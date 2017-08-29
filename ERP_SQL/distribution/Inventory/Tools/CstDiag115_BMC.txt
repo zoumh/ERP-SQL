@@ -1,0 +1,473 @@
+************** Oracle Cost Management Diagnostic Report **************
+
+Diagnostic report generated for Customer bmc
+
+**********************************************************************
+
+Report started at Date/Time                                                     
+==============================                                                  
+27/OCT/2004 15:35:54                                                            
+
+1. Database Name and Created Date :
+
+DB Name   Created                                                               
+========= =========                                                             
+PROD      01-OCT-04                                                             
+
+2. Oracle Version(s) :
+
+Oracle RDBMS/Tools Version(s)                                                   
+================================================================                
+Oracle9i Enterprise Edition Release 9.2.0.3.0 - 64bit Production                
+PL/SQL Release 9.2.0.3.0 - Production                                           
+CORE	9.2.0.3.0	Production                                                       
+TNS for HPUX: Version 9.2.0.3.0 - Production                                    
+NLSRTL Version 9.2.0.3.0 - Production                                           
+
+3. NLS Parameter Settings :
+
+NLS Parameter Name             Currently Set Value                              
+============================== ==============================                   
+NLS_LANGUAGE                   AMERICAN                                         
+NLS_TERRITORY                  AMERICA                                          
+NLS_CURRENCY                   $                                                
+NLS_ISO_CURRENCY               AMERICA                                          
+NLS_NUMERIC_CHARACTERS         .,                                               
+NLS_CALENDAR                   GREGORIAN                                        
+NLS_DATE_FORMAT                DD-MON-RR                                        
+NLS_DATE_LANGUAGE              AMERICAN                                         
+NLS_SORT                       BINARY                                           
+NLS_TIME_FORMAT                HH.MI.SSXFF AM                                   
+NLS_TIMESTAMP_FORMAT           DD-MON-RR HH.MI.SSXFF AM                         
+NLS_TIME_TZ_FORMAT             HH.MI.SSXFF AM TZR                               
+NLS_TIMESTAMP_TZ_FORMAT        DD-MON-RR HH.MI.SSXFF AM TZR                     
+NLS_DUAL_CURRENCY              $                                                
+NLS_COMP                       BINARY                                           
+NLS_LENGTH_SEMANTICS           BYTE                                             
+NLS_NCHAR_CONV_EXCP            FALSE                                            
+
+4. Profile Option Values :
+
+
+================================================================================                                       
+Profile Option Values Set at Site Level                                                                                 
+
+================================================================================                                       
+
+User Profile Option Name                           Profile Option Value                                                
+
+================================================================================                                       
+BOM: Component Item Sequence Increment             10                                                                   
+BOM: Default Bill of Material Levels               7                                                                    
+BOM: Default WIP Supply Values for Components      1                                                                    
+BOM: Hour UOM                                      Hr                                                                   
+BOM: Match to Existing Configurations              2                                                                    
+BOM: Model Item Access                             1                                                                    
+BOM: Perform Lead time calculations                2                                                                    
+BOM: Planning Item Access                          1                                                                    
+BOM: Routing Operation Sequence Increment          10                                                                   
+BOM: Standard Item Access                          1                                                                    
+BOM: Update Resource UOM                           1                                                                    
+BOM: Use Custom Match Function                     2                                                                    
+BOM:Configurator URL of UI Manager                 http://bmcap01.corpusers.net:8000/configurator/oracl                 
+CST: Degree of Parallelism                         1                                                                    
+CST: Transfer Pricing Option                       0                                                                    
+CST:Account Summarization                          1                                                                    
+CST:Cost Rollup - wait for table locks             1                                                                    
+CST:Exchange rate type                             1                                                                    
+CST:Maintain Cost Privilege                        1                                                                    
+CZ: Automatically Validate on Exit                 1                                                                    
+
+5. Organization Structure :
+
+ Org Id Org  Costing Method  Costing Org  Master Org  Default CG Project Ref  WMS Enabled  Cost CutOff  EAM Enabled  WSM Enabled  Ecumbrance Reversal Enabled  Allow Negative Onhand          
+======= ==== =============== =========== =========== =========== ============ ============ ============ ============ ============ ============================ =======================        
+     84 ARC  Standard                 84          81        1004 No           No                        No           No           No                           No                             
+     81 MAS  Standard                 81          81        1000 No           No                        No           No           No                           No                             
+     83 PRD  Standard                 83          81        1003 No           Yes                       No           No           No                           No                             
+     86 PRJ  FIFO                     86          81        1016 No           No                        No           No           No                           No                             
+     85 SEM  Standard                 85          81        1005 No           Yes                       No           No           No                           No                             
+     82 XXX  Standard                 82          81        1001 No           Yes                       No           No           No                           No                             
+
+6. Organization Accounts :
+
+Org Code  Material       MOH  Resource       OSP  Overhead       PPV  Avg CVar  Intransit   Expense    IO XCR  IO Rcvbl   IO Pybl    IO PPV  AP Accrl       IPV     Sales      COGS           
+======== ========= ========= ========= ========= ========= ========= ========= ========== ========= ========= ========= ========= ========= ========= ========= ========= =========           
+ARC           1232      1232      1232      1232      1232      1012      1016                                                                   1013      6801      1014      1015           
+MAS           1001      1001      1001      1001      1001      1002      1007                                                                   1004      1003      1005      1006           
+PRD           1008      1008      1008      1008      1008      1003      1007                                                                   1004      4155      1005      1006           
+PRJ           1198      1198      1198      1198      1198      1003      1007       1198      1533                                              1004      4155      1199      1200           
+SEM           1018      1018      1018      1018      1018      1002      1007                                                                   1004      1003      1005      1006           
+XXX           1001                                              1002      1007                                                                   1004      1003      1005      1006           
+
+7. Cost group Accounts :
+
+Cost Group  CG Id Org Id CG Type       Material       MOH  Resource  Overhead       OSP  Avg CVar   Expense       PPV             
+========== ====== ====== ============ ========= ========= ========= ========= ========= ========= ========= =========             
+CG-1000      1000     81 Inventory         1001      1001      1001      1001      1001                          1003             
+CG-1001      1001     82 Inventory         1001                                              1007                                 
+CG-1016      1016     86 Inventory         1198      1198      1198      1198      1198      1007      1533                       
+CG-ARC       1004     84 Inventory         1232      1232      1232      1232      1232                          1268             
+CG-SEM       1005     85 Inventory         1018      1018      1018      1018      1018                          1159             
+Default      1003     83 Inventory         1008      1008      1008      1008      1008                1324      1271             
+
+8. Interorg Parameters :
+
+  From Org   To Org Xfer Type  FOB Point  IO Required  Interorg Transfer Code     Ele Visible  Xfr Charge  Intransit    IO XCR  IO Rcvbl   IO Pybl    IO PPV         
+========== ======== ========== ========== ============ ========================== ============ ========== ========== ========= ========= ========= =========         
+        83       84 Direct     None       No           No Transfer Charges        No                                      1072      1324      1324      1863         
+        83       86 Direct     None       No           No Transfer Charges        No                                      1328      1324      1324      1864         
+        84       83 Direct     None       No           No Transfer Charges        No                                      1068      1324      1324      1862         
+        86       83 Direct     None       No           No Transfer Charges        No                                      1326      1324      1324      1865         
+
+9. Wip Parameters :
+
+Org Code  Org Id Scrap Acct Option  Completion Cost Source  Cost Type Auto Compute Final Completion  System Option              Recognize Period Variance                           
+======== ======= ================== ====================== ========== ============================== ========================== ================================================    
+PRD           83 Optional                                             No                                                        All Schedules                                       
+PRJ           86 Optional           System Calculated                 No                             Use Actual Resources       All Schedules                                       
+
+10. Package Versions :
+
+Package Name-Specification/Body     File Name          Version         Status                                           
+=================================== ================== =============== ========                                         
+CSTACCWO-Spec                       CSTACCWS.pls       115.3           VALID                                            
+CSTACCWO-Body                       CSTACCWB.pls       115.3           VALID                                            
+CSTACDLS-Spec                       CSTACDLS.pls       115.3           VALID                                            
+CSTACDLS-Body                       CSTACDLB.pls       115.2           VALID                                            
+CSTACOSN-Spec                       CSTACOSS.pls       115.4           VALID                                            
+CSTACOSN-Body                       CSTACOSB.pls       115.4           VALID                                            
+CSTACPCS-Spec                       CSTACPCS.pls       115.3           VALID                                            
+CSTACPCS-Body                       CSTACPCB.pls       115.20          VALID                                            
+CSTACWRO-Spec                       CSTPACOS.pls       115.3           VALID                                            
+CSTACWRO-Body                       CSTPACOB.pls       115.7           VALID                                            
+CSTATOCR-Spec                       CSTATOCS.pls       115.4           VALID                                            
+CSTATOCR-Body                       CSTATOCB.pls       115.11          VALID                                            
+CSTPACDP-Spec                       CSTACDPS.pls       115.5           VALID                                            
+CSTPACDP-Body                       CSTACDPB.pls       115.38          VALID                                            
+CSTPACHK-Spec                       CSTACHKS.pls       115.6           VALID                                            
+CSTPACHK-Body                       CSTACHKB.pls       115.7           VALID                                            
+CSTPACIN-Spec                       CSTACINS.pls       115.5           VALID                                            
+CSTPACIN-Body                       CSTACINB.pls       115.8           VALID                                            
+CSTPACIR-Spec                       CSTPACIS.pls       115.3           VALID                                            
+CSTPACIR-Body                       CSTPACIB.pls       115.3           VALID                                            
+CSTPACIT-Spec                       CSTACITS.pls       115.3           VALID                                            
+CSTPACIT-Body                       CSTACITB.pls       115.7           VALID                                            
+CSTPACLM-Spec                       CSTACLMS.pls       115.3           VALID                                            
+CSTPACLM-Body                       CSTACLMB.pls       115.2           VALID                                            
+CSTPACMS-Spec                       CSTACMSS.pls       115.8           VALID                                            
+CSTPACMS-Body                       CSTACMSB.pls       115.9           VALID                                            
+CSTPACOV-Spec                       CSTACOVS.pls       115.4           VALID                                            
+CSTPACOV-Body                       CSTACOVB.pls       115.9           VALID                                            
+CSTPACRI-Spec                       CSTPACRS.pls       115.4           VALID                                            
+CSTPACRI-Body                       CSTPACRB.pls       115.4           VALID                                            
+CSTPACWB-Spec                       CSTPACBS.pls       115.3           VALID                                            
+CSTPACWB-Body                       CSTPACBB.pls       115.7           VALID                                            
+CSTPACWC-Spec                       CSTPACCS.pls       115.4           VALID                                            
+CSTPACWC-Body                       CSTPACCB.pls       115.13          VALID                                            
+CSTPACWF-Spec                       CSTACWFS.pls       115.3           VALID                                            
+CSTPACWF-Body                       CSTACWFB.pls       115.7           VALID                                            
+CSTPACWP-Spec                       CSTPACPS.pls       115.3           VALID                                            
+CSTPACWP-Body                       CSTPACPB.pls       115.10          VALID                                            
+CSTPACWS-Spec                       CSTPACSS.pls       115.3           VALID                                            
+CSTPACWS-Body                       CSTPACSB.pls       115.6           VALID                                            
+CSTPALBR-Spec                       CSTALBRS.pls       115.6           VALID                                            
+CSTPALBR-Body                       CSTALBRB.pls       115.11          VALID                                            
+CSTPALPC-Spec                       CSTALPCS.pls       115.3           VALID                                            
+CSTPALPC-Body                       CSTALPCB.pls       115.9           VALID                                            
+CSTPALTY-Spec                       CSTALTYS.pls       115.3           VALID                                            
+CSTPAPBR-Spec                       CSTAPBRS.pls       115.5           VALID                                            
+CSTPAPBR-Body                       CSTAPBRB.pls       115.38          VALID                                            
+CSTPAPHK-Spec                       CSTAPHKS.pls       115.3           VALID                                            
+CSTPAPHK-Body                       CSTAPHKB.pls       115.3           VALID                                            
+CSTPAPPR-Spec                       CSTAPPRS.pls       115.5           VALID                                            
+CSTPAPPR-Body                       CSTAPPRB.pls       115.20          VALID                                            
+CSTPAVCP-Spec                       CSTAVCPS.pls       115.7           VALID                                            
+CSTPAVCP-Body                       CSTAVCPB.pls       115.43          VALID                                            
+CSTPCFMS-Spec                       CSTCFMSS.pls       115.3           VALID                                            
+CSTPCFMS-Body                       CSTCFMSB.pls       115.6           VALID                                            
+CSTPCGUT-Spec                       CSTCGUTS.pls       115.8           VALID                                            
+CSTPCGUT-Body                       CSTCGUTB.pls       115.14          VALID                                            
+CSTPCINT-Spec                       CSTPCINS.pls       115.5           VALID                                            
+CSTPCINT-Body                       CSTPCINB.pls       115.9           VALID                                            
+CSTPCOIC-Spec                       CSTPCOIS.pls       115.5           VALID                                            
+CSTPCOIC-Body                       CSTPCOIB.pls       115.7           VALID                                            
+CSTPCWPB-Spec                       CSTPWPBS.pls       115.3           VALID                                            
+CSTPCWPB-Body                       CSTPWPBB.pls       115.3           VALID                                            
+CSTPDPPC-Spec                       CSTDPPCS.pls       115.6           VALID                                            
+CSTPDPPC-Body                       CSTDPPCB.pls       115.10          VALID                                            
+CSTPECEP-Spec                       CSTECEPS.pls       115.3           VALID                                            
+CSTPECEP-Body                       CSTECEPB.pls       115.5           VALID                                            
+CSTPEXPL-Spec                       CSTPEXPS.pls       115.3           VALID                                            
+CSTPEXPL-Body                       CSTPEXPB.pls       115.13          VALID                                            
+CSTPFCHK-Spec                       CSTFCHKS.pls       115.4           VALID                                            
+CSTPFCHK-Body                       CSTFCHKB.pls       115.8           VALID                                            
+CSTPGLXF-Spec                       CSTGLXFS.pls       115.3           VALID                                            
+CSTPGLXF-Body                       CSTGLXFB.pls       115.5           VALID                                            
+CSTPIDIC-Spec                       CSTIDIOS.pls       115.3           VALID                                            
+CSTPIDIC-Body                       CSTIDIOB.pls       115.7           VALID                                            
+CSTPIICC-Spec                       CSTIICIS.pls       115.3           VALID                                            
+CSTPIICC-Body                       CSTIICIB.pls       115.6           VALID                                            
+CSTPLCAC-Spec                       CSTLCACS.pls       115.2           VALID                                            
+CSTPLCAC-Body                       CSTLCACB.pls       115.5           VALID                                            
+CSTPLCAS-Spec                       CSTLCASS.pls       115.2           VALID                                            
+CSTPLCAS-Body                       CSTLCASB.pls       115.2           VALID                                            
+CSTPLCIN-Spec                       CSTLCINS.pls       115.4           VALID                                            
+CSTPLCIN-Body                       CSTLCINB.pls       115.3           VALID                                            
+CSTPLCIR-Spec                       CSTLCIRS.pls       115.2           VALID                                            
+CSTPLCIR-Body                       CSTLCIRB.pls       115.7           VALID                                            
+CSTPLCWP-Spec                       CSTLCWPS.pls       115.2           VALID                                            
+CSTPLCWP-Body                       CSTLCWPB.pls       115.6           VALID                                            
+CSTPLENG-Spec                       CSTLENGS.pls       115.10          VALID                                            
+CSTPLENG-Body                       CSTLENGB.pls       115.43          VALID                                            
+CSTPLMWI-Spec                       CSTLMWIS.pls       115.3           VALID                                            
+CSTPLMWI-Body                       CSTLMWIB.pls       115.4           VALID                                            
+CSTPLPOP-Spec                       CSTLPOPS.pls       115.3           VALID                                            
+CSTPLPOP-Body                       CSTLPOPB.pls       115.4           VALID                                            
+CSTPLVCP-Spec                       CSTLVCPS.pls       115.4           VALID                                            
+CSTPLVCP-Body                       CSTLVCPB.pls       115.28          VALID                                            
+CSTPMECS-Spec                       CSTMECSS.pls       115.3           VALID                                            
+CSTPMECS-Body                       CSTMECSB.pls       115.11          VALID                                            
+CSTPMRGL-Spec                       CSTMRGLS.pls       115.5           VALID                                            
+CSTPMRGL-Body                       CSTMRGLB.pls       115.18          VALID                                            
+CSTPOMLD-Spec                       CSTOMLDS.pls       115.3           VALID                                            
+CSTPOMLD-Body                       CSTOMLDB.pls       115.25          VALID                                            
+CSTPOYLD-Spec                       CSTOYLDS.pls       115.4           VALID                                            
+CSTPOYLD-Body                       CSTOYLDB.pls       115.48          VALID                                            
+CSTPOYUT-Spec                       CSTOYUTS.pls       115.3           VALID                                            
+CSTPOYUT-Body                       CSTOYUTB.pls       115.5           VALID                                            
+CSTPPACQ-Spec                       CSTPACQS.pls       115.9           VALID                                            
+CSTPPACQ-Body                       CSTPACQB.pls       115.26          VALID                                            
+CSTPPAHK-Spec                       CSTPAHKS.pls       115.7           VALID                                            
+CSTPPAHK-Body                       CSTPAHKB.pls       115.8           VALID                                            
+CSTPPBBS-Spec                       CSTPBBSS.pls       115.4           VALID                                            
+CSTPPBBS-Body                       CSTPBBSB.pls       115.8           VALID                                            
+CSTPPCAT-Spec                       CSTPPCAS.pls       115.3           VALID                                            
+CSTPPCAT-Body                       CSTPPCAB.pls       115.5           VALID                                            
+CSTPPCHK-Spec                       CSTPCHKS.pls       115.6           VALID                                            
+CSTPPCHK-Body                       CSTPCHKB.pls       115.6           VALID                                            
+CSTPPCIC-Spec                       CSTPCICS.pls       115.7           VALID                                            
+CSTPPCIC-Body                       CSTPCICB.pls       115.12          VALID                                            
+CSTPPCIT-Spec                       CSTPCITS.pls       115.2           VALID                                            
+CSTPPCIT-Body                       CSTPCITB.pls       115.4           VALID                                            
+CSTPPCLM-Spec                       CSTPCLMS.pls       115.6           VALID                                            
+CSTPPCLM-Body                       CSTPCLMB.pls       115.7           VALID                                            
+CSTPPDOP-Spec                       CSTPDOPS.pls       115.2           VALID                                            
+CSTPPDOP-Body                       CSTPDOPB.pls       115.4           VALID                                            
+CSTPPINV-Spec                       CSTPINVS.pls       115.7           VALID                                            
+CSTPPINV-Body                       CSTPINVB.pls       115.18          VALID                                            
+CSTPPIPV-Spec                       CSTPIPVS.pls       115.6           VALID                                            
+CSTPPIPV-Body                       CSTPIPVB.pls       115.12          VALID                                            
+CSTPPLCS-Spec                       CSTPLCSS.pls       115.5           VALID                                            
+CSTPPLCS-Body                       CSTPLCSB.pls       115.6           VALID                                            
+CSTPPLLC-Spec                       CSTPLLCS.pls       115.3           VALID                                            
+CSTPPLLC-Body                       CSTPLLCB.pls       115.7           VALID                                            
+CSTPPOHK-Spec                       CSTPOHKS.pls       115.2           VALID                                            
+CSTPPOHK-Body                       CSTPOHKB.pls       115.2           VALID                                            
+CSTPPPOI-Spec                       CSTPPOIS.pls       115.3           VALID                                            
+CSTPPPOI-Body                       CSTPPOIB.pls       115.7           VALID                                            
+CSTPPPSC-Spec                       CSTPPSCS.pls       115.8           VALID                                            
+CSTPPPSC-Body                       CSTPPSCB.pls       115.24          VALID                                            
+CSTPPPUR-Spec                       CSTPPURS.pls       115.7           VALID                                            
+CSTPPPUR-Body                       CSTPPURB.pls       115.17          VALID                                            
+CSTPPWAC-Spec                       CSTPWACS.pls       115.5           VALID                                            
+CSTPPWAC-Body                       CSTPWACB.pls       115.20          VALID                                            
+CSTPPWAS-Spec                       CSTPWASS.pls       115.5           VALID                                            
+CSTPPWAS-Body                       CSTPWASB.pls       115.11          VALID                                            
+CSTPPWCL-Spec                       CSTPWCLS.pls       115.4           VALID                                            
+CSTPPWCL-Body                       CSTPWCLB.pls       115.9           VALID                                            
+CSTPPWMT-Spec                       CSTPWMTS.pls       115.5           VALID                                            
+CSTPPWMT-Body                       CSTPWMTB.pls       115.10          VALID                                            
+CSTPPWMX-Spec                       CSTPPWMS.pls       115.4           VALID                                            
+CSTPPWMX-Body                       CSTPPWMB.pls       115.9           VALID                                            
+CSTPPWRO-Spec                       CSTPWROS.pls       115.5           VALID                                            
+CSTPPWRO-Body                       CSTPWROB.pls       115.12          VALID                                            
+CSTPSCCM-Spec                       CSTSCCMS.pls       115.7           VALID                                            
+CSTPSCCM-Body                       CSTSCCMB.pls       115.20          VALID                                            
+CSTPSCCR-Spec                       CSTSCCRS.pls       115.9           VALID                                            
+CSTPSCCR-Body                       CSTSCCRB.pls       115.54          VALID                                            
+CSTPSCEX-Spec                       CSTSCEXS.pls       115.8           VALID                                            
+CSTPSCEX-Body                       CSTSCEXB.pls       115.20          VALID                                            
+CSTPSCHK-Spec                       CSTSCHKS.pls       115.8           VALID                                            
+CSTPSCHK-Body                       CSTSCHKB.pls       115.9           VALID                                            
+CSTPSCHO-Spec                       CSTSCHOS.pls       115.4           VALID                                            
+CSTPSCHO-Body                       CSTSCHOB.pls       115.4           VALID                                            
+CSTPSCWF-Spec                       CSTSCWFS.pls       115.4           VALID                                            
+CSTPSCWF-Body                       CSTSCWFB.pls       115.8           VALID                                            
+CSTPSISC-Spec                       CSTSISCS.pls       115.4           VALID                                            
+CSTPSISC-Body                       CSTSISCB.pls       115.14          VALID                                            
+CSTPSMCM-Spec                       CSTSMCMS.pls       115.4           VALID                                            
+CSTPSMCM-Body                       CSTSMCMB.pls       115.4           VALID                                            
+CSTPSMCW-Spec                       CSTSMCWS.pls       115.9           VALID                                            
+CSTPSMCW-Body                       CSTSMCWB.pls       115.30          VALID                                            
+CSTPSMUT-Spec                       CSTSMUTS.pls       115.10          VALID                                            
+CSTPSMUT-Body                       CSTSMUTB.pls       115.38          VALID                                            
+CSTPUCRU-Spec                       CSTPUCRS.pls       115.4           VALID                                            
+CSTPUCRU-Body                       CSTPUCRB.pls       115.49          VALID                                            
+CSTPUMEC-Spec                       CSTPUMES.pls       115.4           VALID                                            
+CSTPUMEC-Body                       CSTPUMEB.pls       115.18          VALID                                            
+CSTPUPDT-Spec                       CSTPUPDS.pls       115.4           VALID                                            
+CSTPUPDT-Body                       CSTPUPDB.pls       115.9           VALID                                            
+CSTPUTIL-Spec                       CSTPUTIS.pls       115.5           VALID                                            
+CSTPUTIL-Body                       CSTPUTIB.pls       115.6           VALID                                            
+CSTPWCPX-Spec                       CSTPCPXS.pls       115.3           VALID                                            
+CSTPWCPX-Body                       CSTPCPXB.pls       115.3           VALID                                            
+CSTPWPVR-Spec                       CSTPWPVS.pls       115.3           VALID                                            
+CSTPWPVR-Body                       CSTPWPVB.pls       115.13          VALID                                            
+CSTRVHKS-Spec                       CSTRVHKS.pls       115.3           VALID                                            
+CSTRVHKS-Body                       CSTRVHKB.pls       115.3           VALID                                            
+CST_BIS_ALERT-Spec                  CSTBIALS.pls       115.2           VALID                                            
+CST_BIS_ALERT-Body                  CSTBIALB.pls       115.10          VALID                                            
+CST_COST_API-Spec                   CSTCAPIS.pls       115.4           VALID                                            
+CST_COST_API-Body                   CSTCAPIB.pls       115.4           VALID                                            
+CST_COST_COLLECTOR_HOOK-Spec        CSTCCHKS.pls       115.3           VALID                                            
+CST_COST_COLLECTOR_HOOK-Body        CSTCCHKB.pls       115.3           VALID                                            
+CST_COST_GROUPS_PKG-Spec            CSTCOGRS.pls       115.4           VALID                                            
+CST_COST_GROUPS_PKG-Body            CSTCOGRB.pls       115.4           VALID                                            
+CST_COST_TYPES_PKG-Spec             cstpccts.pls       115.2           VALID                                            
+CST_COST_TYPES_PKG-Body             cstpcctb.pls       115.2           VALID                                            
+CST_DEPARTMENT_OVERHEADS_PKG-Spec   cstpcdos.pls       115.3           VALID                                            
+CST_DEPARTMENT_OVERHEADS_PKG-Body   cstpcdob.pls       115.3           VALID                                            
+CST_EAMCOST_PUB-Spec                CSTPEACS.pls       115.10          VALID                                            
+CST_EAMCOST_PUB-Body                CSTPEACB.pls       115.48          VALID                                            
+CST_EAMJOB_ACTESTIMATE-Spec         CSTPJACS.pls       115.0           VALID                                            
+CST_EAMJOB_ACTESTIMATE-Body         CSTPJACB.pls       115.1           VALID                                            
+CST_ITEM_COST_IMPORT_INTERFACE-Spec CSTCIMPS.pls       115.3           VALID                                            
+CST_ITEM_COST_IMPORT_INTERFACE-Body CSTCIMPB.pls       115.7           VALID                                            
+CST_ITEM_OVERHEAD_DEFAULTS_PKG-Spec CSTPOVDS.pls       115.2           VALID                                            
+CST_ITEM_OVERHEAD_DEFAULTS_PKG-Body CSTPOVDB.pls       115.2           VALID                                            
+CST_JOB_SM_PROCESSOR-Spec           CSTPSMOS.pls       115.3           VALID                                            
+CST_JOB_SM_PROCESSOR-Body           CSTPSMOB.pls       115.3           VALID                                            
+CST_MGD_IAL_PVT-Spec                CSTVIALS.pls       115.8           VALID                                            
+CST_MGD_IAL_PVT-Body                CSTVIALB.pls       115.17          VALID                                            
+CST_MGD_IAL_RPT-Spec                CSTRIALS.pls       115.7           VALID                                            
+CST_MGD_IAL_RPT-Body                CSTRIALB.pls       115.9           VALID                                            
+CST_MGD_IAL_UTIL-Spec               CSTUIALS.pls       115.30          VALID                                            
+CST_MGD_IAL_UTIL-Body               CSTUIALB.pls       115.87          VALID                                            
+CST_MGD_INFL_ADJUSTMENT_CP-Spec     CSTCIADS.pls       115.7           VALID                                            
+CST_MGD_INFL_ADJUSTMENT_CP-Body     CSTCIADB.pls       115.10          VALID                                            
+CST_MGD_INFL_ADJUSTMENT_PUB-Spec    CSTPIADS.pls       115.5           VALID                                            
+CST_MGD_INFL_ADJUSTMENT_PUB-Body    CSTPIADB.pls       115.5           VALID                                            
+CST_MGD_INFL_ADJUSTMENT_PVT-Spec    CSTVIADS.pls       115.8           VALID                                            
+CST_MGD_INFL_ADJUSTMENT_PVT-Body    CSTVIADB.pls       115.10          VALID                                            
+CST_MGD_INFL_ADJUSTMENT_RPT-Spec    CSTRIADS.pls       115.4           VALID                                            
+CST_MGD_INFL_ADJUSTMENT_RPT-Body    CSTRIADB.pls       115.13          VALID                                            
+CST_MGD_ITB_RPT-Spec                CSTRITBS.pls       115.7           VALID                                            
+CST_MGD_ITB_RPT-Body                CSTRITBB.pls       115.8           VALID                                            
+CST_MGD_LIFO_COST_PROCESSOR-Spec    CSTGLCPS.pls       115.15          VALID                                            
+CST_MGD_LIFO_COST_PROCESSOR-Body    CSTGLCPB.pls       115.40          VALID                                            
+CST_MGD_MSTR_BOOK_RPT-Spec          CSTGMBKS.pls       115.3           VALID                                            
+CST_MGD_MSTR_BOOK_RPT-Body          CSTGMBKB.pls       115.18          VALID                                            
+CST_MOHRULES_PUB-Spec               CSTMOHRS.pls       115.3           VALID                                            
+CST_MOHRULES_PUB-Body               CSTMOHRB.pls       115.4           VALID                                            
+CST_OSFMUPGRADE_PVT-Spec            CSTVUPGS.pls       115.0           VALID                                            
+CST_OSFMUPGRADE_PVT-Body            CSTVUPGB.pls       115.2           VALID                                            
+CST_OVHD_RATE_IMPORT_INTERFACE-Spec CSTOIMPS.pls       115.3           VALID                                            
+CST_OVHD_RATE_IMPORT_INTERFACE-Body CSTOIMPB.pls       115.6           VALID                                            
+CST_PAC_ITEM_COSTS_PKG-Spec         CSTGLICS.pls       115.8           VALID                                            
+CST_PAC_ITEM_COSTS_PKG-Body         CSTGLICB.pls       115.7           VALID                                            
+CST_PARAMETER_CSTMRG-Spec           CSTGMRGS.pls       115.4           VALID                                            
+CST_PARAMETER_CSTMRG-Body           CSTGMRGB.pls       115.10          VALID                                            
+CST_PARAMETER_CSTREV-Spec           CSTSREVS.pls       115.5           VALID                                            
+CST_PARAMETER_CSTREV-Body           CSTSREVB.pls       115.10          VALID                                            
+CST_PERIODCLOSEOPTION_PUB-Spec      CSTINVRS.pls       115.2           VALID                                            
+CST_PERIODCLOSEOPTION_PUB-Body      CSTINVRB.pls       115.2           VALID                                            
+CST_PL_IMPORT-Spec                  CSTPLIMS.pls       115.3           VALID                                            
+CST_PL_IMPORT-Body                  CSTPLIMB.pls       115.9           VALID                                            
+CST_PRJMFG_ACCT_HOOK-Spec           CSTPMHKS.pls       115.3           VALID                                            
+CST_PRJMFG_ACCT_HOOK-Body           CSTPMHKB.pls       115.3           VALID                                            
+CST_PRJMFG_COST_COLLECTOR-Spec      CSTPPCCS.pls       115.8           VALID                                            
+CST_PRJMFG_COST_COLLECTOR-Body      CSTPPCCB.pls       115.71          VALID                                            
+CST_RESOURCE_OVERHEADS_PKG-Spec     cstrovhs.pls       115.3           VALID                                            
+CST_RESOURCE_OVERHEADS_PKG-Body     cstrovhb.pls       115.3           VALID                                            
+CST_RES_COST_IMPORT_INTERFACE-Spec  CSTRIMPS.pls       115.3           VALID                                            
+CST_RES_COST_IMPORT_INTERFACE-Body  CSTRIMPB.pls       115.6           VALID                                            
+CST_START_IMP_PROCESS-Spec          CSTSIMPS.pls       115.3           VALID                                            
+CST_START_IMP_PROCESS-Body          CSTSIMPB.pls       115.4           VALID                                            
+CST_SUBELEMENTS_PVT-Spec            CSTVCCYS.pls       115.4           VALID                                            
+CST_SUBELEMENTS_PVT-Body            CSTVCCYB.pls       115.15          VALID                                            
+CST_TPRICE_PVT-Spec                 CSTVTPAS.pls       115.0           VALID                                            
+CST_TPRICE_PVT-Body                 CSTVTPAB.pls       115.2           VALID                                            
+CST_UTILITY_PUB-Spec                CSTUTILS.pls       115.7           VALID                                            
+CST_UTILITY_PUB-Body                CSTUTILB.pls       115.10          VALID                                            
+'' 
+'11. Checking Product Tops : ' 
+'' 
+'BOM_TOP is '$BOM_TOP 
+'FND_TOP  is '$FND_TOP  
+'' 
+'12. Product Reports Directory :' 
+' ' 
+'' 
+'' 
+'13. Product Forms Directory :' 
+' ' 
+'' 
+'14. Product Resource Directory :' 
+' ' 
+'' 
+'15. Product Workflow Files :' 
+' ' 
+'' 
+'16. Product ODF Files :' 
+'' 
+'17. Product Pro*C Files :' 
+'CMCTCM :' 
+' ' 
+'' 
+'CMCMCW :' 
+' ' 
+'' 
+'CMCACW :' 
+' ' 
+'' 
+'CMCLCW :' 
+' ' 
+'' 
+'CMCICU :' 
+' ' 
+'' 
+'CMCMEC :' 
+' ' 
+'' 
+'CMCCCM :' 
+' ' 
+'' 
+'CMCCCI :' 
+' ' 
+'' 
+'CMCCCW :' 
+' ' 
+'' 
+'CMCCOC :' 
+' ' 
+'' 
+'CMCCTW :' 
+' ' 
+'' 
+'CMCPAM :' 
+' ' 
+'' 
+'CMCPAW :' 
+' ' 
+'' 
+'CMCPIM :' 
+' ' 
+'' 
+'CMCPIW :' 
+' ' 
+'' 
+'CMRICU :' 
+' ' 
+'' 
+'INCTPC :' 
+' ' 
+'' 
+'INCTGL :' 
+' ' 
+'' 
+'Report completed at Date/Time' 
+The system cannot accept the date entered.
+Enter the new date: (yy-mm-dd) '' 
+'End of Diagnostic Report' 
+'' 

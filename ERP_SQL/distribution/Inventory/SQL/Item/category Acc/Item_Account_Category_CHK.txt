@@ -1,0 +1,55 @@
+
+
+------all item in PRD
+select ITEM_NUMBER,COGS_PRD_SEG,SALES_PRD_SEG,CATEGORY1,Status,STD_COST,ORG_ID,LAST_UPDATE_DATE,COST_TYPE,CATEGORY2,CATEGORY 
+from APPS.BMC_CST_ITEM_CHK
+where ORG_ID=83
+order by ITEM_NUMBER,ORG_ID
+
+
+---Item Account & Category (Check If no PRD segment setup)
+
+
+select ITEM_NUMBER,COGS_PRD_SEG,SALES_PRD_SEG,CATEGORY1,Status,STD_COST,ORG_ID,LAST_UPDATE_DATE,COST_TYPE,CATEGORY2,CATEGORY from APPS.BMC_CST_ITEM_CHK
+--where CATEGORY1='NA' and COGS_PRD_SEG<>'000000'
+where (CATEGORY1='NA' or COGS_PRD_SEG='000000')
+and (ITEM_NUMBER like '%DPY%' or ITEM_NUMBER like '%KRH%' or ITEM_NUMBER like '%KRC%' )
+and Status='Active'
+and ORG_ID=83
+order by ITEM_NUMBER,ORG_ID
+
+
+CREATE OR REPLACE View APPS.BMC_CST_ITEM_CHK
+AS
+select b.ITEM_NUMBER,f.SEGMENT1||'.'||f.SEGMENT2 as Category,b.COST_TYPE
+,b.ITEM_COST as STD_COST
+,b.ORGANIZATION_ID as ORG_ID /*--  83 -->Prod , 84-->ARC, 81-->Mas */
+,d.NAME as Org,c.SEGMENT4 as COGS_PRD_Seg,c.SEGMENT5 as COGS_PRJ_Seg,e.SEGMENT4 as SALES_PRD_Seg,e.SEGMENT5 as SALES_PRJ_Seg
+,INVENTORY_ITEM_STATUS_CODE as Status
+,b.MATERIAL_COST
+,b.RESOURCE_COST
+,g.CREATION_DATE
+,g.LAST_UPDATE_DATE
+,f.SEGMENT1 Category1,f.SEGMENT2 Category2,decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+from apps.CST_ITEM_COST_TYPE_V b
+,HR_ORGANIZATION_UNITS_V d
+,apps.GL_CODE_combinations c
+,apps.GL_CODE_combinations e	
+,apps.mtl_item_categories_v f 
+,apps.mtl_system_items g
+--,apps.mtl_categories_b h
+where 
+(b.COST_TYPE='Frozen' or b.COST_TYPE='FIFO')
+and (b.ORGANIZATION_ID=83 or b.ORGANIZATION_ID=84 or b.ORGANIZATION_ID=86 )
+and d.ORGANIZATION_ID=b.ORGANIZATION_ID
+--and (b.ITEM_NUMBER like '%DPY%' or b.ITEM_NUMBER like '%KRH%' or b.ITEM_NUMBER like '%KRC%' )
+and b.COST_OF_SALES_ACCOUNT=c.CODE_COMBINATION_ID
+and b.SALES_ACCOUNT=e.CODE_COMBINATION_ID
+and f.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and f.ORGANIZATION_ID=b.ORGANIZATION_ID
+and f.category_set_id=1
+and b.INVENTORY_ITEM_ID=g.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=b.ORGANIZATION_ID
+--and h.CATEGORY_ID=f.CATEGORY_ID
+--and INVENTORY_ITEM_STATUS_CODE='Active'
+order by org_id,b.INVENTORY_ITEM_ID

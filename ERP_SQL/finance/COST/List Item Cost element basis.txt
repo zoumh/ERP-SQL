@@ -1,0 +1,26 @@
+
+
+----------Item Cost Type setup screen , cost elements
+
+select inventory_item_id,Basis_type_dsp,cost_element,Item_cost,source_type,resource_code,cost_type_id 
+from apps.CST_ITEM_COST_DETAILS_V 
+where inventory_item_id in (26206,42729) and organization_id=83 and cost_type_id=1
+
+
+
+---------------------Look Up Code
+CST_ITEM_COSTS.based_on_rollup_flag
+1 Yes
+2 No
+
+
+
+apps.CST_ITEM_COST_TYPE_V.BASED_ON_ROLLUP
+1 Yes
+2 No
+ 
+
+bom.cst_item_cost_details.rollup_source_type
+1 User defined
+2 Default
+3 Rolled up

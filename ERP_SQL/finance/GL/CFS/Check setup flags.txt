@@ -1,0 +1,30 @@
+
+--------------Check Account's cash Flag (attribute10)
+select flex_value Account,attribute10 cash_Flag,CREATION_DATE,END_DATE_ACTIVE,ENABLED_FLAG,HIERARCHY_LEVEL,
+,substr(COMPILED_VALUE_ATTRIBUTES,1,1) Post
+from apps.FND_FLEX_VALUES where FLEX_VALUE_SET_ID=1007641 and flex_value like '1%'--='10020305'
+and attribute10='Y'
+
+
+
+-------------AP Bank account with CFS_Stastic_Flag (Dumy bank='N', empty or 'Y' means include in CFS stastic)
+
+select a.ORG_ID,a.ATTRIBUTE15 CFS_ST_Flag,e.BANK_NAME,b.SEGMENT3 Cash_Acc,
+a.BANK_ACCOUNT_NAME,a.BANK_ACCOUNT_NUM,a.CURRENCY_CODE Currency,f.name Doc_Name
+from apps.AP_BANK_ACCOUNTS_all a,apps.GL_CODE_COMBINATIONs b,apps.GL_CODE_COMBINATIONs c,apps.GL_CODE_COMBINATIONs d
+,apps.AP_BANK_BRANCHES e,apps.AP_CHECK_STOCKS_all f,apps.GL_CODE_COMBINATIONs g,apps.GL_CODE_COMBINATIONs h,
+apps.GL_CODE_COMBINATIONs i,apps.AP_CHECK_FORMATS j
+where a.ASSET_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.GAIN_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID (+)
+and a.loss_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID (+)
+and a.BANK_BRANCH_ID=e.BANK_BRANCH_ID
+and f.BANK_ACCOUNT_ID=a.BANK_ACCOUNT_ID
+and a.CASH_CLEARING_CCID =g.CODE_COMBINATION_ID(+)
+and a.BANK_CHARGES_CCID =h.CODE_COMBINATION_ID(+)
+and a.UNIDENTIFIED_CCID =i.CODE_COMBINATION_ID(+)
+and j.check_format_id=f.check_format_id
+--and a.BANK_ACCOUNT_ID=10000
+--and a.BANK_ACCOUNT_NAME='ICBC Tianzhu-RMB(10020101)'
+and (a.ATTRIBUTE15 is null or a.ATTRIBUTE15<>'N')
+and e.BANK_NAME Like '%Dummy%'
+order by e.BANK_NUMBER,e.BANK_NUM,a.BANK_ACCOUNT_ID,a.BANK_ACCOUNT_NAME

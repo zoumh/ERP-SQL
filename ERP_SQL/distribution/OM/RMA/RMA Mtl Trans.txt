@@ -1,0 +1,30 @@
+
+
+
+
+------RMA Return & Ship Trans
+
+select   mmt.transaction_date, mmt.TRANSACTION_SOURCE_TYPE_ID,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, mso.SEGMENT1 SO,mso.SEGMENT2 Type,
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+ 	     mmt.transaction_id, 
+		 decode(mmt.organization_id,130,'PRD','Unknown') Organization ,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.MTL_SALES_ORDERS 		 mso 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+and mmt.TRANSACTION_SOURCE_ID =mso.SALES_ORDER_ID
+and mso.segment1='5002015'
+and mmt.TRANSACTION_SOURCE_TYPE_ID in (2,12) --- SO & RMA
+and mtt.transaction_type_name in ('Sales order issue','RMA Receipt')
+
+

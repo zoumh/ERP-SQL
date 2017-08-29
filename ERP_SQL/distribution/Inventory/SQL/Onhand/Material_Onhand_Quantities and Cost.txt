@@ -1,0 +1,102 @@
+---This SQL Script is used to provide on_hand Quantity,LPN, cost Group....---
+---ZhaoPeng----
+
+SELECT 	   a.segment1 Item_Number,
+           b.Revision,
+	   b.subinventory_code Sub_inventory, 
+	   c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+	   SUM(b.primary_transaction_quantity) Quantities, 
+	   f.item_cost Unit_Price,
+	   SUM(f.item_cost*b.PRIMARY_TRANSACTION_QUANTITY) Value,
+	   d.cost_GROUP,
+	   e.license_plate_number LPN
+FROM   apps.MTL_SYSTEM_ITEMS_B a,
+	   apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+	   apps.mtl_item_locations c,
+	   apps.CST_COST_GROUPS_V d,	
+	   apps.wms_license_plate_numbers e,
+	   apps.CST_ITEM_COST_TYPE_V f
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+	  AND b.LOCATOR_ID=c.Inventory_LOCATion_ID
+	  AND b.cost_group_id=d.COST_GROUP_ID
+	  AND b.inventory_item_id=f.inventory_item_id
+	  AND b.LPN_ID=e.LPN_id(+)
+	  AND (b.subinventory_code='SH'OR b.subinventory_code='SB')
+	  AND a.inventory_item_status_code='Active'
+	  AND a.organization_id>127
+--	  AND b.inventory_item_id=1712
+	  AND f.organization_id=a.organization_id
+	  AND e.organization_id=a.organization_id
+	  AND b.organization_id=a.organization_id
+	  AND f.cost_type_id=1
+GROUP BY  a.segment1 ,
+	   b.revision,
+	   b.subinventory_code , 
+	   c.segment2,c.segment3,c.segment4,c.segment5 ,
+	   f.item_cost ,
+	   d.cost_GROUP,
+	   e.license_plate_number	  
+
+
+-------------Revision count>1 Item List
+
+SELECT 	   a.segment1 Item_Number,
+           b.Revision,
+	   b.subinventory_code Sub_inventory, 
+	   c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+	   SUM(b.primary_transaction_quantity) Quantities, 
+	   f.item_cost Unit_Price,
+	   SUM(f.item_cost*b.PRIMARY_TRANSACTION_QUANTITY) Value,
+	   d.cost_GROUP,
+	   e.license_plate_number LPN
+FROM   apps.MTL_SYSTEM_ITEMS_B a,
+	   apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+	   apps.mtl_item_locations c,
+	   apps.CST_COST_GROUPS_V d,	
+	   apps.wms_license_plate_numbers e,
+	   apps.CST_ITEM_COST_DETAILS_V f
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+	  AND b.LOCATOR_ID=c.Inventory_LOCATion_ID
+	  AND b.cost_group_id=d.COST_GROUP_ID
+	  AND b.inventory_item_id=f.inventory_item_id
+	  AND b.LPN_ID=e.LPN_id(+)
+	  AND (b.subinventory_code='SH'OR b.subinventory_code='SB')
+	  AND a.inventory_item_status_code='Active'
+	  AND a.organization_id=83
+--	  AND b.inventory_item_id=1712
+	  AND f.organization_id=83
+	  AND f.cost_type_id=3
+and a.segment1 in (SELECT a.segment1 Item_Number--,count(distinct b.Revision)
+FROM   apps.MTL_SYSTEM_ITEMS_B a,
+	   apps.MTL_ONHAND_QUANTITIES_DETAIl b
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+	  AND (b.subinventory_code='SB')
+	  AND a.inventory_item_status_code='Active'
+	  AND a.organization_id=83
+AND b.organization_id=83
+group by a.segment1 
+having count(distinct(b.revision))>1)
+GROUP BY  a.segment1 ,
+	   b.revision,
+	   b.subinventory_code , 
+	   c.segment2,c.segment3,c.segment4,c.segment5 ,
+	   f.item_cost ,
+	   d.cost_GROUP,
+	   e.license_plate_number
+order by a.segment1 ,
+	   b.revision
+
+
+
+
+-----------SB Total onhand Value
+select sum(a.transaction_quantity*to_number(d.item_cost,999999.99999)) as Amt
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b,apps.cst_item_costs d
+where a.organization_id=83 and b.organization_id=83 and d.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and d.cost_type_id=1
+--and category_set_id = 1100000001 
+--and structure_id=101 
+--and b.segment1='A/12000030010075'
+and a.subinventory_code='SB'
+

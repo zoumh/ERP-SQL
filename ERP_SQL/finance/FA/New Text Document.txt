@@ -1,0 +1,16 @@
+AND (fad.DEPRN_RUN_DATE) in (select max(DEPRN_RUN_DATE) from apps.FA_deprn_summary group by asset_id) and fad.book_type_code='BMC_FA_BOOK' 
+order by ASSET_NUMBER 
+
+
+AND (fad.DEPRN_RUN_DATE,fad.ASSET_ID) in (select max(DEPRN_RUN_DATE),ASSET_ID from apps.FA_deprn_summary group by asset_id) and fad.book_type_code='BMC_FA_BOOK' 
+
+select max(DEPRN_RUN_DATE) from apps.FA_deprn_summary where asset_id='100000305' group by asset_id 
+
+select max(DEPRN_RUN_DATE),ASSET_ID from apps.FA_deprn_summary where asset_id='100000305' group by asset_id 
+
+select * from apps.FA_deprn_summary FAD where asset_id='100000305' and (fad.DEPRN_RUN_DATE,fad.ASSET_ID) in (select max(DEPRN_RUN_DATE),ASSET_ID from apps.FA_deprn_summary group by asset_id
+
+select * from apps.FA_DISTRIBUTION_HISTORY where asset_id='100000305'
+
+
+select max(DEPRN_RUN_DATE),ASSET_ID  from apps.FA_deprn_summary where asset_id='100000305' group by asset_id

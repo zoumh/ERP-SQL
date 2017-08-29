@@ -1,0 +1,28 @@
+
+
+apps.MTL_SECONDARY_INVENTORIES_FK_V
+
+locator_type
+=1 Non Locator control
+=2 Prespecified
+=3 Dynamic
+=5 Item Level
+
+
+Correct WH Status by ID:
+decode(status_id,1,'Inactive',21,'Active',20,'On Hold')
+
+
+select locator_type,SECONDARY_INVENTORY_NAME,DESCRIPTION,a.CREATION_DATE,a.DISABLE_DATE,a.STATUS_CODE,b.name Org_Name,a.ORGANIZATION_ID,
+decode(a.ASSET_INVENTORY,1,'Y',2,'N' ) ASSET_INVENTORY,
+decode(LPN_CONTROLLED_FLAG,1,'Y',2,'N' )LPN_CONTROLLED_FLAG,
+decode(a.RESERVABLE_TYPE,1,'Y',2,'N') RESERVABLE_TYPE,
+decode(locator_type ,1,'None',2,'Prespecified',3,'Dynamic',5,'Item Level') Locator_Control,
+decode(a.REQUISITION_APPROVAL_TYPE,1,'Approved',2,'Unapproved') REQUISITION_APPROVAL_TYPE
+from apps.MTL_SECONDARY_INVENTORIES_FK_V a,apps.HR_ORGANIZATION_UNITS_V b 
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID>127
+--and a.SECONDARY_INVENTORY_NAME='FC'
+and locator_type=5
+order by a.ORGANIZATION_ID,SECONDARY_INVENTORY_NAME
+

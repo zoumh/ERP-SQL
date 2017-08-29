@@ -1,0 +1,301 @@
+
+---------AR Invoice (Rev Tax Amount) with SO Type,PO ,ship_from_Org=IP
+select --a.CUSTOMER_TRX_ID,LINK_TO_CUST_TRX_LINE_ID,
+c.PURCHASE_ORDER,a.SALES_ORDER,a.SALES_ORDER_LINE,a.INTERFACE_LINE_ATTRIBUTE2 SO_Type,
+c.TRX_NUMBER Invoice_Number,a.LINE_NUMBER,--a.LINE_TYPE, 
+a.DESCRIPTION Item_Desc,a.QUANTITY_ORDERED,a.QUANTITY_INVOICED,a.UNIT_SELLING_PRICE,
+a.REVENUE_AMOUNT,b.Tax_amt,b.TAXABLE_AMOUNT Amt_before_tax,b.TAX_RATE,b.AMOUNT_INCLUDES_TAX_FLAG
+from 
+(select CUSTOMER_TRX_ID,CUSTOMER_TRX_LINE_ID,SALES_ORDER,SALES_ORDER_LINE,INTERFACE_LINE_ATTRIBUTE2,
+LINE_NUMBER,LINE_TYPE,DESCRIPTION,QUANTITY_ORDERED,QUANTITY_INVOICED,UNIT_STANDARD_PRICE,UNIT_SELLING_PRICE,
+EXTENDED_AMOUNT,REVENUE_AMOUNT from apps.ra_customer_trx_lines_all 
+where CREATION_DATE>=to_date('2008-1-1','yyyy-mm-dd') and LINE_TYPE='LINE') a,
+(select CUSTOMER_TRX_ID,TAX_RATE,AUTOTAX,LINK_TO_CUST_TRX_LINE_ID,LINE_NUMBER,LINE_TYPE,TAXABLE_AMOUNT,
+AMOUNT_INCLUDES_TAX_FLAG,EXTENDED_AMOUNT Tax_amt
+from apps.ra_customer_trx_lines_all where CREATION_DATE>=to_date('2008-1-1','yyyy-mm-dd') and LINE_TYPE='TAX') b,
+apps.ra_customer_trx_all c
+where a.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and a.CUSTOMER_TRX_LINE_ID =b.LINK_TO_CUST_TRX_LINE_ID
+and c.TRX_NUMBER='319376'
+--and c.CREATION_DATE>=to_date('2008-1-1','yyyy-mm-dd')
+--and c.INTERFACE_HEADER_ATTRIBUTE10=132 --Ship_from_Org_ID
+--and c.PURCHASE_ORDER is null
+order by c.TRX_NUMBER,a.LINE_TYPE,a.LINE_NUMBER
+
+
+------AR Invoice Full Account Entry:
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Rev_Acc,e.ACCOUNT_CLASS,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,e.GL_POSTED_DATE
+,f.STATUS as Post
+,b.TRX_DATE as Inv_Date  
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_POSTING_CONTROL f
+,apps.GL_CODE_combinations g
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.POSTING_CONTROL_ID=f.POSTING_CONTROL_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and e.GL_DATE>=to_date('2004-07-27','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-07-29','yyyy-mm-dd')  
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER--,d.LINE_NUMBER
+
+
+
+--------For Nancy use
+select to_char(c.TRX_NUMBER) as Invoice_Number,a.LINE_NUMBER,g.segment3 as Rev_Acc,a.REVENUE_AMOUNT,a.LINE_TYPE ,a.SALES_ORDER,a.INTERFACE_LINE_ATTRIBUTE3 as Ship
+,b.AMOUNT,b.ACCTD_AMOUNT as CNY_AMT,b.GL_DATE,b.ACCOUNT_CLASS
+,a.QUANTITY_INVOICED,a.QUANTITY_ORDERED,a.UNIT_SELLING_PRICE,c.PURCHASE_ORDER
+from apps.ra_customer_trx_lines_all a,apps.RA_CUST_TRX_LINE_GL_DIST_all b,apps.ra_customer_trx_all c
+,apps.GL_CODE_combinations g
+where c.CUSTOMER_TRX_ID=b.CUSTOMER_TRX_ID
+and a.CUSTOMER_TRX_LINE_ID=b.CUSTOMER_TRX_LINE_ID
+and a.LINE_TYPE='LINE'
+and b.ACCOUNT_CLASS='REV'
+and b.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and b.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and b.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+and (g.segment3='5101010101' or g.segment3='5101010102' or g.segment3='5101030101' or g.segment3='5101030102')
+
+
+
+----include un-posted AR Invoice
+
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Rev_Acc,e.ACCOUNT_CLASS,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,e.GL_POSTED_DATE
+,b.TRX_DATE as Inv_Date  
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.GL_CODE_combinations g
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and e.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+and e.ACCOUNT_CLASS<>'REC'
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER
+
+
+
+----List un-posted AR Invoice
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Rev_Acc,e.ACCOUNT_CLASS,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,e.GL_POSTED_DATE
+,b.TRX_DATE as Inv_Date  
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.GL_CODE_combinations g
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and e.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+and e.ACCOUNT_CLASS<>'REC'
+and e.GL_POSTED_DATE is null
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER
+
+
+
+----(only posted AR Invoice) link to AR_POSTING_CONTROL 
+
+(Detail to Distribute lines)
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Rev_Acc,e.ACCOUNT_CLASS,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,e.GL_POSTED_DATE
+,f.STATUS as Post
+,b.TRX_DATE as Inv_Date  
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_POSTING_CONTROL f
+,apps.GL_CODE_combinations g
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.POSTING_CONTROL_ID=f.POSTING_CONTROL_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and e.GL_DATE>=to_date('2004-01-27','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-02-29','yyyy-mm-dd')  
+--and b.CUSTOMER_TRX_ID=3950
+and e.ACCOUNT_CLASS<>'REC'
+--and g.segment3='5101010102'
+--and b.TRX_DATE<=to_date('2004-02-29','yyyy-mm-dd') and b.TRX_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER--,d.LINE_NUMBER
+
+
+(Summary by Invoice Distribute type)
+select a.NAME as Trans_Type,to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Account ,e.ACCOUNT_CLASS as Acc_Type--,sum(e.GL_DATE)--,b.CUSTOMER_TRX_ID
+,sum(e.AMOUNT) as Inv_Amount,b.INVOICE_CURRENCY_CODE as Curr,sum(e.ACCTD_AMOUNT) as CNY_Amount,e.GL_DATE
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_POSTING_CONTROL f
+,apps.GL_CODE_combinations g
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.POSTING_CONTROL_ID=f.POSTING_CONTROL_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and e.GL_DATE>=to_date('2004-01-27','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-02-29','yyyy-mm-dd')  
+--and b.CUSTOMER_TRX_ID=3950
+and e.ACCOUNT_CLASS<>'REC'
+--and g.segment3='5101010102'
+--and b.TRX_DATE<=to_date('2004-02-29','yyyy-mm-dd') and b.TRX_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+group by b.TRX_NUMBER,e.ACCOUNT_CLASS,a.NAME,g.segment3,b.INVOICE_CURRENCY_CODE,e.GL_DATE
+order by a.NAME,b.TRX_NUMBER--,d.LINE_NUMBER
+
+
+
+(No- use , multip because ra_customer_trx_lines_all has multi CUSTOMER_TRX_ID !!)
+select g.segment3 as Rev_Acc,f.STATUS as Post,e.GL_DATE,b.CUSTOMER_TRX_ID,d.CUSTOMER_TRX_LINE_ID,a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,to_char(d.LINE_NUMBER) as Inv_Line,b.TRX_DATE as Inv_Date,b.INVOICE_CURRENCY_CODE as Curr
+,d.REVENUE_AMOUNT,c.EXTENDED_AMOUNT as Tax_Amt,c.TAX_RATE
+,d.SALES_ORDER,to_char(d.SALES_ORDER_LINE) as SO_Line
+,b.COMPLETE_FLAG--,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.ra_customer_trx_lines_all c
+,apps.ra_customer_trx_lines_all d
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_POSTING_CONTROL f
+,apps.GL_CODE_combinations g
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+--and a.name not like 'Initial%'
+and c.LINE_TYPE='TAX' and d.LINE_TYPE='LINE'
+and b.CUSTOMER_TRX_ID=d.CUSTOMER_TRX_ID
+and c.LINK_TO_CUST_TRX_LINE_ID=d.CUSTOMER_TRX_LINE_ID 
+and e.CUSTOMER_TRX_LINE_ID=d.CUSTOMER_TRX_LINE_ID
+and e.POSTING_CONTROL_ID=f.POSTING_CONTROL_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and e.GL_DATE<=to_date('2004-02-29','yyyy-mm-dd') and e.GL_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+--and b.TRX_DATE<=to_date('2004-02-29','yyyy-mm-dd') and b.TRX_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER,d.LINE_NUMBER
+
+
+
+----- no link to AR_POSTING_CONTROL (with SO , no care post or not , all AR Invoices)
+
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,to_char(c.LINE_NUMBER) as Inv_Line,b.TRX_DATE as Inv_Date,b.INVOICE_CURRENCY_CODE as Curr
+,c.REVENUE_AMOUNT,c.LINE_TYPE,c.EXTENDED_AMOUNT as AR_Amt
+,c.EXTENDED_AMOUNT*decode(b.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1) as CNY_AR
+,c.SALES_ORDER,to_char(c.SALES_ORDER_LINE) as SO_Line
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.ra_customer_trx_lines_all c
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and b.TRX_DATE<=to_date('2004-02-29','yyyy-mm-dd') and b.TRX_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+--and a.name not like 'Initial%'
+--and b.CUSTOMER_TRX_ID=2010
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER,c.LINE_NUMBER
+
+
+(Tax & Revenue in same line)
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,to_char(d.LINE_NUMBER) as Inv_Line,b.TRX_DATE as Inv_Date,b.INVOICE_CURRENCY_CODE as Curr
+,d.REVENUE_AMOUNT,c.EXTENDED_AMOUNT as Tax_Amt
+,d.SALES_ORDER,to_char(d.SALES_ORDER_LINE) as SO_Line
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.ra_customer_trx_lines_all c
+,apps.ra_customer_trx_lines_all d
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+--and a.name not like 'Initial%'
+and c.LINE_TYPE='TAX' and d.LINE_TYPE='LINE'
+and b.CUSTOMER_TRX_ID=d.CUSTOMER_TRX_ID
+and c.LINK_TO_CUST_TRX_LINE_ID=d.CUSTOMER_TRX_LINE_ID --and b.TRX_NUMBER='10324'
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER,d.LINE_NUMBER
+
+
+-------------------------------- Find out un-posted AR Invoices -- no use because multi records in POST
+
+select to_char(b.TRX_NUMBER) as Inv_Number,to_char(d.LINE_NUMBER) as Inv_Line 
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.ra_customer_trx_lines_all c
+,apps.ra_customer_trx_lines_all d
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+--and a.name not like 'Initial%'
+--and c.AUTOTAX='Y' and d.AUTOTAX='N'
+and c.LINE_TYPE='TAX' and d.LINE_TYPE='LINE'
+and b.CUSTOMER_TRX_ID=d.CUSTOMER_TRX_ID
+and c.LINK_TO_CUST_TRX_LINE_ID=d.CUSTOMER_TRX_LINE_ID 
+and b.TRX_DATE<=to_date('2004-02-29','yyyy-mm-dd') and b.TRX_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and b.TRX_NUMBER not in 
+(select bb.TRX_NUMBER
+from apps.ra_cust_trx_types_all aa
+,apps.ra_customer_trx_all bb
+,apps.ra_customer_trx_lines_all cc
+,apps.ra_customer_trx_lines_all dd
+,apps.RA_CUST_TRX_LINE_GL_DIST_all ee
+,apps.AR_POSTING_CONTROL ff
+where aa.CUST_TRX_TYPE_ID=bb.CUST_TRX_TYPE_ID
+and bb.CUSTOMER_TRX_ID=cc.CUSTOMER_TRX_ID
+--and aa.name not like 'Initial%'
+--and cc.AUTOTAX='Y' and dd.AUTOTAX='N'
+and cc.LINE_TYPE='TAX' and dd.LINE_TYPE='LINE'
+and bb.CUSTOMER_TRX_ID=dd.CUSTOMER_TRX_ID
+and cc.LINK_TO_CUST_TRX_LINE_ID=dd.CUSTOMER_TRX_LINE_ID 
+and ee.CUSTOMER_TRX_LINE_ID=dd.CUSTOMER_TRX_LINE_ID
+and ee.POSTING_CONTROL_ID=ff.POSTING_CONTROL_ID
+and bb.TRX_DATE<=to_date('2004-02-29','yyyy-mm-dd') and bb.TRX_DATE>=to_date('2004-01-27','yyyy-mm-dd') )
+
+
+---------------------------------
+
+select CUSTOMER_TRX_ID,LINE_NUMBER,LINE_TYPE,CUSTOMER_TRX_LINE_ID,LINK_TO_CUST_TRX_LINE_ID,TAXABLE_AMOUNT,REVENUE_AMOUNT,EXTENDED_AMOUNT,TAX_RATE,VAT_TAX_ID,TAX_EXEMPT_FLAG from apps.ra_customer_trx_lines_all where CUSTOMER_TRX_ID=4338
+
+
+
+
+select * from apps.ra_customer_trx_all where TRX_NUMBER='240022'
+
+select * from apps.ra_customer_trx_all where CUSTOMER_TRX_ID=6610
+
+select * from apps.AR_POSTING_CONTROL where POSTING_CONTROL_ID=1120
+STATUS='DONE'
+
+select * from apps.RA_CUST_TRX_LINE_GL_DIST_all where CUSTOMER_TRX_LINE_ID=11807
+
+select * from apps.ra_customer_trx_lines_all where CUSTOMER_TRX_LINE_ID=11807
+
+
+select b.ORDER_NUMBER,
+a.LINE_NUMBER,
+a.ACTUAL_SHIPMENT_DATE
+,a.FLOW_STATUS_CODE
+,ORDERED_ITEM
+,SHIPPED_QUANTITY
+,ORDERED_QUANTITY
+,SHIPPING_QUANTITY
+,a.CREATION_DATE
+,a.LAST_UPDATE_DATE
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b
+where a.HEADER_ID=b.HEADER_ID
+and b.ORDER_NUMBER='400005'
+
+
+-------------
+
+
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,to_char(d.LINE_NUMBER) as Inv_Line,b.TRX_DATE as Inv_Date,b.INVOICE_CURRENCY_CODE as Curr
+,d.REVENUE_AMOUNT,c.EXTENDED_AMOUNT as Tax_Amt
+,d.SALES_ORDER,to_char(d.SALES_ORDER_LINE) as SO_Line
+--,c.AUTOTAX,d.AUTOTAX,c.tax_rate--,c.taxable_amount--,c.CUSTOMER_TRX_ID
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.ra_customer_trx_lines_all c
+,apps.ra_customer_trx_lines_all d
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and a.name not like 'Initial%'
+and c.AUTOTAX='Y' and d.AUTOTAX='N'
+and c.LINE_TYPE='TAX' and d.LINE_TYPE='LINE'
+and b.CUSTOMER_TRX_ID=d.CUSTOMER_TRX_ID
+and c.LINK_TO_CUST_TRX_LINE_ID=d.CUSTOMER_TRX_LINE_ID --and b.TRX_NUMBER='10324'
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER,d.LINE_NUMBER
+
+
+

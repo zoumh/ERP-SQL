@@ -1,0 +1,20 @@
+
+
+----------A model's DPY 's rev 0 create date
+
+select d.CREATION_DATE Rev_created_Date,d.REVISION , a.segment1 Item,a.description,a.inventory_item_status_code status,
+a.Item_Type,b.segment1 Category1,b.segment2 Category2,b.segment3,b.segment4,
+a.purchasing_item_Flag,a.purchasing_Enabled_Flag,
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+from apps.mtl_system_items a,apps.mtl_item_categories_v b,apps.PER_PEOPLE_V7 c,apps.MTL_ITEM_REVISIONS_B d
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID=130
+--and  a.segment1='DPY 001'
+and b.category_set_id=1
+and a.BUYER_ID=c.PERSON_ID(+)
+and b.segment1='W880I' 
+and b.segment2='DPY ITEM' and b.segment3='NA' and b.segment4='NA'
+and a.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and d.REVISION='0'

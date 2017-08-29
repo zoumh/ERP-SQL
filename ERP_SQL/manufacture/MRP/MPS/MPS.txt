@@ -1,0 +1,127 @@
+
+
+
+
+
+-------------- MPS Plan Name
+MRP_SCHEDULE_DESIGNATORS stores MPS and MDS schedule names.
+
+MPS_RELIEF  
+indicates whether or not the Planning Manager should
+consume this master demand or master production schedule.
+1 Yes
+2 No
+
+SCHEDULE_TYPE  
+1 MDS ¨C master demand schedule
+2 MPS ¨C master production schedule
+
+
+
+select SCHEDULE_DESIGNATOR,description,decode(schedule_type,1,'MDS',2,'MPS') schedule_type,
+decode(MPS_RELIEF,1,'Yes',2,'No') MPS_RELIEF ,creation_date 
+from apps.MRP_SCHEDULE_DESIGNATORS where organization_id=130 and creation_date>to_date('2008-1-1','yyyy-mm-dd')
+--and SCHEDULE_DESIGNATOR like '%MDS'
+and schedule_type=1
+order by creation_date desc
+
+
+select * from apps.MRP_SCHEDULE_DESIGNATORS
+
+select * from apps.MRP_SCHEDULE_DESIGNATORS where organization_id=130 and creation_date>to_date('2006-8-1','yyyy-mm-dd')
+order by creation_date desc
+and SCHEDULE_DESIGNATOR ='W639DMPS'
+
+
+'DAKRHMPS','DADPYMPS'
+
+
+-------------MPS Detail
+MRP_SCHEDULE_DATES stores :
+the master demand (SUPPLY_DEMAND_TYPE=¡±Demand¡±) 
+and master production schedules (SUPPLY_DEMAND_TYPE =¡±Supply¡±).
+
+--Master production schedule entries with a SUPPLY_DEMAND_TYPE of ¡±Demand¡± are for internal purposes only,
+--and are never visible to the user.
+
+--The difference between ORIGINAL_SCHEDULE_QUANTITY and SCHEDULE_QUANTITY will always be the sum of the --consumptions that have occurred for a given entry.
+
+SCHEDULE_LEVEL 
+1 Original
+2 Current
+3 Last submitted to MPS/MRP
+
+SCHEDULE_ORIGINATION_TYPE MRP_SCHEDULE_ORIG MFG_LOOKUPS
+1 Manual
+2 Forecast
+3 Sales order
+4 Copied schedule
+6 MPS plan
+7 Outside load
+8 Exploded
+11 Interorganization planned order
+
+SUPPLY_DEMAND_TYPE  
+1 Demand
+2 Supply
+
+
+select * from apps.MRP_SCHEDULE_DATES_V
+
+select SCHEDULE_DESIGNATOR,SCHEDULE_DATE ,SCHEDULE_QUANTITY,ORIGINAL_QUANTITY,SUPPLY_DEMAND_TYPE,
+RELIEF_FLAG,SCHEDULE_LEVEL,
+LINE_CODE,ORGANIZATION_ID,SOURCE_ORGANIZATION_CODE,SOURCE_CODE,FORECAST_ID 
+from apps.MRP_SCHEDULE_DATES_V where SCHEDULE_DESIGNATOR ='W639DMPS'
+
+select decode(SCHEDULE_ORIGINATION_TYPE,1,'Manual',2,'Forecast',3,'Sales order',4,'Copied schedule',6,'MPS plan',7,'Outside load',8,'Exploded') SCHEDULE_ORIGINATION_TYPE,
+decode(SCHEDULE_LEVEL,1,'Original',2,'Current',3,'Last submitted to MPS/MRP') SCHEDULE_LEVEL,
+decode(SUPPLY_DEMAND_TYPE,1,'Demand',2,'Supply') SUPPLY_DEMAND_TYPE,count(*)
+From apps.mrp_schedule_dates where CREATION_DATE>to_date('2008-1-1','yyyy-mm-dd')
+group by SCHEDULE_ORIGINATION_TYPE,SCHEDULE_LEVEL,SUPPLY_DEMAND_TYPE
+
+---with item num,item type
+select SCHEDULE_DESIGNATOR,b.segment1 Item,b.ITEM_TYPE,
+SCHEDULE_DATE ,SCHEDULE_QUANTITY,ORIGINAL_QUANTITY,
+decode(SUPPLY_DEMAND_TYPE,1,'Demand',2,'Supply','else') SUPPLY_DEMAND_TYPE,
+decode(SCHEDULE_ORIGINATION_TYPE,1,'Manual',2,'Forecast',3,'Sales order',4,'Copied schedule',6,'MPS plan',7,'Outside load',8,'Exploded') SCHEDULE_ORIGINATION_TYPE,
+decode(SCHEDULE_LEVEL,1,'Original',2,'Current',3,'Last submitted to MPS/MRP') SCHEDULE_LEVEL,
+a.ORGANIZATION_ID,SOURCE_ORGANIZATION_CODE,SOURCE_CODE,RELIEF_FLAG,LINE_CODE,FORECAST_ID 
+from apps.MRP_SCHEDULE_DATES_V a,apps.mtl_system_items_b  b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.CREATION_DATE>to_date('2008-1-1','yyyy-mm-dd')
+
+
+-------------Find DPY level MPS Demand of one components(KRH,1/KRH)  in a Plan
+
+select SCHEDULE_DESIGNATOR,b.segment1 Item,SCHEDULE_DATE ,SCHEDULE_QUANTITY,ORIGINAL_QUANTITY,
+decode(SUPPLY_DEMAND_TYPE,1,'Demand',2,'Supply','else')
+RELIEF_FLAG,SCHEDULE_LEVEL,
+LINE_CODE,a.ORGANIZATION_ID,SOURCE_ORGANIZATION_CODE,SOURCE_CODE,FORECAST_ID 
+from apps.MRP_SCHEDULE_DATES_V a,apps.mtl_system_items_b  b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and SCHEDULE_DESIGNATOR ='W639DMPS'
+and b.INVENTORY_ITEM_ID in 
+(select bom.assembly_item_id
+           FROM    apps.bom_inventory_components bic ,
+            apps.bom_bill_of_materials bom,
+           apps.mtl_system_items msi,
+     apps.mtl_system_items msi2
+          where --bic.disable_date  IS  NULL and 
+		  bic.COMPONENT_ITEM_ID=msi.INVENTORY_ITEM_ID
+    and msi.organization_id = msi2.organization_id
+    and bic.bill_sequence_id=bom.BILL_SEQUENCE_ID
+    and bom.assembly_item_id = msi2.INVENTORY_ITEM_ID
+    and msi2.organization_id = bom.ORGANIZATION_ID 
+	and bom.ORGANIZATION_ID =130
+--and msi2.segment1 ='DPY 101 3010/72'	
+and ((bic.DISABLE_DATE>sysdate or bic.DISABLE_DATE is null) and (bic.effectivity_date is null or bic.effectivity_date<sysdate))
+and msi.SEGMENT1='1LD/AAB1022014BV')
+
+
+
+
+
+
+

@@ -1,0 +1,279 @@
+
+
+apps.WIP_TRANSACTION_ACCOUNTS.ACCOUNTING_LINE_TYPE 
+1 Inv valuation
+2 Account
+3 Overhead absorption
+4 Resource absorption
+5 Receiving Inspection
+6 Purchase price variance or rate variance
+7 WIP valuation
+8 WIP variance
+9 Inter每org payables
+10 Inter每org receivables
+11 Inter每org transfer credit
+12 Inter每org freight charge
+13 Average cost variance
+14 Intransit Inventory
+15 Encumbrance Reversal
+99 Unknown
+
+apps.WIP_TRANSACTION_ACCOUNTS Transaction_Type
+Cost update
+Job close variance
+Resource transaction
+
+
+----------Mtl Trans Type, Source Type
+
+select distinct mtt.transaction_type_name,mst.transaction_source_type_name
+from   apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_txn_source_types      mst
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+
+
+
+----------Mtl Trans for Job Orders (with Item)
+select  wip_entity_name Job_Order,msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.wip_entities 		 Wet  -- ( or use apps.WIP_DISCRETE_JOBS_V)
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and mst.transaction_source_type_name='Job or Schedule'
+and wip_entity_name='060506-D-6714R1A-SA2'
+
+
+select  wip_entity_name Job_Order,msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.wip_entities 		 Wet  -- ( or use apps.WIP_DISCRETE_JOBS_V)
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = 83 and msi.organization_id = 83 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and    trunc(mmt.transaction_date) >= to_date('20041201','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041231','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+
+
+
+---------WIP Trans Types
+select distinct c.TRANSACTION_TYPE,e.MEANING
+FROM apps.WIP_TRANSACTIONs c,apps.MFG_LOOKUPS e
+where e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+
+
+---------WIP Trans Accounts by Date range
+
+select e.MEANING Trans_Type,d.WIP_ENTITY_NAME Job_Order,(a.base_transaction_value) value,(a.primary_quantity) Qty
+,decode(a.accounting_line_type,1,'Inv valuation',2,'Account',4,'Resource absorption',7,'WIP valuation',8,'WIP variance',a.accounting_line_type) accounting_line_type,
+b.segment3 Acc,b.segment2 CC,b.segment4 PRD, b.segment5 PRJ,a.transaction_date,a.Transaction_id,
+a.transaction_id,c.source_code,c.usage_rate_or_amount,c.actual_resource_rate,c.standard_resource_rate,c.reference
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_ENTITIES d,
+apps.MFG_LOOKUPS e
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+--and b.segment3='41010201'
+and a.transaction_date>=to_date('20051001 00:00:00','YYYYMMDD HH24:MI:SS')
+and a.transaction_date<=to_date('20051001 14:21:00','YYYYMMDD HH24:MI:SS')
+and e.MEANING='Cost update'
+
+
+--------PRJ WIP Trans Accounts
+select e.MEANING Trans_Type,d.WIP_ENTITY_NAME Job_Order,(a.base_transaction_value) value,(a.primary_quantity) Qty
+,decode(a.accounting_line_type,1,'Inv valuation',2,'Account',4,'Resource absorption',7,'WIP valuation',8,'WIP variance',a.accounting_line_type) accounting_line_type,
+b.segment3 Acc,b.segment2 CC,b.segment4 PRD, b.segment5 PRJ,a.transaction_date,a.ORGANIZATION_ID,--msi.segment1 Item,
+a.transaction_id,c.source_code,c.usage_rate_or_amount,c.actual_resource_rate,c.standard_resource_rate,c.reference
+--select count(*) 
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_ENTITIES d,
+apps.MFG_LOOKUPS e--,apps.mtl_system_items_b        msi
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and a.ORGANIZATION_ID=86
+and c.ORGANIZATION_ID=86
+--and msi.ORGANIZATION_ID=86
+--and msi.inventory_item_id = c.inventory_item_id 
+--and b.segment3='41010201'
+and a.transaction_date>=to_date('2005-1-1','yyyy-mm-dd')
+and a.transaction_date<=to_date('2005-5-31','yyyy-mm-dd')
+--and a.transaction_date>=to_date('20051001 00:00:00','YYYYMMDD HH24:MI:SS')
+--and a.transaction_date<=to_date('20051001 14:21:00','YYYYMMDD HH24:MI:SS')
+--and e.MEANING='Cost update'
+order by a.transaction_date, d.WIP_ENTITY_NAME
+
+--------WIP Job Order Trans. & Accounts
+select d.WIP_ENTITY_NAME Job_Order,sum(a.base_transaction_value) value,sum(a.primary_quantity) Qty
+,decode(a.accounting_line_type,1,'Inv valuation',2,'Account',4,'Resource absorption',7,'WIP valuation',8,'WIP variance',a.accounting_line_type) accounting_line_type,
+b.segment3 Acc,b.segment2 CC,b.segment4 PRD, b.segment5 PRJ
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_ENTITIES d,
+apps.MFG_LOOKUPS e
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+--and b.segment3='41010201'
+and a.transaction_date<=to_date('2004-12-28','yyyy-mm-dd')
+and a.transaction_date>=to_date('2004-12-28','yyyy-mm-dd')
+--order by d.WIP_ENTITY_NAME
+group by d.WIP_ENTITY_NAME,a.accounting_line_type,b.segment3 ,b.segment2 ,b.segment4 , b.segment5 
+
+
+--------WIP Trans. Accounts for one GL Batch
+select e.MEANING Trans_Type,d.WIP_ENTITY_NAME Job_Order,(a.base_transaction_value) value,(a.primary_quantity) Qty
+,decode(a.accounting_line_type,1,'Inv valuation',2,'Account',4,'Resource absorption',7,'WIP valuation',8,'WIP variance',a.accounting_line_type) accounting_line_type,
+b.segment3 Acc,b.segment2 CC,b.segment4 PRD, b.segment5 PRJ,a.transaction_date,a.transaction_id,c.source_code,
+c.usage_rate_or_amount,c.actual_resource_rate,c.standard_resource_rate,c.reference,a.GL_BATCH_ID
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_ENTITIES d,
+apps.MFG_LOOKUPS e
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and a.transaction_date>=to_date('2005-1-2','yyyy-mm-dd')
+--and a.transaction_date>=to_date('2004-12-28','yyyy-mm-dd')
+and a.GL_BATCH_ID=6077
+
+
+----------Material Transactions for an Job Order 
+
+select   mmt.transaction_date,-- mmt.CREATED_BY,usr.user_name,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+	 	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 	 mmt.TRANSACTION_QUANTITY as Qty,mta.primary_quantity Booked_Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 a.wip_entity_name job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION,
+		 MGD.SEGMENT1 Alias_SOURCE,
+		 MMT.TRANSACTION_REFERENCE Trans_Reference,
+		 a.material_account Job_Class_Mtl_Account_CCID,
+		 gcc2.segment3 Job_Class_Mtl_Account,
+		 a.class_code Job_Class,
+		 a.status_type_Disp Job_Status
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, apps.gl_code_combinations      gcc2,
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.WIP_DISCRETE_JOBS_V a         --apps.wip_entities a
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    a.wip_entity_id=mmt.transaction_source_id
+and    a.material_account= gcc2.code_combination_id
+and    mst.transaction_source_type_name like 'Job%'
+and a.wip_entity_name='050301-D-112R2A'
+
+
+----------Material Transactions for an WIP Order Type
+select   mmt.transaction_date,-- mmt.CREATED_BY,usr.user_name,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 mmt.TRANSACTION_QUANTITY as Qty,mta.primary_quantity Booked_Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 a.wip_entity_name job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION,
+		 MGD.SEGMENT1 Alias_SOURCE,
+		 MMT.TRANSACTION_REFERENCE Trans_Reference,
+		 a.material_account Job_Class_Mtl_Account_CCID,
+		 gcc2.segment3 Job_Class_Mtl_Account,
+		 a.class_code Job_Class,
+		 a.status_type_Disp Job_Status
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, apps.gl_code_combinations      gcc2,
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.WIP_DISCRETE_JOBS_V a         --apps.wip_entities a
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    a.wip_entity_id=mmt.transaction_source_id
+and    a.material_account= gcc2.code_combination_id
+and    mst.transaction_source_type_name like 'Job%'
+--and    trunc(mmt.transaction_date) >= to_date('20050401','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050403','YYYYMMDD')
+and    a.class_code='Var_Assemb'

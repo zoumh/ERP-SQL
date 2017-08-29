@@ -1,0 +1,15 @@
+
+
+------Sequence Define
+
+
+select * from apps.FND_DOCUMENT_SEQUENCES
+
+
+
+-------Sequence Assign
+
+select * from apps.FND_DOC_SEQUENCE_ASSIGNMENTS 
+
+select name,DOC_SEQUENCE_ID,INITIAL_VALUE,TABLE_NAME,CREATION_DATE from apps.FND_DOCUMENT_SEQUENCES
+

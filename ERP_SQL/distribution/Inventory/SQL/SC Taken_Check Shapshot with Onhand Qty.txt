@@ -1,0 +1,82 @@
+
+------------After SnapShot, check Snapshoot Qty with Onhand Qty by LPN/Item
+
+select a.SYSTEM_QUANTITY,b.Onhand_Qty
+,c.LICENSE_PLATE_NUMBER LPN,d.segment1 Item,a.REVISION
+,e.SEGMENT1 Category1,e.SEGMENT2 Category2
+,a.INVENTORY_ITEM_ID,b.lpn_id
+from apps.mtl_physical_adjustments a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,REVISION,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a
+where ORGANIZATION_ID=83 
+group by lpn_id,INVENTORY_ITEM_ID,REVISION) b,
+apps.wms_license_plate_numbers c,
+apps.mtl_system_items d,
+apps.mtl_item_categories_v e
+where a.physical_inventory_id =:d
+and a.ORGANIZATION_ID=83 
+and a.INVENTORY_ITEM_ID=b.Item_ID
+and a.PARENT_LPN_ID=b.lpn_id
+and a.INVENTORY_ITEM_ID=d.inventory_item_id
+and b.lpn_id=c.lpn_id
+and d.ORGANIZATION_ID=83 
+and c.ORGANIZATION_ID=83
+and e.ORGANIZATION_ID=83
+and e.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.REVISION=b.REVISION
+and a.SYSTEM_QUANTITY<>b.Onhand_Qty
+
+
+
+select a.SYSTEM_QUANTITY,b.Onhand_Qty
+,a.INVENTORY_ITEM_ID,b.lpn_id,a.REVISION
+from apps.mtl_physical_adjustments a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,REVISION,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a
+where ORGANIZATION_ID=83 
+group by lpn_id,INVENTORY_ITEM_ID,REVISION) b
+where a.physical_inventory_id =:d
+and a.ORGANIZATION_ID=83 
+and a.INVENTORY_ITEM_ID=b.Item_ID
+and a.PARENT_LPN_ID=b.lpn_id
+and a.REVISION=b.REVISION
+and a.SYSTEM_QUANTITY<>b.Onhand_Qty
+
+
+
+
+----------TO Check LPN's Qty with Inventory Onhand Qty
+
+
+
+select  a.LPN_Qty,b.Onhand_Qty,c.LICENSE_PLATE_NUMBER LPN,
+d.segment1 Item,e.SEGMENT1 Category1,e.SEGMENT2 Category2,
+a.LPN_ID,a.Item_ID
+from
+(select PARENT_LPN_ID LPN_ID,INVENTORY_ITEM_ID Item_ID,
+sum(QUANTITY) LPN_Qty
+from apps.wms_lpn_contents b
+where ORGANIZATION_ID=83 
+group by PARENT_LPN_ID,INVENTORY_ITEM_ID) a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a
+where ORGANIZATION_ID=83 
+group by lpn_id,INVENTORY_ITEM_ID) b,
+apps.wms_license_plate_numbers c,
+apps.mtl_system_items d,
+apps.mtl_item_categories_v e
+where a.LPN_ID=b.LPN_ID 
+and a.Item_ID=b.Item_ID
+and a.Item_ID=d.inventory_item_id
+and a.lpn_id=c.lpn_id
+and d.ORGANIZATION_ID=83 
+and c.ORGANIZATION_ID=83
+and e.ORGANIZATION_ID=83
+and e.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.LPN_Qty<>b.Onhand_Qty
+
+
+

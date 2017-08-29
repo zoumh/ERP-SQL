@@ -1,0 +1,73 @@
+
+------------2007 a Customer's Inv Rec amt,Commercial_Inv,PO,GL Date
+select  b.TRX_NUMBER,
+b.ATTRIBUTE1 Commercial_Inv,
+b.PURCHASE_ORDER,c.GL_DATE,
+c.amount Original_Amt, c.ACCTD_AMOUNT CNY_Amt,b.INVOICE_CURRENCY_CODE Curr,--c.ACCOUNT_CLASS , 
+f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,b.ORG_ID
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all c
+,apps.AR_customers_v f
+where b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and c.GL_DATE >=to_date('2007-01-1','yyyy-mm-dd')
+and c.GL_DATE < to_date('2008-01-1','yyyy-mm-dd')
+and complete_flag='Y'
+and f.CUSTOMER_NUMBER=1002
+--and b.TRX_NUMBER='109348'
+and c.ACCOUNT_CLASS='REC'
+and c.LATEST_REC_FLAG ='Y'
+
+
+------2005 AR invoice info with customer
+
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Acc,e.ACCOUNT_CLASS,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,h.CUSTOMER_NAME,h.CUSTOMER_NUMBER, 
+e.GL_POSTED_DATE,
+f.STATUS as Post
+,b.TRX_DATE as Inv_Date  
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_POSTING_CONTROL f
+,apps.GL_CODE_combinations g
+,apps.AR_customers_v h
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.POSTING_CONTROL_ID=f.POSTING_CONTROL_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and b.BILL_TO_CUSTOMER_ID=h.CUSTOMER_ID
+and e.ACCOUNT_CLASS in ('REV','REC')
+and e.GL_DATE>=to_date('2005-01-01','yyyy-mm-dd') and e.GL_DATE<=to_date('2005-12-31','yyyy-mm-dd')  
+and b.CUSTOMER_TRX_ID in
+(select b.CUSTOMER_TRX_ID from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_POSTING_CONTROL f
+,apps.GL_CODE_combinations g
+where b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.POSTING_CONTROL_ID=f.POSTING_CONTROL_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and e.ACCOUNT_CLASS in ('REC')
+and g.segment3 in ('11310101','11310103','11330101','11330103')
+and e.GL_DATE>=to_date('2005-01-01','yyyy-mm-dd') and e.GL_DATE<=to_date('2005-12-31','yyyy-mm-dd')  
+)
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER--,d.LINE_NUMBER
+
+
+
+------------Sum Rev acc by Customer
+select sum(c.amount) Amt,sum(c.ACCTD_AMOUNT) CNY_Amt,c.ACCOUNT_CLASS , a.segment3 Acc,
+f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,
+b.invoice_currency_code Currency--,to_char(c.GL_DATE,'yyyy-mm') Period
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all c
+,apps.AR_customers_v f,apps.gl_code_combinations a
+where b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and c.ACCOUNT_CLASS='REV'
+and a.code_combination_id=c.code_combination_id
+and c.GL_DATE >=to_date('2006-01-02','yyyy-mm-dd')
+and c.GL_DATE <=to_date('2006-09-30','yyyy-mm-dd')
+and complete_flag='Y'
+group by c.ACCOUNT_CLASS,f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,b.invoice_currency_code,a.segment3

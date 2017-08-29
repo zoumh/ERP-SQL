@@ -1,0 +1,50 @@
+
+
+
+
+------------Monthly sales (Revenue) Qty/Amount by Item , PRD,PRJ,Account
+
+select --e.ACCOUNT_CLASS,line_type,e.CUSTOMER_TRX_ID,
+b.TRX_NUMBER Invoice_No, c.SEGMENT1 as Item,c.DESCRIPTION,a.QUANTITY_INVOICED Qty,a.UNIT_STANDARD_PRICE Price,a.EXTENDED_AMOUNT amount
+,b.INVOICE_CURRENCY_CODE as Currency,decode(b.INVOICE_CURRENCY_CODE,'CNY',1,EXCHANGE_RATE) as Exchange_Rate
+,a.EXTENDED_AMOUNT*decode(b.INVOICE_CURRENCY_CODE,'CNY',1,EXCHANGE_RATE) as CNY_Amount
+,INTERFACE_LINE_ATTRIBUTE2 Type,d.SEGMENT4 as COGS_PRD,d.SEGMENT5 as COGS_PRJ,d.SEGMENT3 Acc,d.SEGMENT2 CC
+from apps.ra_customer_trx_lines_all a,apps.mtl_system_items c ,apps.GL_CODE_combinations d 
+,apps.ra_customer_trx_all b,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+where 
+a.inventory_item_id=c.inventory_item_id(+)
+and a.CUSTOMER_TRX_ID=b.CUSTOMER_TRX_ID
+and c.ORGANIZATION_ID=83
+--and line_type='LINE'
+and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and a.CUSTOMER_TRX_ID =e.CUSTOMER_TRX_ID
+and e.CUSTOMER_TRX_LINE_ID=a.CUSTOMER_TRX_LINE_ID
+and e.ACCOUNT_CLASS='REV'
+and e.GL_DATE>=to_date('2005-2-1','yyyy-mm-dd') and e.GL_DATE<=to_date('2005-02-28','yyyy-mm-dd')
+order by e.CUSTOMER_TRX_ID
+
+
+
+
+-------------------------------------------
+
+Monthly Sales by Product/Project (use Item's Cost Account ???)  -->Use Developer
+
+select c.SEGMENT1 as Item,c.DESCRIPTION,a.QUANTITY_INVOICED Qty,a.UNIT_STANDARD_PRICE Price,a.EXTENDED_AMOUNT amount
+,b.INVOICE_CURRENCY_CODE as Currency,decode(b.INVOICE_CURRENCY_CODE,'CNY',1,EXCHANGE_RATE) as Exchange_Rate
+,a.EXTENDED_AMOUNT*decode(b.INVOICE_CURRENCY_CODE,'CNY',1,EXCHANGE_RATE) as CNY_Amount
+,INTERFACE_LINE_ATTRIBUTE2 Type,d.SEGMENT4 as COGS_PRD,d.SEGMENT5 as COGS_PRJ
+from apps.ra_customer_trx_lines_all a,apps.mtl_system_items c ,apps.GL_CODE_combinations d 
+,apps.ra_customer_trx_all b
+where 
+a.inventory_item_id=c.inventory_item_id(+)
+and a.CUSTOMER_TRX_ID=b.CUSTOMER_TRX_ID
+and c.ORGANIZATION_ID=83
+and line_type='LINE'
+and c.COST_OF_SALES_ACCOUNT=d.CODE_COMBINATION_ID
+and a.CUSTOMER_TRX_ID in 
+(select CUSTOMER_TRX_ID 
+from apps.RA_CUST_TRX_LINE_GL_DIST_all ee
+where  
+ee.GL_DATE>=to_date('2004-04-1','yyyy-mm-dd') and ee.GL_DATE<=to_date('2004-04-30','yyyy-mm-dd')  and 
+ee.ACCOUNT_CLASS='REC')

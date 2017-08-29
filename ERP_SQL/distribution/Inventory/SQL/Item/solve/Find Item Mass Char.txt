@@ -1,0 +1,8 @@
+
+
+胡敬伟发现的，分享一下。:-)
+ 
+select asciistr(msi.segment1),msi.segment1--,msi.* 
+  from mtl_system_items_b msi 
+ where asciistr(segment1) like '%\%%'
+

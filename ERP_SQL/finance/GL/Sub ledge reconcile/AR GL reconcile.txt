@@ -1,0 +1,83 @@
+
+------GL side Sum by Account
+select b.JE_CATEGORY,b.JE_SOURCE,a.segment3 as Account,
+sum(nvl(b.LINE_ACCOUNTED_DR,0)-nvl(b.LINE_ACCOUNTED_CR,0)) Accounted_Amt, 
+sum(nvl(b.LINE_ENTERED_DR,0)-nvl(b.LINE_ENTERED_CR,0)) Amt
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME='FEB-09')
+and je_source = 'Receivables'
+--and a.segment3= '55031004'
+group by b.JE_CATEGORY,b.JE_SOURCE,a.segment3
+
+
+-----------AR applied Exchange G/L in the period linked with GL
+select
+cash.RECEIPT_NUMBER,
+cash.EXCHANGE_RATE Receipt_Rate,
+ar.AMOUNT_APPLIED,
+ra.EXCHANGE_RATE Invoice_Rate,
+(decode(cash.EXCHANGE_RATE,null,1,cash.EXCHANGE_RATE)*ar.AMOUNT_APPLIED) Receipt_amt,
+(decode(ra.EXCHANGE_RATE,null,1,ra.EXCHANGE_RATE)*ar.AMOUNT_APPLIED) Inv_amt,
+(decode(cash.EXCHANGE_RATE,null,1,cash.EXCHANGE_RATE)-decode(ra.EXCHANGE_RATE,null,1,ra.EXCHANGE_RATE))*ar.AMOUNT_APPLIED Diff,
+ra.TRX_NUMBER AR_Invoice,
+ar.ACCTD_AMOUNT_APPLIED_TO,
+cash.CURRENCY_CODE Receipt_Curr,ra.INVOICE_CURRENCY_CODE Inv_Curr,
+cash.EXCHANGE_DATE Receipt_Rate_date,
+cash.EXCHANGE_RATE_TYPE Receipt_Rate_Type,
+ra.EXCHANGE_DATE Invoice_Rate_Date,
+ra.EXCHANGE_rate_type Invoice_Rate_Type,
+h.PERIOD_NAME
+from
+apps.gl_je_headers h,
+apps.gl_je_lines l,
+apps.gl_import_references r,
+apps.AR_PAYMENT_SCHEDULES_ALL PS,
+apps.RA_CUSTOMER_TRX_ALL RA,
+apps.AR_RECEIVABLE_APPLICATIONS_ALL AR,
+apps.AR_CASH_RECEIPTS_ALL  CASH
+where h.je_header_id=l.je_header_id
+and   l.code_combination_id=44346
+and  l.JE_HEADER_ID=r.JE_HEADER_ID
+and  l.JE_LINE_NUM=r.JE_LINE_NUM
+and PS.CUSTOMER_TRX_ID=RA.CUSTOMER_TRX_ID
+AND  r.REFERENCE_4=cash.RECEIPT_NUMBER
+and  r.REFERENCE_5=ra.TRX_NUMBER
+AND  PS.PAYMENT_SCHEDULE_ID=AR.APPLIED_PAYMENT_SCHEDULE_ID
+AND  AR.DISPLAY='Y'
+AND  AR.CASH_RECEIPT_ID=CASH.CASH_RECEIPT_ID
+and  ra.EXCHANGE_RATE<>cash.EXCHANGE_RATE
+and h.period_name='FEB-09'
+
+
+---------GL Detail
+select JE_CATEGORY, b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME as Journal_Name,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,nvl(b.LINE_ACCOUNTED_DR,0)-nvl(b.LINE_ACCOUNTED_CR,0) Accounted_Amt
+LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,b.HEADER_DESCRIPTION,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR,
+nvl(b.LINE_ENTERED_DR,0)-nvl(b.LINE_ENTERED_CR,0) Amt
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME<>'MAY-06')
+--and je_source = 'Receivables'
+and a.segment3= '11310105'
+
+
+
+select sum(LINE_ACCOUNTED_DR) Dr,sum(LINE_ACCOUNTED_CR) Cr,sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME not in ('MAY-06','DEC-05','NOV-05','ADJ-05'))
+and je_source = 'Receivables'
+and a.segment3= '11310105'--'11310295'
+
+
+select distinct je_source,b.PERIOD_NAME
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+--and  (b.PERIOD_NAME<>'MAY-06')
+--and je_source = 'Receivables'
+and a.segment3= '11310105'
+
+
+

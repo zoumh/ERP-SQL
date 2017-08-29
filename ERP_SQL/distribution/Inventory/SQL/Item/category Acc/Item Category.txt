@@ -1,0 +1,58 @@
+
+
+-------------Inventory Category Code Combination (so non-BOM category included here)
+select segment1,segment2,segment3,segment4 from apps.MTL_CATEGORIES_V
+where CREATION_DATE>to_date('2007-11-1','yyyy-mm-dd')
+--and structure_id=101  --for Item Categories 
+
+
+------------Item category assign to an Item
+select segment1,segment2,segment3,segment4 from apps.mtl_item_categories_v where --segment2='OTR'
+ CREATION_DATE>to_date('2007-11-1','yyyy-mm-dd')
+
+
+
+---------------Item's Attribute & Category (after assign category to Item)
+
+SELECT a.segment1 Item,a.description, a.Item_Type,--a.INVENTORY_ITEM_ID,
+b.segment1 Category1,b.segment2 Category2,
+a.purchasing_item_Flag,a.purchasing_Enabled_Flag,
+a.cumulative_total_lead_time,a.full_lead_time,
+a.WIP_supply_type,a.inventory_item_status_code status,
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,a.mrp_planning_code
+from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID= b.ORGANIZATION_ID 
+--and b.segment1=''
+and  a.segment1='KRE 101 1360'
+and b.category_set_id=1
+and STRUCTURE_ID=101
+
+
+planning_make_buy_code: 1--Make, 2--Buy
+
+
+----------Is Item a RM or FG ?
+
+SELECT a.segment1 Item,a.description, decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,a.Item_Type
+from 
+apps.mtl_system_items a
+where a.ORGANIZATION_ID=83 
+--and  a.segment1='1/KRH 101 192R2A'
+
+
+----------Which Item's category/Cate_Set  has multi value?
+
+select c.segment1 Item,count(a.category_set_id) num--c.description Item_Desc,c.item_type,c.planning_make_buy_code Make_Buy,
+--a.category_set_id,b.category_set_name,b.description Cate_Set_Desc,b.control_level,b.structure_name,b.CONTROL_LEVEL_DISP,b.MULT_ITEM_CAT_ASSIGN_FLAG 
+from apps.mtl_item_categories_v a,apps.MTL_CATEGORY_SETS_V b,apps.mtl_system_items c
+where a.category_set_id=b.category_set_id
+and a.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+--and a.INVENTORY_ITEM_ID=5949 
+and a.ORGANIZATION_ID=83
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+having count(a.category_set_id)>2
+group by c.segment1
+
+

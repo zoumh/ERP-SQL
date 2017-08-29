@@ -1,0 +1,165 @@
+
+----Responsibilities , menu,Data_Group(must have),Request_group(may not have) with used_user_count
+select c.CREATION_DATE,b.END_DATE,
+c.RESPONSIBILITY_NAME RESPONSIBILITY,a.MENU_NAME menu_name ,
+d.APPLICATION_NAME,h.DATA_GROUP_NAME,g.APPLICATION_NAME Data_Group_Application,
+REQUEST_GROUP_NAME,d.APPLICATION_NAME Request_Group_Application,
+(select count(bb.user_name) UserID_Count
+from apps.FND_USER_RESP_GROUPS aa,apps.FND_USER bb,apps.FND_RESPONSIBILITY_TL ff
+where aa.USER_ID=bb.USER_ID
+and aa.RESPONSIBILITY_ID=ff.RESPONSIBILITY_ID
+and ff.APPLICATION_ID=aa.RESPONSIBILITY_APPLICATION_ID
+and ff.LANGUAGE='US'
+and (aa.end_date is null or aa.end_date >sysdate)
+and (bb.end_date is null or bb.end_date >sysdate)
+and c.RESPONSIBILITY_NAME=ff.RESPONSIBILITY_NAME
+group by ff.RESPONSIBILITY_NAME) UserID_Count
+from apps.FND_MENUS a,apps.FND_RESPONSIBILITY b,apps.FND_RESPONSIBILITY_TL c,apps.FND_APPLICATION_VL d,
+--apps.FND_DATA_GROUP_UNITS_V e ,
+apps.FND_REQUEST_GROUPS f,apps.FND_APPLICATION_VL g,
+apps.FND_DATA_GROUPS h
+where a.MENU_ID=b.MENU_ID
+and b.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+--and c.RESPONSIBILITY_NAME='BMC Receiving User'
+and c.LANGUAGE='US'
+and c.APPLICATION_ID=d.APPLICATION_ID
+and b.DATA_GROUP_APPLICATION_ID=g.APPLICATION_ID
+--and b.DATA_GROUP_ID=e.DATA_GROUP_ID
+--and b.GROUP_APPLICATION_ID=e.APPLICATION_ID
+and b.REQUEST_GROUP_ID =f.REQUEST_GROUP_ID (+)
+--and f.APPLICATION_ID(+)=g.APPLICATION_ID
+and b.DATA_GROUP_ID=h.DATA_GROUP_ID
+--AND a.MENU_NAME ='BMC WMS'--BMC_REC'
+--and c.RESPONSIBILITY_NAME='BMC WMS FG Mobile User'
+--and c.APPLICATION_ID<>b.DATA_GROUP_APPLICATION_ID
+order by c.RESPONSIBILITY_NAME
+
+----Responsibilities , menu,Data_Group(must have),Request_group(may not have)
+select c.CREATION_DATE,b.END_DATE,c.RESPONSIBILITY_NAME RESPONSIBILITY,a.MENU_NAME menu_name ,
+d.APPLICATION_NAME,h.DATA_GROUP_NAME,--e.APPLICATION_NAME Data_Group_Application,
+REQUEST_GROUP_NAME,d.APPLICATION_NAME Request_Group_Application
+from apps.FND_MENUS a,apps.FND_RESPONSIBILITY b,apps.FND_RESPONSIBILITY_TL c,apps.FND_APPLICATION_VL d,
+--apps.FND_DATA_GROUP_UNITS_V e ,
+apps.FND_REQUEST_GROUPS f,--apps.FND_APPLICATION_VL g,
+apps.FND_DATA_GROUPS h
+where a.MENU_ID=b.MENU_ID
+and b.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+--and c.RESPONSIBILITY_NAME='BMC Receiving User'
+and c.LANGUAGE='US'
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and b.DATA_GROUP_ID=e.DATA_GROUP_ID
+--and b.GROUP_APPLICATION_ID=e.APPLICATION_ID
+and b.REQUEST_GROUP_ID =f.REQUEST_GROUP_ID (+)
+--and f.APPLICATION_ID(+)=g.APPLICATION_ID
+and b.DATA_GROUP_ID=h.DATA_GROUP_ID
+AND a.MENU_NAME ='BMC WMS'--BMC_REC'
+--and c.RESPONSIBILITY_NAME='BMC WMS FG Mobile User'
+
+
+-----------Menu with submenu & function (level 1)
+SELECT A.MENU_NAME,B.ENTRY_SEQUENCE Seq,B.PROMPT,a1.MENU_NAME SubMenu_1,c1.FUNCTION_NAME Function_1,B.DESCRIPTION,
+A.USER_MENU_NAME,A.TYPE,A.CREATION_DATE,A.CREATED_BY --,B.SUB_MENU_ID,B.FUNCTION_ID
+FROM APPS.FND_MENUS_VL A,APPS.FND_MENU_ENTRIES_VL B ,APPS.FND_MENUS_VL a1,apps.FND_FORM_FUNCTIONS c1
+WHERE A.MENU_ID=B.MENU_ID
+AND B.SUB_MENU_ID= a1.MENU_ID(+)
+and b.function_id=c1.FUNCTION_ID(+)
+AND A.MENU_NAME='BMC_REC'
+order by B.ENTRY_SEQUENCE,a1.MENU_NAME 
+
+------------Meun with submenu & function (include 2 level)
+SELECT b2.MENU_ID,b2.SUB_MENU_ID,b2.FUNCTION_ID,
+a.MENU_NAME,b.ENTRY_SEQUENCE Seq1,b.PROMPT Prompt1,a1.MENU_NAME SubMenu_1,c1.USER_FUNCTION_NAME Function_1,b.DESCRIPTION Description1,
+b1.ENTRY_SEQUENCE Seq_2,b1.PROMPT Prompt2,a2.MENU_NAME SubMenu_2,c2.USER_FUNCTION_NAME Function_2,b1.DESCRIPTION Description2,
+a.USER_MENU_NAME,a.TYPE,a.CREATION_DATE,a.CREATED_BY --,B.SUB_MENU_ID,B.FUNCTION_ID
+FROM APPS.FND_MENUS_VL a,APPS.FND_MENU_ENTRIES_VL b ,
+APPS.FND_MENUS_VL a1,APPS.FND_MENU_ENTRIES_VL b1,apps.FND_FORM_FUNCTIONS_VL c1,--apps.FND_FORM_FUNCTIONS c1,apps.FND_FORM_FUNCTIONS_VL d1,
+APPS.FND_MENUS_VL a2,APPS.FND_MENU_ENTRIES_VL B2,apps.FND_FORM_FUNCTIONS_VL c2
+WHERE a.MENU_ID=b.MENU_ID
+AND b.SUB_MENU_ID= a1.MENU_ID(+)
+and b.function_id=c1.FUNCTION_ID(+)
+and a1.MENU_ID=b1.MENU_ID
+AND b1.SUB_MENU_ID= a2.MENU_ID(+)
+and a2.MENU_ID=b2.MENU_ID(+)
+and b1.function_id=c2.FUNCTION_ID(+)
+AND a.MENU_NAME='BMC WMS'  --Head level
+--and a1.MENU_NAME='INV_AVAILABILITY_OM' ---level 1 manu name
+--and b1.ENTRY_SEQUENCE='2'
+--and a2.MENU_NAME='WMS_INBOUND_LOGISTICS' ---level2 menu name
+--and a1.MENU_NAME in ('PO_RECEIVER_GUI','PO_RECEIVING_GUI','INV_RECEIVING','BMC IS IT PURCHASING REQUESTOR','WMS_INBOUND_LOGISTICS') ---level 1 menu name
+order by B.ENTRY_SEQUENCE,a1.MENU_NAME,B1.ENTRY_SEQUENCE
+
+
+----Find all Responsibilities using a menu in level 1
+select c.RESPONSIBILITY_NAME RESPONSIBILITY,a.MENU_NAME menu_name 
+from apps.FND_MENUS_vl a,apps.FND_RESPONSIBILITY b,apps.FND_RESPONSIBILITY_TL c 
+where a.MENU_ID=b.MENU_ID
+and b.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and a.user_MENU_NAME='Purchasing Buyer GUI'
+and c.LANGUAGE='US'
+
+
+----Find all Responsibilities using a menu in level 2 ??User_menu??
+select c.RESPONSIBILITY_NAME RESPONSIBILITY,a.MENU_NAME menu_name 
+from apps.FND_MENUS a,apps.FND_RESPONSIBILITY b,apps.FND_RESPONSIBILITY_TL c 
+where a.MENU_ID=b.MENU_ID
+and b.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+--and  a.MENU_NAME in ('INV_MOVE_ORDER','WMS_WAREHOUSE_TRANSACTIONS')
+and  a.MENU_NAME in 
+(SELECT a.MENU_NAME
+FROM APPS.FND_MENUS_VL a,APPS.FND_MENU_ENTRIES_VL b ,
+APPS.FND_MENUS_VL a1,APPS.FND_MENU_ENTRIES_VL b1,apps.FND_FORM_FUNCTIONS_VL c1,--apps.FND_FORM_FUNCTIONS c1,apps.FND_FORM_FUNCTIONS_VL d1,
+APPS.FND_MENUS_VL a2,APPS.FND_MENU_ENTRIES_VL B2,apps.FND_FORM_FUNCTIONS_VL c2
+WHERE a.MENU_ID=b.MENU_ID
+AND b.SUB_MENU_ID= a1.MENU_ID(+)
+and b.function_id=c1.FUNCTION_ID(+)
+and a1.MENU_ID=b1.MENU_ID
+AND b1.SUB_MENU_ID= a2.MENU_ID(+)
+and a2.MENU_ID=b2.MENU_ID(+)
+and b1.function_id=c2.FUNCTION_ID(+)
+AND a2.MENU_NAME  in ('INV_MOVE_ORDER','WMS_WAREHOUSE_TRANSACTIONS')
+)
+and c.LANGUAGE='US'
+
+
+
+------Find all level of menus that using a function  
+select a.function_id,a.prompt,c.MENU_NAME,b.USER_FUNCTION_NAME,a.description  
+from apps.FND_MENU_ENTRIES_VL a,apps.FND_FORM_FUNCTIONS_VL b,apps.FND_MENUS c
+where a.function_id=b.FUNCTION_ID and a.MENU_ID=c.MENU_ID 
+--and b.FUNCTION_NAME='Mobile Put Away'
+and b.USER_FUNCTION_NAME='Corrections'
+--and a.prompt='Put away'
+
+
+----- All Menu create by , create after
+select a.menu_name,d.ENTRY_SEQUENCE,f.menu_name Sub_menu,e.FUNCTION_NAME,d.DESCRIPTION,d.PROMPT,
+a.CREATION_DATE,a.LAST_UPDATE_DATE,b.description Created_By,c.description Last_update_by,
+a.menu_id
+from apps.FND_MENUS a,apps.fnd_user b,apps.fnd_user c ,apps.FND_MENU_ENTRIES_VL d,
+apps.FND_FORM_FUNCTIONS e,apps.FND_MENUS f
+where a.CREATED_BY=b.user_id
+and a.LAST_UPDATED_BY=c.user_id
+--and (a.CREATION_DATE>to_date('2007-9-20','yyyy-mm-dd') or
+--a.LAST_UPDATE_DATE>to_date('2007-9-20','yyyy-mm-dd'))
+and a.MENU_ID=d.MENU_ID 
+and d.function_id=e.FUNCTION_ID(+)
+and d.SUB_MENU_ID=f.MENU_ID(+)
+and a.menu_name='BMC BOM ENG_USER'
+
+
+
+
+
+select * from apps.FND_RESPONSIBILITY_VL where menu_id in (77532,72364)
+
+
+apps.FND_MENUS_VL
+(apps.FND_MENUS
+apps.FND_MENUS_TL)
+
+apps.FND_FORM
+
+apps.FND_MENU_ENTRIES_VL
+
+apps.FND_FORM_FUNCTIONS
+

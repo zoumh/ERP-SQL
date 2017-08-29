@@ -1,0 +1,24 @@
+
+
+-------Weekly WIP Complete Qty by Job Class
+
+select msi.organization_id , class_code Job_Class,sum(mmt.TRANSACTION_QUANTITY) as Complete_Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V	 Wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')
+and    trunc(mmt.transaction_date) = to_date('20060514','YYYYMMDD') 
+and    trunc(mmt.transaction_date) = to_date('20060521','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+group by class_code,msi.organization_id 
+
+
+

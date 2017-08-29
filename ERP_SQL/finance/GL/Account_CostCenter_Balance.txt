@@ -1,0 +1,181 @@
+
+
+----------------Budget by CC
+select d.period_name,c.FLEX_VALUE accnt,c.DESCRIPTION,d.cc,d.ptd
+from apps.FND_FLEX_VALUES_VL c,
+(
+select a.PERIOD_NAME,b.segment2 cc,sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account
+from apps.GL_Balances a,apps.GL_CODE_combinations b 
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+  and a.ACTUAL_FLAG='B' 
+  and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+  and a.CURRENCY_CODE='CNY'
+  and a.PERIOD_NAME='APR-05'
+group by a.PERIOD_NAME,b.segment2,b.segment3
+) d,
+apps.FND_FLEX_VALUE_HIERARCHIES e
+where c.FLEX_VALUE_SET_ID=1007641 --BMC_ACC segment
+and ((c.FLEX_VALUE like '5502%' and c.FLEX_VALUE >'550201')  or (c.FLEX_VALUE like '4105%' and c.FLEX_VALUE >'410501'))
+and c.FLEX_VALUE=d.Account(+)
+and c.FLEX_VALUE=e.PARENT_FLEX_VALUE(+)
+and e.FLEX_VALUE_SET_ID(+)=1007641
+and e.FLEX_VALUE_SET_ID IS NULL
+order by d.PERIOD_NAME,c.FLEX_VALUE,d.cc
+
+--------------- Actual By CC
+
+how about the sql:
+
+select d.period_name,c.FLEX_VALUE accnt,c.DESCRIPTION,d.cc,d.ptd
+from apps.FND_FLEX_VALUES_VL c,
+(
+select a.PERIOD_NAME,b.segment2 cc,sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account
+from apps.GL_Balances a,apps.GL_CODE_combinations b 
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+  and a.ACTUAL_FLAG='A' 
+  and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+  and a.CURRENCY_CODE='CNY'
+group by a.PERIOD_NAME,b.segment2,b.segment3
+) d,
+apps.FND_FLEX_VALUE_HIERARCHIES e
+where c.FLEX_VALUE_SET_ID=1007641 --BMC_ACC segment
+and ((c.FLEX_VALUE like '5502%' and c.FLEX_VALUE >'550201')  or (c.FLEX_VALUE like '4105%' and c.FLEX_VALUE >'410501'))
+and c.FLEX_VALUE=d.Account(+)
+and c.FLEX_VALUE=e.PARENT_FLEX_VALUE(+)
+and e.FLEX_VALUE_SET_ID(+)=1007641
+and e.FLEX_VALUE_SET_ID IS NULL
+order by d.PERIOD_NAME,c.FLEX_VALUE,d.cc
+
+
+------Frank's account range
+
+select a.PERIOD_NAME, 
+       b.segment2 cost_center,b.SEGMENT3 as Acnt,b.segment5 Project,
+	   sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD_Amt 
+from apps.GL_Balances a,apps.GL_CODE_combinations b 
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+  and a.ACTUAL_FLAG='A' 
+  and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+  and a.CURRENCY_CODE='CNY' 
+and a.PERIOD_NAME='FEB-06'
+and ((b.SEGMENT3>='54010301' and  b.SEGMENT3<='5401030299')
+or
+(b.SEGMENT3 like '5502%' and  b.SEGMENT3>'550201')
+or
+(b.SEGMENT3 like '4105%' and  b.SEGMENT3>'410501')
+)
+group by a.PERIOD_NAME,b.segment2,b.segment3,b.segment5 
+
+
+
+
+
+
+
+--------Mandary list all Accounts & PTD amount by costcenter
+
+select c.FLEX_VALUE,c.DESCRIPTION,d.ptd Feb_PTD,e.ptd Mar_PTD,f.ptd Apr_PTD,g.ptd May_PTD,h.ptd Jun_PTD,i.ptd Jul_PTD,:CC CC
+from apps.FND_FLEX_VALUES_VL c,
+(select sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account
+ from apps.GL_Balances a,apps.GL_CODE_combinations b where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.ACTUAL_FLAG='A' and a.PERIOD_NAME='FEB-04' and b.DETAIL_POSTING_ALLOWED_FLAG='Y' and a.CURRENCY_CODE='CNY'
+and  b.SEGMENT3 not in (select PARENT_FLEX_VALUE  from apps.FND_FLEX_VALUE_HIERARCHIES where FLEX_VALUE_SET_ID=1007641)
+and b.SEGMENT2=:CC
+group by b.segment3) d,
+(select sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account
+ from apps.GL_Balances a,apps.GL_CODE_combinations b where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.ACTUAL_FLAG='A' and a.PERIOD_NAME='MAR-04' and b.DETAIL_POSTING_ALLOWED_FLAG='Y' and a.CURRENCY_CODE='CNY'
+and  b.SEGMENT3 not in (select PARENT_FLEX_VALUE  from apps.FND_FLEX_VALUE_HIERARCHIES where FLEX_VALUE_SET_ID=1007641)
+and b.SEGMENT2=:CC
+group by b.segment3) e,
+(select sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account
+ from apps.GL_Balances a,apps.GL_CODE_combinations b where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.ACTUAL_FLAG='A' and a.PERIOD_NAME='APR-04' and b.DETAIL_POSTING_ALLOWED_FLAG='Y' and a.CURRENCY_CODE='CNY'
+and  b.SEGMENT3 not in (select PARENT_FLEX_VALUE  from apps.FND_FLEX_VALUE_HIERARCHIES where FLEX_VALUE_SET_ID=1007641)
+and b.SEGMENT2=:CC
+group by b.segment3) f,
+(select sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account
+ from apps.GL_Balances a,apps.GL_CODE_combinations b where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.ACTUAL_FLAG='A' and a.PERIOD_NAME='MAY-04' and b.DETAIL_POSTING_ALLOWED_FLAG='Y' and a.CURRENCY_CODE='CNY'
+and  b.SEGMENT3 not in (select PARENT_FLEX_VALUE  from apps.FND_FLEX_VALUE_HIERARCHIES where FLEX_VALUE_SET_ID=1007641)
+and b.SEGMENT2=:CC
+group by b.segment3) g,
+(select sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account
+ from apps.GL_Balances a,apps.GL_CODE_combinations b where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.ACTUAL_FLAG='A' and a.PERIOD_NAME='JUN-04' and b.DETAIL_POSTING_ALLOWED_FLAG='Y' and a.CURRENCY_CODE='CNY'
+and  b.SEGMENT3 not in (select PARENT_FLEX_VALUE  from apps.FND_FLEX_VALUE_HIERARCHIES where FLEX_VALUE_SET_ID=1007641)
+and b.SEGMENT2=:CC
+group by b.segment3) h,
+(select sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account
+ from apps.GL_Balances a,apps.GL_CODE_combinations b where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.ACTUAL_FLAG='A' and a.PERIOD_NAME='JUL-04' and b.DETAIL_POSTING_ALLOWED_FLAG='Y' and a.CURRENCY_CODE='CNY'
+and  b.SEGMENT3 not in (select PARENT_FLEX_VALUE  from apps.FND_FLEX_VALUE_HIERARCHIES where FLEX_VALUE_SET_ID=1007641)
+and b.SEGMENT2=:CC
+group by b.segment3) i
+where c.FLEX_VALUE_SET_ID=1007641 --BMC_ACC segment
+and ((c.FLEX_VALUE like '5502%' and c.FLEX_VALUE >'550201')  or (c.FLEX_VALUE like '4105%' and c.FLEX_VALUE >'410501'))
+and  c.FLEX_VALUE not in (select PARENT_FLEX_VALUE  from apps.FND_FLEX_VALUE_HIERARCHIES where FLEX_VALUE_SET_ID=1007641)
+and c.FLEX_VALUE=d.Account(+)
+and c.FLEX_VALUE=e.Account(+)
+and c.FLEX_VALUE=f.Account(+)
+and c.FLEX_VALUE=g.Account(+)
+and c.FLEX_VALUE=h.Account(+)
+and c.FLEX_VALUE=i.Account(+)
+order by c.FLEX_VALUE
+
+
+
+select c.FLEX_VALUE,c.DESCRIPTION,d.ptd PTD_Amount,:CC CC
+from apps.FND_FLEX_VALUES_VL c,
+(select sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account,b.SEGMENT2
+ from apps.GL_Balances a,apps.GL_CODE_combinations b where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.ACTUAL_FLAG='A' and a.PERIOD_NAME='AUG-04' and b.DETAIL_POSTING_ALLOWED_FLAG='Y' and a.CURRENCY_CODE='CNY'
+and  b.SEGMENT3 not in (select PARENT_FLEX_VALUE  from apps.FND_FLEX_VALUE_HIERARCHIES where FLEX_VALUE_SET_ID=1007641)
+and b.SEGMENT2=:CC
+group by b.segment3,b.SEGMENT2) d
+where c.FLEX_VALUE_SET_ID=1007641 --BMC_ACC segment
+and ((c.FLEX_VALUE like '5502%' and c.FLEX_VALUE >'550201')  or (c.FLEX_VALUE like '4105%' and c.FLEX_VALUE >'410501'))
+and  c.FLEX_VALUE not in (select PARENT_FLEX_VALUE  from apps.FND_FLEX_VALUE_HIERARCHIES where FLEX_VALUE_SET_ID=1007641)
+and c.FLEX_VALUE=d.Account(+)
+order by c.FLEX_VALUE
+
+
+----WZG
+CREATE OR REPLACE VIEW BMC_P_CC_V
+(COST_CENTER, PERIOD_NAME, ACNT, DESCRIPTION, PTD)
+AS 
+select x.cost_center,x.period_name,x.acnt,x.description,nvl(y.ptd,0) PTD 
+from 
+( 
+select b.flex_value cost_center,a.PERIOD_NAME,c.FLEX_VALUE acnt,c.DESCRIPTION 
+from apps.FND_FLEX_VALUES_VL c, 
+     apps.FND_FLEX_VALUE_HIERARCHIES e, 
+	 GL_PERIODS a, 
+	 apps.FND_FLEX_VALUES b 
+where b.FLEX_VALUE_SET_ID=1007640 
+and c.FLEX_VALUE_SET_ID=1007641 --BMC_ACC segment 
+and ((c.FLEX_VALUE like '5502%' and c.FLEX_VALUE >'550201')  or (c.FLEX_VALUE like '4105%' and c.FLEX_VALUE >'410501')) 
+and c.FLEX_VALUE=e.PARENT_FLEX_VALUE(+) 
+and e.FLEX_VALUE_SET_ID(+)=1007641 
+and e.FLEX_VALUE_SET_ID IS NULL 
+and a.period_type='1' 
+and period_year in (to_char(sysdate,'yyyy'),to_char(to_number(to_char(sysdate,'yyyy'))-1)) 
+and start_date<sysdate 
+) x, 
+( 
+select a.PERIOD_NAME, 
+       b.segment2 cost_center, 
+	   sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD, 
+	   b.SEGMENT3 as Acnt 
+from apps.GL_Balances a,apps.GL_CODE_combinations b 
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+  and a.ACTUAL_FLAG='A' 
+  and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+  and a.CURRENCY_CODE='CNY' 
+group by a.PERIOD_NAME,b.segment2,b.segment3 
+) y 
+where x.cost_center=y.cost_center(+) 
+and x.acnt=y.acnt(+) 
+and x.period_name=y.period_name(+);
+
+

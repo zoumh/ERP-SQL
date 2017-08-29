@@ -1,0 +1,22 @@
+
+
+---------CS Org, Item not used in inventory for 1 year (last inventory transaction date)
+
+
+select   max(mmt.transaction_date) last_use_date, msi.INVENTORY_ITEM_STATUS_CODE Status,
+         msi.segment1 item_code,msi.DESCRIPTION,ITEM_TYPE
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_system_items_b        msi--, 
+where msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id and msi.organization_id= 131 
+--and    trunc(mmt.transaction_date) >= to_date('20071201','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20071210','YYYYMMDD')
+--and msi.segment1='RTK 201 05/BMC' 
+and INVENTORY_ITEM_STATUS_CODE not in ('Inactive','Expense')
+group by msi.INVENTORY_ITEM_STATUS_CODE,msi.segment1,msi.DESCRIPTION,ITEM_TYPE
+order by max(mmt.transaction_date)
+
+
+
+

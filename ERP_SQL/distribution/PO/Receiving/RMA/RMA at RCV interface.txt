@@ -1,0 +1,24 @@
+
+
+
+
+
+select * from apps.rcv_transactions_interface 
+
+select * from apps.OE_ORDER_HEADERS_all where HEADER_ID=817819
+
+select * from apps.OE_ORDER_LINES_all where LINE_ID=1404212
+
+
+
+
+
+
+
+
+test CRP2 8011:
+
+6036699
+
+
+

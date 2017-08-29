@@ -1,0 +1,27 @@
+
+
+-------Clear reservation
+
+Find reservation_id from Reservation Screen
+
+select reservation_id,RESERVATION_QUANTITY,SUBINVENTORY_CODE from mtl_reservations 
+where INVENTORY_ITEM_ID=102914 and ORGANIZATION_ID= 132
+
+select * from mtl_reservations where reservation_id=959479
+ 
+select * from mtl_demand  
+where n_column1 in 
+(select reservation_id from mtl_reservations where 
+reservation_id=959479);
+ 
+ 
+delete from mtl_demand  
+where n_column1 in 
+(select reservation_id from mtl_reservations where 
+reservation_id=959479);
+
+
+commit
+
+
+

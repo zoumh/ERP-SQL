@@ -1,0 +1,232 @@
+
+
+
+???---new add some,but 
+
+SELECT DISTINCT gcc.segment3 acc, gcc.segment4 prd, gcc.segment5 prj,
+                mib.segment1 item_no,
+                --tl.name order_type,
+                NVL (rtl.quantity_invoiced, rtl.quantity_credited) quantity,
+                rtl.unit_selling_price price, rtl.sales_order,
+                rga.amount "Sales Value", rga.acctd_amount "Sales Value(CNY)",
+                rtl1.extended_amount tax, ooh.transactional_curr_code curr,
+                rca.NAME "Trans Type", rta.trx_number "Trans Number",
+                rtl.sales_order_line "Order Line", rta.trx_date "Trans Date",
+                ooh.cust_po_number "Cust PO Number", ola.attribute4 region,
+                raa.city city, raa.country country,
+                rc.customer_name "Custmer Name", rga.gl_posted_date "Month",
+                ooh.attribute14 "PRJ Code Reference",
+                micv.segment1 "Prod_Model",
+                tl.name order_type
+           FROM ra_customer_trx_lines_all rtl,
+                ra_cust_trx_line_gl_dist_all rga,
+                ra_cust_trx_types_all rca,
+                ra_customer_trx_all rta,
+                mtl_system_items_b mib,
+                oe_order_headers_all ooh,
+                oe_transaction_types_tl tl,
+                oe_order_lines_all ola,
+                ra_customers rc,
+                ra_customer_trx_lines_all rtl1,
+                ra_site_uses_all rsu,
+                ra_addresses_all raa,
+                (SELECT code_combination_id, segment1, segment2, segment3,
+                        segment4, segment5, segment6
+                   FROM gl_code_combinations
+                  /*WHERE segment1 = '01'
+                    AND segment2 = '0000'
+                    AND segment3 BETWEEN '&&3' AND '&&4'
+                    AND segment4 BETWEEN '&&5' AND '&&6'
+                    AND segment5 BETWEEN '&&7' AND '&&8'
+                    AND segment6 = '000000'*/) gcc,
+                                        mtl_item_categories_v micv
+          WHERE rtl.customer_trx_line_id = rga.customer_trx_line_id
+            AND rtl.customer_trx_id = rta.customer_trx_id
+            AND rtl1.link_to_cust_trx_line_id(+) = rtl.customer_trx_line_id
+            AND rta.cust_trx_type_id = rca.cust_trx_type_id
+         /*  AND rga.gl_date BETWEEN (SELECT start_date
+                                       FROM gl_periods
+                                      WHERE period_set_name = 'CAL_BMC'
+                                         AND period_name = 'DEC-2005'
+                                                                                )
+                                AND (SELECT end_date
+                                       FROM gl_periods
+                                      WHERE period_set_name = 'CAL_BMC'
+                                         AND period_name = 'JAN-2005'
+                                                                                )*/
+            AND rga.code_combination_id = gcc.code_combination_id
+            AND rtl.inventory_item_id = mib.inventory_item_id(+)
+            AND rtl.inventory_item_id(+)=micv.inventory_item_id
+            AND ooh.order_number(+) = rtl.sales_order
+            AND ooh.sold_to_org_id = rc.customer_id(+)
+            AND ooh.header_id = ola.header_id 
+   AND ola.FLOW_STATUS_CODE<>'CANCELLED'
+            AND ooh.ship_to_org_id = rsu.site_use_id
+            AND rsu.address_id = raa.address_id(+)
+            AND ola.ship_from_org_id(+)=mib.organization_id
+            AND mib.organization_id =micv.organization_id
+--            AND ola.org_id = 87
+            AND tl.transaction_type_id=ooh.order_type_id
+     AND tl.LANGUAGE='US';
+  	and rca.org_id =mib.organization_id 
+  
+BEGIN
+ Fnd_Client_Info.set_org_context('81');
+END;   
+
+
+SELECT DISTINCT gcc.segment3 acc, gcc.segment4 prd, gcc.segment5 prj,
+                mib.segment1 item_no,
+                --tl.name order_type,
+                NVL (rtl.quantity_invoiced, rtl.quantity_credited) quantity,
+                rtl.unit_selling_price price, rtl.sales_order,
+                rga.amount "Sales Value", rga.acctd_amount "Sales Value(CNY)",
+                rtl1.extended_amount tax, ooh.transactional_curr_code curr,
+                rca.NAME "Trans Type", rta.trx_number "Trans Number",
+                rtl.sales_order_line "Order Line", rta.trx_date "Trans Date",
+                ooh.cust_po_number "Cust PO Number", ola.attribute4 region,
+                raa.city city, raa.country country,
+                rc.customer_name "Custmer Name", rga.gl_posted_date "Month",
+                ooh.attribute14 "PRJ Code Reference",
+                micv.segment1 "Prod_Model",
+                tl.name order_type
+           FROM apps.ra_customer_trx_lines_all rtl,
+                apps.ra_cust_trx_line_gl_dist_all rga,
+                apps.ra_cust_trx_types_all rca,
+                apps.ra_customer_trx_all rta,
+                apps.mtl_system_items_b mib,
+                apps.oe_order_headers_all ooh,
+                apps.oe_transaction_types_tl tl,
+                apps.oe_order_lines_all ola,
+                apps.ra_customers rc,
+                apps.ra_customer_trx_lines_all rtl1,
+                apps.ra_site_uses_all rsu,
+                apps.ra_addresses_all raa,
+                (SELECT code_combination_id, segment1, segment2, segment3,
+                        segment4, segment5, segment6
+                   FROM apps.gl_code_combinations
+                  WHERE segment1 = '01'
+                    AND segment2 = '0000'
+                    --AND segment3 ='5101030102'
+                    --AND segment4 BETWEEN '&&5' AND '&&6'
+                    --AND segment5 BETWEEN '&&7' AND '&&8'
+                    AND segment6 = '000000') gcc,
+                                        apps.mtl_item_categories_v micv
+          WHERE rtl.customer_trx_line_id = rga.customer_trx_line_id
+            AND rtl.customer_trx_id = rta.customer_trx_id
+            AND rtl1.link_to_cust_trx_line_id(+) = rtl.customer_trx_line_id
+            AND rta.cust_trx_type_id = rca.cust_trx_type_id
+            AND rga.gl_date BETWEEN (SELECT start_date
+                                       FROM apps.gl_periods
+                                      WHERE period_set_name = 'CAL_BMC'
+                                         AND period_name = 'JAN-06'
+                                                                                )
+                                AND (SELECT end_date
+                                       FROM apps.gl_periods
+                                      WHERE period_set_name = 'CAL_BMC'
+                                         AND period_name = 'JAN-06'
+                                                                                )
+            AND rga.code_combination_id = gcc.code_combination_id
+            AND rtl.inventory_item_id = mib.inventory_item_id(+)
+            AND rtl.inventory_item_id(+)=micv.inventory_item_id
+            AND ooh.order_number(+) = rtl.sales_order
+            AND ooh.sold_to_org_id = rc.customer_id(+)
+            AND ooh.header_id = ola.header_id
+            AND ooh.ship_to_org_id = rsu.site_use_id
+            AND rsu.address_id = raa.address_id(+)
+            AND ola.ship_from_org_id(+)=mib.organization_id
+            and mib.organization_id =micv.organization_id
+            AND ola.org_id = 127
+            and tl.transaction_type_id=ooh.order_type_id
+     and tl.language='US'
+	and rca.org_id=127  --!!!!!
+
+
+
+
+---------Add Region at Mar,  Para: period_name ,ooh.order_number
+
+select distinct gcc.segment3 ACC,gcc.segment4 PRD,gcc.segment5 PRJ,mib.segment1 Item_no,
+nvl(rtl.quantity_invoiced,rtl.QUANTITY_CREDITED) quantity,rtl.unit_selling_price Price,
+rtl.sales_order,rga.AMOUNT "Sales Value",
+rga.ACCTD_AMOUNT "Sales Value(CNY)",
+rtl1.EXTENDED_AMOUNT TAX,ooh.TRANSACTIONAL_CURR_CODE CURR,
+rca.NAME "Trans Type",rta.TRX_NUMBER "Trans Number",rtl.SALES_ORDER_LINE "Order Line",rta.TRX_DATE "Trans Date",
+ooh.CUST_PO_NUMBER "Cust PO Number",ola.attribute4 Region,raa.CITY City,raa.COUNTRY Country,rc.customer_name "Custmer Name",
+rga.GL_POSTED_DATE "Month",ooh.ATTRIBUTE14 "PRJ Code Reference",ola.attribute4 Region
+from apps.ra_customer_trx_lines_all rtl,
+apps.ra_cust_trx_line_gl_dist_all rga,
+apps.RA_CUST_TRX_TYPES_ALL rca,
+apps.ra_customer_trx_all rta,
+apps.mtl_system_items_b mib ,
+apps.oe_order_headers_all ooh,
+apps.oe_order_lines_all ola,
+apps.ra_customers rc,
+apps.ra_customer_trx_lines_all rtl1,
+apps.ra_site_uses_all rsu, 
+apps.ra_addresses_all raa,
+(select code_combination_id,segment1,segment2,segment3,segment4,segment5,segment6
+from apps.gl_code_combinations where segment1='01' 
+and segment3 ='5101010102' and segment6='000000'
+)gcc
+where rtl.customer_trx_line_id=rga.customer_trx_line_id 
+and rtl.customer_trx_id=rta.CUSTOMER_TRX_ID
+and rtl1.LINK_TO_CUST_TRX_LINE_ID(+)=rtl.CUSTOMER_TRX_LINE_ID
+and rta.CUST_TRX_TYPE_ID=rca.CUST_TRX_TYPE_ID
+and rga.gl_date between (select start_date from apps.gl_periods where period_set_name='CAL_BMC' and period_name='JAN-05')
+and (select end_date from apps.gl_periods where period_set_name='CAL_BMC' and period_name='JAN-05')
+and rga.code_combination_id=gcc.CODE_COMBINATION_ID 	  
+and rtl.inventory_item_id=mib.inventory_item_id(+)
+and ooh.order_number(+)=rtl.sales_order
+and ooh.sold_to_org_id=rc.customer_id(+)
+and ooh.header_id=ola.header_id
+and ooh.ship_to_org_id=rsu.site_use_id
+and rsu.address_id=raa.address_id(+)
+and mib.ORGANIZATION_ID(+)=81
+and rca.org_id=81
+and ooh.order_number='106355'
+
+
+
+--------------Changed at Feb, GL_date , Para: period_name
+
+select distinct gcc.segment3 ACC,gcc.segment4 PRD,gcc.segment5 PRJ,mib.segment1 Item_no,
+nvl(rtl.quantity_invoiced,rtl.QUANTITY_CREDITED) quantity,rtl.unit_selling_price Price,
+rtl.sales_order,rga.AMOUNT "Sales Value",
+rga.ACCTD_AMOUNT "Sales Value(CNY)",
+rtl1.EXTENDED_AMOUNT TAX,ooh.TRANSACTIONAL_CURR_CODE CURR,
+rca.NAME "Trans Type",rta.TRX_NUMBER "Trans Number",rtl.SALES_ORDER_LINE "Order Line",rta.TRX_DATE "Trans Date",
+ooh.CUST_PO_NUMBER "Cust PO Number",ola.attribute4 Region,raa.CITY City,raa.COUNTRY Country,rc.customer_name "Custmer Name",
+rga.GL_POSTED_DATE "Month",ooh.ATTRIBUTE14 "PRJ Code Reference"
+from apps.ra_customer_trx_lines_all rtl,
+apps.ra_cust_trx_line_gl_dist_all rga,
+apps.RA_CUST_TRX_TYPES_ALL rca,
+apps.ra_customer_trx_all rta,
+apps.mtl_system_items_b mib ,
+apps.oe_order_headers_all ooh,
+apps.oe_order_lines_all ola,
+apps.ra_customers rc,
+apps.ra_customer_trx_lines_all rtl1,
+apps.ra_site_uses_all rsu, 
+apps.ra_addresses_all raa,
+(select code_combination_id,segment1,segment2,segment3,segment4,segment5,segment6
+from apps.gl_code_combinations where segment1='01' 
+and segment3 ='5101010102' and segment6='000000'
+)gcc
+where rtl.customer_trx_line_id=rga.customer_trx_line_id 
+and rtl.customer_trx_id=rta.CUSTOMER_TRX_ID
+and rtl1.LINK_TO_CUST_TRX_LINE_ID(+)=rtl.CUSTOMER_TRX_LINE_ID
+and rta.CUST_TRX_TYPE_ID=rca.CUST_TRX_TYPE_ID
+and rga.gl_date between (select start_date from apps.gl_periods where period_set_name='CAL_BMC' and period_name='FEB-05')
+and (select end_date from apps.gl_periods where period_set_name='CAL_BMC' and period_name='FEB-05')
+and rga.code_combination_id=gcc.CODE_COMBINATION_ID 	  
+and rtl.inventory_item_id=mib.inventory_item_id(+)
+and ooh.order_number(+)=rtl.sales_order
+and ooh.sold_to_org_id=rc.customer_id(+)
+and ooh.header_id=ola.header_id
+and ooh.ship_to_org_id=rsu.site_use_id
+and rsu.address_id=raa.address_id(+)
+and mib.ORGANIZATION_ID(+)=81
+and rca.org_id=81;
+
+

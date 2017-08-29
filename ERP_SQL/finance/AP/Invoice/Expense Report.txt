@@ -1,0 +1,73 @@
+
+Your Oracle Payables application places the invoice ID in the VOUCHNO column when you transfer an expense report to Payables Invoice
+
+----------Status of Expense report
+An Expense report not be import into AP Batch:
+apps.AP_EXPENSE_REPORT_HEADERS_all.VOUCHNO =0
+
+An Expense report has been import into AP Batch:
+apps.AP_EXPENSE_REPORT_HEADERS_all.VOUCHNO <>0
+
+
+AP_EXPENSE_REPORT_HEADERS_all.EXPENSE_REPORT_ID =Expense report template identifier
+
+
+------------Check Expense report with CC-Account Conflic
+select FULL_NAME,b.EMPLOYEE_NUMBER,a.INVOICE_NUM,d.segment2 CC,d.segment3 Exp_Acc,
+a.DESCRIPTION,a.CREATION_DATE,a.DESCRIPTION
+from apps.AP_EXPENSE_REPORT_HEADERS_all a,apps.PER_ALL_PEOPLE_F b,
+apps.AP_EXPENSE_REPORT_LINES c,apps.GL_CODE_COMBINATIONS d
+where a.report_header_id=c.report_header_id
+and c.code_combination_id=d.CODE_COMBINATION_ID
+and a.EMPLOYEE_ID=b.PERSON_ID
+and c.code_combination_id in
+(select CODE_COMBINATION_ID 
+from apps.gl_code_combinations a,apps.fnd_user b
+where a.LAST_UPDATED_BY=user_id and 
+((a.segment2 >  '0000' and a.segment2<='1999' and a.segment3>='41050000' and a.segment3<='41059999') 
+or 
+(a.segment2 >= '2000' and a.segment2<='ZZZZ' and a.segment3>='55020101' and a.segment3<='550399ZZ') 
+) 
+and summary_flag ='N'
+and enabled_flag='Y'
+and chart_of_accounts_id=50241
+)
+
+
+select * from apps.AP_EXPENSE_REPORT_HEADERS_all where INVOICE_NUM ='19466A'--order by CREATION_DATE desc
+
+select * from AP_EXPENSE_REPORTS_all where expense_report_id=10150
+
+select * from AP_EXPENSE_REPORT_LINES where REPORT_HEADER_ID=96902
+
+select * from AP_INVOICES_V where INVOICE_NUM='19466A'
+
+select * from AP_INVOICE_DISTRIBUTIONS_V where invoice_id=376212
+
+
+
+--------------Monthly Exp report Qty group by creator
+select b.user_name CREATED_BY,b.description Creator_Name ,count(*) count_num,--a.INVOICE_NUM,a.DESCRIPTION,
+to_char(a.CREATION_DATE,'mm' ) month
+from apps.AP_EXPENSE_REPORT_HEADERS_all a,apps.fnd_user b
+where  a.CREATED_BY =b.user_ID
+and a.CREATION_DATE>=to_date('2007-8-1','yyyy-mm-dd')
+and a.CREATION_DATE<to_date('2007-11-1','yyyy-mm-dd')
+group by b.user_name ,b.description,to_char(a.CREATION_DATE,'mm' )
+
+
+
+------ Check why can't import to AP invoice
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('127');
+END;
+
+
+select vouchno Import_AP,decode(expense_check_address_flag,'O','Office','H','Home') Send_to,
+employee_name,employee_number,invoice_num,
+description,
+from apps.AP_EXPENSE_REPORT_HEADERS_V where employee_name='???¨´,' and creation_date>to_date('2007-9-1','yyyy-mm-dd')
+and  creation_date<to_date('2007-10-1','yyyy-mm-dd')
+
+
+

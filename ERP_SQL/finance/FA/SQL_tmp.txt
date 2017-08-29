@@ -1,0 +1,52 @@
+
+
+SELECT fav.asset_number
+,	fav.description
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),1,2) as MajCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as MinCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as StatusCat
+,      fak.segment1 as Prj
+,      fak.segment2 as Prd
+,	fab.DATE_PLACED_IN_SERVICE
+,	fab.COST
+,	fab.SALVAGE_VALUE
+,	fab.DEPRECIATE_FLAG
+,	fab.RECOVERABLE_COST
+,	FAD.YTD_DEPRN
+,	FAD.DEPRN_RESERVE as Depr_Accmu
+,	FAD.DEPRN_SOURCE_CODE
+,	fad.DEPRN_RUN_DATE
+,	fab.COST-FAD.DEPRN_RESERVE as NTValue
+,	GLC.SEGMENT2 as Depr_CC
+,	GLC.SEGMENT3 as Depr_Acc
+FROM FA_ADDITIONS_V fav
+,    FA_ASSET_KEYWORDS fak
+,    FA_BOOKS_V fab
+,	 FA_deprn_summary FAD
+,	 GL_CODE_COMBINATIONS GLC
+,	 FA_DISTRIBUTION_HISTORY FAH
+WHERE fav.ASSET_KEY_CCID = fak.CODE_COMBINATION_ID 
+AND fav.asset_id=fab.asset_id 
+AND fab.asset_id=FAD.ASSET_ID
+AND fav.asset_number like '12%' 
+AND fab.BOOK_TYPE_CODE='BMC_FA_BOOK' 
+and fad.DEPRN_SOURCE_CODE like 'D%'
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+AND FAH.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.ASSET_ID=fav.asset_id
+AND fad.DEPRN_RUN_DATE in (select max(DEPRN_RUN_DATE) from FA_deprn_summary group by asset_id) and fad.book_type_code='BMC_FA_BOOK' 
+
+--and fak.segment2='T610'
+
+select fav.asset_number,fav.asset_id,fab.DEPRN_START_DATE from FA_BOOKS_V fab,FA_ADDITIONS_V fav where fav.asset_id=fab.asset_id  --and fab.DEPRN_START_DATE>
+
+select * from fa_books where asset_id ='100000420' and book_type_code='BMC_FA_BOOK'
+select * from FA_ADDITIONS_TL where asset_number ='12002703'
+
+select * from FA_BOOKS_V where asset_id ='100000420' and book_type_code='BMC_FA_BOOK'
+select fab.DATE_PLACED_IN_SERVICE from FA_BOOKS_V fab where asset_id ='100001858' and fab.book_type_code='BMC_FA_BOOK'
+select date_placed_in_service from fa_books
+
+select FA_deprn_summary.* from  FA_deprn_summary WHERE asset_id ='100000420' and book_type_code='BMC_FA_BOOK'  and DEPRN_RUN_DATE order by DEPRN_RUN_DATE desc  
+
+select FA_deprn_summary.* from  FA_deprn_summary where DEPRN_RUN_DATE in (select max(DEPRN_RUN_DATE) from FA_deprn_summary group by asset_id) and book_type_code='BMC_FA_BOOK' order by asset_id-- and DEPRN_RUN_DATE=(select  order by DEPRN_RUN_DATE desc  

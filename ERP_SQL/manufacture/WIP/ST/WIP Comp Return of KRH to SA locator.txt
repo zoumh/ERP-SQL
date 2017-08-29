@@ -1,0 +1,30 @@
+
+
+---------------KRH Component return from WIP to SA locator
+
+select  wip_entity_name Job_Order,msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,
+loc.segment2||'.'||loc.segment3||'.'||loc.segment4||'.'||loc.segment5 locator,
+mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,mmt.transaction_date 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.wip_entities 		 Wet  -- ( or use apps.WIP_DISCRETE_JOBS_V)
+  ,apps.mtl_item_locations loc--,apps.mtl_item_locations loc2
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return')
+and mst.transaction_source_type_name='Job or Schedule'
+and mmt.CREATION_DATE>=to_date('20070203 20:00:00','YYYYMMDD HH24:MI:SS')
+and mmt.CREATION_DATE<=to_date('20070215 23:59:59','YYYYMMDD HH24:MI:SS')
+--and mmt.subinventory_code in ('SD','SB')
+and msi.segment1 like '%KRH%'
+and mmt.LOCATOR_ID=loc.INVENTORY_LOCATION_ID(+)
+and mmt.organization_id = loc.organization_id (+)
+and mmt.subinventory_code like 'SA%'
+

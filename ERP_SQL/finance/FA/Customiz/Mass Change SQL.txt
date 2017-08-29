@@ -1,0 +1,12 @@
+
+
+---------SQL load to table
+select * from  apps.BMC_CONV_FAXASSET
+
+
+
+
+--------Package :
+APPS.BMC_FA_XLS_LOAD_UPD
+
+

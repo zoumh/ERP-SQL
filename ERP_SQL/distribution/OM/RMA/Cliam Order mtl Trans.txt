@@ -1,0 +1,38 @@
+
+--------Claim Order Mtl Trans with Action,SO Type,line,line type (include SO Issue &RMA receipt)
+select  
+mtt.transaction_type_name Ttrans_Type,
+mmt.INVENTORY_ITEM_ID,
+(mmt.TRANSACTION_QUANTITY) Qty, mmt.TRANSACTION_ID,mmt.transaction_date,
+decode(mmt.ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+decode(mmt.TRANSFER_ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Transfer_Org,
+mmt.SUBINVENTORY_CODE WH,mmt.TRANSFER_SUBINVENTORY Transfer_WH,
+mst.TRANSACTION_SOURCE_TYPE_NAME Source_type,CD.ACTION_Code,
+mso.SEGMENT1 SO,mso.SEGMENT2 SO_Type,sol.LINE_NUMBER,g.NAME Line_Type,sol.ORDERED_QUANTITY
+from
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt,
+  apps.mtl_txn_source_types      mst,
+  (select MEANING ACTION_Code,
+          LOOKUP_CODE TRANSACTION_ACTION_ID
+     from apps.FND_LOOKUP_VALUES_VL
+     where LOOKUP_TYPE='MTL_TRANSACTION_ACTION') CD,
+  apps.MTL_SALES_ORDERS mso,
+  apps.OE_ORDER_lineS_all sol,apps.oe_transaction_types_tl g   
+where
+mtt.transaction_type_id = mmt.transaction_type_id
+and mmt.transaction_source_type_id=mst.transaction_source_type_id
+and mmt.TRANSACTION_ACTION_ID=cd.TRANSACTION_ACTION_ID
+and mmt.TRANSACTION_SOURCE_ID =mso.SALES_ORDER_ID
+and mmt.TRX_SOURCE_LINE_ID=sol.LINE_ID
+and sol.LINE_TYPE_ID=g.TRANSACTION_TYPE_ID
+and g.LANGUAGE='US'
+and mst.TRANSACTION_SOURCE_TYPE_NAME in ('Sales order','RMA')
+and mtt.transaction_type_name in ('Sales order issue','RMA Receipt')
+--and CD.ACTION_Code not in ('Cost update','Subinventory transfer','Staging transfer')
+--and mmt.INVENTORY_ITEM_ID in (205314)
+--and mtt.transaction_type_name in ('','')
+--and     (mmt.transaction_date) >= to_date('20090101','YYYYMMDD')  
+--and    mmt.ORGANIZATION_ID=130
+and mso.segment1='6042726'
+order by mmt.TRANSACTION_ID

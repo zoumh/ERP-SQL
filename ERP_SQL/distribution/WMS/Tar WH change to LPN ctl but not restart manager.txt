@@ -1,0 +1,180 @@
+
+-------------After change WH to LPN control, should restart receiving manager.If not, will create LPN problemS
+
+
+select * from 
+apps.wms_lpn_contents wlc 
+where wlc.parent_lpn_id not in 
+(select moqd.lpn_id 
+from apps.mtl_onhand_quantities_Detail moqd, 
+apps.wms_license_plate_numbers wlpn 
+where moqd.containerized_flag = 1 
+and moqd.inventory_item_id = wlc.inventory_item_id 
+and nvl(moqd.lot_number,'~~') = nvl(wlc.lot_number,'~~') 
+and nvl(moqd.revision,'===') = nvl(wlc.revision,'===') 
+and moqd.organization_id = wlc.organization_id 
+and wlc.parent_lpn_id = wlpn.lpn_id 
+and wlpn.lpn_context in (1,9,11) 
+and wlpn.subinventory_code=moqd.subinventory_Code 
+and wlpn.locator_id = moqd.locator_id) 
+and wlc.parent_lpn_id in 
+(select wlpn2.lpn_id 
+from apps.wms_license_plate_numbers wlpn2 
+where wlpn2.lpn_context in (1,9,11)) 
+and wlc.inventory_item_id in 
+(select msi.inventory_item_id 
+from apps.mtl_system_items msi 
+where msi.organization_id=wlc.organization_id 
+and msi.serial_number_control_code in (1,6)) 
+
+
+
+select * from 
+apps.wms_license_plate_numbers wlpn 
+where wlpn.outermost_lpn_id = wlpn.lpn_id 
+and wlpn.lpn_context=1 
+and not exists 
+(select 1 from apps.wms_license_plate_numbers wlpn2 
+where wlpn2.parent_lpn_id = wlpn.lpn_id) 
+and not exists 
+(select 1 from apps.wms_lpn_contents wlc 
+where wlc.parent_lpn_id=wlpn.lpn_id) 
+and not exists 
+(select 1 from apps.mtl_onhand_quantities_detail moqd 
+where moqd.lpn_id = wlpn.lpn_id) 
+
+
+
+delete from wms_lpn_contents wlc 
+where wlc.parent_lpn_id not in 
+(select moqd.lpn_id 
+from mtl_onhand_quantities_Detail moqd, 
+wms_license_plate_numbers wlpn 
+where moqd.containerized_flag = 1 
+and moqd.inventory_item_id = wlc.inventory_item_id 
+and nvl(moqd.lot_number,'~~') = nvl(wlc.lot_number,'~~') 
+and nvl(moqd.revision,'===') = nvl(wlc.revision,'===') 
+and moqd.organization_id = wlc.organization_id 
+and wlc.parent_lpn_id = wlpn.lpn_id 
+and wlpn.lpn_context in (1,9,11) 
+and wlpn.subinventory_code=moqd.subinventory_Code 
+and wlpn.locator_id = moqd.locator_id) 
+and wlc.parent_lpn_id in 
+(select wlpn2.lpn_id 
+from wms_license_plate_numbers wlpn2 
+where wlpn2.lpn_context in (1,9,11)) 
+and wlc.inventory_item_id in 
+(select msi.inventory_item_id 
+from mtl_system_items msi 
+where msi.organization_id=wlc.organization_id 
+and msi.serial_number_control_code in (1,6)); 
+ 
+ 
+update wms_license_plate_numbers wlpn 
+set lpn_context =5, 
+subinventory_Code=null, 
+locator_id=null, 
+cost_group_id=null 
+where wlpn.outermost_lpn_id = wlpn.lpn_id 
+and wlpn.lpn_context=1 
+and not exists 
+(select 1 from wms_license_plate_numbers wlpn2 
+where wlpn2.parent_lpn_id = wlpn.lpn_id) 
+and not exists 
+(select 1 from wms_lpn_contents wlc 
+where wlc.parent_lpn_id=wlpn.lpn_id) 
+and not exists 
+(select 1 from mtl_onhand_quantities_detail moqd 
+where moqd.lpn_id = wlpn.lpn_id);
+
+
+
+
+-------------
+1)
+select * from wms_lpn_contents wlc
+where wlc.parent_lpn_id not in
+(select moqd.lpn_id
+from mtl_onhand_quantities_Detail moqd,
+wms_license_plate_numbers wlpn
+where moqd.containerized_flag = 1
+and moqd.inventory_item_id = wlc.inventory_item_id
+and nvl(moqd.lot_number,'~~') = nvl(wlc.lot_number,'~~')
+and nvl(moqd.revision,'===') = nvl(wlc.revision,'===')
+and moqd.organization_id = wlc.organization_id
+and wlc.parent_lpn_id = wlpn.lpn_id
+and wlpn.lpn_context in (1,9,11)
+and wlpn.subinventory_code=moqd.subinventory_Code
+and wlpn.locator_id = moqd.locator_id)
+and wlc.parent_lpn_id in
+(select wlpn2.lpn_id
+from wms_license_plate_numbers wlpn2
+where wlpn2.lpn_context in (1,9,11))
+
+
+2)
+select * from mtl_onhand_quantities_detail moqd
+where moqd.lpn_id not in
+(select wlc.parent_lpn_id
+from wms_lpn_contents wlc,
+wms_license_plate_numbers wlpn
+where moqd.inventory_item_id = wlc.inventory_item_id
+and nvl(moqd.lot_number,'~~') = nvl(wlc.lot_number,'~~')
+and nvl(moqd.revision,'===') = nvl(wlc.revision,'===')
+and moqd.organization_id = wlc.organization_id
+and moqd.subinventory_code = wlpn.subinventory_Code
+and moqd.locator_id = wlpn.locator_id
+and moqd.organization_id = wlpn.organization_id
+and wlpn.lpn_id= wlc.parent_lpn_id
+and wlpn.lpn_id = moqd.lpn_id)
+and moqd.containerized_flag=1
+and moqd.lpn_id is not null
+
+
+3)
+select * from
+wms_license_plate_numbers wlpn
+where
+not exists
+(select 1 from wms_lpn_contents wlc
+where wlc.parent_lpn_id=wlpn.lpn_id)
+and wlpn.outermost_lpn_id = wlpn.lpn_id
+and wlpn.lpn_context=1
+and not exists
+(select 1 from wms_license_plate_numbers wlpn2
+where wlpn2.parent_lpn_id = wlpn.lpn_id)
+
+
+4)
+select 1 sno,organization_id,subinventory_code,locator_id,inventory_item_id,
+lpn_id,lot_number,cost_group_id,revision,sum(primary_transaction_quantity) primary_qty
+from MTL_ONHAND_QUANTITIES_DETAIL
+where containerized_flag = 1
+and lpn_id is not null
+GROUP BY organization_id, subinventory_code,locator_id, inventory_item_id,lot_number, 
+lpn_id, cost_group_id,revision
+
+
+5)
+select wlcv.organization_id,wlcv.subinventory_code,
+wlcv.locator_id,wlcv.inventory_item_id,wlcv.parent_lpn_id,
+wlcv.lot_number,wlcv.cost_group_id,wlcv.revision,
+sum(wlcv.primary_transaction_qty) primary_qty
+from
+(select wlc.organization_id,wlpn.subinventory_code,
+wlpn.locator_id,wlc.inventory_item_id,wlc.parent_lpn_id,
+wlc.lot_number,wlc.cost_group_id,wlc.revision,
+INV_CONVERT.INV_UM_CONVERT(wlc.inventory_item_id,null,wlc.quantity,wlc.uom_code,(
+select uom_code
+from mtl_system_items_vl msiv , mtl_units_of_measure_vl muom
+where msiv.inventory_item_id = wlc.inventory_item_id
+and msiv.organization_id = wlc.organization_id
+and muom.unit_of_measure = msiv.primary_unit_of_measure),null,null) primary_transaction_qty
+FROM WMS_LPN_CONTENTS wlc, wms_license_plate_numbers wlpn
+where wlc.parent_lpn_id= wlpn.lpn_id
+and wlpn.lpn_context in (1,9,11) ) wlcv
+GROUP BY wlcv.organization_id, wlcv.subinventory_code,wlcv.locator_id, 
+wlcv.inventory_item_id,wlcv.lot_number, wlcv.parent_lpn_id, 
+wlcv.cost_group_id,wlcv.revision
+
+

@@ -1,0 +1,32 @@
+
+select msi.segment1 Item,pol.attribute1 Customs_Bonded,
+poh.segment1 Quo_Num,pol.line_num,pol.item_revision,pol.item_description,pol.unit_price,pol.quantity,
+convert(PE.FULL_NAME,'ZHS16GBK')  Buyer,poh.status_lookup_code,poh.currency_code,poh.Rate,poh.Rate_type,
+poh.creation_date Head_creation_date,pol.creation_date line_creation_date
+from apps.PO_LINES_all POL,apps.MTL_SYSTEM_ITEMS MSI,apps.PO_HEADERS_all POH,
+apps.FINANCIALS_SYSTEM_PARAMS_ALL FSP,apps.PER_PEOPLE_V7 PE 
+where pol.po_header_id=poh.po_header_id --and poh.segment1='1001'
+AND POL.ITEM_ID = MSI.INVENTORY_ITEM_ID (+) 
+AND NVL(MSI.ORGANIZATION_ID,FSP.INVENTORY_ORGANIZATION_ID) = FSP.INVENTORY_ORGANIZATION_ID
+and POH.TYPE_LOOKUP_CODE ='QUOTATION'
+and poh.status_lookup_code='A'
+and POH.AGENT_ID=PE.PERSON_ID
+and POL.ITEM_ID in 
+(select POL.ITEM_ID
+from apps.PO_LINES_all POL,apps.MTL_SYSTEM_ITEMS MSI,apps.PO_HEADERS_all POH,
+apps.FINANCIALS_SYSTEM_PARAMS_ALL FSP,apps.PER_PEOPLE_V7 PE 
+where pol.po_header_id=poh.po_header_id --and poh.segment1='1001'
+AND POL.ITEM_ID = MSI.INVENTORY_ITEM_ID (+) 
+AND NVL(MSI.ORGANIZATION_ID,FSP.INVENTORY_ORGANIZATION_ID) = FSP.INVENTORY_ORGANIZATION_ID
+and POH.TYPE_LOOKUP_CODE ='QUOTATION'
+and poh.status_lookup_code='A'
+and POH.AGENT_ID=PE.PERSON_ID
+and POL.ITEM_ID in 
+(select POL.ITEM_ID from apps.PO_LINES_all pol,apps.PO_HEADERS_all POH where 
+pol.po_header_id=poh.po_header_id and POH.TYPE_LOOKUP_CODE ='QUOTATION' and poh.status_lookup_code='A'
+and (POL.attribute1<>'Bonded Material' or POL.attribute1 is null)
+)
+and pol.attribute1='Bonded Material'
+)
+order by msi.segment1,pol.attribute1 
+

@@ -1,0 +1,71 @@
+
+------these flag in apps.WSH_DELIVERABLES_V b make a SO in SRS report
+
+where b.RELEASED_STATUS_NAME='Shipped' and (b.inv_interfaced_flag='N' or OE_interfaced_flag='N')
+
+
+
+--------Find all current SO,Delivery on SRS reports 
+select d.FLOW_STATUS_CODE,b.RELEASED_STATUS_NAME , 
+ c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,
+a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type del_type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and c.org_id>=127
+--and c.ORDER_NUMBER='216193'
+--and b.delivery_id=800143942--800143993
+and (b.inv_interfaced_flag='N' or OE_interfaced_flag='N')
+and b.RELEASED_STATUS_NAME='Shipped' 
+
+
+---------Find SO Number from Deliver_ID (delivery number)
+
+select d.FLOW_STATUS_CODE,b.RELEASED_STATUS_NAME , 
+ c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail_type_L,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type del_type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+--and c.ORDER_NUMBER='5003212'
+and b.delivery_id=800143942
+
+
+
+---------Find All Delivery_Detail_id (include type='C') from delivery_id
+select * from  apps.WSH_DELIVERABLES_V where delivery_id=800143942
+
+
+---------Find trip_id stop_id from delivery_id
+select trip_id,trip_name,pick_up_stop_id,drop_off_stop_id,
+delivery_id,delivery_name,creation_date from apps.wsh_bols_db_v where delivery_id =800143942
+
+
+----------Find delivery_dateil_id from Trip_id
+select delivery_detail_id,NAME trip_name,trip_id,status_name,activity_code,creation_date
+from apps.WSH_DELIVERABLE_TRIPS_V   where trip_id=325773
+
+
+----------Find Stop_id from Trip_ID (trip_name=trip_id)
+select stop_id,trip_name,delivery_detail_id,status_name,creation_date,activity_code 
+from apps.WSH_DELIVERABLE_STOPS_V  where  trip_id=325773
+
+
+

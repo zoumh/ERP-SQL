@@ -1,0 +1,207 @@
+
+SR Number  7190248.992
+An RMA 6017576 line can't be cancelled
+
+Line_id =799863 line# 2.2 status AWAITING_RETURN_DISPOSITION'
+Workflow status in
+799863 Return Receiving - Line Wait for inspection Notified RMA_RECEIVING_SUB RMA_WAIT_FOR_INSPECTION 
+No data found under RCV_TRANSACTIONS 
+
+1.Please provide output of this query.
+
+select
+line_id
+, ordered_quantity
+from oe_order_lines_all ool
+where ool.line_id = 799863 
+and ool.flow_status_code = 'AWAITING_RETURN_DISPOSITION'
+and exists (select 'x'
+from mtl_material_transactions mmt, rcv_transactions rcv
+where mmt.trx_source_line_id = ool.line_id
+and mmt.transaction_type_id= 15
+and rcv.oe_order_line_id = ool.line_id
+and mmt.rcv_transaction_id = rcv.transaction_id);
+
+2.if this returns no rows then please apply patch 6366632 (first on test instance).
+This patch contains generic data fix script ontd0008.sql to cancel a stuck line.
+
+
+
+p6366632_11i_GENERIC.zip
+This patch contains generic data fix script ontd0008.sql to cancel a stuck line. 
+
+
+REM  $Header: ontd0008.sql 115.0.1159.7 2007/08/27 06:22:30 snimmaga noship $
+REM +=======================================================================+
+REM |    Copyright (c) 2003 Oracle Corporation, Redwood Shores, CA, USA     |
+REM |                         All rights reserved.                          |
+REM +=======================================================================+
+REM | FILENAME                                                              |
+REM |     ontd0008.sql                                                      |
+REM |                                                                       |
+REM | DESCRIPTION                                                           |
+REM |     This script has been created to allow cancelling those lines      |
+REM |     which are stuck due to some data corruption  and can neither      |
+REM |     be progressed nor cancelled from the application. You may only use| 
+REM |     it on order lines as authorized by Oracle Support.                |
+REM |     This script will do the following:                                |
+REM |                                                                       |
+REM |     1. Update Lines to show as if Cancelled.                          |
+REM |     2. Cancel Delivery Details(if any) associated to order lines.     |
+REM |     3. Marks the Move Order Lines as 'Cancelled by Source' for any    |
+REM |        'Released to Warehouse' details (for INV / OPM Orgs)           |
+REM |     4. Deletes any Serial Number(s) associated with Staged/Shipped    |
+REM |        Delivery Details and Unmarks them                              |
+REM |     5. Cancel OPM Inventory data in case of OPM Org                   |
+REM |     6. Progress flow(if exists) to CLOSE.                             |
+REM |                                                                       |
+REM |     Note that this script DOES NOT:                                   |
+REM |                                                                       |
+REM |     1. Cancel Line if it belongs to (a)WMS Organization; and          |
+REM |        (b)has open delivery details                                   |
+REM |     2. Cancel Line if OTM Integration is enabled for Organization     |
+REM |     3. Delink the Configured Items  that  may exist on  an order.     |
+REM |     4. Update the  history tables with  cancellation information.     |
+REM |     5. Unschedule the Lines. Inventory  patch # 2471362 should be     |
+REM |        applied  after running this  script to relieve the demand.     |
+REM |     6. Update Move Order Lines, log a clean bug against inventory     |
+REM |     7. Update Supply.                                                 |
+REM |                                                                       |
+REM | DISCLAIMER                                                            |
+REM |     Do not use  this script as a replacement for OM Cancellation      |
+REM |     functionality as it is  strictly meant for those stuck  order     |
+REM |     lines which can neither be progressed nor cancelled from the      |
+REM |     application.                                                      |
+REM |                                                                       |
+REM |     Use this script at your own risk. The script has been tested      |
+REM |     and appears to works as intended. However, you should always      |
+REM |     test any script before relying on it.                             |
+REM |                                                                       |
+REM |     Proofread the script prior to running it. Due to differences      |
+REM |     in the way text editors,email packages and operating systems      |
+REM |     handle text  formatting (spaces, tabs and carriage returns),      |
+REM |     this script may not be in an executable state when you first      |
+REM |     receive it.  Check over the script to  ensure that errors of      |
+REM |     this type are corrected.                                          |
+REM |                                                                       |
+REM |     Do not remove disclaimer paragraph.                               |
+REM |                                                                       |
+REM | INPUT/OUTPUT                                                          |
+REM |     Inputs : Line Id(Required)                                        |
+REM |                                                                       |
+REM |     Output : Report is printed to an O/S file named line_id.lst       |
+REM |                                                                       |
+REM | NOTE                                                                  |
+REM |     This script should be tested in TEST Instance first.              |
+REM |     If results are  satisfactory in TEST, then only use in            | 
+REM |     PRODUCTION Instance.                                              |
+REM |                                                                       |
+REM | HISTORY                                                               |
+REM |     14-MAR-2002              Tarun Bharti                 Created     |
+REM +=======================================================================+
+
+REM dbdrv:none
+SET VERIFY OFF;
+WHENEVER OSERROR EXIT FAILURE ROLLBACK;
+WHENEVER SQLERROR EXIT FAILURE ROLLBACK;
+
+clear buffer;
+set serveroutput on size 500000
+rem set feed off
+set pagesize 1000
+set linesize 120
+set underline '='
+
+Prompt !!! MAKE SURE YOU READ, UNDERSTAND AND FOLLOW THE DISCLAIMER PARAGRAPH INSIDE THIS SCRIPT !!!
+Prompt
+accept order_line_id num prompt 'Enter LINE_ID of the line to Cancel: '
+Prompt
+
+spool &order_line_id
+
+declare
+
+  l_lin_id        number := &order_line_id;
+  l_lin_key       varchar2(30) := to_char(l_lin_id);
+
+  l_ordered_qty   number;
+  l_flow_exists   varchar2(1);
+  l_user_id       number;
+  l_resp_id       number;
+  l_resp_appl_id  number;
+
+  cursor line_check is
+  select line_id 
+  from   oe_order_lines_all  
+  where  line_id = l_lin_id
+  and     ( open_flag = 'N' 
+            or nvl(invoiced_quantity,0) > 0
+            or INVOICE_INTERFACE_STATUS_CODE = 'YES' ) ;
+  cursor service_check is
+  select count(*)
+  from   oe_order_lines_all  
+  where  service_reference_type_code = 'ORDER'
+  and    service_reference_line_id = l_lin_id
+  and    open_flag = 'Y'; 
+
+  -- Cursors to fetch details and their Serial Number(s) 
+  cursor wdd is
+  select delivery_detail_id, transaction_temp_id, serial_number, inventory_item_id, to_serial_number
+  from   wsh_delivery_details
+  where  source_line_id = l_lin_id
+  and    source_code = 'OE'
+  and    released_status in ('Y','C');
+
+  cursor msnt(txn_temp_id number) is
+  select fm_serial_number, to_serial_number
+  from   mtl_serial_numbers_temp
+  where  transaction_temp_id = txn_temp_id;
+
+  l_line_check        NUMBER;
+  l_oe_interfaced     NUMBER;
+  l_wms_org           VARCHAR2(1);
+  l_otm_installed     VARCHAR2(1);
+  l_otm_enabled       VARCHAR2(1);
+  l_cursor            INTEGER;                
+  l_stmt              VARCHAR2(4000);
+  l_up_cursor         INTEGER;                
+  l_up_stmt           VARCHAR2(4000);
+  l_ignore            NUMBER;
+  l_ship_from_org_id  NUMBER;
+  l_opm_enabled       BOOLEAN;
+  l_fm_serial         VARCHAR2(30);
+  l_to_serial         VARCHAR2(30);
+
+  Line_Cannot_Be_Updated EXCEPTION;
+
+  l_heading       varchar2(1) := 'N';
+
+ cursor wsh_ifaced
+  is
+  select
+    substr(wdd.source_line_number, 1, 15) line_num
+  , substr(wdd.item_description, 1, 30) item_name
+  , wdd.shipped_quantity
+  , wdd.source_line_id line_id
+  from  wsh_delivery_details wdd, oe_order_lines_all oel
+  where wdd.inv_interfaced_flag     = 'Y'
+  and   nvl(wdd.shipped_quantity,0) > 0
+  and   oel.line_id                 = wdd.source_line_id
+  and   oel.open_flag               = 'N'
+  and   oel.ordered_quantity        = 0
+  and   wdd.source_code             = 'OE'
+  and   oel.line_id                 = l_lin_id
+  and   exists
+      ( select 'x'
+        from  mtl_material_transactions mmt
+        where wdd.delivery_detail_id   = mmt.picking_line_id
+        and   mmt.trx_source_line_id   = wdd.source_line_id
+        and   mmt.transaction_source_type_id in ( 2,8 ));
+
+
+begin
+
+  dbms_output.put_line('Updating Line ID: '||l_lin_id);
+
+  -- C
+  

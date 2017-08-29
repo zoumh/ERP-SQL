@@ -1,0 +1,188 @@
+
+
+---------PR's Creator,preparer,Requestor
+
+select a.segment1 PR_Num,b.line_num PR_Line,
+pe.FULL_NAME RequestOr,pe2.FULL_NAME Preparer,usr.description Created_By
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b, 
+apps.PER_PEOPLE_V7 PE,
+apps.fnd_user usr,
+apps.PER_PEOPLE_V7 PE2
+where a.requisition_header_id=b.requisition_header_id
+and b.created_By =usr.user_id
+and a.PREPARER_ID=PE2.PERSON_ID
+and b.to_person_id=pe.person_id
+and a.PREPARER_ID<>b.to_person_id
+and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd')
+
+---------only PR line action Perform_By could cancel PR
+SELECT PR.SEGMENT1 Req_PO_Number,
+HI.OBJECT_TYPE_CODE Doc_Type,PR.AUTHORIZATION_STATUS,
+HI.ACTION_CODE,
+convert(PE2.FULL_NAME,'ZHS16GBK')  PR_Prepare_Buy,
+PE3.FULL_NAME  Line_Requestor,PE.FULL_NAME Act_PerformBy,usr.description Act_CreatedBy,
+PE.EMPLOYEE_NUMBER Act_EmployeeNum,
+hi.OBJECT_SUB_TYPE_CODE,OBJECT_REVISION_NUM,OBJECT_ID,NOTE,
+PR.DESCRIPTION DESC_OR_COMMENTS,
+pr.creation_date Date_Time,trunc(pr.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PR.REQUISITION_HEADER_ID Hearder_ID
+FROM apps.PO_ACTION_HISTORY  HI,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all PRL,
+apps.fnd_user Usr,
+apps.PER_PEOPLE_V7  PE,
+apps.PER_PEOPLE_V7  PE2,
+apps.PER_PEOPLE_V7  PE3
+WHERE 
+PR.REQUISITION_HEADER_ID=HI.OBJECT_ID and 
+--HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.PREPARER_ID=PE2.PERSON_ID
+and prl.REQUISITION_HEADER_ID=pr.REQUISITION_HEADER_ID
+and prl.REQUISITION_LINE_ID=HI.OBJECT_ID
+and usr.user_id=HI.created_by
+and prl.TO_PERSON_ID=pe3.PERSON_ID
+and PR.SEGMENT1 ='8979'
+and prl.LINE_NUM='3'
+and HI.OBJECT_TYPE_CODE='REQUISITION'
+
+
+---PR has PO , Requestor, sum Qty by line
+select pe.FULL_NAME Requestor,a.segment1 PR_Num,b.line_num PR_Line,
+a.authorization_status PR_Status,
+poh.segment1 PO_Num,pol.line_num PO_Line, 
+sum(c.REQ_LINE_QUANTITY) Dist_Qty,sum(pod.QUANTITY_ORDERED) PO_Qty,
+sum(pod.QUANTITY_DELIVERED) PO_Received_Qty,
+b.ITEM_DESCRIPTION PR_Item_Desc,pol.ITEM_DESCRIPTION PO_item_Desc
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,
+--apps.PO_LINE_TYPES_tl PRTP,apps.PO_LINE_TYPES_tl POTP,
+apps.PER_PEOPLE_V7 PE
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+--and a.authorization_status<>'CANCELLED'
+--and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and poh.authorization_status<>'CANCELLED'
+--and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID  =POD.REQ_DISTRIBUTION_ID 
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+--and poh.segment1='1060307'--1031687'--1030155'
+--and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+--and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd')
+--and a.segment1='25987'
+and b.to_person_id=pe.person_id
+and pe.FULL_NAME in ('Qiao, Dan,','Jackie Guo,','Young Chen,')
+group by pe.FULL_NAME  ,a.segment1 ,b.line_num,
+a.authorization_status,
+poh.segment1 ,pol.line_num ,
+b.ITEM_DESCRIPTION ,pol.ITEM_DESCRIPTION 
+
+
+
+-------------PR (with or without PO) , with Requestor,Preparer,Creator  
+---PR has PO
+select pe.FULL_NAME Requestor,a.segment1 PR_Num,b.line_num PR_Line,--prtp.LINE_TYPE PR_Type,
+c.DISTRIBUTION_NUM PR_Dist,
+a.authorization_status PR_Status,
+poh.segment1 PO_Num,pol.line_num PO_Line,--prtp.LINE_TYPE PO_Type,
+pod.DISTRIBUTION_NUM PO_Dist,
+c.REQ_LINE_QUANTITY PR_Qty,pod.QUANTITY_ORDERED PO_Qty,
+pod.QUANTITY_ORDERED PO_Qty,pod.QUANTITY_DELIVERED PO_Received_Qty,
+b.ITEM_DESCRIPTION PR_Item_Desc,pol.ITEM_DESCRIPTION PO_item_Desc
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,
+--apps.PO_LINE_TYPES_tl PRTP,apps.PO_LINE_TYPES_tl POTP,
+apps.PER_PEOPLE_V7 PE
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+--and a.authorization_status<>'CANCELLED'
+--and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and poh.authorization_status<>'CANCELLED'
+--and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID  =POD.REQ_DISTRIBUTION_ID 
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+--and poh.segment1='1060307'--1031687'--1030155'
+--and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+--and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd')
+--and a.segment1='25987'
+and b.to_person_id=pe.person_id
+and pe.FULL_NAME in ('Qiao, Dan,','Jackie Guo,','Young Chen,')
+union all
+
+-------PR don't have PO ????
+select pe.FULL_NAME Requestor,a.segment1 PR_Num,b.line_num PR_Line,--prtp.LINE_TYPE PR_Type,
+c.DISTRIBUTION_NUM PR_Dist,
+a.authorization_status PR_Status,
+poh.segment1 PO_Num,pol.line_num PO_Line,--prtp.LINE_TYPE PO_Type,
+pod.DISTRIBUTION_NUM PO_Dist,
+c.REQ_LINE_QUANTITY PR_Qty,pod.QUANTITY_ORDERED PO_Qty,
+pod.QUANTITY_ORDERED PO_Qty,pod.QUANTITY_DELIVERED PO_Received_Qty,
+b.ITEM_DESCRIPTION PR_Item_Desc,pol.ITEM_DESCRIPTION PO_item_Desc
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,
+--apps.PO_LINE_TYPES_tl PRTP,apps.PO_LINE_TYPES_tl POTP,
+apps.PER_PEOPLE_V7 PE
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+--and a.authorization_status<>'CANCELLED'
+--and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and poh.authorization_status<>'CANCELLED'
+--and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID  =POD.REQ_DISTRIBUTION_ID (+) and POD.REQ_DISTRIBUTION_ID is null
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+--and poh.segment1='1060307'--1031687'--1030155'
+--and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+--and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd')
+--and a.segment1='25987'
+and b.to_person_id=pe.person_id
+and pe.FULL_NAME in ('Qiao, Dan,','Jackie Guo,','Young Chen,')
+
+
+ 
+-------------PR (with PO if) , with Requestor,Preparer,Creator ---problem slow
+
+select pe.FULL_NAME RequestOr,pe2.FULL_NAME Preparer,usr.description Created_By, b.CANCEL_FLAG PR_Cancel, a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type,c.DISTRIBUTION_NUM PR_Dist,
+a.authorization_status PR_Status,
+poh.segment1 PO_Num,pol.line_num PO_Line,prtp.LINE_TYPE PO_Type,pod.DISTRIBUTION_NUM PO_Dist,
+c.REQ_LINE_QUANTITY *b.rate*b.unit_price PR_Amt,pod.QUANTITY_ORDERED*poh.RATE*pol.UNIT_PRICE PO_Amt,
+c.REQ_LINE_QUANTITY PR_Qty,pod.QUANTITY_ORDERED PO_Qty,
+decode(c.REQ_LINE_QUANTITY-pod.QUANTITY_ORDERED,0,'N','Y') Qty_Diff,
+b.unit_price PR_price,pol.UNIT_PRICE PO_price,
+decode(b.unit_price-pol.UNIT_PRICE ,0,'N','Y') Price_Diff,
+decode(b.ITEM_ID -pol.ITEM_ID,0,'N','Y') Diff,
+--b.QUANTITY,b.rate,b.unit_price,b.currency_code,b.currency_unit_price,b.creation_date,
+b.ITEM_DESCRIPTION PR_Item_Desc,pol.ITEM_DESCRIPTION PO_item_Desc,
+b.CURRENCY_CODE,b.CURRENCY_UNIT_PRICE,POH.CURRENCY_CODE
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,
+apps.PO_LINE_TYPES_tl PRTP,apps.PO_LINE_TYPES_tl POTP,apps.PER_PEOPLE_V7 PE,
+apps.fnd_user usr,
+apps.PER_PEOPLE_V7 PE2
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+--and a.authorization_status<>'CANCELLED'
+--and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and poh.authorization_status<>'CANCELLED'
+--and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID(+) =POD.REQ_DISTRIBUTION_ID
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+--and poh.segment1='1030155'--1031687'--1030155'
+--and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+--and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd')
+and prtp.LANGUAGE='US'
+and potp.LANGUAGE='US'
+and prtp.LINE_TYPE_ID=b.LINE_TYPE_ID 
+and potp.LINE_TYPE_ID=pol.LINE_TYPE_ID 
+and a.segment1='11348'
+and b.created_By =usr.user_id
+and a.PREPARER_ID=PE2.PERSON_ID
+and b.to_person_id=pe.person_id
+--and a.PREPARER_ID<>b.to_person_id
+order by b.line_num

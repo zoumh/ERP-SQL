@@ -1,0 +1,115 @@
+
+------Not conflic with other modules (GL 30000001 ,AP 51000001,52000001,60000001,AR 70000001)
+
+
+----Assign with Application
+select a.CREATION_DATE,a.CATEGORY_CODE,b.APPLICATION_NAME ,a.END_DATE,a.START_DATE
+from apps.FND_DOC_SEQUENCE_ASSIGNMENTS a,apps.FND_APPLICATION_TL b 
+where a.APPLICATION_ID=b.APPLICATION_ID
+and  b.LANGUAGE='US'
+order by b.APPLICATION_NAME
+
+
+-------Assign
+select DOC_SEQUENCE_ID,CATEGORY_CODE,APPLICATION_ID,END_DATE 
+from apps.FND_DOC_SEQUENCE_ASSIGNMENTS  where APPLICATION_ID=660
+
+
+select b.NAME Catrgory,c.NAME Sequence_Define,c.INITIAL_VALUE,a.DOC_SEQUENCE_ID,a.CATEGORY_CODE,a.APPLICATION_ID,a.END_DATE 
+from apps.FND_DOC_SEQUENCE_ASSIGNMENTS a,apps.FND_DOC_SEQUENCE_CATEGORIES b,apps.FND_DOCUMENT_SEQUENCES c 
+where a.DOC_SEQUENCE_ID=c.DOC_SEQUENCE_ID
+and a.CATEGORY_CODE=b.CODE
+and a.APPLICATION_ID=660  
+and b.APPLICATION_ID=660
+and c.APPLICATION_ID=660
+and (a.END_DATE >to_date(sysdate) or a.END_DATE is null) 
+
+
+------Category
+select NAME,CODE,APPLICATION_ID,TABLE_NAME  from apps.FND_DOC_SEQUENCE_CATEGORIES
+where TABLE_NAME='OE_TRANSACTION_TYPES_ALL'
+and APPLICATION_ID=660
+
+select * from apps.FND_DOC_SEQUENCE_CATEGORIES where APPLICATION_ID=660
+
+-----Define
+select a.NAME,b.APPLICATION_NAME,
+decode(a.Type,'G','GapLess','A','Auto','Manu') TYPE,END_DATE,INITIAL_VALUE,TABLE_NAME,DOC_SEQUENCE_ID,a.APPLICATION_ID
+from apps.FND_DOCUMENT_SEQUENCES a,apps.FND_APPLICATION_TL b
+where a.APPLICATION_ID=b.APPLICATION_ID
+--and a.TABLE_NAME is null--
+--and a.TABLE_NAME ='OE_TRANSACTION_TYPES_ALL'
+and  b.LANGUAGE='US'
+and a.APPLICATION_ID=660
+
+------OE Transaction Type
+select b.NAME,a.TRANSACTION_TYPE_ID, a.ORDER_CATEGORY_CODE --* 
+from apps.OE_TRANSACTION_TYPES_all a,apps.OE_TRANSACTION_TYPES_TL b
+where a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID
+and b.LANGUAGE='US'
+and a.TRANSACTION_TYPE_CODE='ORDER'
+
+
+--------max SO number for each type
+select max(b.ORDER_NUMBER) Max_number ,f.NAME SO_Type--,b.CREATION_DATE
+from  
+apps.OE_ORDER_HEADERS_ALL b,
+apps.oe_transaction_types_tl f
+where  f.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID 
+and f.LANGUAGE='US'
+and b.CREATION_DATE>to_date('2008-1-1','yyyy-mm-dd')
+group by f.NAME 
+order by max(b.ORDER_NUMBER) asc
+
+
+
+--------max SO number & creation_date for each Assign/Define/Category/SO type
+select (select creation_date from apps.oe_order_headers_all oh where oh.order_number = e.max_number and oh.org_id=127) creation_date
+      ,e.Max_number
+      ,c.INITIAL_VALUE
+      ,b.NAME Catrgory
+      ,c.NAME Sequence_Define
+      ,a.DOC_SEQUENCE_ID
+      ,a.CATEGORY_CODE
+      ,a.APPLICATION_ID
+      ,a.END_DATE
+  from apps.FND_DOC_SEQUENCE_ASSIGNMENTS a
+      ,apps.FND_DOC_SEQUENCE_CATEGORIES b
+      ,apps.FND_DOCUMENT_SEQUENCES c
+      ,(select max(d.ORDER_NUMBER) Max_number
+              ,f.NAME SO_Type
+          from apps.OE_ORDER_HEADERS_ALL    d
+              ,apps.oe_transaction_types_tl f
+         where f.TRANSACTION_TYPE_ID = d.ORDER_TYPE_ID
+           and f.LANGUAGE = 'US'
+           and d.CREATION_DATE > to_date('2008-1-1', 'yyyy-mm-dd')
+         group by f.NAME) e
+ where a.DOC_SEQUENCE_ID = c.DOC_SEQUENCE_ID
+   and b.NAME = e.SO_Type
+   and a.CATEGORY_CODE = b.CODE
+   and a.APPLICATION_ID = 660
+   and b.APPLICATION_ID = 660
+   and c.APPLICATION_ID = 660
+   and (a.END_DATE > to_date(sysdate) or a.END_DATE is null)
+ order by c.INITIAL_VALUE
+
+
+
+---------try to add SO creation_date ??? not finished
+
+select ee.Max_number,ee.SO_Type,g.CREATION_DATE,g.ORDER_NUMBER
+from 
+(select max(d.ORDER_NUMBER) Max_number ,f.NAME SO_Type 
+from  
+apps.OE_ORDER_HEADERS_ALL d,
+apps.oe_transaction_types_tl f
+where  f.TRANSACTION_TYPE_ID=d.ORDER_TYPE_ID 
+and f.LANGUAGE='US'
+and d.CREATION_DATE>to_date('2008-1-1','yyyy-mm-dd')
+group by f.NAME )
+--order by f.NAME asc
+) ee,
+apps.OE_ORDER_HEADERS_ALL g
+where ee.Max_number=g.ORDER_NUMBER
+
+

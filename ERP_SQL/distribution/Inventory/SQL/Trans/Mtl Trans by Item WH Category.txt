@@ -1,0 +1,148 @@
+
+
+select  mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, 
+mmt.TRANSACTION_QUANTITY ,mmt.transaction_date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt
+where  --(msi.segment1 like '%KRH%') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and (mmt.transaction_date) >= to_date('20080515','YYYYMMDD') 
+--and (mmt.transaction_date) <  to_date('20080516','YYYYMMDD') 
+and (mmt.subinventory_code='SAOTW' or mmt.transfer_subinventory='SAOTW')
+and mmt.INVENTORY_ITEM_ID=162491
+--and mmt.TRANSACTION_QUANTITY<0
+
+
+---------With Item Category / Cost
+
+select  msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date,
+f.SEGMENT1 Category1,f.SEGMENT2 Category2
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst,
+  apps.mtl_item_categories_v f 
+where  (msi.segment1 like '%KRH%') 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=mmt.organization_id 
+and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and mmt.organization_id = msi.organization_id  
+and  f.ORGANIZATION_ID=mmt.organization_id 
+and f.INVENTORY_ITEM_ID=mmt.INVENTORY_ITEM_ID
+and f.category_set_id=1  ---
+and transaction_type_name in ('Subinventory Transfer','Move Order Transfer','SH Move Order Transfer')
+and    trunc(mmt.transaction_date) >= to_date('20050101','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20050131','YYYYMMDD')
+--and mmt.subinventory_code='SG'
+--and mmt.transfer_subinventory in ('SF','SA11','SA12','SA13')
+--and mmt.transaction_id=7912438
+order by mmt.transaction_id
+
+
+
+-----One Item's all Transactions (with WH)
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+--and    trunc(mmt.transaction_date) >= to_date('20041201','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050530','YYYYMMDD')
+and  msi.segment1='RYN 121 6008/1'
+--and mmt.subinventory_code='SG'
+order by trunc(mmt.transaction_date)
+
+
+------------From Wh & To WH , Trans Type All Org
+select   msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,
+mmt.transfer_subinventory To_WH, --(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst
+where  (msi.segment1 like '%DPY%' ) 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and mmt.organization_id = msi.organization_id 
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer','SH Move Order Transfer')
+--and    trunc(mmt.transaction_date) >= to_date('20050101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050131','YYYYMMDD')
+and    trunc(mmt.transaction_date) >= to_date('20061101','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20061130','YYYYMMDD')
+and (mmt.subinventory_code in ('SWP') or  mmt.transfer_subinventory in ('SWP') )
+--and (mmt.subinventory_code in ('RWK') or  mmt.transfer_subinventory in ('RWK') )
+
+
+------------From Wh & To WH , Trans Type & Value
+select   msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst
+where  (msi.segment1 like '%KRH%' ) 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and mmt.organization_id = 83 and msi.organization_id = 83 
+and transaction_type_name in ('Subinventory Transfer','Move Order Transfer','SH Move Order Transfer')
+--and    trunc(mmt.transaction_date) >= to_date('20050101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050131','YYYYMMDD')
+and    trunc(mmt.transaction_date) >= to_date('20041201','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041231','YYYYMMDD')
+and mmt.subinventory_code='SG'
+and mmt.transfer_subinventory in ('SF','SA11','SA12','SA13')
+order by mmt.transaction_id
+
+
+----Item Trans Investigator
+
+select   msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst
+where  (msi.segment1 like '%KRH%' ) 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=mmt.organization_id and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and mmt.organization_id = msi.organization_id 
+and transaction_type_name  not like ('%Container%') and transaction_type_name not in  ('Standard cost update','Sales Order Pick')
+--and    trunc(mmt.transaction_date) >= to_date('20050101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050131','YYYYMMDD')
+and    trunc(mmt.transaction_date) >= to_date('20041201','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20041231','YYYYMMDD')
+and msi.segment1='KRH 101 462.R1A'
+order by mmt.transaction_id
+
+
+
+
+

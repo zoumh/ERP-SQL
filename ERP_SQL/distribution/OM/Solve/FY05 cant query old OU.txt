@@ -1,0 +1,39 @@
+
+-----------Find oe_order_headers_v was filted by Org_id
+
+and h.ORG_ID=127 --28953023 20070907 tuning
+
+As user aggree, in future could query in new cloned test instance which update this review to release the filte.
+
+
+-------------
+SR Number   7340484.994 
+
+We create a new inquiry responsibility 'FY05 Sales Order Inquiry' want it could inquiry the 
+sales order in old OU.
+
+Query an SO in old OU (create date in that period) , but get this error ¡®FRM-40350: Query caused no records to be retreived¡¯
+
+----------SO, line, SO Type , Item
+select a.ORG_ID,b.HEADER_ID,b.ORDER_NUMBER,c.NAME SO_Type,c.description Type_Desc,
+a.LINE_NUMBER||'.'||SHIPMENT_NUMBER Line,d.segment1 Sys_Item,a.ORDERED_ITEM,
+a.ACTUAL_SHIPMENT_DATE
+,a.FLOW_STATUS_CODE
+,ORDERED_ITEM
+,SHIPPED_QUANTITY
+,ORDERED_QUANTITY
+,SHIPPING_QUANTITY
+,a.CREATION_DATE
+,a.LAST_UPDATE_DATE
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d
+where a.HEADER_ID=b.HEADER_ID
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+and c.LANGUAGE='US'
+and d.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and b.ship_from_org_id=d.organization_id
+and a.CREATION_DATE>=to_date('2005-9-1','yyyy-mm-dd')
+and a.CREATION_DATE<=to_date('2005-9-11','yyyy-mm-dd')
+and b.ORDER_NUMBER in ('119766','800662','4002711')
+
+

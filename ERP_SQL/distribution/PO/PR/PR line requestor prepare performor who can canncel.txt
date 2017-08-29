@@ -1,0 +1,35 @@
+
+---------only PR line action Perform_By could cancel PR
+SELECT PR.SEGMENT1 Req_PO_Number,
+HI.OBJECT_TYPE_CODE Doc_Type,PR.AUTHORIZATION_STATUS,
+HI.ACTION_CODE,
+convert(PE2.FULL_NAME,'ZHS16GBK')  PR_Prepare_Buy,
+PE3.FULL_NAME  Line_Requestor,PE.FULL_NAME Act_PerformBy,usr.description Act_CreatedBy,
+PE.EMPLOYEE_NUMBER Act_EmployeeNum,
+hi.OBJECT_SUB_TYPE_CODE,OBJECT_REVISION_NUM,OBJECT_ID,NOTE,
+PR.DESCRIPTION DESC_OR_COMMENTS,
+pr.creation_date Date_Time,trunc(pr.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PR.REQUISITION_HEADER_ID Hearder_ID
+FROM apps.PO_ACTION_HISTORY  HI,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all PRL,
+apps.fnd_user Usr,
+apps.PER_PEOPLE_V7  PE,
+apps.PER_PEOPLE_V7  PE2,
+apps.PER_PEOPLE_V7  PE3
+WHERE 
+PR.REQUISITION_HEADER_ID=HI.OBJECT_ID and 
+--HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.PREPARER_ID=PE2.PERSON_ID
+and prl.REQUISITION_HEADER_ID=pr.REQUISITION_HEADER_ID
+and prl.REQUISITION_LINE_ID=HI.OBJECT_ID
+and usr.user_id=HI.created_by
+and prl.TO_PERSON_ID=pe3.PERSON_ID
+and (PR.SEGMENT1 ='8979' and prl.LINE_NUM='3'
+  or PR.SEGMENT1 ='17752' and prl.LINE_NUM='1'
+  or PR.SEGMENT1 ='8979' and prl.LINE_NUM='8'
+  or PR.SEGMENT1 ='9831' and prl.LINE_NUM='1'
+  or PR.SEGMENT1 ='11537' and prl.LINE_NUM='16'
+  or PR.SEGMENT1 ='13261' and prl.LINE_NUM='31'
+  or PR.SEGMENT1 ='32561' and prl.LINE_NUM='1')
+and HI.OBJECT_TYPE_CODE='REQUISITION'

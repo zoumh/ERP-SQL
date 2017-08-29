@@ -1,0 +1,38 @@
+
+
+select * 
+from apps.wms_license_plate_numbers lpn,
+  apps.wms_lpn_contents lpnc
+where
+   lpn.lpn_id=lpnc.PARENT_LPN_ID
+and   lpn.INVENTORY_ITEM_ID is not null
+and   lpn.LPN_CONTEXT=4
+and   lpnc.INVENTORY_ITEM_ID is not null
+and   lpn.ORGANIZATION_ID=lpnc.ORGANIZATION_ID
+and   lpn.ORGANIZATION_ID=130
+ 
+ 
+the above script check shiped LPN, but exist item information in LPN_CONTENXT table, only for reference.
+ 
+ 
+  
+SELECT MSIB.SEGMENT1,MOQ.SUBINVENTORY_CODE,MOQ.PRIMARY_TRANSACTION_QUANTITY,MOQ.LPN_ID,MMT.LPN_ID  
+FROM apps.mtl_onhand_quantities_detail moq,  
+  APPS.MTL_SYSTEM_ITEMS_B MSIB, 
+  APPS.MTL_MATERIAL_TRANSACTIONS MMT 
+WHERE    MOQ.SUBINVENTORY_CODE='SD' 
+AND   MOQ.ORGANIZATION_ID=130
+--AND      MOQ.LAST_UPDATE_DATE >= TO_DATE('2006-03-14 09:37:00','YYYY-MM-DD HH24-MI-SS')  
+AND      MSIB.ORGANIZATION_ID=130  
+AND      MSIB.INVENTORY_ITEM_ID=MOQ.INVENTORY_ITEM_ID  
+AND   MOQ.UPDATE_TRANSACTION_ID=MMT.TRANSACTION_ID
+AND      MMT.TRANSACTION_TYPE_ID=18  
+AND      MMT.TRANSACTION_ACTION_ID=27
+AND      MOQ.LPN_ID IS NULL 
+ 
+ 
+this script check after put away, but no LPN insert into mtl_onhand_quantities_detail table, only for reference.
+ 
+ 
+Frank
+

@@ -1,0 +1,21 @@
+
+
+
+select 	a.user_id Oracle_User_ID,
+a.user_name Oracle_User_ID, 
+convert(a.description,'ZHS16GBK') Oracle_User_Name, 
+a.fax Department, a.CREATION_DATE,a.LAST_LOGON_DATE ,END_DATE 
+From 	   apps.fnd_user a where a.user_name='28952127'
+
+2007-1-12 15:25:47
+
+
+------Disable User
+update apps.fnd_user set END_DATE=to_date('2007-1-12 15:25:47','YYYY-MM-DD hh24:mI:ss') where user_name='28952127'
+
+update apps.fnd_user set END_DATE=to_date('2007-1-12','YYYY-MM-DD') where user_name='28952127'
+
+-------Clear the End Date
+update apps.fnd_user set END_DATE=null where user_name='28952127'
+
+commit

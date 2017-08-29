@@ -1,0 +1,15 @@
+
+
+---List Item, Category,Creater
+
+select b.segment1 Cate,a.segment1 Item,inventory_item_status_code status,Item_Type,a.CREATION_DATE ,a.CREATED_BY,c.description,
+c.DESCRIPTION 
+from apps.mtl_system_items a,apps.mtl_item_categories_v b,apps.fnd_user c
+where a.ORGANIZATION_ID=130
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+and c.user_id=a.CREATED_BY
+order by a.segment1
+
+

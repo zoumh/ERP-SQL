@@ -1,0 +1,79 @@
+
+
+select sum(COST) from apps.BMC_CST_STDCST_TYPE where COST_TYPE='04Q2 Quota' and organization_id=83
+
+select sum(COST) from apps.BMC_CST_STDCST_TYPE where COST_TYPE='Pending' and organization_id=83
+
+select count(*) from apps.BMC_CST_STDCST_TYPE where COST_TYPE='04Q2 Quota' and organization_id=83
+
+select count(*) from apps.BMC_CST_STDCST_TYPE where COST_TYPE='Pending' and organization_id=83
+
+
+----------check DPY's 0 cost's ,last update date
+select b.SEGMENT1 Item,a.standard_cost,a.update_date,a.update_description 
+from apps.CST_COST_HISTORY_V a,apps.mtl_system_items_b b
+where a.inventory_item_id=b.inventory_item_id
+and a.update_date>= to_date('2007-8-6','YYYY-MM-DD')
+and a.update_date<= to_date('2007-08-11','YYYY-MM-DD')
+and a.organization_id=130 and b.organization_id=130
+--and b.SEGMENT1 like 'DPY%'
+and b.Item_Type='DPY'
+and a.standard_cost=0
+order by b.SEGMENT1,a.update_date
+
+
+select c.ITEM_NUMBER,b.segment1 as Item, item_type, inventory_item_status_code,
+to_number(a.item_cost,999999.99999) cost, to_number(a.material_cost,999999.99999) material_cost, 
+to_number(a.resource_cost,999999.99999) resource_cost ,c.COST_TYPE,a.organization_id,c.DESCRIPTION,
+c.creation_date,c.last_update_date
+from apps.cst_item_costs a, apps.mtl_system_items b 
+,apps.CST_ITEM_COST_TYPE_V c
+where 
+ a.inventory_item_id=b.inventory_item_id and b.segment1 != 'FORKLIFT' and item_type != 'CTR'
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.cost_type_id=c.cost_type_id
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=83
+and c.COST_TYPE='Frozen'
+and inventory_item_status_code='Active'
+and c.ITEM_NUMBER like '%DPY%'
+and a.item_cost=0
+
+
+---------Check DPY's BOM cost
+select c.segment1 assembly, c.item_type Assm_Item_Type, d.segment1 component, c.DESCRIPTION Assm_Desc,
+d.item_type as Comp_item_type,to_char(e.item_cost, 999999.9999) item_cost, 
+to_char(e.material_cost, 999999.9999) material_cost,e.cost_type_id,
+to_char(e.RESOURCE_COST, 999999.9999) Resource_cost,g.segment1 Comp_cate1,g.segment2 Comp_cate2
+from apps.bom_bill_of_materials a, apps.bom_inventory_components b, apps.mtl_system_items c, 
+apps.mtl_system_items d, apps.cst_item_costs e,apps.mtl_item_categories_v f,apps.mtl_categories_b  g
+where a.bill_sequence_id=b.bill_sequence_id and b.component_item_id=d.inventory_item_id 
+and a.assembly_item_id=c.inventory_item_id and c.organization_id=83 and d.organization_id=83 
+and a.organization_id=83 and b.component_item_id=e.inventory_item_id and e.organization_id=83 and f.organization_id=83
+and d.inventory_item_id=f.inventory_item_id 
+and g.category_id=f.category_id
+and e.cost_type_id =1  --Cost Type  (1001=Q2, 3=pending, 1=Frozen)
+and c.segment1='DPY 101 2666/56 DOA'
+order by assembly, component;
+
+
+
+CREATE OR REPLACE VIEW BMC_CST_STDCST_TYPE
+(ITEM_NUMBER, ITEM, ITEM_TYPE, INVENTORY_ITEM_STATUS_CODE, COST, 
+ MATERIAL_COST, RESOURCE_COST, COST_TYPE, ORGANIZATION_ID, DESCRIPTION)
+AS 
+select c.ITEM_NUMBER,b.segment1 as Item, item_type, inventory_item_status_code,
+to_number(a.item_cost,999999.99999) cost, to_number(a.material_cost,999999.99999) material_cost, 
+to_number(a.resource_cost,999999.99999) resource_cost ,c.COST_TYPE,a.organization_id,c.DESCRIPTION
+from apps.cst_item_costs a, apps.mtl_system_items b 
+,apps.CST_ITEM_COST_TYPE_V c
+where 
+ a.inventory_item_id=b.inventory_item_id and b.segment1 != 'FORKLIFT' and item_type != 'CTR'
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.cost_type_id=c.cost_type_id
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+--and a.organization_id=83
+--and c.COST_TYPE='04Q2 Quota'--'Frozen''
+--order by segment1;

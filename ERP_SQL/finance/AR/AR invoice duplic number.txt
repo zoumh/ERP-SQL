@@ -1,0 +1,79 @@
+
+
+select CREATION_DATE,TRX_NUMBER ,ORG_ID from apps.ra_customer_trx_all
+order by TRX_NUMBER,ORG_ID
+
+
+select a.NAME as Type, b.TRX_NUMBER Inv_Number,b.org_id,b.CUST_TRX_TYPE_ID,
+c.name Source_Type,b.DOC_SEQUENCE_VALUE,
+b.INVOICE_CURRENCY_CODE as Curr,
+b.TRX_DATE,b.CREATION_DATE
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b,apps.RA_BATCH_SOURCES_all c
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and c.BATCH_SOURCE_ID=b.BATCH_SOURCE_ID
+and b.org_id=c.org_id
+and a.org_id=c.org_id
+--and b.TRX_NUMBER ='29143CN'
+and b.TRX_NUMBER in 
+(select  TRX_NUMBER from apps.ra_customer_trx_all
+group by TRX_NUMBER
+having count(*)>1
+)
+order by b.TRX_NUMBER,b.TRX_DATE--,d.LINE_NUMBER
+
+
+select  TRX_NUMBER ,count(*) from apps.ra_customer_trx_all where TRX_NUMBER ='29143CN'
+group by TRX_NUMBER
+having count(*)>1
+
+select TRX_NUMBER,CREATION_DATE,BATCH_SOURCE_ID from apps.ra_customer_trx_all where TRX_NUMBER='262658'
+
+select * from apps.RA_BATCH_SOURCES_all where BATCH_SOURCE_ID=1001
+
+select * from apps.ra_cust_trx_types_all where CUST_TRX_TYPE_ID=1
+
+
+select a.NAME as Type, b.TRX_NUMBER Inv_Number,b.org_id,
+c.name Source_Type,b.DOC_SEQUENCE_VALUE,
+b.INVOICE_CURRENCY_CODE as Curr,
+b.TRX_DATE,b.CREATION_DATE
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b,apps.RA_BATCH_SOURCES_all c
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and c.BATCH_SOURCE_ID=b.BATCH_SOURCE_ID
+and a.org_id=c.org_id
+--and length(b.TRX_NUMBER)>=6
+and b.TRX_NUMBER='262658'
+
+and b.TRX_NUMBER not in 
+(select  TRX_NUMBER from apps.ra_customer_trx_all
+group by TRX_NUMBER
+having count(*)>1
+)
+order by b.TRX_NUMBER desc
+
+select a.NAME as Type, b.TRX_NUMBER Inv_Number,b.org_id,
+c.name Source_Type,b.DOC_SEQUENCE_VALUE,
+b.INVOICE_CURRENCY_CODE as Curr,
+b.TRX_DATE,b.CREATION_DATE
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b,apps.RA_BATCH_SOURCES_all c
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and c.BATCH_SOURCE_ID=b.BATCH_SOURCE_ID
+and a.org_id=c.org_id
+--and c.org_id=81
+--and b.CREATION_DATE>=to_date('2005-12-1','yyyy-mm-dd')
+--and b.TRX_NUMBER>'262658'
+and c.name <>'BMC OM Importing'
+and length(b.TRX_NUMBER)>=6
+and  (substr(b.TRX_NUMBER,1,1))  >= '0' and (substr(b.TRX_NUMBER,1,1))  <= '9'
+and  (substr(b.TRX_NUMBER,2,1))  >= '0' and (substr(b.TRX_NUMBER,2,1))  <= '9'
+and  (substr(b.TRX_NUMBER,3,1))  >= '0' and (substr(b.TRX_NUMBER,3,1))  <= '9'
+and  (substr(b.TRX_NUMBER,4,1))  >= '0' and (substr(b.TRX_NUMBER,4,1))  <= '9'
+and  (substr(b.TRX_NUMBER,5,1))  >= '0' and (substr(b.TRX_NUMBER,5,1))  <= '9'
+and  (substr(b.TRX_NUMBER,6,1))  >= '0' and (substr(b.TRX_NUMBER,6,1))  <= '9'
+order by b.TRX_NUMBER desc

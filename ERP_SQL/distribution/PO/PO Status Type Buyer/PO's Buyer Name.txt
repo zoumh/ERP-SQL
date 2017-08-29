@@ -1,0 +1,46 @@
+
+
+SELECT PO.SEGMENT1 PO_Number,
+convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_HEADERS_ALL     PO,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PO.AGENT_ID=PE2.PERSON_ID
+and po.segment1='1015204'
+
+
+
+--------PO's Buyer, creator name (with matched Invoice info)
+
+SELECT a.UNIT_PRICE-nvl(INVOICE_PRICE_VARIANCE,0) PO_Orice,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer,d.user_name Created_By,
+d.description Created_By, 
+c.INVOICE_NUM, 
+--CONVERT(VDR.VENDOR_NAME,'ZHS16GBK') AS Supplier, 
+VDR.VENDOR_NAME  Supplier, 
+vdr.VENDOR_ID,c.INVOICE_AMOUNT 
+,c.INVOICE_DATE,c.DESCRIPTION,b.segment3 AS ACCOUNT,b.segment2 AS Cost_Center,a.ACCOUNTING_DATE GL_DATE 
+,c.ATTRIBUTE1 AS Inv_Trans_Num,c.INVOICE_CURRENCY_CODE AS Inv_Curr,a.DISTRIBUTION_LINE_NUMBER AS Line,a .AMOUNT AS Line_Amount 
+,NVL(A.BASE_AMOUNT,a.AMOUNT) AS Line_Amount_CNY , 
+--CONVERT(a.description,'ZHS16GBK') line_Description 
+a.description  line_Description 
+,b.segment4 PRD,b.segment5 PRJ 
+FROM apps.AP_INVOICE_DISTRIBUTIONS_ALL a 
+,apps.GL_CODE_combinations b 
+,apps.AP_INVOICES_ALL c 
+,apps.PO_VENDORS VDR 
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+,apps.PER_PEOPLE_V7 PE2
+,apps.fnd_user d
+WHERE a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+AND a.invoice_id=c.invoice_id 
+AND VDR.VENDOR_ID=c.VENDOR_ID 
+and b.segment3='41059903' 
+and a.ACCOUNTING_DATE>=to_date('2006-06-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <=to_date('2006-08-31','yyyy-mm-dd')
+and c.INVOICE_NUM='03998113'
+and (INVOICE_PRICE_VARIANCE is not null and  INVOICE_PRICE_VARIANCE<>0)
+and f.po_header_id(+)=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and f.AGENT_ID=PE2.PERSON_ID
+and d.user_id=f.CREATED_BY

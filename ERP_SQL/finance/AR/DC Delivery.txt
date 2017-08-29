@@ -1,0 +1,90 @@
+
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_DC_DELIVERY_REPORT
+(SCHEDULE_SHIP_DATE, REQUESTED_ARRIVAL_DATE, REQUEST_ETD_DATE, FIRST_CONFIRM_ETD_DATE, FIRST_CONFIRM_DATE_TIME, 
+ RESPONSE_TIME_HOURS, ITEM_MODEL, FREIGHT_TERMS_CODE, CARRIER, PO_RECEIVING_DATE, 
+ SHIP_NO, AWB_NO, HAWB_NO, FLIGHT_NO, POD_DATE, 
+ GROSS_WEIGHT, PALLET_QTY, ACTUAL_DELIVERY_DATE, INVOICE_NO, PO_NO, 
+ SO_NO, LINE_NUMBER, ORDER_TYPE, REGION_ID, INVOICE_TYPE, 
+ ORDERED_ITEM, ITEM_CODE_REV, SIGLE_PRICE, TOTAL_PRICE, QTY, 
+ CONSIGNEE_CUSTOMER_NAME, COUNTRY_NAME, ADDRESS)
+AS 
+SELECT
+oola.schedule_ship_date,
+oola.schedule_arrival_date requested_arrival_date,
+oola.request_date             request_etd_date,
+get_first_confirm_etd_date(oola.line_id)  first_confirm_etd_date,
+ha1.last_update_date                      First_confirm_date_time,
+round((ha1.last_update_date-ooha.ordered_date)*24,2)    Response_time_hours,
+--wdd.date_scheduled,
+get_item_model(oola.inventory_item_id,oola.ship_from_org_id)  item_model,
+ooha.freight_terms_code                   freight_terms_code,  -- ||','||wnd.FOB_CODE
+wc.FREIGHT_CODE                           carrier,
+--ooha.FREIGHT_CARRIER_CODE                 Carrier,
+ooha.ordered_date    po_receiving_date,
+wnd.NAME             ship_no,
+wnd.WAYBILL          AWB_No,
+wnd.attribute1       HAWB_No,
+wnd.attribute2       Flight_No,
+wnd.attribute3       POD_Date,
+--wnd.gross_weight,
+get_shipment_gross_weight(wnd.delivery_id)  gross_weight,
+wnd.number_of_lpn  pallet_qty,
+wnd.ULTIMATE_DROPOFF_DATE actual_delivery_date,
+--wnd.NAME dn,
+get_invoice_no(wnd.delivery_id,ooha.order_number)    invoice_no,
+nvl(ooha.CUST_PO_NUMBER,oola.attribute5) po_no,
+--ooha.cust_po_number po_no,
+ooha.order_number so_no,
+oola.line_number||','||oola.shipment_number line_number,
+typ.name         order_type,
+oola.attribute4  region_id,
+TRX.NAME         invoice_type,
+oola.ordered_item,
+msi.segment1 item_code_rev,
+--miv.REVISION ver,
+oola.unit_list_price sigle_price,
+oola.pricing_quantity*oola.unit_list_price total_price,
+oola.pricing_quantity qty,
+get_customer_name(ooha.ship_to_org_id)     consignee_customer_name,
+get_country_name(raa.country)  country_name,
+raa.address1||raa.address2||raa.address3||raa.address4 address
+FROM
+oe_order_headers_all ooha,
+oe_order_lines_all oola,
+OE_TRANSACTION_TYPES_TL        typ,
+OE_TRANSACTION_TYPES_all        typ_all,
+RA_CUST_TRX_TYPES_all              TRX,
+--wsh_pick_slip_v wpsv,
+wsh_delivery_details wdd,
+wsh_new_deliveries wnd,
+wsh_delivery_assignments wda,
+mtl_system_items         msi,
+--mtl_item_revisions miv,
+oe_header_acks                ha1,
+ra_addresses_all raa,
+ra_site_uses_all rsua,
+WSH_CARRIERS     wc
+WHERE
+ooha.ship_to_org_id = rsua.site_use_id and
+ooha.ORDER_TYPE_ID=typ.transaction_type_id and
+typ.language='US' and
+ooha.ORDER_TYPE_ID=typ_all.transaction_type_id and
+TRX.CUST_TRX_TYPE_ID=TYP_all.CUST_TRX_TYPE_ID
+AND rsua.address_id = raa.address_id
+AND ooha.header_id = oola.header_id
+--AND wpsv.move_order_line_id(+) = wdd.move_order_line_id
+AND wdd.source_line_id(+) = oola.line_id
+AND wdd.source_header_id(+) = oola.header_id
+AND wdd.delivery_detail_id = wda.delivery_detail_id(+)
+AND wda.delivery_id = wnd.delivery_id(+)
+AND oola.inventory_item_id = msi.inventory_item_id
+AND oola.ship_from_org_id = msi.organization_id
+--AND msi.inventory_item_id = miv.INVENTORY_ITEM_ID
+--AND msi.organization_id = miv.ORGANIZATION_ID
+and ha1.header_id(+)=ooha.header_id and
+       ha1.org_id(+)=ooha.org_id and
+       ha1.first_ack_code(+)='AC' and
+       wc.carrier_id(+)=wnd.carrier_id;
+
+

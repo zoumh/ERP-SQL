@@ -1,0 +1,44 @@
+
+
+
+---------Pay batch void not update invoice
+---------Found in ap_checks_all status_lookup_code is voided and void_date is also populated.
+---------But there is no reversal entry in ap_invoice_payments_all table for the payment
+
+
+select invoice_id,invoice_num,invoice_amount,amount_paid,PAYMENT_STATUS_FLAG from apps.ap_invoices_all
+where invoice_num in ('BMC0273/06','BMC0274/06A','BMC0275/06','BMC0276/06','DN2511/06','MN0037/06','MN0039/06','MS0038/06')
+
+
+
+select invoice_id,amount_remaining,payment_status_flag,gross_amount,checkrun_id from apps.AP_PAYMENT_SCHEDULES_all where invoice_id--=92460
+in (select invoice_id from apps.ap_invoices_all
+where invoice_num in ('BMC0273/06','BMC0274/06A','BMC0275/06','BMC0276/06','DN2511/06','MN0037/06','MN0039/06','MS0038/06')
+)
+
+
+select invoice_id,amount,check_id,invoice_payment_id,reversal_flag,accounting_date,period_name,posted_flag 
+from apps.AP_INVOICE_PAYMENTS_all where invoice_id
+in (select invoice_id from apps.ap_invoices_all
+where invoice_num in ('BMC0273/06','BMC0274/06A','BMC0275/06','BMC0276/06','DN2511/06','MN0037/06','MN0039/06','MS0038/06')
+)
+
+
+select CHECKRUN_NAME,check_number,amount,currency_code,Bank_account_name,status_lookup_code Status,vendor_name,payment_type_flag Pay_Type,VOID_DATE 
+from apps.AP_CHECKS_all where check_id=79304
+
+
+
+------------solve:Please follow the below fix and void the payment again.
+
+
+create table BMC_ap_checks_all_bkup061222 as select * from ap_checks_all where check_id=79304
+
+--table created
+
+Update
+========
+
+update ap_checks_all set status_lookup_code='NEGOTIABLE',void_date=null where check_id=79304
+
+Commit

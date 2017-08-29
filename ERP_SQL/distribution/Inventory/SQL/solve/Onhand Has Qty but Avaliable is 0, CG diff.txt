@@ -1,0 +1,30 @@
+
+
+----------------Onhand has Qty but avaliable is 0, no task, no reservasion ---Cost Group Diff between Onhand & LPN
+
+select lpn_id from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='3S0007171'
+
+691770
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl where lpn_id=691770
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_id=691770
+
+
+select cost_group_id from apps.wms_lpn_contents WHERE parent_lpn_id=691770
+
+select cost_group_id from apps.MTL_ONHAND_QUANTITIES_DETAIl where lpn_id=691770
+
+
+----->solve , update Onhand or LPN table's cost_Group ID, to match
+UPDATE WMS_LPN_CONTENTS 
+SET cost_group_id = 1009 
+WHERE PARENT_LPN_ID = 691770
+
+UPDATE MTL_ONHAND_QUANTITIES_DETAIl
+SET cost_group_id = 1009 
+WHERE lpn_id=691770
+
+
+select COST_GROUP,DESCRIPTION,ORGANIZATION_ID,COST_GROUP_TYPE,COST_GROUP_ID from apps.cst_cost_groups
+

@@ -1,0 +1,70 @@
+
+select * from APPS.AP_INVOICES_v 
+where INVOICE_TYPE_LOOKUP_CODE='PREPAYMENT' 
+and PAY_GROUP_LOOKUP_CODE='EM' 
+
+select
+APPROVAL_STATUS_LOOKUP_CODE,PREPAYMENTS_APPLIED_FLAG,GL_DATE,AMOUNT_PAID,DESCRIPTION,INVOICE_NUM,BATCH_NAME,INVOICE_CURRENCY_CODE,INVOICE_TYPE,PAYMENT_STATUS
+from APPS.AP_INVOICES_v 
+where INVOICE_TYPE_LOOKUP_CODE='PREPAYMENT' 
+and PAY_GROUP_LOOKUP_CODE='EM' 
+
+
+
+
+
+-------Open prepayment
+
+SELECT --DISTINCT 
+--apb.BATCH_ID,
+adv.LINE_TYPE,
+c. INVOICE_TYPE_LOOKUP_CODE AS TYPE, 
+c.approval_status_lookup_code ,
+c.AMOUNT_PAID,
+ c.DISTRIBUTION_TOTAL,
+vdr.vendor_name,
+vdr.SEGMENT1 vendor_Number,
+c.VENDOR_SITE_CODE site, 
+c.INVOICE_DATE,
+c.INVOICE_NUM invoice_num,
+c.INVOICE_CURRENCY_CODE  curreny,
+c.INVOICE_AMOUNT INVOICE_AMOUNT,
+--transaction_number(user define)
+c.GL_DATE  GL_DATE ,
+c.PAYMENT_CURRENCY_CODE payment_curreny,
+c.PAYMENT_CROSS_RATE_DATE  payment_rate_date,
+c.terms_date  due_date,
+c.TERMS_NAME,
+c.PAYMENT_METHOD,
+c.PAY_GROUP_LOOKUP_CODE,
+ adv.AMOUNT distribution_amt,
+ adv.PREPAY_AMOUNT_REMAINING  
+--vdr.SEGMENT1||'&&'||c.INVOICE_NUM Inv_ID,
+--c.VENDOR_ID,c.INVOICE_TYPE_LOOKUP_CODE Inv_type,c.ORG_ID, c.INVOICE_NUM,
+--apb.BATCH_NAME AS InvBatch,
+--c.INVOICE_AMOUNT,(c.AMOUNT_PAID) Paid_Amt,
+--(c.BASE_AMOUNT) Inv_CNY_Amt,
+--(NVL(c.INVOICE_AMOUNT,0)-NVL(c.AMOUNT_PAID,0)) Open_Amt,
+--c.PAYMENT_STATUS_FLAG,
+--c.GL_DATE, c.DESCRIPTION,c.TERMS_DATE,
+--c.PAY_GROUP_LOOKUP_CODE Pay_Group,c.VAT_CODE,c.EXCHANGE_RATE,c.EXCHANGE_DATE , c.EXCHANGE_RATE_TYPE ,
+--c.APPROVAL_STATUS,
+--c.PREPAY_FLAG, c.WFAPPROVAL_STATUS,      
+--c.invoice_currency_code Curr,c.INVOICE_TYPE_LOOKUP_CODE Inv_Type--,--,c.GL_DATE
+FROM apps.AP_INVOICES_v c,
+apps.PO_VENDORS VDR,
+--apps.AP_BATCHES_ALL apb,
+AP_INVOICE_DISTRIBUTIONS_V  adv  
+WHERE VDR.VENDOR_ID=c.VENDOR_ID
+--AND c.BATCH_ID=apb.BATCH_ID
+--and PAYMENT_STATUS_FLAG in ('N','P')
+--and nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)<>0
+--AND c.approval_status_lookup_code<>'CANCELLED'
+AND c. INVOICE_TYPE_LOOKUP_CODE='PREPAYMENT'  
+AND c.approval_status_lookup_code =  'AVAILABLE' 
+--AND c.invoice_num  IN( '3')
+AND c.INVOICE_ID = adv.INVOICE_ID
+--AND  adv.amount =  c.DISTRIBUTION_TOTAL 
+AND adv.LINE_TYPE = 'По'--item zhongwen 
+-- c.invoice_num = adv.invoice_num AND
+

@@ -1,0 +1,21 @@
+
+--------Raw material's PO price for Zhang Miao to make price
+
+SELECT c.CREATION_DATE, d.segment1 PO_number,to_char(c.LINE_NUM) PO_Line_Num,
+e.SEGMENT1 as Item,C.UNIT_PRICE,
+d.CURRENCY_CODE, c.ITEM_DESCRIPTION,C.QUANTITY,f.LINE_TYPE,f.DESCRIPTION,g.SEGMENT1 Cate1,g.SEGMENT2 Cate2
+,c.ATTRIBUTE1 Flex_Bonded,c.ATTRIBUTE4 Flex_comment,d.AUTHORIZATION_STATUS PO_Status
+FROM apps.PO_LINES_ALL         C,
+	 apps.PO_HEADERS_ALL       D,
+	 apps.mtl_system_items_b   e,
+	 apps.PO_line_types f,
+	 apps.MTL_CATEGORIES_B g
+WHERE D.PO_HEADER_ID=c.PO_HEADER_ID
+and e.INVENTORY_ITEM_ID(+)=c.item_id 
+and c.LINE_TYPE_ID<>1020 --1020=No-BOM PO line
+and (d.AUTHORIZATION_STATUS ='APPROVED')  
+and e.ORGANIZATION_ID='83'
+and f.LINE_TYPE_ID=c.LINE_TYPE_ID
+and c.CATEGORY_ID=g.CATEGORY_ID
+order by e.SEGMENT1,d.segment1,c.LINE_NUM
+

@@ -1,0 +1,172 @@
+
+----------mtl_material_transactions link with SO/delivery
+
+mtl_material_transactions.SOURCE_LINE_ID	=OE_ORDER_lineS_all.LINE_ID
+mtl_material_transactions.TRX_SOURCE_LINE_ID	=OE_ORDER_lineS_all.LINE_ID
+
+mtl_material_transactions.TRANSACTION_REFERENCE =to_char(OE_ORDER_HEADERS_ALL.HEADER_ID)
+
+mtl_material_transactions.SHIPMENT_NUMBER=WSH_DELIVERABLES_V.delivery_ID
+
+select c.ORDER_NUMBER,b.LINE_NUMBER,a.TRANSACTION_QUANTITY,a.transaction_ID,
+a.creation_Date
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+and c.ORDER_NUMBER='1000089'
+
+
+-----------SO's issue mtl transaction with line
+select a.TRANSACTION_TYPE_ID,c.ORDER_NUMBER,b.LINE_NUMBER||'.'||b.SHIPMENT_NUMBER line_num,c.CUST_PO_NUMBER,
+b.ORDERED_QUANTITY,b.SHIPPED_QUANTITY,
+a.TRANSACTION_QUANTITY,b.UNIT_SELLING_PRICE,c.TRANSACTIONAL_CURR_CODE,
+a.TRANSACTION_DATE,
+a.transaction_ID,a.creation_Date,b.SHIP_FROM_ORG_ID 
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+--and a.ORGANIZATION_ID=b.SHIP_FROM_ORG_ID
+--and c.ORDER_NUMBER='41000959'
+and a.ORGANIZATION_ID=132  --IP org
+and a.TRANSACTION_DATE>=to_date('2008-1-1','yyyy-mm-dd')
+and a.TRANSACTION_DATE< to_date('2008-1-10','yyyy-mm-dd')
+and a.TRANSACTION_TYPE_ID=33
+order by c.ORDER_NUMBER,b.LINE_NUMBER||'.'||b.SHIPMENT_NUMBER
+
+
+-----------SO's Ship mtl transaction with SO line, category,SO Type,
+select (select segment1 from apps.mtl_item_categories_v d where d.category_set_id=1 
+and d.ORGANIZATION_ID=a.ORGANIZATION_ID and d.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID ) Model,
+c.ORDER_NUMBER,b.LINE_NUMBER||'.'||b.SHIPMENT_NUMBER line_num,c.CUST_PO_NUMBER,
+b.ORDERED_QUANTITY SO_Line_Order_Qty,b.SHIPPED_QUANTITY SO_Line_Ship_Qty,
+a.TRANSACTION_QUANTITY,b.UNIT_SELLING_PRICE,c.TRANSACTIONAL_CURR_CODE,
+a.TRANSACTION_DATE,
+a.transaction_ID,a.creation_Date,b.SHIP_FROM_ORG_ID 
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+--and a.ORGANIZATION_ID=b.SHIP_FROM_ORG_ID
+--and c.ORDER_NUMBER='41000959'
+and a.ORGANIZATION_ID=132  --IP org
+and a.TRANSACTION_DATE>=to_date('2008-1-1','yyyy-mm-dd')
+and a.TRANSACTION_DATE< to_date('2008-1-22','yyyy-mm-dd')
+and a.TRANSACTION_TYPE_ID=33
+--and d.category_set_id=1
+order by c.ORDER_NUMBER,b.LINE_NUMBER||'.'||b.SHIPMENT_NUMBER
+
+
+
+
+
+-------From SO number, query out SO Issue Trans
+
+select * from apps.mtl_material_transactions mmt ,apps.OE_ORDER_HEADERS_ALL oeh
+where mmt.transaction_type_id =33  --SO Issue 
+and    mmt.transaction_date >= to_date('20040801 00:00:00','YYYYMMDD HH24:MI:SS') 
+and    mmt.transaction_date <= to_date('20040830 23:59:59','YYYYMMDD HH24:MI:SS') 
+and mmt.organization_id = 84
+and mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+))
+and oeh.ORDER_NUMBER in ('4000611','4000593','4000594')
+
+
+----------mtl_material_transactions of SO_Ship,Delivery,LPN
+select e.LICENSE_PLATE_NUMBER CONTENT_LPN,
+c.ORDER_NUMBER,b.LINE_NUMBER,a.TRANSACTION_QUANTITY, 
+d.delivery_ID Delivery_No,d.DELIVERY_DETAIL_ID Del_Detail,
+a.creation_Date
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c,
+apps.WSH_DELIVERABLES_V d,apps.wms_license_plate_numbers e
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+and d.SOURCE_HEADER_ID=c.header_id
+and d.source_line_id=b.LINE_ID
+and b.org_id=c.org_id
+and a.ORGANIZATION_ID=c.SHIP_FROM_ORG_ID
+and a.ORGANIZATION_ID=e.ORGANIZATION_ID
+and a.CONTENT_LPN_ID=e.lpn_id
+and a.SHIPMENT_NUMBER=d.delivery_ID
+and c.ORDER_NUMBER='245026'
+and b.LINE_NUMBER in (2,12)
+
+---------------SO ship & Return Mtl Trans
+
+select   mmt.transaction_date, mmt.TRANSACTION_SOURCE_TYPE_ID,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, mso.SEGMENT1 SO,mso.SEGMENT2 Type,
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+ 	     mmt.transaction_id, 
+		 decode(mmt.organization_id,130,'PRD','Unknown') Organization ,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.MTL_SALES_ORDERS 		 mso 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+and mmt.TRANSACTION_SOURCE_ID =mso.SALES_ORDER_ID
+and mso.segment1='5002015'
+and mmt.TRANSACTION_SOURCE_TYPE_ID in (2,12) --- SO & RMA
+and mtt.transaction_type_name in ('Sales order issue','RMA Receipt')
+
+
+--------Mtl_account with (SO,SO_Type,Alias) Item,Type
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+          mta.primary_quantity  as Qty,
+         mmt.transaction_id, 
+         mst.transaction_source_type_name, 
+         mta.gl_batch_id, 
+         mmt.organization_id Organization , 
+         gcc.segment3 as Account_Num,mso.SEGMENT1 SO,mso.SEGMENT2 SO_Type, 
+         mmt.REVISION, 
+         MGD.SEGMENT1                       Alias_SOURCE, 
+         MMT.TRANSACTION_REFERENCE             Trans_Reference, 
+         mtr.reason_name,
+         mmt.subinventory_code                    Source_WareHouse,
+         mmt.transfer_subinventory             Destination_WareHouse,
+         gcc.segment2                    Cost_Center,
+         mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_generic_dispositions  MGD, 
+  apps.MTL_TRANSACTION_REASONS   mtr,
+  apps.MTL_SALES_ORDERS mso
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id  
+and    mta.organization_id = mmt.organization_id    
+and    mmt.organization_id =msi.organization_id     
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and    mtr.reason_id(+)=mmt.reason_id 
+and mmt.TRANSACTION_SOURCE_ID =mso.SALES_ORDER_ID(+)
+--and    mta.gl_batch_id=6397
+--and    gcc.code_combination_id in (1267,16058)
+--and    mta.base_transaction_value in (34.88,-34.88)
+--and msi.segment1 ='1212-0436.1'
+--and mtt.transaction_type_name ='Sales order issue'
+and mmt.transaction_date>=to_date('20080901 00:00:00','YYYYMMDD HH24:MI:SS')
+and mmt.transaction_date< to_date('20080927 00:00:00','YYYYMMDD HH24:MI:SS')
+and gcc.segment2 ='3050'

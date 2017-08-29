@@ -1,0 +1,75 @@
+
+
+AR Balance by Currency
+
+select 
+a.INVOICE_CURRENCY_CODE 
+,sum(a.ACCTD_AMOUNT_DUE_REMAINING) as CNY_Balance
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+group by a.INVOICE_CURRENCY_CODE 
+
+
+
+
+Customer Total/Balance
+
+
+select 
+--,sum(a.AMOUNT_DUE_REMAINING) as Balance,sum(a.AMOUNT_DUE_ORIGINAL) as Inv_Amt,sum(nvl(a.AMOUNT_APPLIED,0)) as Paid_Amt
+--,nvl(a.EXCHANGE_RATE,1) as Rate,a.INVOICE_CURRENCY_CODE as Curr,a.TRX_NUMBER as InvNum
+--,sum(a.AMOUNT_CREDITED) as Credit_amt,a.INVOICE_CURRENCY_CODE 
+convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER ,sum(a.ACCTD_AMOUNT_DUE_REMAINING) as CNY_Balance
+--,a.CUSTOMER_ID,a.CUSTOMER_TRX_ID,a.GL_DATE,a.DUE_DATE,a.CREATION_DATE,a.CUST_TRX_TYPE_ID
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,a.INVOICE_CURRENCY_CODE 
+
+
+
+
+
+Customer Total/Balance & more
+
+
+select sum(a.AMOUNT_DUE_REMAINING) as Balance,sum(a.ACCTD_AMOUNT_DUE_REMAINING) as CNY_Balance,sum(a.AMOUNT_DUE_ORIGINAL) as Inv_Amt,sum(nvl(a.AMOUNT_APPLIED,0)) as Paid_Amt
+--,nvl(a.EXCHANGE_RATE,1) as Rate,a.INVOICE_CURRENCY_CODE as Curr,a.TRX_NUMBER as InvNum
+,sum(a.AMOUNT_CREDITED) as Credit_amt,a.INVOICE_CURRENCY_CODE 
+,convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER 
+--,a.CUSTOMER_ID,a.CUSTOMER_TRX_ID,a.GL_DATE,a.DUE_DATE,a.CREATION_DATE,a.CUST_TRX_TYPE_ID
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,a.INVOICE_CURRENCY_CODE 
+
+
+
+
+
+
+
+
+Customer/Invoice_Num//AR Inv_Amt/Paid/Balance/GL_date
+
+select a.AMOUNT_DUE_REMAINING as Balance,a.ACCTD_AMOUNT_DUE_REMAINING as CNY_Balance,a.AMOUNT_DUE_ORIGINAL as Inv_Amt,nvl(a.AMOUNT_APPLIED,0) as Paid_Amt
+,AMOUNT_CREDITED,nvl(a.EXCHANGE_RATE,1) as Rate,a.INVOICE_CURRENCY_CODE as Curr,a.TRX_NUMBER as InvNum
+,convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER 
+,a.CUSTOMER_ID,a.CUSTOMER_TRX_ID,a.GL_DATE,a.DUE_DATE,a.CREATION_DATE,a.CUST_TRX_TYPE_ID
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+order by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER
+
+
+
+select * from apps.ar_payment_schedules_all

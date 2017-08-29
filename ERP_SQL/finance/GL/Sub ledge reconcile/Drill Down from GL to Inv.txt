@@ -1,0 +1,45 @@
+
+start from GL, batch name,account number, find the inventory transaction detasils
+
+
+
+1.------Have GL Batch , Account
+select b.BATCH_NAME,b.HEADER_NAME Journal_Name,
+JE_HEADER_ID,LINE_JE_LINE_NUM,
+a.segment2 CC,a.segment3 as Account,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR,b.PERIOD_NAME
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE --,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME='JUL-08')
+and (a.segment3='12320401') and ACTUAL_FLAG='A'
+and b.BATCH_NAME='19511 VP Inventory 17343542: A 1939805'
+
+
+2.----GL journal line (based on above info)
+select * from apps.GL_JE_JOURNAL_LINES_V where JE_HEADER_ID=168270 and LINE_JE_LINE_NUM in ('7','8')
+
+
+3.----Mtl_Account lines (based on above info)
+select * from apps.MTL_TRANSACTION_ACCOUNTS where GL_BATCH_ID=19511 and REFERENCE_ACCOUNT in (89392,75599)
+
+
+4.----Mtl Transaction details (based on above info)
+select  mtt.transaction_type_name,mta.TRANSACTION_DATE,
+(mta.base_transaction_value) value,mta.organization_id, 
+mta.primary_quantity,mmt.transaction_id,mta.gl_batch_id
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,
+  apps.mtl_transaction_types     mtt
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id   
+and    mta.organization_id = mmt.organization_id  
+and gcc.segment3='12320401'
+and mta.TRANSACTION_DATE>=to_date('20080701 00:00:00','YYYYMMDD HH24:MI:SS')
+and mta.GL_BATCH_ID=19511
+
+

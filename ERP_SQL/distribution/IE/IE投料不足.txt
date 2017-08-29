@@ -1,0 +1,18 @@
+
+投料不足
+
+select rowid, a.* from database_tl@bmcienew a  where ljno in ('ROA 128 2074.R1A')  order by LJNO
+
+
+select *  from ck_chk_tl@BMCienew /**??Buzu??**/  where LJNO='ROA 128 2074.R1A' --and YWID in ('12469430331520147315450409937274')
+
+select sum(LJINT) from ck_chk_tl@BMCienew /**??Buzu??**/  where LJNO='ROA 128 2074.R1A' --and BMC_FLAG='DPY'
+
+
+
+---------zhang ce mingxi -->yewuID
+从'帐册名细'-->业务ID
+
+select * from BGD_ZC_MX@bmcienew  where MXDNO in ('DK-090725-70922893-10A' )
+
+select * from CPCK_LJ_MX@bmcienew where  YWID='12486727044721333402834389039870'--LJNO='RNH 942 276.R2A' and LJINT1!=0

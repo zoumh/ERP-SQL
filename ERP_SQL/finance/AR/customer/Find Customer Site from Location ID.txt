@@ -1,0 +1,66 @@
+
+--------------Could run from Query 
+---------Find Customer/Site Number from location_ID(Site_ID), (have EDI_Location)
+select a.CUSTOMER_NUMBER,
+PARTY_SITE.PARTY_SITE_NUMBER Site_Number
+,b.SITE_USE_CODE ,b.LOCATION ,b.TAX_CODE,e.LOCATION Bill_To_Site
+,segment3 as Receivable_Acc,a.STATUS,b.PRIMARY_FLAG,LOC.COUNTRY,LOC.ADDRESS1,a.CUSTOMER_NAME,LOC.ADDRESS1||' '||LOC.CITY||' '||LOC.POSTAL_CODE||' '||LOC.COUNTRY Address,
+loc.ADDRESS2||' '||loc.ADDRESS3||' '||loc.ADDRESS4 Addres,c.ECE_TP_LOCATION_CODE EDI_Location,c.ORG_ID
+from apps.AR_CUSTOMERS_V  a
+,apps.HZ_CUST_SITE_USES_all b
+,apps.HZ_CUST_ACCT_SITES_ALL  c
+,apps.GL_CODE_combinations d
+,apps.HZ_CUST_SITE_USES_all e,
+apps.HZ_PARTY_SITES PARTY_SITE, 
+apps.HZ_LOCATIONS LOC 
+where a.CUSTOMER_ID=c.CUST_ACCOUNT_ID
+and c.CUST_ACCT_SITE_ID=b.CUST_ACCT_SITE_ID
+and b.GL_ID_REC=d.CODE_COMBINATION_ID(+)
+and b.ORG_ID=c.ORG_ID
+and b.ORG_ID=e.ORG_ID(+)
+and b.BILL_TO_SITE_USE_ID=e.site_use_id(+)
+AND c.PARTY_SITE_ID = PARTY_SITE.PARTY_SITE_ID 
+AND LOC.LOCATION_ID = PARTY_SITE.LOCATION_ID 
+--and a.CUSTOMER_NUMBER='1000'
+and b.LOCATION in ('11596')
+and b.ORG_ID>=127
+--and b.TAX_CODE is null
+order by c.ORG_ID,a.CUSTOMER_NAME,PARTY_SITE.PARTY_SITE_NUMBER
+
+
+
+---------New , add Tax_Round_Rule (But can't distinct from OU !!!) ,Find Customer/Site Number from location_ID
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('127');
+END;
+
+
+select c.ORG_ID,
+PARTY_SITE.PARTY_SITE_NUMBER Site_Number
+,b.SITE_USE_CODE ,b.LOCATION Site_ID,b.TAX_CODE,e.LOCATION Bill_To_Site
+,segment3 as Receivable_Acc,a.STATUS,b.PRIMARY_FLAG,LOC.COUNTRY,LOC.ADDRESS1,a.CUSTOMER_NAME,LOC.ADDRESS1||' '||LOC.CITY||' '||LOC.POSTAL_CODE||' '||LOC.COUNTRY Address,
+loc.ADDRESS2||' '||loc.ADDRESS3||' '||loc.ADDRESS4 Addres,a.CUSTOMER_NUMBER,f.TAX_ROUNDING_RULE
+from apps.AR_CUSTOMERS_V  a
+,apps.HZ_CUST_SITE_USES_all b
+,apps.HZ_SITE_USES_V f
+,apps.HZ_CUST_ACCT_SITES_ALL  c
+,apps.GL_CODE_combinations d
+,apps.HZ_CUST_SITE_USES_all e,
+apps.HZ_PARTY_SITES PARTY_SITE, 
+apps.HZ_LOCATIONS LOC 
+where a.CUSTOMER_ID=c.CUST_ACCOUNT_ID
+and c.CUST_ACCT_SITE_ID=b.CUST_ACCT_SITE_ID
+and b.GL_ID_REC=d.CODE_COMBINATION_ID(+)
+and b.ORG_ID=c.ORG_ID
+and b.ORG_ID=e.ORG_ID(+)
+and b.BILL_TO_SITE_USE_ID=e.site_use_id(+)
+AND c.PARTY_SITE_ID = PARTY_SITE.PARTY_SITE_ID 
+AND LOC.LOCATION_ID = PARTY_SITE.LOCATION_ID 
+--and a.CUSTOMER_NUMBER='1000'
+and b.LOCATION in ('33852','1048')
+and f.LOCATION=b.LOCATION
+--and b.TAX_CODE is null
+order by c.ORG_ID,a.CUSTOMER_NAME,PARTY_SITE.PARTY_SITE_NUMBER
+
+

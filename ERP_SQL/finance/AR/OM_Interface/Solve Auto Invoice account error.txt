@@ -1,0 +1,30 @@
+
+
+
+
+select code_combination_id,segment1,segment2,segment3,segment4,segment5,segment6 
+from apps.gl_code_combinations where code_combination_id=1217
+
+
+select * from apps.gl_code_combinations where code_combination_id=1217
+
+select * from apps.ra_interface_distributions_all where interface_line_id=272656 
+
+select * from apps.ra_interface_lines_all where interface_line_id=272656 
+
+
+
+SO
+780068
+NON-EDI Component Export Order
+COGS
+01.0000.5401010104.000000.0000.000000
+
+
+
+AR
+Components-Exp.
+Revenue
+01.0000.5101010104.000000.0000.000000
+
+01.0000.5101010104.000000.0000.000000

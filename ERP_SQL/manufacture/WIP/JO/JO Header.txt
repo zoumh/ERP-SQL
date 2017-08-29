@@ -1,0 +1,13 @@
+
+
+--------Check JO status, routine_revision ,Qty
+select wip_entity_name ,last_update_date,CREATION_DATE,
+ROUTING_REVISION,ROUTING_REFERENCE_ID,ROUTING_REVISION_DATE,
+BOM_REVISION,BOM_REVISION_DATE,
+decode(status_Type,1,'Unreleased',3,
+'Released',4,'Complete',5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+Class_Code,Date_Released,Date_Completed,Date_Closed,Entity_Type,Job_Type,start_quantity,QUANTITY_COMPLETED,quantity_remaining,net_quantity
+from apps.WIP_DISCRETE_JOBS_V
+where wip_entity_name in ('0070979199/1','0070979357/1','0070979336/1','0070976397/1')
+
+

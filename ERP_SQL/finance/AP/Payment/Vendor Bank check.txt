@@ -1,0 +1,115 @@
+
+----------Vendor bank info (one table)
+select VENDOR_NAME,VENDOR_NUMBER,VENDOR_SITE_CODE,VENDOR_TYPE_LOOKUP_CODE,
+ACCOUNT_TYPE,BANK_ACCOUNT_NAME,BANK_ACCOUNT_NUM,BANK_BRANCH_NAME,BANK_NAME,
+BANK_NUMBER,CREATION_DATE,END_DATE,ACCT_INACTIVE_DATE
+from apps.AP_BANK_ACCOUNT_USES_V  
+
+
+
+------------For Vendor Bank Check
+
+-------------Vendor check
+select a.vendor_number,
+       a.vendor_name,
+       a.last_update_date Vendor_Last_Update_Date,
+       a.vendor_type_lookup_code,
+       a.employee_id,
+       b.vendor_site_code,
+       b.creation_date Site_Create_date,
+       b.last_update_date site_last_update_date,       
+       b.bank_account_name,
+       b.bank_account_num,
+       c.user_Name Site_Created_ID,c.Description Site_Created_By 
+      ,d.user_Name Site_Lastupdate_ID,d.Description Site_Last_Update_By 
+from apps.AP_VENDORS_V a, apps.AP_VENDOR_SITES_V b,apps.fnd_user c,apps.fnd_user d
+where a.vendor_id = b.vendor_id
+and c.user_id= b.CREATED_BY
+and d.user_id(+)= b.LAST_UPDATED_BY
+and b.org_id=127
+
+----------Supplier Bank (with linked vendor & SWIFT,IBAN)
+select b.BANK_NAME,
+       b.BANK_BRANCH_NAME,b.EFT_SWIFT_CODE,
+       a.CREATION_DATE BKaccount_Create_Date,
+       a.LAST_UPDATE_DATE BKaccount_last_Update_Date,
+       a.BANK_ACCOUNT_NAME,a.IBAN_NUMBER,
+       a.ACCOUNT_TYPE,
+       a.BANK_ACCOUNT_NUM,
+       a.CURRENCY_CODE,
+       d.user_name BK_Account_Created_ID,d.description BK_Account_Created_By,
+       e.user_name BK_Vendor_Created_ID,e.description BK_Vendor_Created_By,
+       f.user_name BK_Vendor_Lastupdate_ID,f.description BK_Vendor_Lastupdate_By,
+       VENDOR_NAME,VENDOR_NUMBER,VENDOR_SITE_CODE,VENDOR_TYPE_LOOKUP_CODE,
+       c.LAST_UPDATE_DATE BK_Vendor_last_Update_Date
+from apps.AP_BANK_ACCOUNTS a, apps.AP_BANK_BRANCHES b,apps.AP_BANK_ACCOUNT_USES_V c,apps.fnd_user d,
+apps.fnd_user e,apps.fnd_user f
+where a.BANK_BRANCH_ID = b.BANK_BRANCH_ID
+and c.BANK_BRANCH_NAME=b.BANK_BRANCH_NAME
+and c.BANK_ACCOUNT_NUM=a.BANK_ACCOUNT_NUM
+and c.BANK_ACCOUNT_NAME=a.BANK_ACCOUNT_NAME
+and c.BANK_NAME=b.BANK_NAME
+and d.user_id=a.CREATED_BY
+and e.user_id=c.CREATED_BY
+and f.user_id=c.LAST_UPDATED_BY
+and a.org_id=127
+--and c.BANK_NUM=b.BANK_NUM
+
+
+
+
+-----List Vendor didn't setup bank info
+select c.SEGMENT1 As Vender_Num, c.VENDOR_NAME  ,b.VENDOR_SITE_CODE,b.CREATION_DATE,
+b.LAST_UPDATE_DATE,f.USER_NAME as Create_by,trunc(b.INACTIVE_DATE) Site_Inactive_Date,
+c.INVOICE_CURRENCY_CODE    Supplier_Inv_Curr,b.ORG_ID
+from apps.AP_TERMS_LINES a,apps.PO_VENDOR_SITES_ALL b,apps.PO_VENDORS c,apps.GL_CODE_combinations d
+,apps.GL_CODE_combinations e,apps.FND_USER f,apps.AP_TERMS_TL g
+where a.TERM_ID=b.TERMS_ID and g.TERM_ID=b.TERMS_ID
+and b.ACCTS_PAY_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and b.PREPAY_CODE_COMBINATION_ID=e.CODE_COMBINATION_ID
+and b.VENDOR_ID=c.VENDOR_ID
+and b.CREATED_BY =f.USER_ID
+and g.LANGUAGE='US'
+--and c.SEGMENT1='7'
+and ORG_ID>=127
+--and g.NAME<>'60 DAYS NET'
+and c.VENDOR_TYPE_LOOKUP_CODE<>'EMPLOYEE'
+--and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+and to_char(b.VENDOR_ID)||'.'||to_char(b.VENDOR_SITE_ID) not in
+(select to_char(VENDOR_ID)||'.'||to_char(VENDOR_SITE_ID) from apps.AP_BANK_ACCOUNT_USES_V)
+order by b.VENDOR_ID,b.VENDOR_SITE_CODE
+
+
+----------All Bank Account info
+select a.ATTRIBUTE15 CFS_flag,e.BANK_NAME,e.BANK_NUMBER,e.BANK_NUM Branch_Num,
+--to_char(a.BANK_ACCOUNT_ID) Bank_Account_ID,
+a.ACCOUNT_TYPE,a.LAST_UPDATE_DATE BK_Account_last_Update_date,k.description BKAccount_last_update,
+a.BANK_ACCOUNT_NAME,a.BANK_ACCOUNT_NUM,a.CURRENCY_CODE Currency,a.DESCRIPTION,
+b.SEGMENT2||'.'||b.SEGMENT3||'.'||b.SEGMENT4||'.'||b.SEGMENT5||'.'||b.SEGMENT6 Cash_Acc,
+g.SEGMENT2||'.'||g.SEGMENT3||'.'||g.SEGMENT4||'.'||g.SEGMENT5||'.'||g.SEGMENT6 Cash_Clear_Acc,
+h.SEGMENT2||'.'||h.SEGMENT3||'.'||h.SEGMENT4||'.'||h.SEGMENT5||'.'||h.SEGMENT6 Bank_Charg_Acc,
+i.SEGMENT2||'.'||i.SEGMENT3||'.'||i.SEGMENT4||'.'||i.SEGMENT5||'.'||i.SEGMENT6 Unidentfy_Acc,
+--a.MULTI_CURRENCY_FLAG Multi_Curr, a.ZERO_AMOUNTS_ALLOWED Allow_Zero,--a.RECEIPT_MULTI_CURRENCY_FLAG,
+c.SEGMENT2||'.'||c.SEGMENT3||'.'||c.SEGMENT4||'.'||c.SEGMENT5||'.'||c.SEGMENT6 Gain_Acc,
+d.SEGMENT2||'.'||d.SEGMENT3||'.'||d.SEGMENT4||'.'||d.SEGMENT5||'.'||d.SEGMENT6 Loss_Acc,
+f.name Doc_Name,j.name Payment_Format,j.Payment_method_lookup_code,
+a.INACTIVE_DATE,a.RECEIPT_MULTI_CURRENCY_FLAG
+from apps.AP_BANK_ACCOUNTS_all a,apps.GL_CODE_COMBINATIONs b,apps.GL_CODE_COMBINATIONs c,apps.GL_CODE_COMBINATIONs d
+,apps.AP_BANK_BRANCHES e,apps.AP_CHECK_STOCKS_all f,apps.GL_CODE_COMBINATIONs g,apps.GL_CODE_COMBINATIONs h,
+apps.GL_CODE_COMBINATIONs i,apps.AP_CHECK_FORMATS j,apps.FND_USER k
+where a.ASSET_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.GAIN_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID (+)
+and a.loss_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID (+)
+and a.BANK_BRANCH_ID=e.BANK_BRANCH_ID
+and f.BANK_ACCOUNT_ID=a.BANK_ACCOUNT_ID
+and a.CASH_CLEARING_CCID =g.CODE_COMBINATION_ID(+)
+and a.BANK_CHARGES_CCID =h.CODE_COMBINATION_ID(+)
+and a.UNIDENTIFIED_CCID =i.CODE_COMBINATION_ID(+)
+and j.check_format_id=f.check_format_id
+and k.USER_ID=a.LAST_UPDATED_BY
+and a.org_id=127
+--and a.BANK_ACCOUNT_ID=10000
+--and a.BANK_ACCOUNT_NAME='ICBC Tianzhu-RMB(10020101)'
+--and a.ATTRIBUTE15 is not null
+order by e.BANK_NUMBER,e.BANK_NUM,a.BANK_ACCOUNT_ID,a.BANK_ACCOUNT_NAME
+

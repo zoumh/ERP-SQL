@@ -1,0 +1,461 @@
+
+------------------------One modle's Material status report
+
+------------------------List One PROD modle's RM data--Onhand, Open PO,Build Plan
+---------------------Week11 (Mar-18th) , Modle Clara,Cajsa ('9919','K750','K750C','K750I','D750I')
+
+
+
+select a.Category,a.Item,a.Item_Desc,a.onhand_Qty,b.PO_Qty PO_Qty_ByToday,c.Plan_Qty_W11,d.Plan_Qty_W12,Plan_Qty_W13,Plan_Qty_W14 
+from
+(
+select b.Item,b.Item_Desc,a.onhand_Qty ,b.Category
+from
+(
+select b.segment1 Item,sum(a.transaction_quantity) onhand_Qty
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b
+where a.organization_id=83 and b.organization_id=83 
+and a.inventory_item_id=b.inventory_item_id
+and a.subinventory_code in 
+(
+select sub_inventory_code subinventory_code
+from apps.MRP_SUB_INVENTORIES_V where netting_type='1'
+and compile_designator=
+(
+select distinct compile_designator from apps.MRP_SUB_INVENTORIES_V where creation_date =
+(select max(creation_date) creation_date from apps.MRP_SUB_INVENTORIES_V)
+)
+)
+group by b.segment1
+) a,
+(
+SELECT a.segment1 Item,a.Description Item_Desc,b.segment1 Category from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1 in ('9919','K750','K750C','K750I','D750I')
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where
+a.Item(+) =b.Item 
+) a, --------- Onhand Qty table
+(
+select b.Item,a.Open_PO_Qty PO_Qty 
+from
+(
+select sum(c.QUANTITY-c.QUANTITY_RECEIVED-c.QUANTITY_cancelled) Open_PO_Qty
+,d.SEGMENT1 as Item
+from apps.PO_HEADERS_ALL a, apps.PO_LINES_ALL b,apps.po_Line_locations_all c,apps.mtl_system_items_b d
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and a.po_header_id=c.po_header_id
+and b.po_line_id=c.po_line_id
+and d.INVENTORY_ITEM_ID(+)=b.item_id 
+and (d.ORGANIZATION_ID=c.SHIP_TO_ORGANIZATION_ID(+))--'81' or d.ORGANIZATION_ID='83') ---Org is multi if use 81 & 83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null) 
+and (c.QUANTITY-c.QUANTITY_RECEIVED-c.QUANTITY_cancelled)>0
+group by d.SEGMENT1
+) a,
+(
+SELECT a.segment1 Item from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1 in ('9919','K750','K750C','K750I','D750I')
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where a.Item(+) =b.Item
+) b,--------PO Qty table
+(
+select b.Item,a.Plan_Qty_W11 
+from
+(
+select Item_segments Item,sum(Quantity_rate) Plan_Qty_W11
+from apps.MRP_ORDERS_SC_V 
+where 
+  compile_designator in   (  select  compile_designator 
+                           from apps.MRP_SUB_INVENTORIES_V 
+						  where creation_date =  (select max(creation_date) creation_date 
+						                            from apps.MRP_SUB_INVENTORIES_V 
+												   where compile_designator like '%KRH%') 
+						  union   
+                          select  compile_designator 
+                            from apps.MRP_SUB_INVENTORIES_V 
+						    where creation_date =  (select max(creation_date) creation_date 
+							                            from apps.MRP_SUB_INVENTORIES_V 
+													   where compile_designator like '%DPY%' )  )  
+and 
+(
+ (compile_designator like '%DPY%'
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%KRH%')
+	)
+ )	
+ or
+ (compile_designator like '%KRH%' 
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%DPY%')
+	)
+ )
+) 
+and new_due_date>=to_date('2005-3-14','yyyy-mm-dd')
+and new_due_date<=to_date('2005-3-20','yyyy-mm-dd')
+group by Item_segments
+)a,
+(
+SELECT a.segment1 Item from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1 in ('9919','K750','K750C','K750I','D750I')
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where a.Item(+) =b.Item
+) c, ----------build plan W11
+(
+select b.Item,a.Plan_Qty_W12 
+from
+(
+select Item_segments Item,sum(Quantity_rate) Plan_Qty_W12
+from apps.MRP_ORDERS_SC_V 
+where 
+  compile_designator in   (  select  compile_designator 
+                           from apps.MRP_SUB_INVENTORIES_V 
+						  where creation_date =  (select max(creation_date) creation_date 
+						                            from apps.MRP_SUB_INVENTORIES_V 
+												   where compile_designator like '%KRH%') 
+						  union   
+                          select  compile_designator 
+                            from apps.MRP_SUB_INVENTORIES_V 
+						    where creation_date =  (select max(creation_date) creation_date 
+							                            from apps.MRP_SUB_INVENTORIES_V 
+													   where compile_designator like '%DPY%' )  )  
+and 
+(
+ (compile_designator like '%DPY%'
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%KRH%')
+	)
+ )	
+ or
+ (compile_designator like '%KRH%' 
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%DPY%')
+	)
+ )
+) 
+and new_due_date>=to_date('2005-3-14','yyyy-mm-dd')+7
+and new_due_date<=to_date('2005-3-20','yyyy-mm-dd')+7
+group by Item_segments
+)a,
+(
+SELECT a.segment1 Item from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1 in ('9919','K750','K750C','K750I','D750I')
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where a.Item(+) =b.Item
+) d, ----------  build plan w12
+(
+select b.Item,a.Plan_Qty_W13 
+from
+(
+select Item_segments Item,sum(Quantity_rate) Plan_Qty_W13
+from apps.MRP_ORDERS_SC_V 
+where 
+  compile_designator in   (  select  compile_designator 
+                           from apps.MRP_SUB_INVENTORIES_V 
+						  where creation_date =  (select max(creation_date) creation_date 
+						                            from apps.MRP_SUB_INVENTORIES_V 
+												   where compile_designator like '%KRH%') 
+						  union   
+                          select  compile_designator 
+                            from apps.MRP_SUB_INVENTORIES_V 
+						    where creation_date =  (select max(creation_date) creation_date 
+							                            from apps.MRP_SUB_INVENTORIES_V 
+													   where compile_designator like '%DPY%' )  )  
+and 
+(
+ (compile_designator like '%DPY%'
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%KRH%')
+	)
+ )	
+ or
+ (compile_designator like '%KRH%' 
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%DPY%')
+	)
+ )
+) 
+and new_due_date>=to_date('2005-3-14','yyyy-mm-dd')+14
+and new_due_date<=to_date('2005-3-20','yyyy-mm-dd')+14
+group by Item_segments
+)a,
+(
+SELECT a.segment1 Item from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1 in ('9919','K750','K750C','K750I','D750I')
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where a.Item(+) =b.Item
+) e, ----------  build plan w13
+(
+select b.Item,a.Plan_Qty_W14 
+from
+(
+select Item_segments Item,sum(Quantity_rate) Plan_Qty_W14
+from apps.MRP_ORDERS_SC_V 
+where 
+  compile_designator in   (  select  compile_designator 
+                           from apps.MRP_SUB_INVENTORIES_V 
+						  where creation_date =  (select max(creation_date) creation_date 
+						                            from apps.MRP_SUB_INVENTORIES_V 
+												   where compile_designator like '%KRH%') 
+						  union   
+                          select  compile_designator 
+                            from apps.MRP_SUB_INVENTORIES_V 
+						    where creation_date =  (select max(creation_date) creation_date 
+							                            from apps.MRP_SUB_INVENTORIES_V 
+													   where compile_designator like '%DPY%' )  )  
+and 
+(
+ (compile_designator like '%DPY%'
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%KRH%')
+	)
+ )	
+ or
+ (compile_designator like '%KRH%' 
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%DPY%')
+	)
+ )
+) 
+and new_due_date>=to_date('2005-3-14','yyyy-mm-dd')+21
+and new_due_date<=to_date('2005-3-20','yyyy-mm-dd')+21
+group by Item_segments
+)a,
+(
+SELECT a.segment1 Item from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1 in ('9919','K750','K750C','K750I','D750I')
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where a.Item(+) =b.Item
+) f ----------  build plan w14
+where
+a.Item =b.Item
+and a.Item =c.Item
+and a.Item =d.Item
+and a.Item =e.Item
+and a.Item =f.Item
+
+
+
+
+
+--------------On hand Qty of these Items (for one modle)
+
+select b.Item,a.onhand_Qty 
+from
+(
+select b.segment1 Item,sum(a.transaction_quantity) onhand_Qty
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b
+where a.organization_id=83 and b.organization_id=83 
+and a.inventory_item_id=b.inventory_item_id
+and a.subinventory_code in 
+(
+select sub_inventory_code subinventory_code
+from apps.MRP_SUB_INVENTORIES_V where netting_type='1'
+and compile_designator=
+(
+select distinct compile_designator from apps.MRP_SUB_INVENTORIES_V where creation_date =
+(select max(creation_date) creation_date from apps.MRP_SUB_INVENTORIES_V)
+)
+)
+group by b.segment1
+) a,
+(
+SELECT a.segment1 Item,a.Description Item_Desc from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1='9919'
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where
+a.Item(+) =b.Item 
+order by b.Item
+
+
+
+--------------PO Qty of these Items from two MRP plan (KRH & DPY) , Open Qty untill today,  (for one modle)
+
+------Actual PO Open Qty
+select sum(c.QUANTITY-c.QUANTITY_RECEIVED-c.QUANTITY_cancelled) Open_PO_Qty
+,d.SEGMENT1 as Item
+from apps.PO_HEADERS_ALL a, apps.PO_LINES_ALL b,apps.po_Line_locations_all c,apps.mtl_system_items_b d
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and a.po_header_id=c.po_header_id
+and b.po_line_id=c.po_line_id
+and d.INVENTORY_ITEM_ID(+)=b.item_id 
+and (d.ORGANIZATION_ID=c.SHIP_TO_ORGANIZATION_ID(+))--'81' or d.ORGANIZATION_ID='83') ---Org is multi if use 81 & 83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null) 
+and (c.QUANTITY-c.QUANTITY_RECEIVED-c.QUANTITY_cancelled)>0
+group by d.SEGMENT1
+) a,
+(
+SELECT a.segment1 Item from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1 in ('9919','K750','K750C','K750I','D750I')
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where a.Item(+) =b.Item
+
+
+
+-------MRP PO advice Qty, not use here
+select b.Item,a.PO_Qty 
+from
+(
+SELECT 
+  Item_segments Item,
+  sum(Quantity_rate) PO_Qty 
+FROM 
+  apps.MRP_ORDERS_SC_V
+WHERE 
+  compile_designator in   (  select  compile_designator 
+                           from apps.MRP_SUB_INVENTORIES_V 
+						  where creation_date =  (select max(creation_date) creation_date 
+						                            from apps.MRP_SUB_INVENTORIES_V 
+												   where compile_designator like '%KRH%') 
+						  union   
+                          select  compile_designator 
+                            from apps.MRP_SUB_INVENTORIES_V 
+						    where creation_date =  (select max(creation_date) creation_date 
+							                            from apps.MRP_SUB_INVENTORIES_V 
+													   where compile_designator like '%DPY%' )  )  
+  and order_type_text='Purchase order'  
+  and new_due_date<=to_date('2005-3-15','yyyy-mm-dd')
+  group by Item_segments
+) a,
+(
+SELECT a.segment1 Item from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1='9919'
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where a.Item(+) =b.Item
+order by b.Item
+
+
+---------------MRP Demand Qty (Build plan)
+
+select b.Item,a.Plan_Qty 
+from
+(
+select Item_segments Item,sum(Quantity_rate) Plan_Qty
+from apps.MRP_ORDERS_SC_V 
+where 
+  compile_designator in   (  select  compile_designator 
+                           from apps.MRP_SUB_INVENTORIES_V 
+						  where creation_date =  (select max(creation_date) creation_date 
+						                            from apps.MRP_SUB_INVENTORIES_V 
+												   where compile_designator like '%KRH%') 
+						  union   
+                          select  compile_designator 
+                            from apps.MRP_SUB_INVENTORIES_V 
+						    where creation_date =  (select max(creation_date) creation_date 
+							                            from apps.MRP_SUB_INVENTORIES_V 
+													   where compile_designator like '%DPY%' )  )  
+and 
+(
+ (compile_designator like '%DPY%'
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%KRH%')
+	)
+ )	
+ or
+ (compile_designator like '%KRH%' 
+	and
+   	(
+	ORDER_TYPE_TEXT ='Planned order demand' 
+	or 
+	(ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like '%DPY%')
+	)
+ )
+) 
+and new_due_date<=to_date('2005-3-18','yyyy-mm-dd')
+group by Item_segments
+)a,
+(
+SELECT a.segment1 Item from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1='9919'
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+) b
+where a.Item(+) =b.Item
+order by b.Item
+
+
+
+
+
+
+
+
+
+

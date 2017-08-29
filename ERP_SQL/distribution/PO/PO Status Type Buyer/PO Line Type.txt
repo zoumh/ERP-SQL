@@ -1,0 +1,28 @@
+
+select line_type_id,line_type,description from apps.PO_line_types 
+
+select distinct attribute1 from apps.PO_LINES_ALL 
+
+select * from apps.PO_line_types 
+
+
+
+select a.po_header_id,b.attribute1 B_NonB,d.SEGMENT1 as Item,f.LINE_TYPE,
+decode(INSTR(d.segment1,'/',1,1),0,d.segment1,SUBSTR(d.segment1,1,INSTR(d.segment1,'/',1,1)-1)) Item_New
+from apps.PO_HEADERS_ALL a, apps.PO_LINES_ALL b,apps.po_Line_locations_all c,apps.mtl_system_items_b d
+,apps.PO_line_types f
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and a.po_header_id=c.po_header_id
+and b.po_line_id=c.po_line_id
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and d.INVENTORY_ITEM_ID(+)=b.item_id 
+and (d.ORGANIZATION_ID=c.SHIP_TO_ORGANIZATION_ID(+))--'81' or d.ORGANIZATION_ID='83') ---Org is multi if use 81 & 83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and b.LINE_TYPE_ID<>1020
+and b.creation_date<=to_date('2005-3-27','YYYY-MM-DD')
+--and f.LINE_TYPE='VP Purchasing'
+and d.segment1='SK/LZT 108 7235'

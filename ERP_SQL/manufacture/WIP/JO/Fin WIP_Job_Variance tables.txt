@@ -1,0 +1,61 @@
+
+
+
+Please run the following SQLs for the discrete job in question and upload the outputs onto Metalink.
+
+select * from WIP_ENTITIES
+where wip_entity_name = '&Job_name';
+
+Use the above wip_entity_id in the below scripts.
+
+1) About the discrete job history 
+
+select * from WIP_DISCRETE_JOBS 
+where wip_entity_id = &wip_entity_id;
+
+2) To understand about the resources required for the job 
+
+select * from WIP_OPERATION_RESOURCES 
+where wip_entity_id = &wip_entity_id;
+
+3) To find out if resource transactions corresponding to a job are stuck.
+
+select * from WIP_COST_TXN_INTERFACE 
+where wip_entity_id = &wip_entity_id;
+
+4) Shows the qty transacted through each job 
+
+select * from WIP_OPERATIONS 
+where wip_entity_id = &wip_entity_id;
+
+5) Shows the actual transactions done for the job. 
+
+select * from WIP_TRANSACTIONS 
+where wip_entity_id = &wip_entity_id;
+
+6) To check the accounting information for each resource transaction 
+
+select * from WIP_TRANSACTION_ACCOUNTS 
+where wip_entity_id = &wip_entity_id ;
+
+7) To check for any transactions stuck in MMTT for that WIP job 
+
+select * from MTL_MATERIAL_TRANSACTIONS_TEMP 
+where transaction_source_id = &wip_entity_id ; 
+
+8) To see the completed transactions in MMT 
+
+select * from MTL_MATERIAL_TRANSACTIONS 
+where transaction_source_id = &wip_entity_id;
+
+9) To see the costed transactions for the job
+
+select * from MTL_TRANSACTION_ACCOUNTS 
+where transaction_source_id = &wip_entity_id; 
+
+10) To get an idea of the summary accounting information for the job
+
+select * from WIP_PERIOD_BALANCES 
+where wip_entity_id = &wip_entity_id ;
+
+

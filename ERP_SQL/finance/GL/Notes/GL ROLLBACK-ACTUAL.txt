@@ -1,0 +1,359 @@
+Article-ID:         <Note:11449.1>
+Alias:              OLS:104856.209
+Circulation:        REVIEWED (INTERNAL) ***Oracle Confidential - Internal Use Only***
+Folder:             apps.fin.ledger
+Topic:              MISC: Miscellaneous
+Title:              Rolling Back Actual Account Balances
+Open-Remarks:       See <RemarksOn:NOTE:11449.1>
+Document-Type:      FAQ
+Impact:             LOW
+Skill-Level:        CASUAL
+Updated-Date:       21-SEP-2001 06:25:12
+References:         
+Shared-Refs:        
+Authors:            RBEDOYA
+Attachments:        NONE
+Content-Type:       TEXT/PLAIN
+Keywords:           GL; LEDGER; SUBCOMP-MISC; 
+Products:           500/LEDGER (10.7.0.16.1 to 11.0.3); 
+Platforms:          GENERIC;  
+
+                   Rolling Back Actual Account Balances
+
+This bulletin describes how to rollback all actual account balances to a
+particular accounting period for a specific set of books. It does not describe
+how to do a selective rollback of actual balances, budget or encumbrance
+balances in Oracle General Ledger.
+
+This bulletin consists of the following sections:
+
+   -- WHY ROLLBACK ACTUAL ACCOUNT BALANCES
+
+   -- AFFECTED GENERAL LEDGER TABLES
+
+   -- THE ROLLBACK SCRIPT
+
+   -- POST ROLLBACK PROCEDURES
+
+   -- A NOTE ABOUT ROLLBACKS THAT CROSS FISCAL YEARS
+
+   -- REFERENCES
+
+
+                               WARNING!
+
+Use this bulletin only with the assistance of Oracle Support Services. Oracle 
+does not support the update of your financial database through Sql*Plus without 
+the consent of Oracle.  Please contact Oracle for assistance.
+
+Before attempting any database update, ensure no users or processes are
+accessing or updating the financial database. We also recommend a full export
+of your database for recovery purposes.
+
+
+WHY ROLLBACK ACTUAL ACCOUNT BALANCES
+------------------------------------
+
+The only time you would ever rollback actual account balances is in the case
+of a corrupt GL Balances table. Database corruption to this table happens
+rarely, and it usually results from an unsupported update to the database.
+
+This procedure can be time consuming because you must re-post all your
+journal entries for the corrupted periods. Also, if you translate your account
+balances to a foreign currency, you have to rerun translation for each
+period you are rolling back.
+
+Because you have to re-post journals for the periods you are rolling back,
+you CANNOT perform a rollback of actual account balances if you have
+deleted, archived or corrupted your journal entries.
+
+
+AFFECTED GENERAL LEDGER TABLES
+------------------------------
+
+The following General Ledger tables are updated:
+
+GL_BALANCES
+GL_JE_BATCHES
+GL_JE_HEADERS
+GL_JE_LINES
+GL_PERIOD_STATUSES
+GL_SETS_OF_BOOKS
+GL_TRANSLATION_TRACKING
+
+
+THE ROLLBACK SCRIPT
+-------------------
+
+Read this entire section before attempting any update described in the steps.
+
+We use the following case study to explain the rollback script.
+
+Fremont Manufacturing's corporate set of books period status for the current
+fiscal year is:
+
+        Period          System Name     Status
+        ---------       -----------     ------------
+        January         JAN-99          Closed
+        February        FEB-99          Closed
+        March           MAR-99          Closed
+        April           APR-99          Closed
+        May             MAY-99          Open
+        June            JUN-99          Closed
+        July            JUL-99          Future Entry
+        August          AUG-99          Never Opened
+        September       SEP-99          Never Opened
+        October         OCT-99          Never Opened
+        November        NOV-99          Never Opened
+        December        DEC-99          Never Opened
+
+Journal entries exist for periods January through July. Period June 99 was
+opened and some journals posted, but now is closed.
+
+Fremont Manufacturing was about to close their current open period, May 99,
+for the corporate set of books when they discovered some of the period
+account balances for March 99 were incorrect, thus causing the forward balances
+to be off. Someone had made an unsupported update to account balances
+through Sql*Plus.
+
+The Accounting Department determined that the actual account balances up to
+February 99 were correct and decided to rollback balances to February 99.
+
+Complete every step below for a successful rollback.
+
+STEP 1. Backup Your Database
+---------------------------
+
+Backup your datbase before proceeding with any update included in this
+bulletin.
+
+STEP 2. Determine SET_OF_BOOKS_ID
+---------------------------------
+Each set of books in your General Ledger has an associated id. Execute the
+following query to determine the SET_OF_BOOKS_ID for the book you want to
+update:
+
+        select set_of_books_id, name from GL_SETS_OF_BOOKS
+        where name = 'Fremont Corporate';
+
+Substitute your set of books name for the string 'Fremont Corporate'.
+
+STEP 3. Determine Periods to Delete
+-----------------------------------
+
+Determine the period balance rows in GL_BALANCES that need to delete.
+
+In the case study, the period to rollback to is February 99. The periods that
+have corrupt balances are March, April, May and June.
+
+Because the period status for JUN-99 is closed, it had to have been opened at
+some point in time, thus there are balances for June which are corrupt.
+
+The best way to determine what period rows you need to be delete from
+GL_BALANCES is to do the following query:
+
+        select distinct period_name from GL_BALANCES
+        where set_of_books_id = <set of books id found in step 2>
+        and actual_flag = 'A'
+        and period_year = <year of the period you are rolling back to>;
+
+This query will return the period names for which actual balance rows exist
+for the set of books in the accounting year specified. If you have defined
+periods for future accounting/fiscal years, run the query for these years to
+verify the existence of corrupt rows that may have crossed into your future
+fiscal years. This is possible if you had at any time opened the first period
+of a new fiscal year.
+
+Take note of all the period names that follow the period you are rolling back
+to, including those for future accounting years. These period rows will be
+deleted.
+
+Step 4. Delete from GL_BALANCES
+-------------------------------
+
+Execute the following script to delete the corrupt period balances:
+
+        delete from GL_BALANCES
+        where period_name in ('MAR-99', 'APR-99', 'MAY-99', 'JUN-99')
+        and set_of_books_id = <set of books id found in step 2>
+        and actual_flag = 'A';
+
+        commit;
+
+In this script substitute your list of period names you noted in Step
+3 and supply the set of books id found in Step 2.  Be sure to verify the list
+of periods you are deleting.  You must delete all period balances that follow
+the period you are rolling back to. You cannot do a selective delete of period
+balances. If you commit this change to the database and discover a mistake,
+you must restore your database.
+
+Step 5. Reset Journal Statuses
+------------------------------
+
+Execute the following script to update your journal entries so they can be
+re-posted.
+
+        update GL_JE_BATCHES set status = 'U', status_verified = 'N' where
+        default_period_name in ('MAR-99', 'APR-99', 'MAY-99', 'JUN-99') and
+        actual_flag = 'A' and
+        set_of_books_id = <set of books id found in step 2>;
+
+        update GL_JE_HEADERS set status = 'U' where
+        period_name in ('MAR-99', 'APR-99', 'MAY-99', 'JUN-99') and
+        actual_flag = 'A' and
+        set_of_books_id = <set of books id found in step 2>;
+
+        update GL_JE_LINES set status = 'U' where
+        period_name in ('MAR-99', 'APR-99', 'MAY-99', 'JUN-99') and
+        set_of_books_id = <set of books id found in step 2> and
+        je_header_id in (select je_header_id from gl_je_headers
+                         where period_name in
+                         ('MAR-99', 'APR-99', 'MAY-99', 'JUN-99') and
+                         actual_flag = 'A');
+
+        commit;
+
+Substitute the string  MAR-99, APR-99, MAY-99,JUN-99 with your list of
+period names you noted in Step 3. Supply the set of books id found in Step
+2.
+
+
+Step 6. Update Period Statuses
+------------------------------
+
+Update GL_PERIOD_STATUSES to make the period you are rolling back to, the
+current open period and the others future entry.
+
+This allows the journal entries for the periods to exist in the system and the
+correct balances to be rolled forward as you reopen each period.
+
+        update GL_PERIOD_STATUSES set closing_status = 'O'
+        where period_name = 'FEB-99'
+        and set_of_books_id = <set of books id found in step 2>
+        and application_id = 101;
+
+        update GL_PERIOD_STATUSES
+        set closing_status = 'F'
+        where period_name in ('MAR-99', 'APR-99', 'MAY-99', 'JUN-99')
+        and set_of_books_id = <set of books id found in step 2>
+        and application_id = 101;
+
+        commit;
+
+Application_id = 101 indicates you are updating the period status for General
+Ledger. DO NOT specify any other application id except 101.  Substitute
+'FEB-99' with the period name to which you are rolling back. In the second
+update statement replace the period list with the period list you noted in
+Step 3. Be sure to supply the correct set of books id for each statement.
+
+Step 7. Reset GL_SETS_OF_BOOKS
+------------------------------
+
+Reset the latest opened period for the set of books to the period to which you
+are rolling back.
+
+        update GL_SETS_OF_BOOKS
+        set latest_opened_period_name = 'FEB-99'
+        where set_of_books_id = <set of books id found in step 2>;
+
+        commit;
+
+Substitute 'FEB-99' with the period name you are rolling back to, and provide
+the set of books id.
+
+Step 8. Reset Translation Status
+--------------------------------
+
+If you translate your account balance you need to reset the table
+GL_TRANSLATION_TRACKING to retranslate.
+
+        update GL_TRANSLATION_TRACKING
+        set earliest_never_period_name = 'MAR-99',
+        earliest_never_period_year = <accounting period year>,
+        earliest_never_period_num = <period number>
+        where set_of_books_id = <set of books id found in step 2>;
+
+        commit;
+
+Substitute MAR-99 with the period name after the period to which you are
+rolling back (In our example, we did a rollback to FEB-99, the period after
+February is MAR-99).  Substitute accounting period year and number with the
+year and number that corresponds to the period name you are setting.
+
+Step 9. Delete old translation statuses for rolled-back periods 
+--------------------------------------------------------------- 
+
+This MUST be run after Step 8: Reset Translation Status.
+
+If you translated your account balances, you need to delete the old 
+translation statuses (in GL_TRANSLATION_STATUSES) for periods which 
+have been rolled back. 
+
+        delete from GL_TRANSLATION_STATUSES TS 
+        where TS.set_of_books_id = <set of books id found in step 2> 
+        and exists 
+       (select PS.period_name 
+        from GL_PERIOD_STATUSES PS, GL_TRANSLATION_TRACKING TR 
+          where TR.set_of_books_id = TS.set_of_books_id 
+          and TR.bal_seg_value  = TS.bal_seg_value 
+          and TR.target_currency = TS.target_currency 
+          and TR.actual_flag = TS.actual_flag 
+          and TR.average_translation_flag = TS.average_translation_flag 
+          and PS.application_id  = 101 
+          and PS.set_of_books_id = TR.set_of_books_id 
+          and PS.period_name = TS.period_name 
+          and (PS.effective_period_num <       
+          ( TR.earliest_ever_period_year * 10000 + TR.earliest_ever_period_num ) 
+             OR 
+           PS.effective_period_num >= (TR.earliest_never_period_year 
+             * 10000 + TR.earliest_never_period_num ))); 
+
+      COMMIT; 
+
+POST ROLLBACK PROCEDURES
+========================
+
+Step 1. Open Periods and Post
+-----------------------------
+
+After you have performed the rollback script, reopen each period and re-post
+the journals for that period.
+
+You have to open the periods in order, starting with the period after the
+period you rolled back to. In the case study, the first period we would reopen
+is MAR-99.
+
+We recommend you open one period at a time and post all journal entries for
+that period before opening the next period. This will prevent the additional
+overhead of the posting program having to carry forward multiple period
+balances.
+
+We also recommend running trial balance reports for each period before
+opening the next, insuring correct balances.
+
+Note: If you have disabled any code combinations used in these journal
+entries from the time the journal entries were originally created and posted,
+you will need to enable them again.
+
+
+Step 2. Re-submit Translation
+-----------------------------
+
+If you translate your account balances, you have to re-submit translation for
+each period, from and to currency, and balancing segment.
+
+
+A NOTE ABOUT ROLLBACKS THAT CROSS FISCAL YEARS
+----------------------------------------------
+
+This script is appropriate to prior fiscal years. If you rollback to a
+prior year you must realize that the re-posting of journal entries will be time
+consuming. We recommed you verify the retained earnings account for all
+balancing segments when you reopen the first period of the fiscal year.
+
+
+REFERENCES
+----------
+
+General Ledger Technical Reference Manual Release 10 
+General Ledger Technical Reference Manual Release 11

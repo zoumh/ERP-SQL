@@ -1,0 +1,60 @@
+
+
+select * from apps.rcv_shipment_headers where SHIPMENT_HEADER_ID=992697
+
+select * from apps.rcv_shipment_lines where SHIPMENT_HEADER_ID=992697
+
+
+select * from apps.PO_HEADERS_ALL where segment1=''
+
+select * from apps.PO_LINES_ALL where PO_HEADER_ID=
+
+
+select * from apps.OE_ORDER_HEADERS_all where ORDER_NUMBER=''
+
+select * from apps.OE_ORDER_HEADERS_all where HEADER_ID=
+
+
+select OE_ORDER_HEADER_ID,OE_ORDER_LINE_ID,PO_HEADER_ID,PO_LINE_ID,
+SHIPMENT_HEADER_ID,SHIPMENT_LINE_ID,TRANSACTION_DATE,TRANSACTION_TYPE,
+ORGANIZATION_ID,TRANSACTION_ID 
+FROM apps.rcv_transactions
+where OE_ORDER_HEADER_ID=
+PO_HEADER_ID=
+
+
+
+
+rcv_transactions.SOURCE_DOCUMENT_CODE
+
+PO
+REQ  -- for internal Order
+RMA
+
+rcv_transactions
+----------------------------------------------------------------------------------------------------------------------------------------------
+SOURCE_DOCUMENT_CODE       INTERFACE_SOURCE_CODE      TRANSACTION_TYPE      DESTINATION_TYPE_CODE    SO_EMPTY  PO_EMPTY  PR_EMPTY  SHIP_EMPTY
+----------------------	   ---------------------      ------------------    ---------------------    ---------------------------------------	
+PO                         RCV                        ACCEPT                RECEIVING                Y         N         Y         N
+PO                         RCV                        DELIVER               EXPENSE                  Y         N         Y         N
+PO                         RCV                        DELIVER               INVENTORY                Y         N         Y         N
+PO                         RCV                        RECEIVE               RECEIVING                Y         N         Y         N
+PO                         RCV                        REJECT                RECEIVING                Y         N         Y         N
+PO                         RCV                        TRANSFER              RECEIVING                Y         N         Y         N
+PO                                                    RETURN TO RECEIVING   EXPENSE                  Y         N         Y         N
+PO                                                    RETURN TO RECEIVING   INVENTORY                Y         N         Y         N
+PO                                                    RETURN TO RECEIVING   RECEIVING                Y         N         Y         N
+PO                                                    RETURN TO VENDOR      RECEIVING                Y         N         Y         N
+----------------------------------------------------------------------------------------------------------------------------------------------
+REQ                        ORDER ENTRY                DELIVER               EXPENSE                  Y         Y         N         N
+REQ                        ORDER ENTRY                RECEIVE               RECEIVING                Y         Y         N         N
+----------------------------------------------------------------------------------------------------------------------------------------------
+RMA                        RCV                        ACCEPT                RECEIVING                N         Y         Y         N
+RMA                        RCV                        DELIVER               INVENTORY                N         Y         Y         N
+RMA                        RCV                        RECEIVE               RECEIVING                N         Y         Y         N
+RMA                                                   CORRECT               RECEIVING                N         Y         Y         N
+RMA                                                   RETURN TO CUSTOMER    RECEIVING                N         Y         Y         N
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+

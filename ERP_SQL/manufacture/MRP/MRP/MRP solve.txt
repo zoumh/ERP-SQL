@@ -1,0 +1,15 @@
+
+Work Bench Error for a plan --- MRP_WORKBENCH_BUCKET_DATES has duplicate records for this plan !
+
+When open this plan at MRP workbench, error :FRM-40212
+
+Delete these duplic, solve
+
+MRP_WORKBENCH_BUCKET_DATES is a table that stores the start date of buckets for the Planner Workbench Horizontal Plan.
+has a row for every bucket type and plan name.
+
+BUCKET_TYPE:
+1 Days
+2 Weeks
+3 Periods
+-------------------------

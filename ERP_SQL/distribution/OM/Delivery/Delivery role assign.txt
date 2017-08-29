@@ -1,0 +1,11 @@
+
+
+--------By Create, last_update_by
+select a.CREATION_DATE,b.User_name Created_By,b.DESCRIPTION Created_By_name,c.User_name Last_update_by,c.DESCRIPTION last_update_name,a.LAST_UPDATE_DATE,a.END_DATE,
+a.USER_NAME,d.DESCRIPTION Name,a.ROLE_NAME,a.ROLE_DESCRIPTION,a.ORGANIZATION_CODE Org
+from apps.wsh_grants_v a,apps.fnd_user b,apps.fnd_user c ,apps.fnd_user d
+where a.CREATED_BY=b.user_id
+and a.LAST_UPDATED_BY=c.user_id
+and a.user_id=d.user_id
+order by a.CREATION_DATE desc
+

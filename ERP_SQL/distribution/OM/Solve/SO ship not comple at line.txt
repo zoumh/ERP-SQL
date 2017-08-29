@@ -1,0 +1,25 @@
+
+Line STATUS_CODE='AWAITING_SHIPPING'
+
+Delivery Status ='Shipped'
+
+
+
+---------SO deliver_Status,line Status
+select c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODELine_Status,b.released_Status_name Ship_Status,
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.unit_price,b.currency_code Curr,b.Type,b.Source_Name,
+b.SOURCE_HEADER_ID
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and c.ORDER_NUMBER='303278'
+and b.RELEASED_STATUS_NAME='Shipped'
+and d.FLOW_STATUS_CODE='AWAITING_SHIPPING'
+

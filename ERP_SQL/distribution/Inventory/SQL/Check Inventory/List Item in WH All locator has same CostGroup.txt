@@ -1,0 +1,31 @@
+
+
+------This will list all Items in a WH, all locator in the WH has same cost group for this Item
+----Harris
+
+select a.locator_number/b.Max_Locator_num Fact,a.Item,a.revision,a.subinventory_code,a.cost_group,a.qty
+from
+(
+select count(Locator) locator_number, Item,revision, sum(onhand) Qty ,
+subinventory_code,cost_group
+from (
+select b.segment1 Item,a.revision, sum(a.transaction_quantity) onhand ,
+a.subinventory_code, d.segment2||'.'||d.segment3||'.'||d.segment4||'.'||d.segment5 Locator,
+c.cost_group
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c,apps.MTL_ITEM_LOCATIONS d
+where a.organization_id=83 and b.organization_id=83 and c.organization_id=83 and d.organization_id=83
+and a.inventory_item_id=b.inventory_item_id 
+and a.cost_group_id=c.cost_group_id 
+and a.locator_id=d.inventory_location_id
+and (a.subinventory_code like 'SA%' or a.subinventory_code in ('SH','SF'))
+group by b.segment1, a.revision,a.subinventory_code, d.segment2||'.'||d.segment3||'.'||d.segment4||'.'||d.segment5,
+c.cost_group) group by Item, revision,subinventory_code,cost_group
+) a,
+(
+select count(segment2||'.'||segment3||'.'||segment4||'.'||segment5) Max_Locator_num,subinventory_code from apps.MTL_ITEM_LOCATIONS  
+where (subinventory_code like 'SA%' or subinventory_code in ('SH','SF'))
+group by subinventory_code
+) b
+where a.subinventory_code=b.subinventory_code
+and a.locator_number/b.Max_Locator_num=1
+

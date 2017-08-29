@@ -1,0 +1,47 @@
+
+
+
+select a.DISABLE_DATE ,a.COST_GROUP,a.DESCRIPTION,b.NAME Org_Name,
+d.segment2||'.'||d.segment3 MATERIAL_ACCOUNT,
+e.segment2||'.'||e.segment3 MATERIAL_OVERHEAD_ACCOUNT,
+f.segment2||'.'||f.segment3 RESOURCE_ACCOUNT,
+g.segment2||'.'||g.segment3 OUTSIDE_PROCESSING_ACCOUNT,
+h.segment2||'.'||h.segment3 OVERHEAD_ACCOUNT,
+i.segment2||'.'||i.segment3 EXPENSE_ACCOUNT,
+j.segment2||'.'||j.segment3 COST_VAR_ACCOUNT,
+k.segment2||'.'||k.segment3 ENCUMBRANCE_ACCOUNT,
+l.segment2||'.'||l.segment3 PPV_ACCOUNT,
+m.segment2||'.'||m.segment3 PAYBACK_MAT_VAR_ACCOUNT,
+n.segment2||'.'||n.segment3 PAYBACK_MOH_VAR_ACCOUNT,
+o.segment2||'.'||o.segment3 PAYBACK_RES_VAR_ACCOUNT
+from apps.cst_cost_groups a,HR_ORGANIZATION_UNITS_V b,apps.CST_COST_GROUP_ACCOUNTS c,
+apps.GL_CODE_combinations d,
+apps.GL_CODE_combinations e,
+apps.GL_CODE_combinations f,
+apps.GL_CODE_combinations g,
+apps.GL_CODE_combinations h,
+apps.GL_CODE_combinations i,
+apps.GL_CODE_combinations j,
+apps.GL_CODE_combinations k,
+apps.GL_CODE_combinations l,
+apps.GL_CODE_combinations m,
+apps.GL_CODE_combinations n,
+apps.GL_CODE_combinations o
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID--(+)
+and a.COST_GROUP_ID=c.COST_GROUP_ID
+and c.MATERIAL_ACCOUNT =d.CODE_COMBINATION_ID (+)
+and c.MATERIAL_OVERHEAD_ACCOUNT =e.CODE_COMBINATION_ID(+) 
+and c.RESOURCE_ACCOUNT =f.CODE_COMBINATION_ID (+)
+and c.OUTSIDE_PROCESSING_ACCOUNT =g.CODE_COMBINATION_ID(+) 
+and c.OVERHEAD_ACCOUNT =h.CODE_COMBINATION_ID (+)
+and c.EXPENSE_ACCOUNT =i.CODE_COMBINATION_ID (+)
+and c.AVERAGE_COST_VAR_ACCOUNT =j.CODE_COMBINATION_ID(+) 
+and c.ENCUMBRANCE_ACCOUNT =k.CODE_COMBINATION_ID (+)
+and c.PURCHASE_PRICE_VAR_ACCOUNT =l.CODE_COMBINATION_ID (+)
+and c.PAYBACK_MAT_VAR_ACCOUNT =m.CODE_COMBINATION_ID (+)
+and c.PAYBACK_MOH_VAR_ACCOUNT =n.CODE_COMBINATION_ID (+)
+and c.PAYBACK_RES_VAR_ACCOUNT =o.CODE_COMBINATION_ID (+)
+and a.DISABLE_DATE is null
+order by a.COST_GROUP_ID
+
+

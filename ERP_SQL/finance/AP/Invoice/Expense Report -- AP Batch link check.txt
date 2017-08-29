@@ -1,0 +1,84 @@
+
+Link with AP Invocie:
+apps.AP_INVOICES_ALL.INVOICE_ID=apps.AP_EXPENSE_REPORT_HEADERS_all.VOUCHNO
+
+
+An Expense report not be import into AP Batch:
+apps.AP_EXPENSE_REPORT_HEADERS_all.VOUCHNO =0
+
+An Expense report has been import into AP Batch:
+apps.AP_EXPENSE_REPORT_HEADERS_all.VOUCHNO <>0
+
+
+--------AP Batch ,Invoice header link to Expense report (By Employee_ID & Invoice_num)
+select aa.AP_Invoice_Amt,bb.Amount ExpRpt_Amt, 
+AP_Inv_Curr,bb.Curr ExpRpt_Curr,
+aa.VENDOR_NAME,aa.Employee_Name, aa.Vendor_Number,
+aa.EMPLOYEE_NUMBER,aa.batch_Invoice_num,bb.INVOICE_NUM ExpRpt_Invoice_num
+from 
+    (select a.INVOICE_AMOUNT AP_Invoice_Amt,a.INVOICE_CURRENCY_CODE as AP_Inv_Curr,
+    c.VENDOR_NAME,b.FULL_NAME Employee_Name, c.SEGMENT1 Vendor_Number,b.EMPLOYEE_NUMBER,
+    a.INVOICE_NUM batch_Invoice_num,c.EMPLOYEE_ID,
+    a.INVOICE_TYPE_LOOKUP_CODE Invoice_Type,BATCH_NAME,BATCH_DATE,d.CREATION_DATE,
+    a.INVOICE_DATE,a.GL_DATE
+    from apps.AP_INVOICES_ALL a,apps.PER_PEOPLE_V7 b,
+    apps.PO_VENDORS c,apps.AP_BATCHES_ALL d
+    where  a.BATCH_ID=d.BATCH_ID
+    and c.EMPLOYEE_ID=b.PERSON_ID(+)
+    and a.VENDOR_ID=c.VENDOR_ID
+    and d.BATCH_NAME in ('SM20090811AP')--,'JP20090805')
+    and a.INVOICE_TYPE_LOOKUP_CODE='EXPENSE REPORT') aa,
+    (select a.TOTAL Amount,a.DEFAULT_CURRENCY_CODE Curr, a.EMPLOYEE_ID,
+    b.FULL_NAME,b.EMPLOYEE_NUMBER,a.INVOICE_NUM
+    from apps.AP_EXPENSE_REPORT_HEADERS_all a,apps.PER_ALL_PEOPLE_F b
+    where  a.EMPLOYEE_ID=b.PERSON_ID
+    and a.CREATION_DATE>=to_date('20090805 17:10:59','YYYYMMDD HH24:MI:SS')
+    and a.CREATION_DATE<=to_date('20090811 9:52:56','YYYYMMDD HH24:MI:SS')) bb
+where aa.INVOICE_ID=bb.VOUCHNO
+order by aa.VENDOR_NAME
+
+
+
+
+--------AP Batch with Invoice header & Vendor & Employee  (Expense type invoice)
+select a.INVOICE_AMOUNT AP_Invoice_Amt,a.INVOICE_CURRENCY_CODE as AP_Inv_Curr,
+c.VENDOR_NAME,b.FULL_NAME Employee_Name, c.SEGMENT1 Vendor_Number,b.EMPLOYEE_NUMBER,
+a.INVOICE_NUM batch_Invoice_num,
+a.INVOICE_TYPE_LOOKUP_CODE Invoice_Type,BATCH_NAME,BATCH_DATE,d.CREATION_DATE,
+a.INVOICE_DATE,a.GL_DATE
+from apps.AP_INVOICES_ALL a,apps.PER_PEOPLE_V7 b,
+apps.PO_VENDORS c,apps.AP_BATCHES_ALL d
+where  a.BATCH_ID=d.BATCH_ID
+and c.EMPLOYEE_ID=b.PERSON_ID(+)
+and a.VENDOR_ID=c.VENDOR_ID
+and d.BATCH_NAME in ('SM20090811AP')--,'JP20090805')
+and a.INVOICE_TYPE_LOOKUP_CODE='EXPENSE REPORT'
+order by a.INVOICE_NUM,a.GL_DATE
+
+
+
+--------Expense report in the period (between two batch)
+select a.TOTAL Amount,a.DEFAULT_CURRENCY_CODE Curr, 
+b.FULL_NAME,b.EMPLOYEE_NUMBER,a.INVOICE_NUM
+from apps.AP_EXPENSE_REPORT_HEADERS_all a,apps.PER_ALL_PEOPLE_F b
+where  a.EMPLOYEE_ID=b.PERSON_ID
+and a.CREATION_DATE>=to_date('20090805 17:10:59','YYYYMMDD HH24:MI:SS')
+and a.CREATION_DATE<=to_date('20090811 9:52:56','YYYYMMDD HH24:MI:SS')
+order by a.INVOICE_NUM,a.CREATION_DATE asc
+
+
+------------Vendor-Employee
+select a.VENDOR_NAME, a.SEGMENT1 Vendor_Number,b.EMPLOYEE_NUMBER,b.FULL_NAME,
+a.VENDOR_TYPE_LOOKUP_CODE Supplier_Type, 
+c.Description Create_By,c.Description LAST_UPDATED_BY,
+a.CREATION_DATE,a.LAST_UPDATE_DATE,a.PAY_GROUP_LOOKUP_CODE Pay_group,a.INVOICE_CURRENCY_CODE Curr,a.END_DATE_ACTIVE
+from apps.PO_VENDORS a ,apps.PER_PEOPLE_V7 b,apps.FND_USER c,apps.FND_USER d
+where a.EMPLOYEE_ID=b.PERSON_ID(+)
+and a.CREATED_BY=c.user_id
+and a.LAST_UPDATED_BY=d.user_id
+and a.VENDOR_TYPE_LOOKUP_CODE ='EMPLOYEE'
+--and a.EMPLOYEE_ID is null
+--and a.VENDOR_NAME<>b.FULL_NAME
+
+
+

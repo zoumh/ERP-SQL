@@ -1,0 +1,25 @@
+
+
+---------AP Invoice CC with Dr Account & Cr Account &Dist Info with price,Qty,PO_num
+
+select c.INVOICE_NUM,NVL(A.BASE_AMOUNT,a.AMOUNT) as Line_Amount_CNY,a.AMOUNT Line_Amount,
+convert(a.description,'ZHS16GBK') line_Description,
+convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.segment1 Vendor_num ,c.INVOICE_AMOUNT,c.invoice_currency_code Curr,a.exchange_Rate Rate,
+c.INVOICE_DATE,c.DESCRIPTION,b.segment2 CC,b.segment3 as Dr_Account,d.segment3 Cr_Account,c.GL_DATE,a.accounting_date,
+a.quantity_invoiced,a.unit_price,f.segment1 PO_Num
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+and b.segment3='41059903'
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and f.po_header_id(+)=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and a.accounting_date>=to_date('2005-01-01','yyyy-mm-dd')
+and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')

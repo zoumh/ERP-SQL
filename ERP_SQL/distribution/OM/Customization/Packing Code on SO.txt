@@ -1,0 +1,18 @@
+
+Packing_Code :
+apps.OE_ORDER_HEADERS_ALL.GLOBAL_ATTRIBUTE15 
+
+
+
+select ORDER_NUMBER,GLOBAL_ATTRIBUTE15 Packing_Code,ORDERED_DATE,FLOW_STATUS_CODE 
+from apps.OE_ORDER_HEADERS_ALL where ORDER_NUMBER='238780'
+CREATION_DATE>=to_date('2007-7-1','yyyy-mm-dd')
+
+
+----usage rate of packing code
+select distinct GLOBAL_ATTRIBUTE15 Packing_Code,count(*)
+from apps.OE_ORDER_HEADERS_ALL where CREATION_DATE>=to_date('2007-7-1','yyyy-mm-dd')
+and FLOW_STATUS_CODE <>'CANCELLED'
+group by GLOBAL_ATTRIBUTE15
+
+

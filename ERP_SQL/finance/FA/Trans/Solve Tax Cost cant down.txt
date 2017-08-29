@@ -1,0 +1,74 @@
+SR : 6893354.994 
+
+Solve FA TAX Book can't decrease cost after increase cost  
+
+1.
+At FA Book, Asset 12017129 has two cost adjust transaction this month:
+(1) wrongly increase cost from 210714.23 to 12017137.00
+(2) reduce the cost from 12017137.00 to 210785.41
+
+2.After FA Book closed, period mass copy to Tax Book, only copy the first cost adjust transaction to Tax Book (So Tax 
+Book's cost became 12017137 wrongly)
+
+3.Run Deprication for Tax Book, then find the cost in Tax Book is wrong.
+
+4.Rollback Deprication in Tax Book, try to change the cost at Tax Book from 12017137 to 210785.41 
+but receive the error message: 
+'APP-OFA-47761 the salvage value cannot be greater then the net book value'
+
+
+
+
+select * from APPS.FA_ADDITIONS_V where ASSET_NUMBER='12017129'
+
+create table BMC_BKUP_FA_TRANSACTION_HEAD as select * from FA_TRANSACTION_HEADERS   
+where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+
+create table BMC_BKUP_FA_ADJUSTMENTS as select * from FA_ADJUSTMENTS  
+where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+
+create table BMC_BKUP_FA_BOOKS as select * from FA_BOOKS   
+where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+
+select * from BMC_BKUP_FA_BOOKS
+
+select * from BMC_BKUP_FA_TRANSACTION_HEAD 
+
+select * from BMC_BKUP_FA_ADJUSTMENTS
+
+--asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+
+select * from apps.FA_TRANSACTION_HEADERS where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+--and transaction_header_id = 251233
+
+delete FA_TRANSACTION_HEADERS 
+where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id = 251233 ;
+-- should delete 1 row
+
+select * from apps.FA_ADJUSTMENTS where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+--and transaction_header_id = 251233
+
+delete FA_ADJUSTMENTS
+where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id = 251233 ;
+-- should delete 3 rows
+
+
+select * from apps.FA_BOOKS  where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+--and transaction_header_id_in =251233
+
+delete FA_BOOKS 
+where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in = 251233 ;
+-- should delete 1 row
+
+select * from apps.FA_BOOKS where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+
+update FA_BOOKS 
+set transaction_header_id_out = NULL,
+date_ineffective = NULL
+where asset_id = 100029502 
+and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in = 225774 
+-- should update 1 row

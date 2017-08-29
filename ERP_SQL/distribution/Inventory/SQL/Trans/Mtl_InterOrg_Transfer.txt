@@ -1,0 +1,219 @@
+
+can't link  mta.organization_id = mmt.organization_id  
+
+
+1.Mtl has two Trans_ID for two Org
+(example : VP->IP , ID=32722412,32722413)
+
+
+2.Mtl has one Trans_ID in one rg, but it will link mta in two Orgs 
+(example: VP.PR5->CS.CS.W01.01.00 , ID=32943900)
+
+
+
+-----------------------Inter-Org Transfer Accounting Detail
+
+select   mtt.transaction_type_name,mta.organization_id Acc_Org ,mmt.organization_id Mtl_Org,
+          (mta.base_transaction_value) value, 
+	  (mta.primary_quantity)  as Qty, 
+		 mmt.transaction_id,
+		 mta.gl_batch_id, 
+		 gcc.segment3 as Account_Num, 
+		 trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,
+  apps.mtl_transaction_types     mtt
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id   
+--and    mta.organization_id = mmt.organization_id   
+and gcc.segment3='21210300'
+and trunc(mmt.transaction_date)>=to_date('2006-10-1','yyyy-mm-dd')
+and trunc(mmt.transaction_date)<=to_date('2006-10-31','yyyy-mm-dd')
+--and mtt.transaction_type_name='Direct Org Transfer'
+--and mta.gl_batch_id in (11999)--,12018,12098)
+--and mmt.transaction_id=32943900
+--and reference_account=1324
+
+
+
+
+---------Trouble shooting GL--Inv on 21210300
+
+1. GL side
+-----GL monthly total (by source)
+select --b.BATCH_NAME,--JE_BATCH_ID,JE_HEADER_ID,
+b.JE_SOURCE,JE_CATEGORY,--b.CURRENCY_CODE,
+sum(nvl(b.LINE_ACCOUNTED_DR,0)-nvl(b.LINE_ACCOUNTED_CR,0)) amt
+--,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME='JUN-07')
+and (a.segment3='21210300') and ACTUAL_FLAG='A'
+and b.JE_SOURCE='Inventory'
+group by b.JE_SOURCE,JE_CATEGORY
+
+----GL journal line
+select b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME,HEADER_NAME Journal_Name,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME='JUN-07')
+and (a.segment3='21210300') and ACTUAL_FLAG='A'
+
+
+
+2. Inventory side
+--------Inv mtl Transaction account, sum by Trans Type,on one account 21210300
+ select   
+ mtt.transaction_type_name, 
+          sum(mta.base_transaction_value) value
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,
+  apps.mtl_transaction_types     mtt
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id   
+--and    mta.organization_id = mmt.organization_id   
+and gcc.segment3='21210300'
+and mta.TRANSACTION_DATE>=to_date('20070601 00:00:00','YYYYMMDD HH24:MI:SS')
+and mta.TRANSACTION_DATE<to_date('20070701 00:00:00','YYYYMMDD HH24:MI:SS')
+group by mta.TRANSACTION_SOURCE_TYPE_ID,mtt.transaction_type_name
+
+
+---------direct inter org transfer sum
+
+select   sum(mta.base_transaction_value) value 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,
+  apps.mtl_transaction_types     mtt
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id   
+--and    mta.organization_id = mmt.organization_id   
+and gcc.segment3='21210300'
+and mta.TRANSACTION_DATE>=to_date('20070601 00:00:00','YYYYMMDD HH24:MI:SS')
+and mta.TRANSACTION_DATE<to_date('20070701 00:00:00','YYYYMMDD HH24:MI:SS')
+--and trunc(mmt.transaction_date)>=to_date('2007-6-1','yyyy-mm-dd')
+--and trunc(mmt.transaction_date)<=to_date('2007-6-30','yyyy-mm-dd')
+and mtt.transaction_type_name='Direct Org Transfer'
+
+-----------------------Inter-Org Transfer Accounting Sum by Date,Trans_ID
+
+select   mtt.transaction_type_name,
+         sum(mta.base_transaction_value) value, 
+	 sum(mta.primary_quantity)  as Qty, 
+		 mmt.transaction_id,
+--		 mta.gl_batch_id, 
+		 gcc.segment3 as Account_Num, 
+		 trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,
+  apps.mtl_transaction_types     mtt
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id   
+--and    mta.organization_id = mmt.organization_id   
+and gcc.segment3='21210300'
+and trunc(mmt.transaction_date)>=to_date('2006-10-1','yyyy-mm-dd')
+and trunc(mmt.transaction_date)<=to_date('2006-10-31','yyyy-mm-dd')
+--and mtt.transaction_type_name='Direct Org Transfer'
+--and mta.gl_batch_id in (11999)--,12018,12098)
+--and mmt.transaction_id=33845941
+--and reference_account=1324
+group by mmt.transaction_id,--mta.gl_batch_id ,
+gcc.segment3,mtt.transaction_type_name,mmt.transaction_date
+having sum(mta.base_transaction_value)<>0
+
+-------Other Inventory Trans Account details on account 21210300
+select  mtt.transaction_type_name,mta.TRANSACTION_DATE,
+(mta.base_transaction_value) value,mta.organization_id, 
+mta.primary_quantity,mmt.transaction_id,mta.gl_batch_id
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,
+  apps.mtl_transaction_types     mtt
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id   
+--and    mta.organization_id = mmt.organization_id   
+and gcc.segment3='21210300'
+and mta.TRANSACTION_DATE>=to_date('20070601 00:00:00','YYYYMMDD HH24:MI:SS')
+and mta.TRANSACTION_DATE<to_date('20070701 00:00:00','YYYYMMDD HH24:MI:SS')
+--and trunc(mmt.transaction_date)>=to_date('2007-6-1','yyyy-mm-dd')
+--and trunc(mmt.transaction_date)<=to_date('2007-6-30','yyyy-mm-dd')
+and mtt.transaction_type_name='Account alias receipt'
+and    mta.organization_id = mmt.organization_id  
+
+
+
+select   mta.gl_batch_id, 
+         sum(mta.base_transaction_value)  value, 
+    	 gcc.segment3 as Account_Num,mmt.organization_id
+from 
+  apps.mtl_material_transactions mmt, apps.mtl_transaction_types     mtt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+and    mtt.transaction_type_id = mmt.transaction_type_id  
+--and    mta.organization_id = mmt.organization_id   
+and gcc.segment3='21210300'
+and trunc(mmt.transaction_date)>=to_date('2006-10-1','yyyy-mm-dd')
+and trunc(mmt.transaction_date)<=to_date('2006-10-31','yyyy-mm-dd')
+and mtt.transaction_type_name='Direct Org Transfer'
+group by mmt.organization_id,mta.gl_batch_id,gcc.segment3
+order by mta.gl_batch_id
+
+
+
+
+select substr(BATCH_NAME,1,5) Batch_ID,
+sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt,--a.segment3 as Account--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+b.JE_SOURCE,JE_CATEGORY--b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='06'
+and b.PERIOD_NAME='OCT-06'
+and a.segment3 ='21210300'
+and ACTUAL_FLAG='A'
+group by b.JE_SOURCE,JE_CATEGORY,BATCH_NAME 
+
+
+select * from apps.GL_JE_JOURNAL_LINES_V  where je_batch_id=1077809
+
+
+---------Inter Org Transfer Mtl_Trans of CS->VP
+select   mtt.transaction_type_name,
+		 mmt.transaction_id,
+		 trunc(mmt.transaction_date) as Trans_Date,mmt.ACTUAL_COST,mmt.TRANSACTION_COST,mmt.TRANSACTION_QUANTITY
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt
+where  mtt.transaction_type_id = mmt.transaction_type_id   
+and trunc(mmt.transaction_date)>=to_date('2006-1-3','yyyy-mm-dd')
+and trunc(mmt.transaction_date)<=to_date('2006-10-31','yyyy-mm-dd')
+and mtt.transaction_type_name='Direct Org Transfer'
+and mmt.TRANSACTION_QUANTITY <0
+and mmt.ORGANIZATION_ID=131  
+and mmt.TRANSFER_ORGANIZATION_ID=130  
+
+
+
+
+

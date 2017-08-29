@@ -1,0 +1,48 @@
+
+----------------- Journal's All accounts are Cash Accounts
+
+
+select LINE_JE_LINE_NUM,
+b.PERIOD_NAME,convert(b.BATCH_NAME,'ZHS16GBK') Batch,convert(b.HEADER_NAME,'ZHS16GBK') Journal,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,a.segment3 as Account--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,c.USER_JE_CATEGORY_NAME JE_Category,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+,b.HEADER_ROW_ID,BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,apps.GL_JE_CATEGORIES c
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+--and b.PERIOD_YEAR=2009
+--and a.segment3 ='170100'
+and ACTUAL_FLAG='A'
+--and HEADER_STATUS ='P'
+and HEADER_ROW_ID in
+(
+select aa.HEADER_ROW_ID from
+(
+select --BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID,
+HEADER_ROW_ID,count (*) num
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+--and b.PERIOD_YEAR=2009
+and (a.segment3 like '1001%' or a.segment3 like '1002%' or  a.segment3 like '1009%')
+and ACTUAL_FLAG='A'
+group by HEADER_ROW_ID
+) aa,
+(
+select --BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID,
+HEADER_ROW_ID,count (*) num
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+--and b.PERIOD_YEAR=2009
+and ACTUAL_FLAG='A'
+group by HEADER_ROW_ID
+) bb
+where aa.HEADER_ROW_ID=bb.HEADER_ROW_ID and aa.num=bb.num
+)
+order by b.BATCH_NAME,b.HEADER_NAME,b.LINE_JE_LINE_NUM

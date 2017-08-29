@@ -1,0 +1,26 @@
+
+
+-----------------PO ship line Qty for  'REQUIRES REAPPROVAL' status
+
+select c.AUTHORIZATION_STATUS,c.org_id,d.segment1 Item,e.ITEM_DESCRIPTION,c.segment1 PO,e.LINE_NUM,f.SHIPMENT_NUM, 
+f.QUANTITY,f.QUANTITY_RECEIVED,f.QUANTITY_BILLED,f.QUANTITY_CANCELLED,e.UNIT_PRICE,c.CURRENCY_CODE,f.creation_date,
+f.CANCEL_FLAG ,f.CLOSED_FLAG,
+f.NEED_BY_DATE,f.PROMISED_DATE      
+from apps.PO_HEADERS_ALL c,apps.mtl_system_items d, 
+apps.PO_LINES_ALL e,apps.po_line_locations_all f
+where c.org_id<127
+and c.org_id=e.org_id
+and c.org_id=f.org_id
+and c.po_header_id=e.po_header_id
+and e.PO_LINE_ID=f.PO_LINE_ID
+and c.po_header_id=f.po_header_id
+and e.item_id=d.inventory_item_id
+and f.SHIP_TO_ORGANIZATION_ID=d.ORGANIZATION_ID
+and e.PO_LINE_ID=f.PO_LINE_ID
+and c.AUTHORIZATION_STATUS='REQUIRES REAPPROVAL'
+--and d.segment1 in (select segment1 from apps.PO_HEADERS_ALL where org_id>=127 )
+--and (nvl(f.QUANTITY,0)-nvl(f.QUANTITY_CANCELLED,0)>0)
+--and nvl(f.QUANTITY_RECEIVED,0)>nvl(f.QUANTITY_BILLED,0)
+order by d.segment1,e.LINE_NUM,f.SHIPMENT_NUM
+
+

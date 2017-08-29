@@ -1,0 +1,45 @@
+
+These Type don't create Accounting entry:
+Move Order Transfer Type
+
+
+
+
+
+select b.CREATION_DATE,b.TRANSACTION_DATE,b.INVENTORY_ITEM_ID,b.ORGANIZATION_ID,b.TRANSACTION_ACTION_ID
+,b.TRANSACTION_TYPE_ID,b.TRANSACTION_QUANTITY ,b.ACTUAL_COST
+from apps.mtl_transaction_accounts a,apps.mtl_material_transactions b 
+where b.TRANSACTION_ID =a.TRANSACTION_ID(+) and a.TRANSACTION_ID is null
+
+
+
+select count(*)
+from apps.mtl_transaction_accounts a,apps.mtl_material_transactions b 
+where b.TRANSACTION_ID =a.TRANSACTION_ID(+) and a.TRANSACTION_ID is null
+
+
+
+select count(distinct TRANSACTION_ID)
+from apps.mtl_transaction_accounts 
+978353
+
+
+select count(distinct TRANSACTION_ID)
+from apps.mtl_material_transactions
+1486223
+
+--------------Find out records in Mtl_Trans but not in Mtl_Trans_Account
+
+select count(*)
+from apps.mtl_transaction_accounts a,apps.mtl_material_transactions b 
+where b.TRANSACTION_ID =a.TRANSACTION_ID(+) and a.TRANSACTION_ID is null
+and trunc(b.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and trunc(b.transaction_date) <= to_date('20040901','YYYYMMDD')
+
+select b.TRANSACTION_ID,b.transaction_date
+from apps.mtl_transaction_accounts a,apps.mtl_material_transactions b 
+where b.TRANSACTION_ID =a.TRANSACTION_ID(+) and a.TRANSACTION_ID is null
+and trunc(b.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and trunc(b.transaction_date) <= to_date('20040901','YYYYMMDD')
+
+select * from apps.AP_EXPENSE_REPORT_HEADERS_V 

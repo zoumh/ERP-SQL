@@ -1,0 +1,150 @@
+
+
+
+change IPV Account from 123205 to 12320301
+-----------------------------
+
+----Open PO
+select d.RECEIVING_ROUTING_ID,d.segment1 Item,c.segment1 PO,e.LINE_NUM, a.DISTRIBUTION_NUM, a.org_id,a.VARIANCE_ACCOUNT_ID,a.DESTINATION_ORGANIZATION_ID,b.segment2,b.segment3,b.segment4 
+from apps.PO_DISTRIBUTIONS_ALL a,apps.GL_code_combinations b,apps.PO_HEADERS_ALL c,apps.mtl_system_items d, 
+apps.PO_LINES_ALL e,apps.po_line_locations_all f
+where a.org_id>=127 
+and a.po_header_id=e.po_header_id
+and e.PO_LINE_ID=a.PO_LINE_ID
+and a.VARIANCE_ACCOUNT_ID=b.CODE_COMBINATION_ID
+and a.po_header_id=c.po_header_id
+and e.item_id=d.inventory_item_id
+and a.po_header_id=f.po_header_id
+and e.PO_LINE_ID=f.PO_LINE_ID
+and f.LINE_LOCATION_ID =a.LINE_LOCATION_ID
+and d.organization_id=130
+--and d.RECEIVING_ROUTING_ID =2
+--and a.po_header_id=11480
+and f.quantity_received<(f.quantity-f.QUANTITY_CANCELLED)
+and a.CREATED_BY=5548
+
+
+
+-------List New OU's PO Dist IPV Account ='123205'
+
+select c.segment1 PO,d.LINE_NUM, a.DISTRIBUTION_NUM, a.org_id,a.VARIANCE_ACCOUNT_ID,a.DESTINATION_ORGANIZATION_ID,b.segment2,b.segment3,b.segment4 
+from apps.PO_DISTRIBUTIONS_ALL a,apps.GL_code_combinations b,apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d
+where a.org_id=127 
+and a.po_header_id=d.po_header_id
+and d.PO_LINE_ID=a.PO_LINE_ID
+and a.VARIANCE_ACCOUNT_ID=b.CODE_COMBINATION_ID
+and a.po_header_id=c.po_header_id
+--and a.po_header_id=11480
+and VARIANCE_ACCOUNT_ID in
+(select CODE_COMBINATION_ID from apps.GL_code_combinations where segment3='123205')
+
+
+----------PO type, creater,Var Acc
+
+select SHIP_TO_ORGANIZATION_ID,g.LINE_TYPE,f.segment2 Char_CC,f.segment3 Charg_Acc,e.user_name,a.CREATED_BY,a.CREATION_DATE,c.segment1 PO,d.LINE_NUM, a.DISTRIBUTION_NUM, a.org_id,a.VARIANCE_ACCOUNT_ID,a.DESTINATION_ORGANIZATION_ID,b.segment2 Var_cc,b.segment3 Var_Acc,b.segment4 
+from apps.PO_DISTRIBUTIONS_ALL a,apps.GL_code_combinations b,apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,apps.fnd_user e,apps.GL_code_combinations f,apps.PO_line_types g,apps.po_line_locations_all h
+where a.org_id=127 
+and a.po_header_id=d.po_header_id
+and d.PO_LINE_ID=a.PO_LINE_ID
+and a.VARIANCE_ACCOUNT_ID=b.CODE_COMBINATION_ID
+and a.po_header_id=c.po_header_id
+and e.user_id=a.CREATED_BY
+and f.CODE_COMBINATION_ID=a.CODE_COMBINATION_ID
+and  g.LINE_TYPE_ID=d.LINE_TYPE_ID
+and h.po_header_id=a.po_header_id
+and h.PO_LINE_ID=a.PO_LINE_ID
+and h.LINE_LOCATION_ID=a.LINE_LOCATION_ID
+ 
+
+
+
+select f.segment2 Char_CC,f.segment3 Charg_Acc,e.user_name,a.CREATED_BY,a.CREATION_DATE,c.segment1 PO,d.LINE_NUM, a.DISTRIBUTION_NUM, a.org_id,a.VARIANCE_ACCOUNT_ID,a.DESTINATION_ORGANIZATION_ID,b.segment2 Var_cc,b.segment3 Var_Acc,b.segment4 
+from apps.PO_DISTRIBUTIONS_ALL a,apps.GL_code_combinations b,apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,apps.fnd_user e,apps.GL_code_combinations f
+where a.org_id=127 
+and a.po_header_id=d.po_header_id
+and d.PO_LINE_ID=a.PO_LINE_ID
+and a.VARIANCE_ACCOUNT_ID=b.CODE_COMBINATION_ID
+and a.po_header_id=c.po_header_id
+and e.user_id=a.CREATED_BY
+and f.CODE_COMBINATION_ID=a.CODE_COMBINATION_ID
+
+--and a.po_header_id=11480
+and VARIANCE_ACCOUNT_ID not in
+(select CODE_COMBINATION_ID from apps.GL_code_combinations where segment3='123205')
+
+
+
+select distinct a.VARIANCE_ACCOUNT_ID,b.segment2,b.segment3
+from apps.PO_DISTRIBUTIONS_ALL a,apps.GL_code_combinations b,apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d
+where a.org_id>=127 
+and a.po_header_id=d.po_header_id
+and d.PO_LINE_ID=a.PO_LINE_ID
+and a.VARIANCE_ACCOUNT_ID=b.CODE_COMBINATION_ID
+and a.po_header_id=c.po_header_id
+--and a.po_header_id=11480
+and VARIANCE_ACCOUNT_ID in
+(select CODE_COMBINATION_ID from apps.GL_code_combinations where segment3 in ('123205','123204'))
+
+select * from apps.GL_code_combinations where CODE_COMBINATION_ID in (4155,75359,42478,75368)
+
+
+select segment2,segment3,CODE_COMBINATION_ID 
+from apps.GL_code_combinations where CODE_COMBINATION_ID in (4155,75359,42478,75368)
+
+select segment1,segment2,segment3,segment4,segment5,CODE_COMBINATION_ID  from apps.GL_code_combinations where segment3='12320301' and segment2 in ('0000','6001')
+
+1159->75359
+4155->75359
+42478->75368
+
+select count(*) from apps.PO_DISTRIBUTIONS_ALL where VARIANCE_ACCOUNT_ID in (4155,1159) and org_id>=127 --and CREATED_BY=5548
+
+4114
+
+select count(*) from apps.PO_DISTRIBUTIONS_ALL where VARIANCE_ACCOUNT_ID=42478 and org_id>=127 --and CREATED_BY=5548
+
+343
+
+
+
+update apps.PO_DISTRIBUTIONS_ALL set VARIANCE_ACCOUNT_ID=75359 
+where org_id>=127  and VARIANCE_ACCOUNT_ID in (4155,1159)
+
+commit
+
+update apps.PO_DISTRIBUTIONS_ALL set VARIANCE_ACCOUNT_ID=75368
+where org_id>=127  and VARIANCE_ACCOUNT_ID=42478 
+
+
+
+
+
+----backup
+create table bkup_POD as (select PO_HEADER_ID,PO_LINE_ID,PO_DISTRIBUTION_ID,  VARIANCE_ACCOUNT_ID,CODE_COMBINATION_ID
+from apps.PO_DISTRIBUTIONS_ALL where  org_id>=127  and VARIANCE_ACCOUNT_ID in (4155,1159,42478))
+
+
+
+-----------Check (have item)
+select SHIP_TO_ORGANIZATION_ID,g.LINE_TYPE,f.segment2 Char_CC,f.segment3 Charg_Acc,e.user_name,a.CREATED_BY,a.CREATION_DATE,c.segment1 PO,d.LINE_NUM, a.DISTRIBUTION_NUM, a.org_id,a.VARIANCE_ACCOUNT_ID,a.DESTINATION_ORGANIZATION_ID,b.segment2 Var_cc,b.segment3 Var_Acc,b.segment4 
+from apps.PO_DISTRIBUTIONS_ALL a,apps.GL_code_combinations b,apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,apps.fnd_user e,apps.GL_code_combinations f,apps.PO_line_types g,apps.po_line_locations_all h
+where a.org_id=127 
+and a.po_header_id=d.po_header_id
+and d.PO_LINE_ID=a.PO_LINE_ID
+and a.VARIANCE_ACCOUNT_ID=b.CODE_COMBINATION_ID
+and a.po_header_id=c.po_header_id
+and e.user_id=a.CREATED_BY
+and f.CODE_COMBINATION_ID=a.CODE_COMBINATION_ID
+and  g.LINE_TYPE_ID=d.LINE_TYPE_ID
+and h.po_header_id=a.po_header_id
+and h.PO_LINE_ID=a.PO_LINE_ID
+and h.LINE_LOCATION_ID=a.LINE_LOCATION_ID
+and VARIANCE_ACCOUNT_ID in (4155,1159) and a.CREATED_BY<>5548
+
+
+

@@ -1,0 +1,536 @@
+
+
+select * from  apps.po_headers_all  where segment1='1047288'
+
+
+select * from  apps.po_lines_all where po_header_id=148693 and LINE_NUM in (415,416,417)
+
+
+
+update apps.po_lines_all set closed_code=null,cancel_flag='Y',cancel_date=to_date('2007-6-29','yyyy-mm-dd'),cancel_reason='wrong item category',quantity=null,cancelled_by=9292 where 
+po_header_id=148693 and LINE_NUM in (415,416,417)
+
+
+
+
+
+select LINE_NUM from  apps.po_lines_all where po_header_id=142815 and CANCEL_FLAG='Y'
+
+select * from  apps.po_lines_all where po_header_id=142815 and LINE_NUM in (298,299)
+
+
+closed_code=null,cancel_flag='Y',cancel_date=to_date('2007-6-29','yyyy-mm-dd'),cancel_reason='wrong item category'
+quantity=null,cancelled_by=9292
+
+
+
+--------------Tar (apply patch 3661821)
+SR Number  6417874.992   Open Date 12-JUL-07 03:21:03 
+Support Identifier  3869015   Name jin zhong 
+Severity  2   Last Update 05-AUG-07 00:01:42 
+Product Oracle Purchasing   Product Version   11.5.9 
+Platform HP-UX PA-RISC (64-bit)   Detailed Status Hard Close 
+SR Reference   n/a   BUG Reference  
+
+Abstract
+ 
+wrong PO line can't be cancel or delete when the po is 'requires reapproval'  
+      
+
+Resolution History 
+ 
+
+12-JUL-07 03:21:03 GMT
+
+The following files were uploaded for SR number 6417874.992:
+
+C:\Documents_and_Settings\28952561\Desktop\SR\blanket_po_category\Apps_Check_120707.txt
+
+
+This SR was saved as a draft on: 11-JUL-2007 20:10:58
+
+### Detailed Problem Statement ###
+We use item category as a creteria to approval blanket PO. The item category is from master org. But normally we do not maintain item category in master org. 
+So sometimes when we issue PO, the item category is wrong. Because the PO status
+is already 'Requires Reapproval', we can't cancel the wrong PO line or delete i
+t or approve it.
+
+### Steps to Reproduce ###
+create a PO line in blanket PO without maintain the correct item category in master org -> save -> the PO approval
+status changed to 'Requires Reapproval'.
+
+### Instance Name and Type of System ###
+production instance
+
+### Recent Changes ###
+N/A
+
+### Workaround ###
+we used to delete the PO line in database, but we don't want to use this method in the f
+uture.
+
+### Impact on Business ###
+Update database should not be a standard function to solve this problem.
+
+Can you easily recover from, bypass or work around the problem? 
+No
+
+Does your system or application continue normally after the problem occurs? 
+No
+
+Are the standard features of the system or application still available; is the loss of service minor?
+Yes
+
+
+Contact me via : MetaLink
+
+
+
+12-JUL-07 03:29:53 GMT
+
+UPDATE
+======
+Hi Jin,
+
+Thank you for logging a Service Request with Oracle Support. My name is Sara and I will be helping the analyst to clarify this issue
+at this moment. We are currently reviewing the issue and will update the SR as 
+soon as we have completed the initial investigations. 
+
+Best Regards,
+Sara Chou
+Support Engineer, Global eHUB
+North Asian Support Center
+
+STATUS
+=======
+
+@WIP -- Work In Progress
+
+
+
+
+12-JUL-07 04:07:06 GMT
+
+.
+ACTION PLAN
+============
+1. May you provide the screenshot of problem in English env ? 
+2. Does the problem reproduce every time ? 
+
+
+
+
+12-JUL-07 04:07:14 GMT
+
+Email Update button has been pressed: Sending email to jin.zhong@sonyericsson.com. 
+
+
+12-JUL-07 04:21:39 GMT
+
+.
+RESEARCH
+=========
+(Note: This is INTERNAL ONLY research. No action should be taken by the customer on this information.
+This is research only, and may NOT be applicable to your specific situation.)
+
+Note 276857.1 Unable To Cancel A Po Line When The Status Is Requires Reapproval
+Bug.3661821/1243500 (81) NOT ABLE TO DELETE A LINE ON A BLANKET IF IT'S NOT APPROVED: 
+Bug.3672233/3661821 (90) FP 11I9-11I10 UNABLE TO DELETE A LINE ON A BLANKET IF IT'S NOT APPROVED: 
+
+
+
+
+12-JUL-07 04:27:29 GMT
+
+.
+DATA COLLECTED
+===============
+
+FILE VERSIONS
+---------------
+Apps_Check_120707.txt
+occa.lpc 115.18 
+POXDOCON.fmb 115.9
+POXDOCON.pll 115.50 
+POXPOPOL.pll 115.68
+
+SCREEN SHOT
+------------
+screen_shot.doc shows Blanket PO: 1045865 has one line ,
+status is required reapproval
+when the custoemr want to cancel or delete it , it got error : APP-PO-14468 Please cancel
+this previous 
+approved purchase order.... 
+
+Action: Use the Control Purchase Orders form to cancel the purchase order".
+.
+
+
+
+
+12-JUL-07 04:44:01 GMT
+
+New info : jin.zhong@sonyericsson.com
+If the category is wrong, this problem occurs.
+
+
+
+12-JUL-07 04:45:04 GMT
+
+The customer : jin.zhong@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Documents_and_Settings\28952561\Desktop\SR\blanket_po_category\screen_shot.doc
+
+
+
+12-JUL-07 06:59:04 GMT
+
+.
+ACTION PLAN
+============
+1. do you use (M) Tools -> Cancel to cancel the line ? 
+if you got any error message , pls also upload the screenshot . 
+
+2. please provide the version of POXPOPOL.pld 
+cd $AU_TOP/resource 
+strings -a POXPOPOL.pll |grep 'POXPOPOL.pld' 
+
+3. select count(*) from ad_bugs where bug_number='3661821';
+
+
+
+
+12-JUL-07 06:59:11 GMT
+
+Email Update button has been pressed: Sending email to jin.zhong@sonyericsson.com. 
+
+
+12-JUL-07 07:07:03 GMT
+
+New info : jin.zhong@sonyericsson.com
+1.we can't cancel the po line. because the po status is 'requires reapproval'
+2. how can i get 'the version of POXPOPOL.pld '?
+3. the output is '0'
+
+
+
+12-JUL-07 07:14:07 GMT
+
+.
+UPDATE
+=======
+Called +86 10 80481188.
+Spoke to Jin about the action plan.
+1. please the customer paste the error message 
+2. please the customer follow step 2 to get the file version.
+
+
+STATUS
+=======
+
+@CUS -- Waiting for customer action plan results
+
+
+
+
+12-JUL-07 07:28:02 GMT
+
+New info : jin.zhong@sonyericsson.com
+FDRCSID('$Header: POXPOPOL.pld 115.111 2003/04/15 02:20:11 mbhargav ship $');FDRCSID('$Header: POXPOPOL.pld 115.111 2003/0
+4/15 02:20:11 mbhargav ship $');
+
+
+
+
+12-JUL-07 07:29:02 GMT
+
+The customer : jin.zhong@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Documents_and_Settings\28952561\Desktop\SR\blanket_po_category\error_message.doc
+
+
+
+12-JUL-07 07:42:29 GMT
+
+.
+DATA COLLECTED
+===============
+
+SCREEN SHOTS
+--------------
+error_message.doc shows 
+From the Purchase Order Summary Form, select the blanket line and go to the menu Tool/Control , 
+it got message: you get the message "No control actions found for this document". No way to cancel the line.
+
+
+FILE VERSIONS
+---------------
+POXPOPOL.pld 115.111
+patch : 3661821 did not apply 
+
+
+.
+ACTION PLAN
+============
+1. please apply patch 3661821 on TEST env first ,
+if it fix the problem , pls migrate the solution to the production env.
+
+STATUS
+=======
+
+@WCP -- Waiting for customer apply the patch.
+
+
+
+12-JUL-07 07:42:36 GMT
+
+Email Update button has been pressed: Sending email to jin.zhong@sonyericsson.com. 
+
+
+16-JUL-07 01:43:35 GMT
+
+.
+FOLLOW UP
+==========
+Hi Jin,
+
+Please update the SR as soon as possible with the current status and/or requested information so we can continue working the iss
+ue.
+
+Thank You,
+Sara
+
+STATUS
+=======
+
+@CUS -- Waiting for Customer Update
+
+
+
+
+16-JUL-07 01:43:40 GMT
+
+Email Update button has been pressed: Sending email to jin.zhong@sonyericsson.com. 
+
+
+16-JUL-07 07:15:45 GMT
+
+.
+UPDATE
+=======
+Called +86 10 80481188.
+Spoke to Jin about the action plan.
+Miss Zhong states she will apply patch on TEST env this week.
+
+STATUS
+=======
+
+@CUS -- Waiting for customer action plan results
+
+
+
+
+24-JUL-07 07:42:54 GMT
+
+.
+UPDATE
+=======
+Called +86 10 80481188.
+Spoke to Jin about the action plan.
+The test env is going to be ready , she will apply the patch. 
+
+STATUS
+=======
+
+@CUS -- Waiting for customer action plan results
+
+
+
+
+27-JUL-07 03:49:02 GMT
+
+New info : jin.zhong@sonyericsson.com
+We've already applied the patch. Now we can delete po line with the status of 'requires reapproval'. But from the patch, t
+here're four form may be affected:POXPOEPO, POXPOERL, POXPOVPO, POXRQERQ. We wan
+t to know what are these forms and the effect.
+
+
+
+27-JUL-07 03:51:20 GMT
+
+.
+UPDATE
+=======
+Hi Jin,
+
+Thank you for providing the requested information. I am currently reviewing/researching the situation and will update the SR / call yo
+u as soon as I have additional information. Thank you for your patience.
+
+Best Regards,
+Sara
+
+STATUS
+=======
+
+@WIP -- Work In Progress
+
+
+
+
+27-JUL-07 08:44:38 GMT
+
+.
+UPDATE
+=======
+Hi Jin,
+
+The patch is to upgrade POXPOPOL.pld ( POXPOPOL.pll) , so there are four forms which contain it.
+That's why they are in the patch. The functionality to allow to " cancel PO line" in those forms.
+
+POXPOEPO => (N) Purchase Orders -> Purchase Orders , the form that you create a new PO
+POXPOVPO => (N) Purchase Orders -> Purchase Order Summary , the form that you qu
+ery the existed PO
+POXPOERL => (N) Purchase Orders -> Releases , the form that you release BPA ( Blanket Purchase Agreement )
+POXRQERQ => (N) Requisitions -> Requisitions , the form you create a new requisitions.
+
+
+
+Best Regards,
+Sara
+
+STATUS
+=======
+CUS 
+
+
+
+27-JUL-07 08:44:46 GMT
+
+Email Update button has been pressed: Sending email to jin.zhong@sonyericsson.com. 
+
+
+31-JUL-07 03:21:30 GMT
+
+.
+FOLLOW UP
+==========
+Hi Jin,
+
+Please update the SR as soon as possible with the current status and/or requested information so we can continue working the iss
+ue.
+
+Thank You,
+Sara
+
+STATUS
+=======
+
+@CUS -- Waiting for Customer Update
+
+
+
+
+31-JUL-07 03:21:37 GMT
+
+Email Update button has been pressed: Sending email to jin.zhong@sonyericsson.com. 
+
+
+31-JUL-07 07:19:03 GMT
+
+New info : jin.zhong@sonyericsson.com
+because we have some customization of PO create form, we are still on testing this. please kindly wait.
+
+
+
+01-AUG-07 02:56:03 GMT
+
+New info : jin.zhong@sonyericsson.com
+the test is already finished. the problem is solved. we can close this SR.
+
+
+
+01-AUG-07 03:52:33 GMT
+
+.
+UPDATE
+=======
+
+Hi Jin,
+
+I am inactivating this Service Request, as I have received confirmation from you that this issue is now resolved. 
+You may receive a Service Request (SR) Survey via email requesting feedback on
+this SR. Please take a minute to respond. We appreciate your feedback!
+
+
+
+Best Regards,
+Sara
+Global Customer Services
+
+STATUS
+=======
+
+Inactivated -- Issue Resolved
+
+
+
+
+02-AUG-07 06:41:02 GMT
+
+.
+ISSUE CLARIFICATION
+====================
+create a PO line in blanket PO without maintain the correct item category in master org -> save -> the PO
+approval status changed to 'Requires Reapproval'. 
+we can't cancel the wrong PO line or delete it or approve it.
+
+
+.
+ISSUE VERIFICATION
+===================
+
+Verified the issue by the screen shots in the file error_message.doc , which shows 
+message "No control actions found for this document". No way to cancel the line.
+
+
+.
+CAUSE DETERMINATION
+====================
+Bug 3661821 NOT ABLE TO DELETE A LINE ON A BLANKET IF IT'S NOT APPROVED
+
+
+
+
+
+CAUSE JUSTIFICATION
+====================
+Bug.3661821/1243500 NOT ABLE TO DELETE A LINE ON A BLANKET IF IT'S NOT APPROVED
+Bug.3672233/3661821 FP 11I9-11I10 UNABLE TO DELETE A LINE ON A BLANKET IF IT'S NOT APPROVED: 
+Bug.5473270/3661821 BACKPORT REQUEST FOR BUG 3661821: 
+
+
+.
+PROPOSED SOLUTION(S)
+======================
+1. apply patch 3661821 in your test env first 
+2. if it fix the problem , pls migrate the solution to the production env.
+
+
+
+PROPOSED SOLUTION JUSTIFICATION(S)
+====================================
+Bug 3661821 NOT ABLE TO DELETE A LINE ON A BLANKET IF IT'S NOT APPROVED
+
+.
+SOLUTION / ACTION PLAN
+=======================
+To implement the solution, please execute the following steps:
+
+1. apply patch 3661821 .
+
+
+05-AUG-07 00:01:42 GMT
+
+TAR passed SCL review date. Setting to HCL.  
+
+
+
+

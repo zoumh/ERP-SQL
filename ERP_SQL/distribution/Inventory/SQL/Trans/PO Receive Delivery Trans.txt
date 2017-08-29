@@ -1,0 +1,23 @@
+
+
+
+select a.ORGANIZATION_ID,b.segment1 Item,a.ITEM_DESC,a.TRANSACTION_DATE,a.TRANSACT_QTY,a.TRANSACTION_TYPE 
+from APPS.RCV_VRC_TXS_VENDINT_V a,apps.mtl_system_items b
+where a.TRANSACTION_TYPE in ('RECEIVE','CORRECT','RETURN TO VENDOR')
+and b.inventory_item_id=a.item_id
+and b.organization_id=83
+and (b.segment1 like 'KRH 101 162%' or b.segment1 like 'KRC 114 1700%' or b.segment1 like 'KRC 114 1701%' or b.segment1 like 'A3627888%' or b.segment1 like 'KRH 101 260%')
+
+
+
+Harris,
+
+The import KRH item no. is as follows:
+
+PROD NO.                    Item No.
+
+P908                             KRH 101 162
+Z208                             KRC 114 1700
+                                      KRC 114 1701
+Z608                             A3627888
+S700                            KRH 101 260

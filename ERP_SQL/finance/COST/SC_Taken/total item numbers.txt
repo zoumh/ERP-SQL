@@ -1,0 +1,58 @@
+
+
+
+
+---------------------(Add New) List total Items number in PRD (For Mona,Michael)
+
+----total item numbers in a WH
+
+----snapshoot
+
+select PHYSICAL_INVENTORY_ID,count(distinct(inventory_item_id)) item_no_Rev,count(distinct(to_char(inventory_item_id)||REVISION)) item_Rev,SUBINVENTORY_NAME
+from apps.mtl_physical_adjustments --where PHYSICAL_INVENTORY_ID=672 
+group by SUBINVENTORY_NAME,PHYSICAL_INVENTORY_ID
+
+
+
+----onhand
+
+select 
+count(distinct(to_char(a.inventory_item_id)||a.REVISION)) item_no,a.subinventory_code
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+group by a.subinventory_code 
+
+
+select 
+count(distinct(to_char(a.inventory_item_id)||a.REVISION)) item_no--,a.subinventory_code
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+
+
+
+------------old , no revision
+CREATE OR REPLACE View APPS.BMC_CST_TOTAL_ITEM_NUM
+AS
+select count(distinct(inventory_item_id)) as Item_Num ,organization_id from apps.mtl_onhand_quantities
+group by organization_id
+
+
+

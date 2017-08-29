@@ -1,0 +1,391 @@
+ Needs improve !!
+
+
+For:
+and g.segment1='CYNDI'
+and g.segment4='AC3'
+
+-------------Has Sourcing Rule but no AVL
+select g.segment1 Model,g.segment4 Cmd,
+f.segment1 Item,'' AVL_VENDOR,'' AVL_Site,'' AVL_Created_By, null AVL_Created_Date,
+null AVL_Org,
+a.SOURCING_RULE_NAME SOURCING_RULE_SR,
+h.user_name SR_Created_by,trunc(a.creation_date) SR_Creation_Date,c.ALLOCATION_PERCENT,
+c.VENDOR_NAME SR_Vendor,c.VENDOR_SITE SR_Site,a.ORGANIZATION_ID SR_Org
+from apps.MRP_SOURCING_RULES a,apps.MRP_SR_RECEIPT_ORG b,apps.MRP_SR_SOURCE_ORG_V c,
+apps.MRP_SR_ASSIGNMENTS d,apps.MRP_ASSIGNMENT_SETS e,apps.mtl_system_items f,apps.mtl_item_categories_v g
+,apps.fnd_user h,
+(select b.item_id from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_STATUSES f
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.OWNING_ORGANIZATION_ID >126
+--and a.segment1='SXA 109 5315/3.R1B'--'ROA 128 1186'--'SXK 109 7394.P1A'
+and b.asl_status_id=f.STATUS_ID
+) i
+where a.sourcing_rule_id=b.sourcing_rule_id
+and b.SR_receipt_ID=c.SR_receipt_ID
+--and a.SOURCING_RULE_NAME ='SXA 109 5315/3.R1B'--'ROA 128 1186'
+and a.STATUS =1
+--and (b.DISABLE_DATE is null or b.DISABLE_DATE >sysdate)
+and ( (b.EFFECTIVE_DATE is null or b.EFFECTIVE_DATE <=sysdate)
+    and (b.DISABLE_DATE is null or b.DISABLE_DATE >sysdate))
+and d.ASSIGNMENT_SET_ID=e.ASSIGNMENT_SET_ID
+and d.SOURCING_RULE_ID=a.SOURCING_RULE_ID
+and f.ORGANIZATION_ID=d.ORGANIZATION_ID
+and f.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and e.ASSIGNMENT_SET_NAME='BMC MRP New Sourcing Rule Set'
+and g.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=d.ORGANIZATION_ID
+and g.CATEGORY_SET_ID=1
+and a.CREATED_BY=h.user_id
+and d.INVENTORY_ITEM_ID =i.item_id(+)
+and i.item_id is null
+and a.ORGANIZATION_ID>126--130
+--and g.segment1='CYNDI'
+--and g.segment4='AC3'
+--order by a.SOURCING_RULE_NAME,f.segment1,c.VENDOR_NAME,c.VENDOR_SITE
+union
+------------------Has AVL, May have/May Not have Sourcing Rule  ???? Needs improve !!
+select aa.Model,aa.cmd,aa.Item,--a.description,
+aa.vendor_name AVL_Vendor,aa.vendor_site_code AVL_Site,aa.AVL_Created_by,aa.AVL_Created_Date,
+aa.OWNING_ORGANIZATION_ID AVL_Org,
+i.SOURCING_RULE_NAME SOURCING_RULE_SR,
+i.SR_Created_by,i.SR_Created_Date,i.ALLOCATION_PERCENT,i.VENDOR_NAME SR_Vendor,i.VENDOR_SITE SR_Site,
+i.ORGANIZATION_ID SR_Org
+from
+(select g.segment1 Model,g.segment4 Cmd,a.segment1 item,a.description,
+d.vendor_name,e.vendor_site_code,h.user_name AVL_Created_by,trunc(b.CREATION_DATE) AVL_Created_Date
+,f.status,b.OWNING_ORGANIZATION_ID,b.disable_flag,
+DECODE(b.USING_ORGANIZATION_ID, -1, 'Y','N') GLOBAL_FLAG,
+c.processing_lead_time,c.min_order_qty,c.fixed_lot_multiple
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e,apps.PO_ASL_STATUSES f,
+(select * from apps.mtl_item_categories_v where CATEGORY_SET_ID=1) g
+,apps.fnd_user h
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+and g.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=130--a.ORGANIZATION_ID
+and b.asl_status_id=f.STATUS_ID
+and a.CREATED_BY=h.user_id
+and f.status='Approved'
+and (b.disable_flag ='N' or b.disable_flag is null)
+--and g.segment1='CYNDI'
+--and g.segment4='AC3'
+) aa,
+(select f.segment1 Item,a.SOURCING_RULE_NAME,c.VENDOR_NAME,c.VENDOR_SITE,
+h.user_name SR_Created_by,a.creation_date SR_Created_Date,c.ALLOCATION_PERCENT,a.ORGANIZATION_ID
+from apps.MRP_SOURCING_RULES a,apps.MRP_SR_RECEIPT_ORG b,apps.MRP_SR_SOURCE_ORG_V c,
+apps.MRP_SR_ASSIGNMENTS d,apps.MRP_ASSIGNMENT_SETS e,apps.mtl_system_items f,apps.fnd_user h
+where a.sourcing_rule_id=b.sourcing_rule_id
+and b.SR_receipt_ID=c.SR_receipt_ID
+and a.STATUS =1
+--and (b.DISABLE_DATE is null or b.DISABLE_DATE >sysdate)
+and ( (b.EFFECTIVE_DATE is null or b.EFFECTIVE_DATE <=sysdate)
+    and (b.DISABLE_DATE is null or b.DISABLE_DATE >sysdate))
+and d.ASSIGNMENT_SET_ID=e.ASSIGNMENT_SET_ID
+and d.SOURCING_RULE_ID=a.SOURCING_RULE_ID
+and f.ORGANIZATION_ID=d.ORGANIZATION_ID
+and f.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and e.ASSIGNMENT_SET_NAME='BMC MRP New Sourcing Rule Set'
+and a.CREATED_BY=h.user_id
+and a.ORGANIZATION_ID>126) i
+where  aa.item=i.item (+)
+and aa.vendor_name=i.VENDOR_NAME (+)
+and aa.vendor_site_code=i.VENDOR_SITE(+)
+and aa.OWNING_ORGANIZATION_ID+3=i.ORGANIZATION_ID(+)
+
+
+
+
+
+-------------Has Sourcing Rule but no AVL
+
+select g.segment1 Model,g.segment4 Cmd,
+f.segment1 Item,'' AVL_VENDOR,'' AVL_Site,'' AVL_Created_By,'' AVL_Created_Date,
+a.SOURCING_RULE_NAME SOURCING_RULE_SR,
+h.user_name SR_Created_by,c.ALLOCATION_PERCENT,trunc(a.creation_date) SR_Creation_Date,
+c.VENDOR_NAME SR_Vendor,c.VENDOR_SITE SR_Site
+from apps.MRP_SOURCING_RULES a,apps.MRP_SR_RECEIPT_ORG b,apps.MRP_SR_SOURCE_ORG_V c,
+apps.MRP_SR_ASSIGNMENTS d,apps.MRP_ASSIGNMENT_SETS e,apps.mtl_system_items f,apps.mtl_item_categories_v g
+,apps.fnd_user h,
+(select b.item_id from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_STATUSES f
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.OWNING_ORGANIZATION_ID >126
+--and a.segment1='SXA 109 5315/3.R1B'--'ROA 128 1186'--'SXK 109 7394.P1A'
+and b.asl_status_id=f.STATUS_ID
+) i
+where a.sourcing_rule_id=b.sourcing_rule_id
+and b.SR_receipt_ID=c.SR_receipt_ID
+--and a.SOURCING_RULE_NAME ='SXA 109 5315/3.R1B'--'ROA 128 1186'
+and a.STATUS =1
+and (b.DISABLE_DATE is null or b.DISABLE_DATE >sysdate)
+and d.ASSIGNMENT_SET_ID=e.ASSIGNMENT_SET_ID
+and d.SOURCING_RULE_ID=a.SOURCING_RULE_ID
+and f.ORGANIZATION_ID=d.ORGANIZATION_ID
+and f.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and e.ASSIGNMENT_SET_NAME='BMC MRP New Sourcing Rule Set'
+and g.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=d.ORGANIZATION_ID
+and g.CATEGORY_SET_ID=1
+and a.CREATED_BY=h.user_id
+and d.INVENTORY_ITEM_ID =i.item_id(+)
+and i.item_id is null
+and a.ORGANIZATION_ID>126--130
+order by a.SOURCING_RULE_NAME,f.segment1,c.VENDOR_NAME,c.VENDOR_SITE
+
+
+---old
+select g.segment1 Model,g.segment4 Cmd,
+f.segment1 Item,a.SOURCING_RULE_NAME,
+h.user_name Created_by,c.ALLOCATION_PERCENT,trunc(a.creation_date) Creation_Date,
+c.VENDOR_NAME,c.VENDOR_SITE,a.ORGANIZATION_ID Rule_Org,d.ORGANIZATION_ID Assign_Org,ASSIGNMENT_SET_NAME
+,d.INVENTORY_ITEM_ID ,i.item_id AVL
+from apps.MRP_SOURCING_RULES a,apps.MRP_SR_RECEIPT_ORG b,apps.MRP_SR_SOURCE_ORG_V c,
+apps.MRP_SR_ASSIGNMENTS d,apps.MRP_ASSIGNMENT_SETS e,apps.mtl_system_items f,apps.mtl_item_categories_v g
+,apps.fnd_user h,(select b.item_id
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_STATUSES f
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.OWNING_ORGANIZATION_ID >126
+--and a.segment1='SXA 109 5315/3.R1B'--'ROA 128 1186'--'SXK 109 7394.P1A'
+and b.asl_status_id=f.STATUS_ID
+) i
+where a.sourcing_rule_id=b.sourcing_rule_id
+and b.SR_receipt_ID=c.SR_receipt_ID
+--and a.SOURCING_RULE_NAME ='SXA 109 5315/3.R1B'--'ROA 128 1186'
+and a.STATUS =1
+and (b.DISABLE_DATE is null or b.DISABLE_DATE >sysdate)
+and d.ASSIGNMENT_SET_ID=e.ASSIGNMENT_SET_ID
+and d.SOURCING_RULE_ID=a.SOURCING_RULE_ID
+and f.ORGANIZATION_ID=d.ORGANIZATION_ID
+and f.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and e.ASSIGNMENT_SET_NAME='BMC MRP New Sourcing Rule Set'
+and g.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=d.ORGANIZATION_ID
+and g.CATEGORY_SET_ID=1
+and a.CREATED_BY=h.user_id
+and d.INVENTORY_ITEM_ID =i.item_id(+)
+and i.item_id is null
+
+
+------------------Has AVL, May have/May Not have Sourcing Rule 
+
+select aa.Model,aa.cmd,aa.Item,--a.description,
+aa.vendor_name AVL_Vendor,aa.vendor_site_code AVL_Site,aa.AVL_Created_by,aa.AVL_Created_Date,
+i.SOURCING_RULE_NAME SOURCING_RULE_SR,
+i.SR_Created_by,i.SR_Created_Date,i.ALLOCATION_PERCENT,i.VENDOR_NAME SR_Vendor,i.VENDOR_SITE SR_Site
+from
+(select g.segment1 Model,g.segment4 Cmd,a.segment1 item,a.description,
+d.vendor_name,e.vendor_site_code,h.user_name AVL_Created_by,b.CREATION_DATE AVL_Created_Date
+,f.status,b.OWNING_ORGANIZATION_ID,b.disable_flag,
+DECODE(b.USING_ORGANIZATION_ID, -1, 'Y','N') GLOBAL_FLAG,
+c.processing_lead_time,c.min_order_qty,c.fixed_lot_multiple
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e,apps.PO_ASL_STATUSES f,
+(select * from apps.mtl_item_categories_v where CATEGORY_SET_ID=1) g
+,apps.fnd_user h
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+and g.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=a.ORGANIZATION_ID
+and b.asl_status_id=f.STATUS_ID
+and a.CREATED_BY=h.user_id
+and f.status='Approved'
+and (b.disable_flag ='N' or b.disable_flag is null)
+) aa,
+(select f.segment1 Item,a.SOURCING_RULE_NAME,c.VENDOR_NAME,c.VENDOR_SITE,
+h.user_name SR_Created_by,a.creation_date SR_Created_Date,c.ALLOCATION_PERCENT
+from apps.MRP_SOURCING_RULES a,apps.MRP_SR_RECEIPT_ORG b,apps.MRP_SR_SOURCE_ORG_V c,
+apps.MRP_SR_ASSIGNMENTS d,apps.MRP_ASSIGNMENT_SETS e,apps.mtl_system_items f,apps.fnd_user h
+where a.sourcing_rule_id=b.sourcing_rule_id
+and b.SR_receipt_ID=c.SR_receipt_ID
+and a.STATUS =1
+and (b.DISABLE_DATE is null or b.DISABLE_DATE >sysdate)
+and d.ASSIGNMENT_SET_ID=e.ASSIGNMENT_SET_ID
+and d.SOURCING_RULE_ID=a.SOURCING_RULE_ID
+and f.ORGANIZATION_ID=d.ORGANIZATION_ID
+and f.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and e.ASSIGNMENT_SET_NAME='BMC MRP New Sourcing Rule Set'
+and a.CREATED_BY=h.user_id
+and a.ORGANIZATION_ID>126) i
+where  aa.item=i.item (+)
+and aa.vendor_name=i.VENDOR_NAME (+)
+and aa.vendor_site_code=i.VENDOR_SITE(+)
+order by aa.item,aa.vendor_name
+
+
+
+
+-----------Sourcing Rule (with Category & User)
+
+select --a.SOURCING_RULE_ID,e.ASSIGNMENT_SET_ID,a.CREATED_BY,
+g.segment1 Model,g.segment4 Cmd,
+f.segment1 Item,a.SOURCING_RULE_NAME,
+h.user_name Created_by,c.ALLOCATION_PERCENT,trunc(a.creation_date) Creation_Date,
+c.VENDOR_NAME,c.VENDOR_SITE,a.ORGANIZATION_ID Rule_Org,d.ORGANIZATION_ID Assign_Org,ASSIGNMENT_SET_NAME     
+from apps.MRP_SOURCING_RULES a,apps.MRP_SR_RECEIPT_ORG b,apps.MRP_SR_SOURCE_ORG_V c,
+apps.MRP_SR_ASSIGNMENTS d,apps.MRP_ASSIGNMENT_SETS e,apps.mtl_system_items f,apps.mtl_item_categories_v g
+,apps.fnd_user h
+where a.sourcing_rule_id=b.sourcing_rule_id
+and b.SR_receipt_ID=c.SR_receipt_ID
+--and a.SOURCING_RULE_NAME ='ROA 128 1186'
+and a.STATUS =1
+and (b.DISABLE_DATE is null or b.DISABLE_DATE >sysdate)
+and d.ASSIGNMENT_SET_ID=e.ASSIGNMENT_SET_ID
+and d.SOURCING_RULE_ID=a.SOURCING_RULE_ID
+and f.ORGANIZATION_ID=d.ORGANIZATION_ID
+and f.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and e.ASSIGNMENT_SET_NAME='BMC MRP New Sourcing Rule Set'
+and g.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=d.ORGANIZATION_ID
+and g.CATEGORY_SET_ID=1
+and a.CREATED_BY=h.user_id
+order by a.SOURCING_RULE_NAME
+
+
+
+------AVL (with Status,Item Category & Creator)
+select g.segment1 Model,g.segment4 Cmd,a.segment1 item,a.description,
+d.vendor_name,e.vendor_site_code,h.user_name AVL_Created_by,b.CREATION_DATE AVL_Create_Date
+,f.status,b.OWNING_ORGANIZATION_ID,b.disable_flag,
+DECODE(b.USING_ORGANIZATION_ID, -1, 'Y','N') GLOBAL_FLAG,
+c.processing_lead_time,c.min_order_qty,c.fixed_lot_multiple
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e,apps.PO_ASL_STATUSES f,
+(select * from apps.mtl_item_categories_v where CATEGORY_SET_ID=1) g
+,apps.fnd_user h
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+and g.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=a.ORGANIZATION_ID
+and b.asl_status_id=f.STATUS_ID
+and b.CREATED_BY=h.user_id
+and a.segment1='SXK 109 7394.P1A'
+order by a.segment1,d.vendor_name
+
+
+
+select g.segment1 Model,g.segment4 Cmd,a.segment1 item,a.description,
+d.vendor_name,e.vendor_site_code
+,f.status,b.OWNING_ORGANIZATION_ID,b.disable_flag,
+DECODE(b.USING_ORGANIZATION_ID, -1, 'Y','N') GLOBAL_FLAG,
+c.processing_lead_time,c.min_order_qty,c.fixed_lot_multiple
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e,apps.PO_ASL_STATUSES f,
+(select * from apps.mtl_item_categories_v where CATEGORY_SET_ID=1) g
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+and g.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=a.ORGANIZATION_ID
+and b.asl_status_id=f.STATUS_ID
+and a.segment1='SXK 109 7394.P1A'
+order by a.segment1,d.vendor_name
+
+
+select distinct b.asl_id,d.vendor_name,--b.item_id,
+b.VENDOR_SITE_ID,e.vendor_site_code
+,a.segment1 item,a.description
+,f.status,b.OWNING_ORGANIZATION_ID,b.disable_flag,
+DECODE(b.USING_ORGANIZATION_ID, -1, 'Y','N') GLOBAL_FLAG,
+c.processing_lead_time,c.min_order_qty,c.fixed_lot_multiple
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e,apps.PO_ASL_STATUSES f
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+and a.segment1='SXA 109 5315/3.R1B'--'ROA 128 1186'--'SXK 109 7394.P1A'
+and b.asl_status_id=f.STATUS_ID
+order by a.segment1,d.vendor_name
+
+
+select distinct b.asl_id,d.vendor_name,--b.item_id,
+b.VENDOR_SITE_ID,e.vendor_site_code
+,a.segment1 item,a.description
+,b.asl_status_id,b.OWNING_ORGANIZATION_ID,b.disable_flag,
+DECODE(b.USING_ORGANIZATION_ID, -1, 'Y','N') GLOBAL_FLAG,
+c.processing_lead_time,c.min_order_qty,c.fixed_lot_multiple
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+and a.segment1='SXK 109 7394.P1A'
+order by a.segment1,d.vendor_name

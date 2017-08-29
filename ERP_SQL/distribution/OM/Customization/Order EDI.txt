@@ -1,0 +1,39 @@
+
+
+1. If has CHO, EDI automatic hold the SO, discover report 'BMC_PO_Summary_Report_NEW_enter-planning' 
+can see the CHO info (old/New of Qty,GI Date/Revision)
+
+2. If an SO has been send EDI out confirm, then this report won't list it.
+
+
+3.discover report 'Bmc_Oe_Import_Err_Msg' could list SO in OE_Interface
+
+
+
+
+-----------Some Fields from EDI SAP
+Here is the informationt that we need:
+
+1. - oe_order_headers_all. global_attribute3  = SEMC CustomerPONumber
+2. - oe_order_lines_all.global_attribute2     =SE_Customer_Item
+3. - oe_order_headers_all. global_attribute17, 1_;2_;3_;4_ = 4 position = GTINCode 
+4. - oe_order_headers_all. global_attribute13 = Goods Marking field
+5. - ra_addresses_all.ADDRESS_LINES_PHONETIC  = SEMCshipto partner
+
+Rgds//h
+
+
+
+---------------show these addition label information from SAP EDI
+select to_char(b.ORDER_NUMBER) OR_Num,
+to_Char(a.LINE_NUMBER) Line_Num
+,a.FLOW_STATUS_CODE,
+b.global_attribute3 SEMC_Customer_PO,
+a.global_attribute2 SE_Customer_Item,
+b.global_attribute17 GTINCode ,
+b.global_attribute13 Goods_Marking 
+,a.ORDERED_ITEM
+,a.CREATION_DATE
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b
+where a.HEADER_ID=b.HEADER_ID
+and b.ORDER_NUMBER='256600'

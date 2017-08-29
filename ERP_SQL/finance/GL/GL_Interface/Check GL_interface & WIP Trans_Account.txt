@@ -1,0 +1,40 @@
+
+----------Check GL_interface & WIP Trans_Account
+
+
+Select set_of_books_id SOB ,      
+user_je_category_name  CAT,      
+user_je_source_name SOURCE,      
+status,      
+reference21     
+from apps.gl_interface     
+where status= 'EU02,P'     
+order by reference21
+
+SELECT M.currency_code CURRENCY,     
+M.REFERENCE_ACCOUNT ACCOUNT,    
+DECODE(sign(SUM(NVL(M.TRANSACTION_VALUE,    
+M.BASE_TRANSACTION_VALUE))),1,    
+SUM(NVL(M.TRANSACTION_VALUE,M.BASE_TRANSACTION_VALUE)),0) d,    
+DECODE(sign(SUM(NVL(M.TRANSACTION_VALUE,    
+M.BASE_TRANSACTION_VALUE))),-1,    
+(-1SUM(NVL(M.TRANSACTION_VALUE,M.BASE_TRANSACTION_VALUE))),0) c,    
+DECODE(sign(SUM(M.BASE_TRANSACTION_VALUE)),1,    
+SUM(M.BASE_TRANSACTION_VALUE),0) e,    
+DECODE(sign(SUM(M.BASE_TRANSACTION_VALUE)),    
+-1,
+(-1SUM(M.BASE_TRANSACTION_VaLUE)),0)  f    
+FROM apps.WIP_TRANSACTION_ACCOUNTS M     
+WHERE gl_batch_id = 4289--&reference21    	  
+GROUP BY    	 
+M.CURRENCY_CODE,    	 
+M.REFERENCE_ACCOUNT ; 
+
+
+
+
+SELECT M.currency_code CURRENCY,     
+M.REFERENCE_ACCOUNT ACCOUNT,    
+DECODE(sign(SUM(NVL(M.TRANSACTION_VALUE,    
+M.BASE_TRANSACTION_VALUE))),1,    
+SUM(NVL(M.TRANSACTION_VALUE,M.BASE_TRANSACTION_VALUE)),0) d,    

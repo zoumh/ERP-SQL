@@ -1,0 +1,105 @@
+
+下面的sql是根据标准的程序整理出的可用量库存的明细sql
+ 
+ 
+ SELECT     'Transaction_temp_table' Source_type
+            ,mmtt.organization_id                 organization_id
+          , mmtt.inventory_item_id               inventory_item_id
+     ,msi.segment1   item_no
+          , mmtt.revision                        revision
+          , mmtt.subinventory_code               subinventory_code
+          , mmtt.locator_id                      locator_id
+        ,mmtt.transaction_quantity
+       FROM
+            apps.mtl_material_transactions_temp mmtt
+     ,apps.mtl_system_items msi
+       WHERE
+              mmtt.posting_flag = 'Y'
+   AND mmtt.subinventory_code IS NOT NULL
+    AND (Nvl(mmtt.transaction_status,0) <> 2 OR -- pending txns
+       -- only picking side of the suggested transactions are used
+       Nvl(mmtt.transaction_status,0) = 2 AND
+       mmtt.transaction_action_id IN (1,2,28,3,21,29,32,34)
+       )
+         -- dont look at scrap and costing txns
+         AND mmtt.transaction_action_id NOT IN (24,30)
+   and mmtt.organization_id=130
+   and mmtt.organization_id=msi.organization_id
+   and mmtt.inventory_item_id=msi.inventory_item_id  
+   union
+   SELECT
+         'Reservations' Source_type,
+          mr.organization_id                   organization_id
+        , mr.inventory_item_id                 inventory_item_id
+  ,msi.segment1 item_no
+        , mr.revision                          revision
+        , mr.subinventory_code                 subinventory_code
+        , mr.locator_id                        locator_id
+        , mr.primary_reservation_quantity
+           - Nvl(mr.detailed_quantity,0)       primary_quantity
+     FROM apps.mtl_reservations mr,
+       apps.mtl_system_items msi
+     WHERE
+          Nvl(mr.supply_source_type_id, 13) = 13
+      AND mr.primary_reservation_quantity > Nvl(mr.detailed_quantity,0)
+   and mr.organization_id=130
+   and mr.INVENTORY_ITEM_ID=msi.inventory_item_id
+   and mr.organization_id=msi.organization_id 
+
+
+logic:
+(mtl_transaction_temp : 
+  posting_flag = 'Y'
+  is to be processed(not saved status),or is saved status for below transactions actions:
+	TRANSACTION_ACTION_ID:
+	In:
+	1	Issue from stores
+	2	Subinventory transfer
+	3	Direct organization transfer
+	21	Intransit shipment
+	28	Staging transfer
+	29	Delivery adjustments
+	32	Assembly return
+	34	Negative component return
+  TRANSACTION_ACTION_ID not in  
+	24	Cost update
+	30	WIP scrap transaction
+
+mtl_reservations:
+  supply_source_type_id=13
+  primary_reservation_quantity > detailed_quantity
+)
+
+Not in:
+24	Cost update
+30	WIP scrap transaction
+
+transaction_status:
+----------------Indicates if it has to be processed or just saved. 
+NULL or 1 is default behavior. 
+2 is save only. 
+3 is ready to process
+
+
+-----------------HJW
+Hello,
+function bmc_get_availability   是根据那个标准的onhand 界面做的。附件是他的代码，
+使用方式:
+select bmc_get_availability (130,128,'SA16') AVAILABILITY_qty from dual;
+ 
+输入: organization_id,item_id,subinventory_name
+输出：
+v_availability :=
+               v_onhand - v_reservation - v_pending_transac - v_receiving_side;
+ 
+您看看有用不：）
+ 
+另外，CS 的report:
+Discover Report Name:BMCDSCV.BMC Shorage For CS Report  使用了这个功能。当时是Key user Sunying 提的需求。
+view bmc_shortage_for_CS_rpt 
+ 
+Jingwei Hu
+
+IS/IT -OracleTeam -DBA&Developer
+
+

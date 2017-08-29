@@ -1,0 +1,76 @@
+
+
+----------GL Interface linked to receiving Journal,rec Trans, PO
+
+select d.segment1 PO,e.RECEIPT_NUM,f.segment3 Acc,
+a.ACCOUNTED_DR,a.ACCOUNTED_CR,TRANSACTION_ID,QUANTITY, TRANSACTION_TYPE , 
+b.ACCOUNTING_DATE ,b.TRANSACTION_DATE ,b.PERIOD_NAME,b.REFERENCE4 as PO
+,a.CURRENCY_CODE,a.CURRENCY_CONVERSION_RATE as Rate
+FROM apps.GL_interface a,APPS.RCV_RECEIVING_SUB_LEDGER b,apps.RCV_TRANSACTIONS c,
+apps.PO_HEADERS_ALL d,apps.RCV_SHIPMENT_HEADERS e,apps.GL_CODE_combinations f
+WHERE --b.creation_date=to_Date('2006-10-30','yyyy-mm-dd') and 
+a.gl_sl_link_id=b.GL_SL_LINK_ID
+and b.RCV_TRANSACTION_ID=c.TRANSACTION_ID
+and e.SHIPMENT_HEADER_ID=c.SHIPMENT_HEADER_ID
+and d.PO_HEADER_ID=c.PO_HEADER_ID
+and a.status in ('EP01')
+and  f.CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+
+
+
+ ----********************************************'Purchasing'*********************************************
+ CREATE OR REPLACE VIEW BMC_ACCOUNT_QUERY_PO
+AS
+  SELECT GL_JL.PERIOD_NAME      PERIOD_NAME,
+         RSH.RECEIPT_NUM        TRX_NUMBER,
+         RCT.TRANSACTION_DATE   TRX_DATE,  
+         GL_JB.NAME             JE_BATCH_NAME,
+         GL_JH.NAME             JE_HEADER_NAME,         
+         GL_JH.JE_CATEGORY      JE_CATEGORY, 
+         GL_JH.JE_SOURCE        JE_SOURCE,
+         GC_CC.SEGMENT          ACCOUNT_NUMBER,
+         GC_CC.SEGMENT1         SEGMENT1,
+         GC_CC.SEGMENT2         SEGMENT2,
+         GC_CC.SEGMENT3         SEGMENT3,
+         GC_CC.SEGMENT4         SEGMENT4,
+         GC_CC.SEGMENT5         SEGMENT5,
+         GC_CC.SEGMENT6         SEGMENT6,
+         GC_CC.SEGMENT7         SEGMENT7,
+         RRS.ENTERED_DR         ENTERED_DR, 
+         RRS.ENTERED_CR         ENTERED_CR, 
+         RRS.ACCOUNTED_DR       ACCOUNTED_DR, 
+         RRS.ACCOUNTED_CR       ACCOUNTED_CR,         
+         GL_JH.CURRENCY_CODE    CURRENCY_CODE, 
+         RSL.ITEM_DESCRIPTION   TRX_DESC,
+         RCT.TRANSACTION_DATE   GL_DATE,       
+         GL_JH.SET_OF_BOOKS_ID  SET_OF_BK_ID,
+         RRS.CURRENCY_CONVERSION_RATE        CC_RATE,
+         RSH.CREATION_DATE                   CREATION_DATE,
+         NVL(FND.DESCRIPTION,FND.USER_NAME)  CREATED_BY   ,       
+         PH.SEGMENT1                         PO_NUMBER
+  FROM  GL_JE_BATCHES        GL_JB,
+        GL_JE_HEADERS        GL_JH,
+        GL_JE_LINES          GL_JL,
+        BMC_CCID_SEG3        GC_CC,
+        GL_IMPORT_REFERENCES     R, 
+        RCV_RECEIVING_SUB_LEDGER RRS, 
+        RCV_TRANSACTIONS         RCT, 
+        RCV_SHIPMENT_HEADERS     RSH,
+        PO_HEADERS_ALL           PH,
+        RCV_SHIPMENT_LINES       RSL,
+        FND_USER                 FND
+  WHERE GL_JB.JE_BATCH_ID = GL_JH.JE_BATCH_ID
+   AND GL_JL.JE_HEADER_ID = GL_JH.JE_HEADER_ID
+   AND GL_JL.JE_HEADER_ID = R.JE_HEADER_ID    
+   AND GL_JL.JE_LINE_NUM  = R.JE_LINE_NUM     
+    AND GL_JL.CODE_COMBINATION_ID = GC_CC.CCID
+    AND RSH.SHIPMENT_HEADER_ID = RCT.SHIPMENT_HEADER_ID
+    AND RSH.CREATED_BY         = FND.USER_ID
+    AND RSL.SHIPMENT_LINE_ID = RCT.SHIPMENT_LINE_ID      
+    AND RCT.TRANSACTION_ID = RRS.RCV_TRANSACTION_ID
+    AND RCT.PO_HEADER_ID   = PH.PO_HEADER_ID
+    AND RRS.GL_SL_LINK_ID = R.GL_SL_LINK_ID
+    AND TO_CHAR(RRS.RCV_TRANSACTION_ID) = R.REFERENCE_5
+    AND   (GL_JH.ACCRUAL_REV_JE_HEADER_ID IS NULL OR GL_JH.ACCRUAL_REV_STATUS ='R')
+    AND   GL_JB.ACTUAL_FLAG='A'
+    AND   GL_JH.STATUS ='P'  ;

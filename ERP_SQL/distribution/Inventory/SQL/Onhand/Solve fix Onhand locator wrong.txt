@@ -1,0 +1,62 @@
+
+-------------onhand locator is wrong due to stock taken
+
+Hi,
+
+UPDATE FROM DEVELOPMENT :
+***************************************
+Please take proper backup and then run the following 
+datafix in test instance first. 
+. 
+According to us valid Locator values are- 2302632082Please verify and 
+then enter the value when promptedEach row below should update only one 
+record 
+
+a. 
+update mtl_physical_inventory_tags mpit 
+set locator_id = &locidlast_updated_by = -5222949 
+where organization_id = 130 and subinventory = 'SA14' 
+and physical_inventory_id = 804 
+and locator_id = 23034 
+and parent_lpn_id is null and not exists 
+(select 1 from mtl_item_locations mil 
+where mil.organization_id = mpit.organization_id 
+and mil.subinventory_code = mpit.subinventory 
+and mil.inventory_location_id = mpit.locator_id); 
+
+b. 
+update mtl_physical_adjustments mpa 
+set locator_id = &locidlast_updated_by = -5222949 
+where organization_id = 130 and subinventory_name = 'SA14' 
+and physical_inventory_id = 804 
+and locator_id = 23034 and parent_lpn_id is null 
+AND outermost_lpn_id IS NULL and not exists 
+(select 1 from mtl_item_locations mil 
+where mil.organization_id = mpa.organization_id 
+and mil.subinventory_code = mpa.subinventory_name 
+and mil.inventory_location_id = mpa.locator_id ); 
+
+c. 
+update mtl_material_transactions mmt 
+set locator_id = &locidlast_updated_by = -5222949 
+where organization_id = 130 and subinventory_code = 'SA14' 
+and locator_id = 23034 and transaction_type_id = 8 
+and physical_adjustment_id is not null 
+and lpn_id is null and not exists 
+(select 1 from mtl_item_locations mil 
+where mil.organization_id = mmt.organization_id 
+and mil.subinventory_code = mmt.subinventory_code 
+and mil.inventory_location_id = mmt.locator_id ); 
+
+d. 
+update mtl_onhand_quantities_detail moqd 
+set locator_id = &locid last_updated_by = -5222949 
+where organization_id = 130 and subinventory_code = 'SA14' 
+and locator_id = 23034 and lpn_id is null 
+and not exists 
+(select 1 from mtl_item_locations mil 
+where mil.organization_id = moqd.organization_id 
+and mil.subinventory_code = moqd.subinventory_code 
+and mil.inventory_location_id = moqd.locator_id); 
+
+ 

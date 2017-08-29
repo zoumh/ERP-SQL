@@ -1,0 +1,40 @@
+
+
+----total sesson by user
+SELECT   d.user_name ,COUNT(*),d.description,convert(d.description,'ZHS16GBK') Oracle_User_Name        
+  FROM apps.fnd_logins a, v$session b, v$process c, apps.fnd_user d 
+ WHERE b.paddr = c.addr                
+   AND a.pid = c.pid                   
+   AND a.spid = b.process              
+   AND d.user_id = a.user_id           
+GROUP BY d.user_name ,convert(d.description,'ZHS16GBK'),d.description                 
+ORDER BY COUNT(*) DESC    
+
+----total sessons
+SELECT   COUNT(*)         
+  FROM apps.fnd_logins a, v$session b, v$process c, apps.fnd_user d 
+ WHERE b.paddr = c.addr                
+   AND a.pid = c.pid                   
+   AND a.spid = b.process              
+   AND d.user_id = a.user_id           
+--GROUP BY d.user_name                   
+ORDER BY COUNT(*) DESC 
+
+
+------how long times already
+SELECT DISTINCT d.user_name "User Name", a.PROCESS_SPID,a.LOGIN_TYPE,
+         b.SID SID, b.serial# "Serial#",
+            c.spid "srvPID", 
+   a.spid "ClPID",c.TERMINAL,c.USERNAME,
+            TO_CHAR (start_time, 'YYYY-MM-DD HH24:MM:SS') "STime",b.program client_program,b.action,b.module
+  FROM fnd_logins a, v$session b, v$process c, fnd_user d,v$sql l
+ WHERE b.paddr = c.addr
+   AND a.pid = c.pid
+   AND a.spid = b.process
+   AND d.user_id = a.user_id
+ AND (d.user_name = '28952292' )
+   AND b.sql_hash_value=l.hash_value(+)
+   --AND b.PROCESS = '5691'
+--   AND c.SPID=13105
+ORDER BY d.user_name,"STime"
+

@@ -1,0 +1,69 @@
+
+
+-----PO_APPROVAL_LIST_HEADERS  is used for requisition approvals only !!
+-------------------------Can't list out  PO Full Approval path & Hierasrchy Name path (no matter it happen or not,not include submit step)
+select hir.NAME Hierarchy_Name,
+PO.SEGMENT1 PO_Num,c.FULL_NAME To_Whom,b.sequence_num Appro_Seq,b.status,d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,apps.PO_APPROVAL_LIST_LINES b,apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_HEADERS_ALL PO,apps.PER_POSITION_STRUCTURES Hir
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PO.PO_HEADER_ID=a.document_id
+and a.APPROVAL_PATH_ID=hir.POSITION_STRUCTURE_ID
+and PO.SEGMENT1='1012666'
+
+
+-------------------------PR Full Approval path & Hierasrchy name (no matter it happen or not,not include submit step)
+select --b.CREATION_DATE,b.LAST_UPDATE_DATE,a.CREATION_DATE,a.LAST_UPDATE_DATE,pr.CREATION_DATE,pr.LAST_UPDATE_DATE,
+hir.NAME Hierarchy_Name,
+PR.SEGMENT1 PR_Num,c.FULL_NAME To_Whom,a.CREATION_DATE Submit_Date,b.sequence_num Appro_Seq,pr.AUTHORIZATION_STATUS PR_Status,
+d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,apps.PO_APPROVAL_LIST_LINES b,apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,apps.PER_POSITION_STRUCTURES Hir
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PR.REQUISITION_HEADER_ID=a.document_id
+and a.APPROVAL_PATH_ID=hir.POSITION_STRUCTURE_ID
+and PR.SEGMENT1='49594'
+--and b.creation_date>to_date('2009-7-11','yyyy-mm-dd')
+order by PR.SEGMENT1,b.CREATION_DATE desc ,b.sequence_num desc
+
+
+---------Check Employee laster date
+select PERSON_ID,LAST_UPDATE_DATE,EMPLOYEE_NUMBER,FULL_NAME,EFFECTIVE_START_DATE,EFFECTIVE_END_DATE,ATTRIBUTE1 BANK_ACCOUNT_NO
+from apps.PER_PEOPLE_V7 where EMPLOYEE_NUMBER in ('28945495','28952413')
+--PERSON_ID=13695
+
+
+select  LAST_UPDATE_DATE,ASSIGNMENT_NUMBER from apps.PER_ASSIGNMENTS_V7 where PERSON_ID in (947,4440)
+
+
+-----------
+SELECT PR.SEGMENT1 Req_or_PO_Number,
+HI.OBJECT_TYPE_CODE Doc_Type,PR.AUTHORIZATION_STATUS,
+--HI.ACTION_CODE,
+PE.FULL_NAME To_Whom,
+PR.NOTE_TO_AUTHORIZER,
+PR.DESCRIPTION DESC_OR_COMMENTS,
+PE.EMPLOYEE_NUMBER,pr.creation_date Date_Time,trunc(pr.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PR.REQUISITION_HEADER_ID Hearder_ID,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY          HI,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.PER_PEOPLE_V7              PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+--AND PR.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+--and HI.ACTION_CODE is null
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.PREPARER_ID=PE2.PERSON_ID
+and PR.SEGMENT1=''
+
+AND PE.EMPLOYEE_NUMBER IN ('22966145', '22701003','249','28946107','952209','23032632','23000946','234','22860519')
+

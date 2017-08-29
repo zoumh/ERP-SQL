@@ -1,0 +1,1653 @@
+
+SR Number  6487171.993 
+
+SR Number  6487171.993   Open Date 14-SEP-07 09:37:02 
+Support Identifier  3869015   Name Hongwei Zho 
+Severity  2   Last Update 13-NOV-07 11:40:32 
+Product Oracle Inventory Management   Product Version   11.5.9 
+Platform HP-UX PA-RISC (64-bit)   Detailed Status Waiting on Customer 
+SR Reference   18103288.6   BUG Reference 6436635 
+
+Abstract
+ 
+ESC: BUG: 6436635 - DATAFIX: MISSING ROWS IN RCV_TRANSACTIONS  
+      
+
+Resolution History 
+ 
+
+14-SEP-07 09:37:02 GMT
+
+### Detailed Problem Statement ###
+A PO (1048900) line 5 was fully received,now can't be return. Found nothing in receiving transaction summary screen. Use SQL 
+script find no record in rcv_transactions table, but there are records in 
+rcv_shipment_lines & rcv_shipment_headers table. (We are using WMS)
+
+### Steps to Reproduce ###
+no
+
+### Instance Name and Type of System ###
+PROD
+
+### Recent Changes ###
+No
+
+### Workaround ###
+no
+
+### Impact on Business ###
+Material can't move in, change revision
+
+### Forms name and version where issue is occurring ###
+no
+
+### Does this happen for one transaction or all transactions? ###
+one transaction
+
+### All document types or specific document types ###
+PO receive
+
+### Does this happen for all transaction types, i.e. Receipts, Corrections, Returns, Inspection? ###
+Receipts,Returns
+
+### Problem occurs with Misc. Receipts ###
+No
+
+### Are rows returned when performing a FIND ###
+Not Applicable
+
+### What is the Destination Type and Receipt Routing for records returned? ###
+No
+
+### Is the item under serial, lot or revision control? ###
+Not Applicable
+
+### Does the problem only occur for a particular item,organization,location,purchase order or supplier? ###
+PO 1048900, line 5
+
+### WMS, OPM, Mobile Apps used ###
+OPM
+
+### Files to be Loaded:Note217378.1,Note186123.1 ###
+Some Files
+
+Can you easily recover from, bypass or work around the problem? 
+No
+
+Does your system or application continue normally after the problem occurs? 
+No
+
+Are the standard features of the system or application still available; is the loss of service minor?
+Yes
+
+
+Contact me via : MetaLink
+
+
+14-SEP-07 09:38:07 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+
+upload below script result for your reference:
+
+1.
+select * from apps.PO_HEADERS_ALL where segment1='1048900'
+
+2.
+select * from apps.PO_LINES_ALL where po_header_id=150717 and line_num=5
+
+3.
+select * from apps.rcv_transactions where (po_header_id=150717 and po_line_id=311400) or 
+SHIPMENT_HEADER_ID=659649
+
+4.
+select * from apps.rcv_shipment_lines where po_header_id=150717 and po_line_id=311400
+
+5.
+select * from apps.rcv_shipment_headers where SHIPMENT_HEADER_ID=659649
+
+Script 3 has no record
+
+BR
+
+
+14-SEP-07 09:43:02 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\1.xls
+
+
+14-SEP-07 09:44:09 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\2.xls
+
+
+14-SEP-07 09:45:05 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\3.xls
+
+
+14-SEP-07 09:46:10 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\4.xls
+
+
+14-SEP-07 09:47:02 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\5.xls
+
+
+14-SEP-07 10:20:41 GMT
+
+(Update for record id(s): 108358515)
+
+UPDATE
+======
+Hi,
+
+My name is Neil and I will be helping you with your issue. If you should have any comments or concerns 
+regarding the service you receive please direct these to my manager Christian El
+sner at christian.elsner@oracle.com.
+
+The following note can enhance your experience with Global Customer Services:
+Note: 166650.1 : Working Effectively With Support
+
+Thank you
+Neil
+Global Customer Services
+
+STATUS
+======
+@WIP - Work In Progress
+
+
+
+14-SEP-07 10:23:54 GMT
+
+(Update for record id(s): 108358657)
+
+UPDATE
+======
+Hi,
+
+Please see the action plan below.
+
+Thanks
+Neil
+
+ACTION PLAN
+===========
+1. 
+Upload output from "Diagnostics: Apps Check" Report using a Purchasing responsibility:
+- Reports > Run 
+- Submit a Single Request 
+- Name: Diagnostics: Apps Check 
+- Parameters:
+Purchasing
+Inventory
+Warehouse Management
+Applications Object Library
+- Submit the request 
+- View > Requests 
+Select the Concurrent Request and upload the report output (not the log)
+
+2. Upload the output of the Receiving Transactions Data Collection Script rcv11i_sa.sql (Note 402245.1)
+
+STATUS
+======
+@CUS - Waiting for customer response
+
+
+
+14-SEP-07 10:23:55 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+17-SEP-07 01:50:02 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\Apps_Check_170907.txt
+
+
+17-SEP-07 01:51:01 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\RCV11i_PO_1048900-_.html
+
+
+17-SEP-07 09:35:36 GMT
+
+.
+STATUS
+=======
+Reviewing.
+@WIP -- Work In Progress
+
+
+
+17-SEP-07 10:06:12 GMT
+
+.
+DATA COLLECTED
+===============
+
+RDA OUTPUT
+------------
+
+<<<From RCV11i_PO_1048900-_.html>>>
+
+Source Type:: PO (Purchase Order) 
+Document Number: 1048900 
+Operating Unit ID: 127 
+
+1: po_headers_all 
+
+PO_HEADER_ID 
+150717
+
+2: po_lines_all
+PO_LINE_ID
+311400
+
+LINE_NUM
+5
+
+QUANTITY
+64800
+
+CLOSED_CODE
+<NULL>
+
+
+3: po_line_locations_all
+LINE_LOCATION_ID
+460916
+
+QUANTITY QUANTITY_RECEIVED
+64800 64800
+
+QUANTITY_BILLED
+64800
+
+
+4: po_distributions_all 
+PO_DISTRIBUTION_ID
+449743
+
+QUANTITY_DELIVERED
+0
+
+
+12: rcv_shipment_lines
+SHIPMENT_LINE_ID
+1081150
+1081151
+1081152
+1081153
+1081154
+1081155
+1081156
+1081157
+1081158
+1081159
+
+SHIPMENT_HEADER_ID
+659649
+
+SHIPMENT_LINE_STATUS_CODE
+FULLY RECEIVED
+
+QUANTITY_SHIPPED QUANTITY_RECEIVED
+6912 6912
+6912 6912
+6912 6912
+6912 6912
+6912 6912
+6912 6912
+6912 6912
+6912 6912
+6912 6912
+2592 2592
+
+(9 x 6912) + 2592 = 64800
+
+13: rcv_transactions 
+<No Rows with PO_LINE_ID = 311400>
+
+14: mtl_supply
+SUPPLY_TYPE_CODE
+RECEIVING
+
+RCV_TRANSACTION_ID
+2309713
+2309714
+2309715
+2309716
+2309717
+2309718
+2309719
+2309720
+2309721
+2309722
+
+15: rcv_supply
+SUPPLY_TYPE_CODE
+RECEIVING
+
+
+17-SEP-07 10:37:55 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+Thank you for the uploaded RCV11i output.
+
+This shows that for PO Line 5, there are no rows in RCV_TRANSACTIONS although the PO LI
+ne is marked as being fully received.
+The RCV11i does show the TRANACTION_ID that were assigned to the receipt transactions, but these are not used by the SQL
+that returns data in the RCV11i.
+.
+ACTION PLAN
+============
+We need to confirm if these rows do exist.
+
+[1] Please provide the output of the following XLS format with Col. Headings, if rows are returned.
+
+select * from rcv_transactions where transaction_id in (2309713, 2309714, 2309715, 2309716, 2309717, 2309718, 230971
+9, 2309720, 2309721, 2309722)
+
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@CUS -- Waiting for requested information
+
+
+
+17-SEP-07 10:41:02 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+18-SEP-07 00:52:01 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi , 
+
+This script doesn't return anything, in Prod:
+select * from rcv_transactions where transaction_id in (2309713, 2309714, 2309715, 2309716, 2309717, 2309718, 230971
+9, 2309720, 2309721, 2309722)
+
+
+BR
+
+
+18-SEP-07 08:06:45 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+Data in the table RCV_TRANSACTIONS are never deleted from the table by the application as this table is the history table for rece
+ipts.
+Every parts of the receipt transaction looks complete except for the rows missing in RCV_TRANSACTIONS.
+The fact that we have TRANSACTION_ID values indicates that these rows existed at some point.
+
+We will have to request a data fix from Development.
+.
+ACTION PLAN
+============
+[1] Was any SQL used at any point on this table that may have resulted in these rows being deleted ?
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@CUS -- Waiting for requested information
+
+
+18-SEP-07 08:06:54 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+18-SEP-07 08:33:03 GMT
+
+New info : jin.zhong@sonyericsson.com
+we never use any sql to delete record in rcv_transactions. not only for this po, but other several POs have this 
+problem. we just found that a few days before. Currently we need a data fix, 
+but we still want to know the root cause, because this is not the first time 
+the case happen.
+
+
+18-SEP-07 10:31:47 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+.
+ACTION PLAN
+============
+[1] Please confirm that all the transactions that have been found with missing RCV_TRANSACTION records a
+re all entered via WMS.
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@CUS -- Waiting for requested information
+
+
+18-SEP-07 10:31:57 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+19-SEP-07 01:24:02 GMT
+
+New info : jin.zhong@sonyericsson.com
+we use wms to receive po.
+
+
+19-SEP-07 10:44:40 GMT
+
+.
+ISSUE CLARIFICATION
+====================
+On 11.5.9 in Production:
+Find that there are missing rows in RCV_TRANSACTIONS for one Shipment Line of a Standard PO 
+that
+has been Receipted as rows exist in RCV_SHIPMENT_HEADERS and RCV_SHIPMENT_LINES
+
+EXPECTED BEHAVIOR
+-----------------------
+Expect to find rows in RCV_TRANSACTIONS
+
+BUSINESS IMPACT
+-----------------------
+The issue has the following business impact:
+Due to this issue, users cannot perform a return of received items to the supplier.
+
+.
+ISSUE VERIFICATION
+===================
+Verified the issue in the log file as noted below:
+
+LOG FILE
+-----------------------
+Filename = RCV11i_PO_1048900-_.html
+See that no rows exist in RCV_TRANSACTIONS for the PO Shipment that has been Received.
+Rows exist in RCV_SHIPMENT_HEADERS and RCV_SHIPMENT_LINES
+
+
+
+
+19-SEP-07 14:13:07 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+The following data fix bug has been created....
+
+[] BUG 6436635 - DATAFIX: MISSING ROWS IN RCV_TRANSACTIONS 
+
+...and I will update this SR when I have a positive response from Development.
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@DEV -- Development Work In Progress
+
+
+
+19-SEP-07 14:13:17 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+19-SEP-07 14:19:37 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+21-SEP-07 18:53:05 GMT
+
+Associated bug 6436635 has been updated and has changed status to 30. 
+
+24-SEP-07 01:47:01 GMT
+
+New info : jin.zhong@sonyericsson.com
+do you get a datafix? we need to solve this problem no later than tomorrow.
+
+
+25-SEP-07 06:30:04 GMT
+
+New info : jin.zhong@sonyericsson.com
+please update this sr as soon as possible
+
+
+25-SEP-07 08:42:44 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+Oracle Development have not provided a data fix as they do not feel this issue was caused by the application as Standard Applicati
+on code 
+does not delete rows from the table RCV_TRANSACTIONS.
+.
+ACTION PLAN
+============
+[1] Is there any circumstance where you can reproduce this issue ?
+[2] Do you have ANY custom triggers on the instance ?
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@CUS -- Waiting for requested information
+
+
+25-SEP-07 08:42:52 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+25-SEP-07 09:01:47 GMT
+
+Associated bug 6436635 has been updated and has changed status to 30. 
+
+26-SEP-07 01:00:02 GMT
+
+New info : jin.zhong@sonyericsson.com
+we don't know how to reproduce this case and we didn't delete any record in rcv_transactions. although we use 
+customization in po receiving now, but this case happend before we use 
+customization, we just found it now.
+we need data fix today, please be quick!
+
+
+26-SEP-07 09:28:23 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+Development are reluctant to recreate such vital data without first knowing how it came to be missing.
+The data in the table RCV_TRANSACTIONS is central to how Receiving works and Development can confirm that n
+o standard
+oracle code deletes rows from this table.
+
+I have asked then again, but they may not be willing to provide such a fix.
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@DEV -- Development Work In Progress
+
+
+
+26-SEP-07 09:28:31 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+26-SEP-07 09:34:15 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+26-SEP-07 09:41:03 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+Please help to fix the transaction here after provide all nessary data.
+We are waitting to return the PO received Qty.
+(PO received qty wes booked , Receipt number was created, but no rcv_transaction created)
+
+BR
+
+
+26-SEP-07 09:42:42 GMT
+
+.
+STATUS
+=======
+Ack update.
+Only Development can provide a supported fix.
+@DEV -- Development work in progress
+
+
+
+27-SEP-07 00:59:01 GMT
+
+New info : jin.zhong@sonyericsson.com
+we get error data by this sql:
+Select SHIPMENT_HEADER_ID
+From Apps.Rcv_Shipment_Headers Rch 
+where rch.ORGANIZATION_ID=130
+minus
+Select Shipment_Header_Id
+From Apps.Rcv_Transactions rcv
+Where ORGANIZATION_ID= 130
+
+
+
+
+27-SEP-07 01:06:42 GMT
+
+.
+** HUB **
+
+CUSTOMER UPDATE
+================
+Customer contact name (if not same as in SR header): HONGWEI ZHOU
+Verify preferred method of contact: PHONE OR METALINK
+Phone#: +86 10 80481188 --550
+Email: Harris.Zhou@sonyericsson.com
+
+Comments for this update:
+Customer called would like to escalate the SR, as if the PO is not returned there will be about 600,000 RMB loss for the company.
+Hence would like engineer to solve the issue as soon as possible, or it will impact the Sep
+monthly closing.
+
+
+Thank you.
+Coco Zhao
+Oracle HUB Team
+
+
+
+27-SEP-07 01:07:09 GMT
+
+.
+GLOBAL ESCALATION REQUEST
+==========================
+The customer called. They want to escalate this issue.
+
+Requestor's name, if different from header: HONGWEI ZHOU
+Requestor's email, if different from header: Harris.Zhou@sonyericsson.com
+Requestor's telephone number, if different from header: +86 10 80481188 --550
+
+Requested manager callback: No.
+Requested severity change: from sev 2 to esc sev2
+
+Reason for Escalation:
+Customer called would like to escalate the SR, as if the PO is not returned there will be about 600,000 RMB loss for the company.
+Hence would like engineer to solve the issue as soon as possible, or it will impact
+the Sep monthly closing.
+
+Thank you.
+Coco Zhao
+Oracle HUB Team
+
+
+
+27-SEP-07 01:15:04 GMT
+
+New info : jin.zhong@sonyericsson.com
+we get nearly 200 records from this sql. Some of these records are created by '-1' which is not our normal user id. and 
+the receipt_source_code include customer and vendor.
+
+
+27-SEP-07 02:50:08 GMT
+
+.
+CTC UPDATE
+=======
+Received aim message from Duty Manager -Aditya Kulkarni.
+= Having SR reviewed in ISC time zone to see how best this issue can be addressed.
+
+
+Thanks,
+Kavita
+CTC, Shift 1
+
+
+
+27-SEP-07 03:03:06 GMT
+
+(Update for record id(s): 108812116)
+
+UPDATE
+======
+Duty Manager Update:
+==================
+
+Hi,
+
+I am in receipt of the escalation request and reviewing the SR.
+Will update you asap.
+
+Thanks
+
+Aditya
+
+STATUS
+======
+@RVW -- Review
+
+
+
+27-SEP-07 03:03:08 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+27-SEP-07 03:20:56 GMT
+
+.
+DUTY MANAGER
+=============
+# Update by Chandu Tadanki
+# Not calling customer per above update by Hub
+
+
+GLOBAL SR ESCALATION ACTION PLAN - PUBLISHED ACTION:
+=====================================================
+
+Summary
+=======
+# Customer reports that some records are missing in rcv_transactions (RT) table, even thoug
+h they are referenced at other places (RT.rcv_transaction_id). 
+# The fact that rcv_transaction_id values exist at other tables is an indication that these reco
+rds were created by the system, and they are somehow missing now. Not sure how 
+customer ended up at this data state. 
+# Customer seeks a datafix to re-insert these records in RT table - this is where expectations need to be set clearly. 
+-- Only Oracle Dev can provide any authorized datafix ... not Oracle Support.
+-- Oracle Dev will provide a datafix only if the issue is caused by application ...
+not for any other reasons/causes. 
+-- The application is clearly coded NOT to delete records from this RT table, hence we are certain that the currently report
+ed issue is NOT casued by the standard application. 
+# A bug was already logged with Oracle Dev, but the chances of getting a datafix are slim unless we provide
+a reproducible test case, or an evidence that this issue IS caused BY standard 
+application. Otherwise customer will have to conduct their own investigation on 
+why only a few records are missing from a certain table, and what needs to be do
+ne to recover them. Then, they may need Consulting assistance to address this is
+sue. 
+# Clearly there is a mismatch between Customer expecations, and Oracle Support/Dev service scope. If this is not clarified, then in may required the manag
+ement level interactions betwen these two entities. 
+
+
+Action Plan
+===========
+# Customer:
+- Provide a reproducible test case or an evidence that issue was caused by standard applicaiton ... they are necessary for Oracle Dev to consider thi
+s as a bug and provide a datafix. 
+- Please discuss this with your management as well as your Service Delivery Manager as the requested service is out of scope 
+for Oracle Support/Dev. 
+# Support:
+- Explore with Dev if any other customers have reported similar issues, and if it were due to standard code (chances are sli
+m as we know from our experience as well as code reviews that standard applicati
+on does not cause this). 
+- Let's try our best to guide the customer in addressing the issue, but let's also keep in mind that this out of scope of Oracle Suppo
+rt/Dev. 
+
+
+Communication Plan
+==================
+# SR updates or phone calls as required
+
+
+De-escalation Plan
+==================
+# This issue is out of scope of Oracle Support/Dev, hence does not fall under the escalation ambit, nevertheles
+s setting the escalation flag so it catches the attention of Support Management.
+
+# We should de-escalate if customer does not provide either a reproducible test case or an evidence that issue was caused by standard application, in the next
+one week. 
+
+
+Other
+=====
+# Customer should discuss the issue with their management and their SDM. Should they need further technical assistance that is within 
+the Oracle Support/Dev scope, then please contact the Escalation Owning-MAnager:
+Christian Elsner (christian.elsner@oracle.com)
+
+
+@ RVW for owning engineer to note this DM entry
+. 
+
+27-SEP-07 03:21:04 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+27-SEP-07 03:22:03 GMT
+
+.
+FOLLOW UP
+==========
+Hi Hongwei,
+
+Please review the above entry by Duty Manager, and update the SR as soon as possible with the current status and/or requeste
+d information so we can continue working the issue.
+
+Thank You,
+Chandu Tadanki
+Duty Manager
+
+STATUS
+=======
+@CUS -- Waiting for Customer Update
+
+
+27-SEP-07 03:22:09 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+27-SEP-07 03:44:04 GMT
+
+New info : jin.zhong@sonyericsson.com
+as i said, we query many records with the sql i provided. we do NOT have any customization in receiving when our system 
+go live at 2004. but the first error record was created in 2004. we did NOT 
+delete the record ourselves.
+
+
+27-SEP-07 07:33:03 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+Only Development can provide a data fix.
+They bug is currently with them and we are awaiting a response.
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@DEV -- Development Work In Progress
+
+
+
+27-SEP-07 07:33:13 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+27-SEP-07 18:36:35 GMT
+
+Associated bug 6436635 has been updated and has changed status to 30. 
+
+28-SEP-07 14:54:09 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+Development have provided the following reason as to why a data fix is not possible...
+
+1. It is not known how may RTs are missing for each shipment line.
+2. We are not aware of the transaction types that were performed before they started missing in RT.
+3. There could be transfers, inspections, corrections etc etc.
+- No one has an idea about the history of transactions to be created.
+4. Also, for instance, we do not know what should be the qty, uom, location etc etc for each record. 
+- Those are just some sample columns which we mentioned.
+.
+So, it is not feasible for us to provide a datafix script to populate missing records in rcv_transactions. 
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@CUS -- Waiting for requested information
+
+
+28-SEP-07 14:54:18 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+29-SEP-07 00:52:01 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+Quite understand your concerns.
+
+In this case,there is no physical item was received(as user confirmed) on the PO line but PO location line show full received(so user asked 
+to return).
+
+As the receiving transaction (RT) was not created & user just want PO don't show the receive qty, after fully checking make sure the receiving 
+transaction was not create physical inventory & finance entry , can we fix data 
+in another direction ? Not try to complete the receiving transaction, instead 
+try to remove it (this looks more easy in this case may be).
+
+Thanks,
+
+
+
+
+
+
+
+
+29-SEP-07 06:12:02 GMT
+
+New info : jin.zhong@sonyericsson.com
+please update this SR asap!
+
+
+02-OCT-07 10:21:32 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+Regardless to whether items were Physically receipted, the items were recorded as being Receipted.
+They have also been billed, which means there is a matching invoice tied to the PO line.
+If the Development were to offer a data fix for the PO and Receiving side, you will still have the pro
+blem on the AP side.
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@CUS -- Waiting for requested information
+
+
+02-OCT-07 10:21:54 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+07-OCT-07 01:07:01 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+AP side should be handle be Accountant AP user (cancel the billing invoice be normal operation og user 
+level).
+
+Please consider go forward.
+
+BR
+
+
+07-OCT-07 01:53:00 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+Our AP user alredy successfully cancelled the billed Invoice , so the billed Qty on this PO 1048900 line 5 now 
+was zero !
+
+BR
+
+
+08-OCT-07 07:41:39 GMT
+
+Associated bug 6436635 has been updated and has changed status to 33. 
+
+08-OCT-07 16:17:12 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+I have gone back to Development.
+To be honest I think that without prove that the missing transaction was caused by Oracle code, t
+hey will suggest you contact Oracle Consulting to provide the fix.
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@DEV -- Development Work In Progress
+
+
+
+08-OCT-07 16:17:21 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+09-OCT-07 03:38:01 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+First of all, no deletion of any records on rcv_transaction table.
+The missing record must be the running result of Oracle EBS-this is fact no need otherthing to prove.
+
+If difficult for Development team to fix their way , could try another way to fix-cancel the 
+receipt Qty on the PO line as no stock transaction for it.
+
+BR
+
+
+09-OCT-07 03:39:01 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+First of all, no deletion of any records on rcv_transaction table.
+The missing record must be the running result of Oracle EBS-this is fact no need otherthing to prove.
+
+If difficult for Development team to fix in their current way , could try another way to fix - 
+to cancel the receipt Qty on the PO line as no stock transaction for it.
+
+BR
+
+
+09-OCT-07 03:40:02 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+First of all, no deletion of any records on rcv_transaction table.
+The missing record must be the running result of Oracle EBS-this is fact no need otherthing to prove.
+
+If difficult for Development team to fix in their current way , could try another way to fix - 
+to cancel the receipt Qty on the PO line as no stock transaction for it.
+
+BR
+
+
+09-OCT-07 03:41:03 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+First of all, no deletion of any records on rcv_transaction table.
+The missing record must be the running result of Oracle EBS-this is fact no need otherthing to prove.
+
+If difficult for Development team to fix in their current way , could try another way to fix - 
+to cancel the receipt Qty on the PO line as no stock transaction for it.
+
+BR
+
+
+09-OCT-07 03:42:01 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+First of all, no deletion of any records on rcv_transaction table.
+The missing record must be the running result of Oracle EBS-this is fact no need otherthing to prove.
+
+If difficult for Development team to fix in their current way , could try another way to fix - 
+to cancel the receipt Qty on the PO line as no stock transaction for it.
+
+BR
+
+
+09-OCT-07 13:44:04 GMT
+
+Associated bug 6436635 has been updated and has changed status to 30. 
+
+09-OCT-07 15:19:49 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+Development may be prepared to provide a data fix that will 'reset' the PO Line as though it had never been receipted.
+I am going to ask them to consider this fix.
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@DEV -- Development Work In Progress
+
+
+
+
+09-OCT-07 15:20:02 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+09-OCT-07 15:33:06 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+10-OCT-07 00:41:01 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi,
+
+Thanks for understanding, this may be the direction to success.
+
+BR
+
+
+10-OCT-07 10:20:38 GMT
+
+.
+STATUS
+=======
+Ack Update. - Waiting for response fromDevelopment.
+@DEV -- Development work in progress
+
+
+
+10-OCT-07 15:36:05 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+10-OCT-07 15:53:56 GMT
+
+.
+STATUS
+=======
+Dev working on datafix to reset the PO.
+@DEV -- Development work in progress
+
+
+
+10-OCT-07 17:06:27 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+11-OCT-07 19:09:36 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+12-OCT-07 07:17:26 GMT
+
+.
+STATUS
+=======
+Discussion between PO and Receiving regarding what needs to be done and by whom.
+@DEV -- Development work in progress
+
+
+
+15-OCT-07 15:18:28 GMT
+
+Associated bug 6436635 has been updated and has changed status to 30. 
+
+15-OCT-07 15:48:12 GMT
+
+(Update for record id(s): 109404185)
+
+UPDATE
+======
+Dear customer,
+
+we received the following action plan from development:
+
+Provide us the sql outputs in an excel format with column headers. 
+. 
+
+Please run the 5 sql scripts and upload your results into the SR 
+so we can update development.
+
+Thanks and regards
+Christan on behalf of Richard
+Oracle Support
+
+ACTION PLAN
+===========
+Provide us the sql outputs in an excel format with column headers. 
+. 
+Sql 1: 
+CREATE TABLE missing_receipt_po_shpmts_bkp AS 
+SELECT pll.line_location_id 
+FROM po_line_locations_all pll 
+WHERE quantity_received > 0 
+AND quantity_received <> (SELECT Sum(quantity_received) 
+FROM rcv_shipment_lines rsl 
+WHERE rsl.po_line_location_id= 
+pll.line_location_id) 
+GROUP BY line_location_id 
+ORDER BY line_location_id; 
+. 
+. 
+Sql 2: 
+SELECT * 
+FROM po_line_locations_all pll 
+WHERE pll.line_location_id IN (SELECT line_location_id 
+FROM missing_receipt_po_shpmts_bkp) 
+ORDER BY line_location_id asc; 
+. 
+. 
+Sql 3: 
+SELECT Sum(quantity_received), po_line_location_id 
+FROM rcv_shipment_lines 
+WHERE po_line_location_id IN (SELECT line_location_id 
+FROM missing_receipt_po_shpmts_bkp) 
+group BY po_line_location_id 
+ORDER BY po_line_location_id; 
+. 
+. 
+Sql 4: 
+SELECT * 
+FROM rcv_shipment_lines 
+WHERE po_line_location_id IN (SELECT line_location_id 
+FROM missing_receipt_po_shpmts_bkp) 
+order BY po_line_location_id; 
+. 
+. 
+Sql 5: 
+SELECT * 
+FROM rcv_transactions 
+WHERE po_line_location_id IN (SELECT line_location_id 
+FROM missing_receipt_po_shpmts_bkp) 
+ORDER BY po_line_location_id, transaction_id;
+
+STATUS
+======
+@CUS - Waiting for customer response
+
+
+
+15-OCT-07 15:48:14 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+16-OCT-07 01:26:00 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\sql2.xls
+
+
+16-OCT-07 01:27:02 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\sql3.xls
+
+
+16-OCT-07 01:28:04 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\sql4.xls
+
+
+16-OCT-07 01:29:01 GMT
+
+The customer : Harris.Zhou@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Tar\PO\Rcv_Trans_no__cant_return\sql5.xls
+
+
+16-OCT-07 07:04:58 GMT
+
+(Update for record id(s): 109426784)
+
+UPDATE
+======
+Dear customer,
+
+thanks for the requested files.
+We are in process to review them and passing them to developer.
+
+Regards
+Christian on behalf if Richard
+Oracle Support
+
+
+16-OCT-07 07:05:00 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+16-OCT-07 07:07:11 GMT
+
+(Update for record id(s): 109427359)
+
+UPDATE
+======
+Files passed to development.
+Changing status to dev , waiting for development advice.
+
+STATUS
+======
+@DEV -- Waiting for Oracle Development response
+
+
+
+16-OCT-07 07:07:12 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+16-OCT-07 07:26:46 GMT
+
+Associated bug 6436635 has been updated and has changed status to 30. 
+
+16-OCT-07 07:57:14 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+16-OCT-07 08:26:44 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+17-OCT-07 08:58:57 GMT
+
+.
+UPDATE
+=======
+
+
+Checked BUG 6436635
+development is working on it.
+As soon we have any updates from dev. we will inform customer.
+
+Update status from SR to DEV
+
+Regards
+Christian 
+Oracle Support 
+
+17-OCT-07 08:59:08 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+19-OCT-07 15:34:44 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+29-OCT-07 12:29:00 GMT
+
+Associated bug 6436635 has been updated and has changed status to 30. 
+
+29-OCT-07 12:52:06 GMT
+
+.
+STATUS
+=======
+Returned to Dev
+@DEV -- Development work in progress
+
+
+
+29-OCT-07 12:58:59 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+02-NOV-07 08:37:51 GMT
+
+Associated bug 6436635 has been updated and has changed status to 32. 
+
+02-NOV-07 14:11:48 GMT
+
+.
+UPDATE
+=======
+Hello,
+
+Oracle Development provided the following feedback :
+<quote>
+Insertion of records into rcv_transactions is not possible. 
+We cannot come up with scripts to insert into rcv_transactions table. 
+We have never done that as it is infeasible to provide such a datafix. 
+
+Moreover nowhere in our code deletion from rcv_transactions table happens. 
+This may be due to customization or someone has unknowingly deleted the RT data from backend. We do not see any 
+other possible reason for the same. Closing this as not a bug. 
+<unquote>
+
+Once you have acknowledged Oracle Development update, please let us know if this SR c
+an be inactivated.
+Thanks and regards,
+Solange (on behalf of Richard)
+.
+STATUS
+=======
+
+@CUS -- Waiting for requested information 
+
+02-NOV-07 14:12:11 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+05-NOV-07 01:03:00 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi ,
+
+Firstly no deleteion of records & no customization on this area.
+There is possibility that EBS to create records in shipment table then failed to create record in rcv_transaction table in some 
+circumstance, this is very naturally reason & possibility.
+
+Think Oracle Develop team needs more knowledge Oracle function & business process. Because 
+from the feedback of them, looks they didn't get the whole picture 
+yet...
+
+
+Here say the other direction of fix - cancel the receipt Qty on the PO line,
+obvously nobody (except Oracle Develop team) would think to delete records from rcv_transaction or else,that's no reason to do that (& think about 
+that!).
+
+Could think about update the Received Quantity on PO files, that's the in-correct data caused from this issue.
+
+Please show us that support team could understand the whole picture...
+
+BR
+
+
+
+
+06-NOV-07 12:32:03 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+06-NOV-07 12:45:35 GMT
+
+.
+UPDATE
+=======
+Hi Hongwei,
+
+Development understand the issue and so does Support.
+There is no code in the application that deletes records from the RT table.
+Development have said they will not provide a data fix to recreate the missing R
+T.
+I have asked Development to consider a data fix where the PO is reset.
+
+Thanks,
+Richard
+
+STATUS
+=======
+
+@DEV -- Development Work In Progress
+
+
+
+06-NOV-07 12:45:46 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+07-NOV-07 06:33:20 GMT
+
+Associated bug 6436635 has been updated and has changed status to 30. 
+
+07-NOV-07 08:51:38 GMT
+
+.
+STATUS
+=======
+Internal discussion with Development.
+@DEV -- Development work in progress
+
+
+
+07-NOV-07 09:03:32 GMT
+
+Associated bug 6436635 has been updated and is still at status: 11. 
+
+12-NOV-07 12:39:59 GMT
+
+Associated bug 6436635 has been updated and is still at status: 73. 
+
+12-NOV-07 14:41:38 GMT
+
+.
+Hi Hongwei,
+
+I have uploaded to this SR a script that has been provided by Development
+This file can be downloaded from the following URL...
+
+[] ftp://ftp.oracle.com/support/outgoing/6487171.993/datafix.sql
+
+ACTION PLAN
+-----------
+This script will reset the Received Quantity on the Po Shipment LIne for PO# 1048900
+
+
+Regards,
+Richard
+Oracle Support Services
+
+
+12-NOV-07 14:42:06 GMT
+
+Email Update button has been pressed: Sending email to Harris.Zhou@sonyericsson.com. 
+
+
+13-NOV-07 00:41:02 GMT
+
+New info : Harris.Zhou@sonyericsson.com
+Hi ,
+
+Thanks for supporting.
+
+Have another question:, also need to check the record in table mtl_supply ?
+
+select * from apps.mtl_supply where po_header_id=150717 and po_line_id=311400 and 
+PO_line_location_id=460916 and po_distribution_id=449743
+
+
+BR
+
+
+13-NOV-07 10:01:17 GMT
+
+.
+STATUS
+=======
+Ack update.
+Bug closed.
+Email to Developer who provided script for clarification.
+@DEV -- Development work in progress
+
+
+
+13-NOV-07 11:40:18 GMT
+
+.
+Hi Hongwei,
+
+I have uploaded to this SR a new datafix script after talking to Development who provided additional SQL
+This file can be downloaded from the following URL...
+
+[] ftp://ftp.oracle.com/support/outgoing/6487171.993/datafix v2.sql
+
+ACTION PLAN
+-----------
+[1] Please review the script before executing.
+
+Regards,
+Richard
+Oracle Support Services 
+
+
+
+--------------ftp://ftp.oracle.com/support/outgoing/6487171.993/datafix.sql
+UPDATE po_line_locations_all
+SET quantity_received = 0
+WHERE line_location_id = 460916;
+
+/* To make the billed qty zero on the PO shipment use the following script otherwise ignore it */
+UPDATE po_line_locations_all
+SET quantity_billed = 0
+WHERE line_location_id = 460916;
+
+/* Additional for receipt lines, supplied by Development in email */
+
+--Backup for rcv_shipment_lines
+CREATE table rsl_bkp
+AS SELECT *from rcv_shipment_lines
+where po_line_location_id = &po_line_location_id;
+
+--Backup for rcv_supply
+CREATE table rs_bkp
+AS SELECT * from rcv_supply
+where po_line_location_id = &po_line_location_id;
+
+--Backup for mtl_supply
+CREATE table ms_bkp
+AS SELECT * from mtl_supply
+where po_line_location_id = &po_line_location_id;
+
+--Backup for rcv_shipment_headers
+CREATE table rsh_bkp as
+SELECT * from rcv_shipment_headers rsh
+where receipt_source_code = 'PO'
+and not exists (select '1' from rcv_shipment_lines rsl
+                         where rsl.shipment_header_id = rsh.shipment_header_id)
+and not exists (select '1' from rcv_transactions rt
+                      where rt.shipment_header_id = rsh.shipment_header_id);
+
+
+--Delete rcv_shipment_lines
+delete from rcv_shipment_lines
+where po_line_location_id = &po_line_location_id;
+
+--Delete rcv_supply
+delete from rcv_supply
+where po_line_location_id = &po_line_location_id;
+
+--Delete mtl_supply
+delete from mtl_supply
+where po_line_location_id = &po_line_location_id;
+
+--Delete rcv_shipment_headers
+delete from rcv_shipment_headers rsh
+where receipt_source_code = 'PO'
+and not exists (select '1' from rcv_shipment_lines rsl
+                         where rsl.shipment_header_id = rsh.shipment_header_id)
+and not exists (select '1' from rcv_transactions rt
+                      where rt.shipment_header_id = rsh.shipment_header_id); 
+

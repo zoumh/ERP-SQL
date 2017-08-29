@@ -1,0 +1,30 @@
+
+
+-----------Find out total Mtl Trans JO Complete Qty<>JO complete Qty
+(In case there are pending WIP Move)
+
+
+select b.WIP_ENTITY_NAME,b.START_QUANTITY Qty ,b.QUANTITY_COMPLETED QtyComplete_JO,a.Complete_Qty_Trans,
+b.DATE_COMPLETED JO_Plan_comp_Date
+from
+(select mmt.transaction_source_id,
+msi.organization_id , sum(mmt.TRANSACTION_QUANTITY) as Complete_Qty_Trans
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')
+--and    trunc(mmt.transaction_date) >= to_date('20070920','YYYYMMDD') 
+and mst.transaction_source_type_name='Job or Schedule'
+--and wet.WIP_ENTITY_NAME='070921-D-396R3A'
+group by mmt.transaction_source_id,msi.organization_id) a, 
+apps.WIP_DISCRETE_JOBS_V b
+where a.transaction_source_id=b.wip_entity_id
+and a.organization_id=b.organization_id
+and b.DATE_COMPLETED >=to_date('20070917','YYYYMMDD')
+and b.QUANTITY_COMPLETED<>a.Complete_Qty_Trans

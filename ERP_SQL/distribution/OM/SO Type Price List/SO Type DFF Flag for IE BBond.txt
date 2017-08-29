@@ -1,0 +1,37 @@
+
+
+-----------Bond Flag for IE at SO type DFF (Attribute2)
+
+select b.name SO_Type,a.TRANSACTION_TYPE_CODE,a.attribute2 B_NB_Flag_For_IE,
+(select c.description from apps.FND_FLEX_VALUES_VL c where c.flex_value_set_id=1008811
+and c.flex_value=a.attribute2) B_NB_Flag_Description,a.org_id
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b
+where a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID --and a.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID
+and b.LANGUAGE='US' --and a.TRANSACTION_TYPE_CODE='ORDER'
+and a.org_id>=127
+--and a.attribute2 is null
+order by b.name
+
+
+
+
+
+
+
+
+----------WH flag for RM/Kitting, for IE
+
+select decode(a.ATTRIBUTE1,0,'RM-WH',1,'Kitting','No-Matter') IE_WH_Flag,b.ORGANIZATION_CODE,
+a.ORGANIZATION_ID,SECONDARY_INVENTORY_NAME,DESCRIPTION,a.CREATION_DATE,a.DISABLE_DATE,a.STATUS_CODE,
+decode(a.ASSET_INVENTORY,1,'Y',2,'N' ) ASSET_INVENTORY,
+decode(LPN_CONTROLLED_FLAG,1,'Y',2,'N' )LPN_CONTROLLED_FLAG,
+decode(a.RESERVABLE_TYPE,1,'Y',2,'N') RESERVABLE_TYPE,
+decode(locator_type ,1,'None',2,'Prespecified',3,'Dynamic',5,'Item Level') Locator_Control,
+decode(a.AVAILABILITY_TYPE,1,'MRP not Net',2,'MRP Netable','else') MRP_Netable,
+decode(a.REQUISITION_APPROVAL_TYPE,1,'Approved',2,'Unapproved') REQUISITION_APPROVAL_TYPE
+from apps.MTL_SECONDARY_INVENTORIES_FK_V a,apps.org_organization_definitions b 
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID>127
+order by a.ORGANIZATION_ID,a.ATTRIBUTE1,SECONDARY_INVENTORY_NAME
+
+

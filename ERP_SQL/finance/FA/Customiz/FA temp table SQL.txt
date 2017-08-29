@@ -1,0 +1,876 @@
+
+
+---------FA temp table (to store Category3,CC,Prj,Prd,Location)
+select * from apps.BMC_FA_BATCH_MASS_CHANGE_T
+
+
+
+---------FA daily update transaction history table (through daily update customized screen)
+select * from apps.BMC_FA_BATCH_CHANGE_HISTORY
+
+TRANSACTION_TYPE='U'  --Update
+TRANSACTION_TYPE='S'  --Syntho from FA to Temp table
+TRANSACTION_TYPE='D'  --Enforce syntho from FA to Temp table
+TRANSACTION_TYPE='C'  --Updated by Cycle counting
+
+
+---------User & CC range mapping table
+select * from apps.BMC_FA_COST_CENTER_USER_MAP_L
+
+insert into BMC_FA_COST_CENTER_USER_MAP_L (user_id,cost_center_fr,cost_center_to) values (5308,'0000','9999')
+
+
+---------Month-end Copyback from temp to FA history table (3 records for each FA)
+select * from apps.BMC_FA_BATCH_TRAN_HISTORY 
+
+Type=TEMP      -- Source date (temp table)
+Type=STAND_BF  -- Target BeFore(FA before copy back) 
+Type=STAND_AF  -- Target AFter (FA after copy back
+TRANSFER_STATUS=S --Success transfer transaction
+TRANSFER_STATUS=E --Transfer transaction has error
+RECLASS_STATUS=S  --Success Reclass transaction
+RECLASS_STATUS=E  --Reclass transaction has error
+
+-------List Error on the Copyback from temp to FA history table ,during Copy back from temp to FA
+select * from apps.BMC_FA_BATCH_TRAN_HISTORY  where 
+(    (TRANSFER_STATUS is not null and TRANSFER_STATUS<>'S')
+  or (RECLASS_STATUS is not null and RECLASS_STATUS<>'S')  
+  or trim(' ' from ERR_MESSAGE) is not null
+) 
+and CREATION_DATE>to_date('20080726 00:30:59','YYYYMMDD HH24:MI:SS')
+
+------------ Program (Request):
+BMC Fa Data Synch to Temp Table
+BMC FA Data Synch From Temp Table to  FA
+
+
+
+-------Alert :
+BMC FA update through workbench
+
+
+----(View) , Screen show Transaction histiory  by Asset,date
+BMC_FA_MASS_CHANGE_HISTORY_V (low-end version)
+BMC_FA_MASS_CHANGE_HISTORY_A_V (advance version)
+
+
+
+-----clear 
+delete  BMC_FA_BATCH_MASS_CHANGE_T --where ASSET_NO in ('11000009')
+
+delete  BMC_FA_BATCH_CHANGE_HISTORY --where ASSET_NO in ('11000009')
+
+delete  from apps.BMC_FA_BATCH_TRAN_HISTORY 
+
+commit
+
+
+
+------------check Depr Accounts
+select * from apps.FA_DISTRIBUTION_HISTORY where asset_id=100003874
+and  DATE_INEFFECTIVE is  null 
+
+select * from apps.gl_code_combinations where  CODE_COMBINATION_ID in (38452,57444,1642)
+--SEGMENT3=41050204--and segment2='1020'
+
+
+-------list fields
+SELECT fav.asset_number
+,	GLC.SEGMENT2 as CC
+,	GLC.SEGMENT3 as Acc
+,	GLC.SEGMENT4 as Prd
+,	GLC.SEGMENT5 as Prj
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as Cat2
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as Cat3,fav.asset_id
+FROM APPS.FA_ADDITIONS_V fav
+,	 apps.FA_CATEGORIES_VL  a
+,	 apps.FA_DISTRIBUTION_HISTORY FAH
+,	 apps.GL_CODE_COMBINATIONS GLC
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fah.DATE_INEFFECTIVE is  null
+and asset_number='11000009'
+
+
+
+
+
+----checking multi account line in FA
+SELECT fav.asset_number,fav.asset_id
+,count(*)
+FROM APPS.FA_ADDITIONS_V fav
+,     apps.FA_CATEGORIES_VL  a
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+,     apps.GL_CODE_COMBINATIONS GLC
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fah.DATE_INEFFECTIVE is null
+group by  fav.asset_number,fav.asset_id
+having count(*)>1
+
+---after first synachy
+---check multip lines in one FA
+select count(*),ASSET_NO from BMC_FA_BATCH_MASS_CHANGE_T group by ASSET_NO
+having count(*)>1
+
+----compare total lines
+select count(*)  from apps.BMC_FA_BATCH_MASS_CHANGE_T  
+
+select count(*) FROM APPS.FA_ADDITIONS_V 
+
+SELECT count(*)
+FROM APPS.FA_ADDITIONS_V fav
+,     apps.FA_CATEGORIES_VL  a
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+,     apps.GL_CODE_COMBINATIONS GLC
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fah.DATE_INEFFECTIVE is null
+
+
+---List FA side
+SELECT fav.asset_number
+,	GLC.SEGMENT2 as CC
+,	GLC.SEGMENT3 as Acc
+,	GLC.SEGMENT4 as Prd
+,	GLC.SEGMENT5 as Prj
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as Cat2
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as Cat3,
+fav.Attribute1 Remark,fav.Attribute2 IT_Asset_Name,fav.Attribute3 Property_Type,fav.Attribute4 Warranty,fav.Attribute8 Line_No,
+fav.asset_id
+FROM APPS.FA_ADDITIONS_V fav
+,	 apps.FA_CATEGORIES_VL  a
+,	 apps.FA_DISTRIBUTION_HISTORY FAH
+,	 apps.GL_CODE_COMBINATIONS GLC
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fah.DATE_INEFFECTIVE is  null
+--and asset_number='11000009'
+
+
+---------List in Both side (has Retired Flag)
+SELECT fav.asset_number,fah.ASSIGNED_TO,bt.EMPLOYER_ID
+,    GLC.SEGMENT2 as FA_CC,bt.COST_CENTER tmp_CC
+,    GLC.SEGMENT3 as FA_Acc,GLC2.SEGMENT3 tmp_Acc
+,    GLC.SEGMENT4 as FA_Prd,bt.PRODUCT_CODE tmp_Prd
+,    GLC.SEGMENT5 as FA_Prj,bt.PROJECT_CODE tmp_Prj
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as FA_Cat2,bt.ASSET_CATEGORY_SEGMENT2 tmp_Cat2
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as FA_Cat3,bt.ASSET_CATEGORY_SEGMENT3 tmp_Cat3,
+fav.Attribute1 FA_Remark,bt.Attribute1 tmp_Remark,
+fav.Attribute2 FA_IT_Asset_Name,bt.Attribute2 tmp_IT_Asset_Name,
+fav.Attribute3 FA_Property_Type,bt.Attribute3 tmp_Property_Type,
+fav.Attribute4 FA_Warranty,bt.Attribute4 tmp_Warranty,
+fav.Attribute8 FA_Line_No,bt.LINE_NO tmp_line_No,bt.Attribute8 tmp_Line_No_att8,
+em.FULL_NAME FA_EMPLOYEE_Name,bt.EMPLOYER_NAME tmp_EMPLOYER_NAME,
+lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3 FA_Location,bt.LOCATION_CODE tmp_Location,
+(
+      select decode(transaction_type_code,'FULL RETIREMENT','FULL RETIRED','Not_FullRetired')
+      from apps.fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from apps.fa_transaction_headers
+    where book_type_code='BMC_FA_BOOK'
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+   and fa1.asset_id=fav.asset_id
+   AND fa1.book_type_code='BMC_FA_BOOK'
+     -- and transaction_type_code='PARTIAL RETIREMENT' 
+      ) transaction_type_code
+FROM APPS.FA_ADDITIONS_V fav
+,     apps.FA_CATEGORIES_VL  a
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+,     apps.GL_CODE_COMBINATIONS GLC
+,     apps.GL_CODE_COMBINATIONS GLC2
+,apps.BMC_FA_BATCH_MASS_CHANGE_T BT
+,apps.PER_PEOPLE_V7 em
+,apps.FA_LOCATIONS lc
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+AND GLC2.CODE_COMBINATION_ID=bt.CODE_COMBINATION_ID
+and fav.asset_id=bt.asset_id
+and em.PERSON_ID(+)=fah.ASSIGNED_TO
+and FAH.LOCATION_ID=lc.LOCATION_ID
+and fah.DATE_INEFFECTIVE is  null
+
+
+-------------inital check BMC_FA_BATCH_CHANGE_T with FA (not include DFF, include Full_Retired)
+SELECT fav.asset_number
+,    GLC.SEGMENT2 as FA_CC,bt.COST_CENTER tmp_CC
+,    GLC.SEGMENT3 as FA_Acc,GLC2.SEGMENT3 tmp_Acc
+,    GLC.SEGMENT4 as FA_Prd,bt.PRODUCT_CODE tmp_Prd
+,    GLC.SEGMENT5 as FA_Prj,bt.PROJECT_CODE tmp_Prj
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as FA_Cat2,bt.ASSET_CATEGORY_SEGMENT2 tmp_Cat2
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as FA_Cat3,bt.ASSET_CATEGORY_SEGMENT3 tmp_Cat3,
+em.FULL_NAME FA_EMPLOYEE_Name,bt.EMPLOYER_NAME tmp_EMPLOYER_NAME,
+lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3 FA_Location,bt.LOCATION_CODE tmp_Location,
+fav.asset_id
+FROM APPS.FA_ADDITIONS_V fav
+,     apps.FA_CATEGORIES_VL  a
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+,     apps.GL_CODE_COMBINATIONS GLC
+,     apps.GL_CODE_COMBINATIONS GLC2
+,apps.BMC_FA_BATCH_MASS_CHANGE_T BT
+,apps.PER_PEOPLE_V7 em
+,apps.FA_LOCATIONS lc
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+AND GLC2.CODE_COMBINATION_ID=bt.CODE_COMBINATION_ID
+and fav.asset_id=bt.asset_id
+and em.PERSON_ID(+)=fah.ASSIGNED_TO
+and FAH.LOCATION_ID=lc.LOCATION_ID
+and fah.DATE_INEFFECTIVE is  null
+and (
+GLC.SEGMENT2<>bt.COST_CENTER
+or FAH.CODE_COMBINATION_ID<>bt.CODE_COMBINATION_ID
+or GLC.SEGMENT3<>GLC2.SEGMENT3
+or GLC.SEGMENT4<>bt.PRODUCT_CODE
+or GLC.SEGMENT5<>bt.PROJECT_CODE
+or SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2)<>bt.ASSET_CATEGORY_SEGMENT2
+or SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2)<>bt.ASSET_CATEGORY_SEGMENT3
+or  bt.Attribute1 is not null
+or  bt.Attribute2 is not null
+or  bt.Attribute3 is not null
+or  bt.Attribute4 is not null
+or  bt.Attribute8 is not null--LINE_NO 
+or  bt.LINE_NO is not null 
+or fah.ASSIGNED_TO<>bt.EMPLOYER_ID--
+   or (fah.ASSIGNED_TO is null and bt.EMPLOYER_ID is not null)
+   or (fah.ASSIGNED_TO is not null and bt.EMPLOYER_ID is null)
+or em.FULL_NAME<>bt.EMPLOYER_NAME
+   or (em.FULL_NAME is null and bt.EMPLOYER_NAME is not null)
+   or (em.FULL_NAME is not null and bt.EMPLOYER_NAME is null)
+or lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3<>bt.LOCATION_CODE
+or FAH.LOCATION_ID<>bt.LOCATION_ID
+--or fav.ASSET_KEY_CCID<>bt.ASSET_KEY_CCID  ---temp's ASSET_KEY_CCID no use
+)
+
+
+---------Compare FA & temp table after first synth FA->temp (old, include DFF)
+SELECT fav.asset_number,fah.ASSIGNED_TO,bt.EMPLOYER_ID
+,    GLC.SEGMENT2 as FA_CC,bt.COST_CENTER tmp_CC
+,    GLC.SEGMENT3 as FA_Acc,GLC2.SEGMENT3 tmp_Acc
+,    GLC.SEGMENT4 as FA_Prd,bt.PRODUCT_CODE tmp_Prd
+,    GLC.SEGMENT5 as FA_Prj,bt.PROJECT_CODE tmp_Prj
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as FA_Cat2,bt.ASSET_CATEGORY_SEGMENT2 tmp_Cat2
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as FA_Cat3,bt.ASSET_CATEGORY_SEGMENT3 tmp_Cat3,
+fav.Attribute1 FA_Remark,bt.Attribute1 tmp_Remark,
+fav.Attribute2 FA_IT_Asset_Name,bt.Attribute2 tmp_IT_Asset_Name,
+fav.Attribute3 FA_Property_Type,bt.Attribute3 tmp_Property_Type,
+fav.Attribute4 FA_Warranty,bt.Attribute4 tmp_Warranty,
+fav.Attribute8 FA_Line_No,bt.LINE_NO tmp_line_No,bt.Attribute8 tmp_Line_No_att8,
+em.FULL_NAME FA_EMPLOYEE_Name,bt.EMPLOYER_NAME tmp_EMPLOYER_NAME,
+lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3 FA_Location,bt.LOCATION_CODE tmp_Location,
+fav.asset_id
+FROM APPS.FA_ADDITIONS_V fav
+,     apps.FA_CATEGORIES_VL  a
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+,     apps.GL_CODE_COMBINATIONS GLC
+,     apps.GL_CODE_COMBINATIONS GLC2
+,apps.BMC_FA_BATCH_MASS_CHANGE_T BT
+,apps.PER_PEOPLE_V7 em
+,apps.FA_LOCATIONS lc
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+AND GLC2.CODE_COMBINATION_ID=bt.CODE_COMBINATION_ID
+and fav.asset_id=bt.asset_id
+and em.PERSON_ID(+)=fah.ASSIGNED_TO
+and FAH.LOCATION_ID=lc.LOCATION_ID
+and fah.DATE_INEFFECTIVE is  null
+and (
+GLC.SEGMENT2<>bt.COST_CENTER
+or FAH.CODE_COMBINATION_ID<>bt.CODE_COMBINATION_ID
+or GLC.SEGMENT3<>GLC2.SEGMENT3
+or GLC.SEGMENT4<>bt.PRODUCT_CODE
+or GLC.SEGMENT5<>bt.PROJECT_CODE
+or SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2)<>bt.ASSET_CATEGORY_SEGMENT2
+or SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2)<>bt.ASSET_CATEGORY_SEGMENT3
+or fav.Attribute1<>bt.Attribute1
+   or (fav.Attribute1 is null and bt.Attribute1 is not null)
+   or (fav.Attribute1 is not null and bt.Attribute1 is null)
+or fav.Attribute2<>bt.Attribute2
+   or (fav.Attribute2 is null and bt.Attribute2 is not null)
+   or (fav.Attribute2 is not null and bt.Attribute2 is null)
+or fav.Attribute3<>bt.Attribute3
+   or (fav.Attribute3 is null and bt.Attribute3 is not null)
+   or (fav.Attribute3 is not null and bt.Attribute3 is null)
+or fav.Attribute4<>bt.Attribute4
+   or (fav.Attribute4 is null and bt.Attribute4 is not null)
+   or (fav.Attribute4 is not null and bt.Attribute4 is null)
+or fav.Attribute8<>bt.Attribute8 --LINE_NO 
+   or (fav.Attribute1 is null and bt.Attribute1 is not null)
+   or (fav.Attribute1 is not null and bt.Attribute1 is null)
+or fav.Attribute8<>bt.LINE_NO 
+   or (fav.Attribute8 is not null and bt.LINE_NO is null) 
+   or (fav.Attribute8 is null and bt.LINE_NO is not null)
+or fah.ASSIGNED_TO<>bt.EMPLOYER_ID--
+   or (fah.ASSIGNED_TO is null and bt.EMPLOYER_ID is not null)
+   or (fah.ASSIGNED_TO is not null and bt.EMPLOYER_ID is null)
+or em.FULL_NAME<>bt.EMPLOYER_NAME
+   or (em.FULL_NAME is null and bt.EMPLOYER_NAME is not null)
+   or (em.FULL_NAME is not null and bt.EMPLOYER_NAME is null)
+or lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3<>bt.LOCATION_CODE
+or FAH.LOCATION_ID<>bt.LOCATION_ID
+--or fav.ASSET_KEY_CCID<>bt.ASSET_KEY_CCID   ---temp's ASSET_KEY_CCID no use
+)
+--and asset_number='11000009'
+
+
+--------Transaction histiory by Asset,date
+select fav.asset_nO,fav.CREATION_DATE ,fav.cost_center,fav.product_code,fav.PROJECT_CODE,fav.LOCATION_CODE,fav.EMPLOYER_NAME,
+fav.Attribute1 Remark,fav.Attribute2 IT_Asset_Name,fav.Attribute3 Property_Type,fav.Attribute4 Warranty,fav.Attribute8 Line_No,
+fav.TRANSACTION_TYPE,fav.TRANSACTION_ID,b.user_name CREATED_BY
+from apps.BMC_FA_BATCH_CHANGE_HISTORY fav, apps.fnd_user b
+where fav.TRANSACTION_TYPE='U'
+and b.user_id=fav.CREATED_BY
+--and fav.TRANSACTION_TYPE='U'
+--and FAV.ASSET_NO ='13005338'
+and  fav.CREATION_DATE>to_date('20080627 00:30:59','YYYYMMDD HH24:MI:SS')
+--and  fav.CREATION_DATE<to_date('20080630 23:30:59','YYYYMMDD HH24:MI:SS')
+--and b.user_name<>'28990051'
+order by fav.ASSET_NO,fav.CREATION_DATE
+
+select * from apps.BMC_FA_BATCH_CHANGE_HISTORY where TRANSACTION_TYPE='U'
+and  CREATION_DATE>to_date('20080729 00:30:59','YYYYMMDD HH24:MI:SS')
+
+
+---Stastic of period transaction count by user
+select count(*),fav.TRANSACTION_TYPE,b.user_name CREATED_BY,b.description Name
+from apps.BMC_FA_BATCH_CHANGE_HISTORY fav, apps.fnd_user b
+where   
+b.user_id=fav.CREATED_BY
+and  fav.CREATION_DATE>to_date('20080701 00:30:59','YYYYMMDD HH24:MI:SS')
+group by fav.TRANSACTION_TYPE,b.user_name,b.description
+
+
+select b.user_name CREATED_BY,count(*)
+from apps.BMC_FA_BATCH_CHANGE_HISTORY fav, apps.fnd_user b
+where fav.TRANSACTION_TYPE='U'
+and b.user_id=fav.CREATED_BY
+and  fav.CREATION_DATE<to_date('20080626 00:30:59','YYYYMMDD HH24:MI:SS')
+group by b.user_name
+
+----Screen show Transaction histiory (View) by Asset,date
+BMC_FA_MASS_CHANGE_HISTORY_V (low-end version)
+BMC_FA_MASS_CHANGE_HISTORY_A_V (advance version)
+
+
+
+-----------Compare two side after month-end copyback (exclude FullRetired FA)
+SELECT fav.asset_number,fav.ASSET_KEY_CCID ,bt.ASSET_KEY_CCID
+,    GLC.SEGMENT2 as FA_CC,bt.COST_CENTER tmp_CC
+,    GLC.SEGMENT3 as FA_Acc,GLC2.SEGMENT3 tmp_Acc
+,    GLC.SEGMENT4 as FA_Prd,bt.PRODUCT_CODE tmp_Prd
+,    GLC.SEGMENT5 as FA_Prj,bt.PROJECT_CODE tmp_Prj
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as FA_Cat2,bt.ASSET_CATEGORY_SEGMENT2 tmp_Cat2
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as FA_Cat3,bt.ASSET_CATEGORY_SEGMENT3 tmp_Cat3,
+em.FULL_NAME FA_EMPLOYEE_Name,bt.EMPLOYER_NAME tmp_EMPLOYER_NAME,
+lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3 FA_Location,bt.LOCATION_CODE tmp_Location,
+fav.asset_id
+FROM APPS.FA_ADDITIONS_V fav
+,     apps.FA_CATEGORIES_VL  a
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+,     apps.GL_CODE_COMBINATIONS GLC
+,     apps.GL_CODE_COMBINATIONS GLC2
+,apps.BMC_FA_BATCH_MASS_CHANGE_T BT
+,apps.PER_PEOPLE_V7 em
+,apps.FA_LOCATIONS lc
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+AND GLC2.CODE_COMBINATION_ID=bt.CODE_COMBINATION_ID
+and fav.asset_id=bt.asset_id
+and em.PERSON_ID(+)=fah.ASSIGNED_TO
+and FAH.LOCATION_ID=lc.LOCATION_ID
+and fah.DATE_INEFFECTIVE is  null
+and not exists
+   (
+      select fa1.asset_id
+      from apps.fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from apps.fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+   and fa1.asset_id=fav.asset_id
+      and transaction_type_code='FULL RETIREMENT' 
+      )
+and (
+GLC.SEGMENT2<>bt.COST_CENTER
+or FAH.CODE_COMBINATION_ID<>bt.CODE_COMBINATION_ID
+or GLC.SEGMENT3<>GLC2.SEGMENT3
+or GLC.SEGMENT4<>bt.PRODUCT_CODE
+or GLC.SEGMENT5<>bt.PROJECT_CODE
+or SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2)<>bt.ASSET_CATEGORY_SEGMENT2
+or SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2)<>bt.ASSET_CATEGORY_SEGMENT3
+or  bt.Attribute1 is not null
+or  bt.Attribute2 is not null
+or  bt.Attribute3 is not null
+or  bt.Attribute4 is not null
+or  bt.Attribute8 is not null--LINE_NO 
+or  bt.LINE_NO is not null 
+or fah.ASSIGNED_TO<>bt.EMPLOYER_ID--
+   or (fah.ASSIGNED_TO is null and bt.EMPLOYER_ID is not null)
+   or (fah.ASSIGNED_TO is not null and bt.EMPLOYER_ID is null)
+or em.FULL_NAME<>bt.EMPLOYER_NAME
+   or (em.FULL_NAME is null and bt.EMPLOYER_NAME is not null)
+   or (em.FULL_NAME is not null and bt.EMPLOYER_NAME is null)
+or FAH.LOCATION_ID<>bt.LOCATION_ID
+or lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3<>bt.LOCATION_CODE
+--or fav.ASSET_KEY_CCID<>bt.ASSET_KEY_CCID  
+)
+
+ 
+
+---------Check Copy back transaction in FA (user=systemadmin)
+select a.DATE_EFFECTIVE,a.PERIOD_ENTERED, a.TRANSACTION_TYPE,
+a.ASSET_NUMBER,b.user_name UserID,
+a.SEGMENT1,a.SEGMENT2,a.SEGMENT3,b.description User_name,
+a.BOOK_TYPE_CODE,a.ASSET_NUMBER_DESC
+from apps.FA_TRANSACTION_HISTORY_TRX_V a,apps.fnd_user b where 
+a.LAST_UPDATED_BY=b.user_id
+--and a.ASSET_NUMBER='13002984'
+and a.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and a.PERIOD_ENTERED='AUG-08'
+--and a.TRANSACTION_TYPE not in ('Reclass','Transfer')
+and TRANSACTION_DATE_ENTERED>to_date('2008-6-10','yyyy-mm-dd')
+
+
+
+---------Month-end history table of Copyback from temp to FA  (3 records for each FA)
+select b.user_name CREATED_BY,fav.TYPE,fav.CREATION_DATE,
+fav.ASSET_NO,fav.ACCOUNT_NAME,fav.PROJECT_CODE,fav.PRODUCT_CODE,
+fav.LOCATION_CODE,fav.EMPLOYEE_NAME,fav.TRANSFER_STATUS,fav.RECLASS_STATUS
+from apps.BMC_FA_BATCH_TRAN_HISTORY fav, apps.fnd_user b
+where b.user_id=fav.CREATED_BY
+--and fav.TRANSACTION_TYPE='U'
+--and FAV.ASSET_NO ='13005338'
+and b.user_name<>'SYSADMIN'
+
+
+-----list FA which has error FA & transaction for Copy back
+select a.ASSET_NO,a.ACCOUNT_NAME, a.LOCATION_CODE,a.CATEGORY,a.PRODUCT_CODE,a.PROJECT_CODE,
+a.ASSIGNED_TO,a.EMPLOYEE_NAME,a.TYPE Trans_Type,a.TRANSFER_STATUS,a.RECLASS_STATUS,b.description Create_by
+from apps.BMC_FA_BATCH_TRAN_HISTORY a,apps.fnd_user b  
+where a.CREATED_BY=b.user_id
+and a.CREATION_DATE>to_date('20080726 15:26:59','YYYYMMDD HH24:MI:SS')
+--and asset_no='13001351'
+and a.asset_id in 
+(select asset_id from apps.BMC_FA_BATCH_TRAN_HISTORY 
+    where CREATION_DATE>to_date('20080726 15:26:59','YYYYMMDD HH24:MI:SS')
+    and (     (TRANSFER_STATUS is not null and TRANSFER_STATUS<>'S')
+  	   or (RECLASS_STATUS is not null and RECLASS_STATUS<>'S')  
+  	   or trim(' ' from ERR_MESSAGE) is not null
+        ) 
+)
+order by a.asset_no,a.CREATION_DATE
+
+
+
+----------Special Solve couldn't copy back if has done transfer/reclass on workbench
+Current logic is compare a FA's creation date on BMC_FA_BATCH_MASS_CHANGE_T with lasted transaction date on workbench
+If workbench has Reclass/Transfer transaction later then creation_date of BMC_FA_BATCH_MASS_CHANGE_T,
+then don't copy back from temp table to workbench forever!
+If want to copy a FA in this case, to do:
+1. delete from BMC_FA_BATCH_MASS_CHANGE_T where ASSET_NO='xxxxxx'
+2. delete from BMC_FA_BATCH_CHANGE_HISTORY where TRANSACTION_TYPE='S' and ASSET_NO='xxxxxx'
+   or 
+   update BMC_FA_BATCH_CHANGE_HISTORY set TRANSACTION_TYPE='S1' where TRANSACTION_TYPE='S' and ASSET_NO='xxxxxx'
+   (This should be done before step3, inital copy this FA again from FA to temp)
+3. inital copy this FA to temp table (the creation date will be later...)
+4. No need change on BMC_FA_BATCH_CHANGE_HISTORY or BMC_FA_BATCH_TRAN_HISTORY 
+
+
+
+--------List all not in Fully Retire status,FA Key's prj,Prd segment not same with Assigment's Prj,Prd
+SELECT fav.asset_number,fav.ASSET_KEY_CCID ,fav.asset_id, fak.CODE_COMBINATION_ID
+,      fak.segment1 as Key_Prj
+,      fak.segment2 as Key_Prd
+,    GLC.SEGMENT5 as Depr_Prj
+,    GLC.SEGMENT4 as Depr_Prd
+FROM apps.FA_ADDITIONS_V fav
+,    apps.FA_ASSET_KEYWORDS fak
+,     apps.GL_CODE_COMBINATIONS GLC
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+WHERE fav.ASSET_KEY_CCID = fak.CODE_COMBINATION_ID(+) 
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fah.DATE_INEFFECTIVE is null
+AND FAH.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.ASSET_ID=fav.asset_id
+and (fak.segment1 is null or fak.segment2 is null 
+    or
+    fak.segment1<>GLC.SEGMENT5
+     or fak.segment2<>GLC.SEGMENT4
+)
+and not exists
+   (
+      select fa1.asset_id
+      from apps.fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from apps.fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+   and fa1.asset_id=fav.asset_id
+      and transaction_type_code='FULL RETIREMENT' 
+      )
+ORDER BY FAV.CREATION_DATE DESC
+
+
+------------Alert to check FA update through workbench (List reclass/transfer FA after copy to temp,exclude category3=06)
+SELECT
+ fb.ASSET_NUMBER ,
+ fdh.LAST_UPDATE_DATE, bt.CREATION_DATE,
+rpad(fnd.user_name,20,'  '),
+SYSDATE
+FROM
+apps.fa_additions_b fb, 
+apps.fa_distribution_history fdh,
+apps.fnd_user  fnd,
+apps.BMC_FA_BATCH_MASS_CHANGE_T BT
+WHERE 1=1 
+and   fb.ASSET_ID=fdh.asset_id
+and   fdh.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and   fdh.LAST_UPDATED_BY=fnd.USER_ID
+and   fdh.TRANSACTION_HEADER_ID_OUT is  null 
+and   fb.ASSET_ID=bt.ASSET_ID
+and   fdh.LAST_UPDATE_DATE>bt.CREATION_DATE
+and   fdh.LAST_UPDATE_DATE>=sysdate-30
+AND   apps.bmc_fa_batch_mass_change_pro.VALID_FA_UPDATE(FB.ASSET_ID)='Y'
+and not exists 
+   ( 
+      select fa1.asset_id 
+      from fa_transaction_headers fa1, 
+      (select  asset_id,max(transaction_header_id)  thi 
+      from fa_transaction_headers 
+      where book_type_code='BMC_FA_BOOK' 
+      group by asset_id) fa2 
+      where fa1.asset_id=fa2.asset_id 
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi 
+      and fa1.asset_id=fb.asset_id 
+      and transaction_type_code='FULL RETIREMENT' 
+      and fa1.book_type_code='BMC_FA_BOOK' 
+      )
+and exists 
+   ( 
+      select fa1.asset_id 
+      from fa_transaction_headers fa1, 
+      (select  asset_id,max(transaction_header_id)  thi 
+      from fa_transaction_headers 
+      where book_type_code='BMC_FA_BOOK' 
+      group by asset_id) fa2 
+      where fa1.asset_id=fa2.asset_id 
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi 
+      and fa1.asset_id=fb.asset_id 
+      and transaction_type_code in('TRANSFER','RECLASS') 
+      and fa1.book_type_code='BMC_FA_BOOK' 
+      )      
+AND  NOT EXISTS
+(
+ SELECT
+ SEGMENT3
+ FROM
+ FA_CATEGORIES FC
+ WHERE FC.CATEGORY_ID=FB.ASSET_CATEGORY_ID
+ AND FC.SEGMENT3='06'
+)
+
+---Updated alert (no use package) could run in Appsquery
+
+SELECT
+ fb.ASSET_NUMBER ,
+ fdh.LAST_UPDATE_DATE, bt.CREATION_DATE,
+rpad(fnd.user_name,20,'  '),
+SYSDATE
+FROM
+apps.fa_additions_b fb, 
+apps.fa_distribution_history fdh,
+apps.fnd_user  fnd,
+apps.BMC_FA_BATCH_MASS_CHANGE_T BT
+WHERE 1=1 
+and   fb.ASSET_ID=fdh.asset_id
+and   fdh.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and   fdh.LAST_UPDATED_BY=fnd.USER_ID
+and   fdh.TRANSACTION_HEADER_ID_OUT is  null 
+and   fb.ASSET_ID=bt.ASSET_ID
+and   fdh.LAST_UPDATE_DATE>bt.CREATION_DATE
+and   fdh.LAST_UPDATE_DATE>=sysdate-30
+--AND   apps.bmc_fa_batch_mass_change_pro.VALID_FA_UPDATE(FB.ASSET_ID)='Y'
+and fnd.user_name<>'SYSADMIN'
+and not exists 
+   ( 
+      select fa1.asset_id 
+      from apps.fa_transaction_headers fa1, 
+      (select  asset_id,max(transaction_header_id)  thi 
+      from apps.fa_transaction_headers 
+      where book_type_code='BMC_FA_BOOK' 
+      group by asset_id) fa2 
+      where fa1.asset_id=fa2.asset_id 
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi 
+      and fa1.asset_id=fb.asset_id 
+      and transaction_type_code='FULL RETIREMENT' 
+      and fa1.book_type_code='BMC_FA_BOOK' 
+      )
+and exists 
+   ( 
+      select fa1.asset_id 
+      from apps.fa_transaction_headers fa1, 
+      (select  asset_id,max(transaction_header_id)  thi 
+      from apps.fa_transaction_headers 
+      where book_type_code='BMC_FA_BOOK' 
+      group by asset_id) fa2 
+      where fa1.asset_id=fa2.asset_id 
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi 
+      and fa1.asset_id=fb.asset_id 
+      and transaction_type_code in('TRANSFER','RECLASS') 
+      and fa1.book_type_code='BMC_FA_BOOK' 
+      )      
+AND  NOT EXISTS
+(
+ SELECT
+ SEGMENT3
+ FROM
+ apps.FA_CATEGORIES FC
+ WHERE FC.CATEGORY_ID=FB.ASSET_CATEGORY_ID
+ AND FC.SEGMENT3='06'
+)
+
+------------simulate what will be copy from temp to FA ???
+select
+R.ASSET_ID
+,R.ASSET_NO
+,R.HISOTRY_ID
+,R.CODE_COMBINATION_ID R_CODE_COMBINATION_ID
+,R.ACCOUNT_NAME        R_ACCOUNT_NAME
+,R.PRODUCT_CODE        R_PRODUCT_CODE 
+,R.PROJECT_CODE        R_PROJECT_CODE
+,R.LOCATION_ID         R_LOCATION_ID
+,R.LOCATION_CODE       R_LOCATION_CODE
+,R.ASSET_CATEGORY_ID   R_ASSET_CATEGORY_ID
+,R.CATEGORY            R_CATEGORY
+,R.ASSIGNED_TO         R_ASSIGNED_TO
+--,R.EMPLOYEE_NAME       R_EMPLOYEE_NAME
+,D.CODE_COMBINATION_ID D_CODE_COMBINATION_ID
+,D.ACCOUNT_NAME        D_ACCOUNT_NAME
+,D.ASSET_KEY_CCID      D_ASSET_KEY_CCID
+,D.PRODUCT_CODE        D_PRODUCT_CODE 
+,D.PROJECT_CODE        D_PROJECT_CODE
+,D.LOCATION_ID         D_LOCATION_ID
+,D.LOCATION_CODE       D_LOCATION_CODE
+,D.ASSET_CATEGORY_ID   D_ASSET_CATEGORY_ID
+,D.CATEGORY            D_CATEGORY
+,D.ASSIGNED_TO         D_ASSIGNED_TO
+--,D.EMPLOYEE_NAME       D_EMPLOYEE_NAME
+,D.ATTRIBUTE1
+,D.ATTRIBUTE2
+,D.ATTRIBUTE3
+,D.ATTRIBUTE4
+,D.ATTRIBUTE5
+,D.ATTRIBUTE6
+,D.ATTRIBUTE7
+,D.ATTRIBUTE8
+,D.ATTRIBUTE9
+,D.ATTRIBUTE10
+,D.ATTRIBUTE11
+,D.ATTRIBUTE12
+,D.ATTRIBUTE13
+,D.ATTRIBUTE14
+,D.ATTRIBUTE15
+from
+(
+select 
+ bft.asset_id 
+,bft.asset_no asset_no 
+,bft.code_combination_id 
+,gc.segment1||'.'|| 
+ gc.segment2||'.'|| 
+ gc.segment3||'.'|| 
+ gc.segment4||'.'|| 
+ gc.segment5||'.'|| 
+ gc.segment6  account_name 
+,gc.segment4  product_code 
+,gc.segment5  project_code 
+,bft.location_id 
+,fl.segment1 
+|| '.' 
+|| fl.segment2 
+|| '.' 
+|| fl.segment3 location_code 
+,bft.asset_category_id 
+,fc.segment1||'.'|| 
+ fc.segment2||'.'|| 
+ fc.segment3 Category 
+,bft.EMPLOYER_ID assigned_to 
+--,bmc_fa_physical_pub_pkg.return_employee_name (bft.EMPLOYER_ID) employee_name 
+,bft.HISOTRY_ID 
+from 
+apps.BMC_FA_BATCH_MASS_CHANGE_T bft, 
+apps.gl_code_combinations gc, 
+apps.fa_locations fl, 
+apps.fa_categories fc 
+where bft.code_combination_id = gc.code_combination_id(+) 
+AND   bft.location_id = fl.location_id(+) 
+AND   bft.ASSET_CATEGORY_ID = fc.category_id(+) 
+AND   NOT EXISTS 
+( 
+ SELECT COUNT('X') 
+ FROM   apps.BMC_FA_BATCH_MASS_CHANGE_T bft1 
+ WHERE  BFT.ASSET_ID=BFT1.ASSET_ID 
+ HAVING(COUNT('X'))>1 
+)
+)R,
+(
+SELECT 
+ fa.asset_id 
+,fa.asset_number asset_no 
+,fdh.code_combination_id 
+,gc.segment1||'.'|| 
+ gc.segment2||'.'|| 
+ gc.segment3||'.'|| 
+ gc.segment4||'.'|| 
+ gc.segment5||'.'|| 
+ gc.segment6  account_name 
+,fa.asset_key_ccid 
+,fak.SEGMENT1  project_code 
+,fak.SEGMENT2  product_code 
+,fdh.location_id 
+,fl.segment1 
+|| '.' 
+|| fl.segment2 
+|| '.' 
+|| fl.segment3 location_code 
+,fa.asset_category_id 
+,fc.segment1||'.'|| 
+ fc.segment2||'.'|| 
+ fc.segment3 Category ,
+fdh.assigned_to ,
+fa.attribute1, 
+fa.attribute2, 
+fa.attribute3, 
+fa.attribute4, 
+fa.attribute5, 
+fa.attribute6, 
+fa.attribute7, 
+fa.attribute8, 
+fa.attribute9, 
+fa.attribute10, 
+fa.attribute11, 
+fa.attribute12, 
+fa.attribute13, 
+fa.attribute14, 
+fa.attribute15 
+FROM apps.fa_additions_b fa 
+    ,apps.fa_categories fc 
+    ,apps.fa_distribution_history fdh 
+    ,apps.gl_code_combinations gc 
+    ,apps.fa_locations fl 
+    ,apps.fa_additions_tl adt 
+    ,apps.fa_asset_keywords fak 
+WHERE 1 = 1 
+--AND fa.asset_number = '11000007' 
+AND fa.asset_category_id = fc.category_id 
+AND fa.asset_id = fdh.asset_id(+) 
+AND fdh.transaction_header_id_out IS NULL 
+AND fdh.code_combination_id = gc.code_combination_id(+) 
+AND fdh.location_id = fl.location_id(+) 
+AND fa.asset_id = adt.asset_id 
+AND adt.LANGUAGE = USERENV ('LANG') 
+AND fa.asset_key_ccid = fak.code_combination_id(+) 
+and not exists 
+( select 'x' 
+  from 
+  apps.fa_retirements  fr 
+  where 
+          fr.ASSET_ID=fa.ASSET_ID 
+  and     fr.BOOK_TYPE_CODE='BMC_FA_BOOK' 
+  and     fr.status in('PROCESSED','PENDING') 
+  ) 
+and not exists 
+( 
+select count('x') 
+from apps.fa_distribution_history fdh 
+where 1=1 
+AND fdh.transaction_header_id_out IS NULL 
+and fdh.ASSET_ID=fa.ASSET_ID 
+having(count('x'))>1 
+)
+) D
+WHERE 
+   R.ASSET_ID=D.ASSET_ID
+AND  
+(   1=2
+  OR   R.CODE_COMBINATION_ID<>D.CODE_COMBINATION_ID 
+   OR R.ASSET_CATEGORY_ID<>D.ASSET_CATEGORY_ID
+  OR   R.LOCATION_ID<>D.LOCATION_ID
+  OR   NVL(R.ASSIGNED_TO,'-1')<>NVL(D.ASSIGNED_TO,'-1')
+) 
+
+
+
+---------Solve FA_ADD_WARRANTIES (存在双份有效记录,FA can't Open correctly)
+select b.asset_number,a.DATE_EFFECTIVE,a.DATE_INEFFECTIVE,c.description Create_by
+from apps.FA_ADD_WARRANTIES a,APPS.FA_ADDITIONS_V b,apps.fnd_user c
+where a.ASSET_ID=b.ASSET_ID
+and a.CREATED_BY=c.user_id
+--and b.asset_number='13001351'
+and a.ASSET_ID in
+  (select ASSET_ID from apps.FA_ADD_WARRANTIES 
+    where DATE_EFFECTIVE<=sysdate and (DATE_INEFFECTIVE>sysdate or DATE_INEFFECTIVE is null )
+    group by ASSET_ID
+    having count(*)>1
+  )
+order by b.asset_number,a.CREATION_DATE
+
+1.    
+select ROWID,R.*
+from   APPS.fa_add_warranties R
+WHERE ASSET_ID IN
+(
+'100003454',
+'100012824',
+'100014666',
+'100014683',
+'100015584',
+'100016645',
+'100017127',
+'100018244'
+)
+AND TO_CHAR(DATE_EFFECTIVE,'YYYY')='2008'
+ 
+2.
+update APPS.fa_add_warranties R
+set date_ineffective = r.DATE_EFFECTIVE
+WHERE ASSET_ID IN
+(
+'100003454',
+'100012824',
+'100014666',
+'100014683',
+'100015584',
+'100016645',
+'100017127',
+'100018244'
+)
+AND TO_CHAR(DATE_EFFECTIVE,'YYYY')='2008'
+
+
+----------Solve transfer at workbench
+FA  11000043 ,category2=01 , can't make change in Temp table, so make transfer at workbench
+But will be list in Alert
+So run request ‘BMC FA Data Synch to Temp Table’
+use the ‘Enforce Copy’ parameter then fill in the FA number
+to copy it from workbench to Temp table
+It only be query in  Temp table
+
+FA S12019616 , May-09 Change Account(and then change back,so no change) at workbench
+use the ‘Enforce Copy’ parameter then fill in the FA number
+to copy it from workbench to Temp table
+
+
+

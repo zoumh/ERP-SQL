@@ -1,0 +1,24 @@
+
+
+select * from apps.rcv_transactions_interface
+
+select * from apps.rcv_shipment_headers where SHIPMENT_HEADER_ID=943603
+
+select * from Apps.Rcv_Shipment_lines where SHIPMENT_HEADER_ID=943603
+
+select * From apps.po_headers_all where PO_HEADER_ID=181390
+
+select * From apps.po_lines_all where PO_LINE_ID=459093
+
+select * From apps.po_line_locations_all where LINE_LOCATION_ID=905960
+
+
+----Find out BMC Backup Tables :
+select * from all_objects where object_name like 'BMC%BAK%' AND OBJECT_TYPE='TABLE'
+
+insert into BMC_RCVTRANS_IFACE_BAK select * from apps.rcv_transactions_interface where SHIPMENT_HEADER_ID=943603
+
+delete from apps.rcv_transactions_interface where SHIPMENT_HEADER_ID=943603
+
+
+

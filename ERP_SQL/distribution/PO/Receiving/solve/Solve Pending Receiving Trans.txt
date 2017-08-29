@@ -1,0 +1,57 @@
+
+
+--------Pending Receiving (use Oracle Form to receive, but in Receiving Trans Form can't find this receipt/PO to putaway)
+
+select * from apps.po_headers_all where segment1='1011856'
+PO_header_id=61671
+
+
+select * from apps.rcv_shipment_headers where receipt_num=209717
+shipment_header_id=155398
+
+select * from apps.rcv_transactions_interface  where PO_header_id=61671 --and shipment_header_id=155398
+select group_id,processing_mode_code,processing_status_code,transaction_status_code from apps.rcv_transactions_interface  
+where PO_header_id=61671 --and shipment_header_id=155398
+
+update apps.rcv_transactions_interface set processing_mode_code='BATCH' where PO_header_id=61671 and shipment_header_id=155398 and group_id=380616
+
+Run <Receiving Transaction Processor> with group_id para , will auto create Delivery Transaction.
+
+
+PO:Workflow Processing Mode
+
+
+--------------------
+select * from apps.po_headers_all where segment1='1011856'
+PO_header_id=61671
+
+select * from apps.rcv_shipment_headers where receipt_num=209717
+
+select * from apps.rcv_shipment_lines where shipment_header_id=155398
+
+shipment_header_id=155398
+
+PO_header_id=61671
+po_line_id=86156
+po_line_location=85605
+
+select * from apps.rcv_transactions_interface  where PO_header_id=61671 --and shipment_header_id=155398 --and group_id=380616
+
+group_id=380616
+
+update apps.rcv_transactions_interface set processing_mode_code='BATCH' where PO_header_id=61671 and shipment_header_id=155398 and group_id=380616
+
+
+
+
+
+----------- more could check if Accounting was already created
+
+select * from apps.rcv_transactions  where shipment_header_id=155398
+
+transaction_id=397576
+
+select * from APPS.RCV_RECEIVING_SUB_LEDGER where rcv_transaction_id=397576
+
+
+

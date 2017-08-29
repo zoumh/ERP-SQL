@@ -1,0 +1,120 @@
+
+
+SET heading on;
+COLUMN "Region" FORMAT A10;
+select distinct gcc.segment3 ACC,gcc.segment4 PRD,gcc.segment5 PRJ,mib.segment1 Item_no,
+nvl(rtl.quantity_invoiced,rtl.QUANTITY_CREDITED) quantity,rtl.unit_selling_price Price,
+rtl.sales_order,rga.AMOUNT "Sales Value",rga.ACCTD_AMOUNT "Sales Value(CNY)",rtl1.EXTENDED_AMOUNT TAX,ooh.TRANSACTIONAL_CURR_CODE CURR,
+rca.NAME "Trans Type",rta.TRX_NUMBER "Trans Number",rtl.SALES_ORDER_LINE "Order Line",rta.TRX_DATE "Trans Date",
+ooh.CUST_PO_NUMBER "Cust PO Number",ola.attribute4 Region,raa.CITY City,raa.COUNTRY Country,rc.customer_name "Custmer Name",
+rga.GL_POSTED_DATE "Month",ooh.ATTRIBUTE14 "PRJ Code Reference"
+from ra_customer_trx_lines_all rtl,ra_cust_trx_line_gl_dist_all rga,RA_CUST_TRX_TYPES_ALL rca,
+ra_customer_trx_all rta,mtl_system_items_b mib ,oe_order_headers_all ooh,oe_order_lines_all ola,ra_customers rc,
+ra_customer_trx_lines_all rtl1,ra_site_uses_all rsu, ra_addresses_all raa,(select code_combination_id,segment1,segment2,segment3,segment4,segment5,segment6
+from gl_code_combinations where segment1='01'and segment2='0000' 
+and segment3 between '&&3' and '&&4' and segment4 between '&&5' and '&&6' 
+and segment5 between '&&7' and '&&8' and segment6='000000'
+)gcc
+where rtl.customer_trx_line_id=rga.customer_trx_line_id and rtl.customer_trx_id=rta.CUSTOMER_TRX_ID
+and rtl1.LINK_TO_CUST_TRX_LINE_ID(+)=rtl.CUSTOMER_TRX_LINE_ID
+and rta.CUST_TRX_TYPE_ID=rca.CUST_TRX_TYPE_ID
+and rga.gl_date between (select start_date from gl_periods where period_set_name='CAL_BMC' and period_name='&&1')
+and (select end_date from gl_periods where period_set_name='CAL_BMC' and period_name='&&2')
+and rga.code_combination_id=gcc.CODE_COMBINATION_ID    
+and rtl.inventory_item_id=mib.inventory_item_id(+)
+and ooh.order_number(+)=rtl.sales_order
+and ooh.sold_to_org_id=rc.customer_id(+)
+and ooh.header_id=ola.header_id
+and ooh.ship_to_org_id=rsu.site_use_id
+and rsu.address_id=raa.address_id(+)
+and mib.ORGANIZATION_ID(+)=81
+and rca.org_id=81;
+
+
+
+---------Add Region at Mar,  Para: period_name ,ooh.order_number
+
+select distinct gcc.segment3 ACC,gcc.segment4 PRD,gcc.segment5 PRJ,mib.segment1 Item_no,
+nvl(rtl.quantity_invoiced,rtl.QUANTITY_CREDITED) quantity,rtl.unit_selling_price Price,
+rtl.sales_order,rga.AMOUNT "Sales Value",
+rga.ACCTD_AMOUNT "Sales Value(CNY)",
+rtl1.EXTENDED_AMOUNT TAX,ooh.TRANSACTIONAL_CURR_CODE CURR,
+rca.NAME "Trans Type",rta.TRX_NUMBER "Trans Number",rtl.SALES_ORDER_LINE "Order Line",rta.TRX_DATE "Trans Date",
+ooh.CUST_PO_NUMBER "Cust PO Number",ola.attribute4 Region,raa.CITY City,raa.COUNTRY Country,rc.customer_name "Custmer Name",
+rga.GL_POSTED_DATE "Month",ooh.ATTRIBUTE14 "PRJ Code Reference",ola.attribute4 Region
+from apps.ra_customer_trx_lines_all rtl,
+apps.ra_cust_trx_line_gl_dist_all rga,
+apps.RA_CUST_TRX_TYPES_ALL rca,
+apps.ra_customer_trx_all rta,
+apps.mtl_system_items_b mib ,
+apps.oe_order_headers_all ooh,
+apps.oe_order_lines_all ola,
+apps.ra_customers rc,
+apps.ra_customer_trx_lines_all rtl1,
+apps.ra_site_uses_all rsu, 
+apps.ra_addresses_all raa,
+(select code_combination_id,segment1,segment2,segment3,segment4,segment5,segment6
+from apps.gl_code_combinations where segment1='01' 
+and segment3 ='5101010102' and segment6='000000'
+)gcc
+where rtl.customer_trx_line_id=rga.customer_trx_line_id 
+and rtl.customer_trx_id=rta.CUSTOMER_TRX_ID
+and rtl1.LINK_TO_CUST_TRX_LINE_ID(+)=rtl.CUSTOMER_TRX_LINE_ID
+and rta.CUST_TRX_TYPE_ID=rca.CUST_TRX_TYPE_ID
+and rga.gl_date between (select start_date from apps.gl_periods where period_set_name='CAL_BMC' and period_name='JAN-05')
+and (select end_date from apps.gl_periods where period_set_name='CAL_BMC' and period_name='JAN-05')
+and rga.code_combination_id=gcc.CODE_COMBINATION_ID 	  
+and rtl.inventory_item_id=mib.inventory_item_id(+)
+and ooh.order_number(+)=rtl.sales_order
+and ooh.sold_to_org_id=rc.customer_id(+)
+and ooh.header_id=ola.header_id
+and ooh.ship_to_org_id=rsu.site_use_id
+and rsu.address_id=raa.address_id(+)
+and mib.ORGANIZATION_ID(+)=81
+and rca.org_id=81
+and ooh.order_number='106355'
+
+
+
+--------------Changed at Feb, GL_date , Para: period_name
+
+select distinct gcc.segment3 ACC,gcc.segment4 PRD,gcc.segment5 PRJ,mib.segment1 Item_no,
+nvl(rtl.quantity_invoiced,rtl.QUANTITY_CREDITED) quantity,rtl.unit_selling_price Price,
+rtl.sales_order,rga.AMOUNT "Sales Value",
+rga.ACCTD_AMOUNT "Sales Value(CNY)",
+rtl1.EXTENDED_AMOUNT TAX,ooh.TRANSACTIONAL_CURR_CODE CURR,
+rca.NAME "Trans Type",rta.TRX_NUMBER "Trans Number",rtl.SALES_ORDER_LINE "Order Line",rta.TRX_DATE "Trans Date",
+ooh.CUST_PO_NUMBER "Cust PO Number",ola.attribute4 Region,raa.CITY City,raa.COUNTRY Country,rc.customer_name "Custmer Name",
+rga.GL_POSTED_DATE "Month",ooh.ATTRIBUTE14 "PRJ Code Reference"
+from apps.ra_customer_trx_lines_all rtl,
+apps.ra_cust_trx_line_gl_dist_all rga,
+apps.RA_CUST_TRX_TYPES_ALL rca,
+apps.ra_customer_trx_all rta,
+apps.mtl_system_items_b mib ,
+apps.oe_order_headers_all ooh,
+apps.oe_order_lines_all ola,
+apps.ra_customers rc,
+apps.ra_customer_trx_lines_all rtl1,
+apps.ra_site_uses_all rsu, 
+apps.ra_addresses_all raa,
+(select code_combination_id,segment1,segment2,segment3,segment4,segment5,segment6
+from apps.gl_code_combinations where segment1='01' 
+and segment3 ='5101010102' and segment6='000000'
+)gcc
+where rtl.customer_trx_line_id=rga.customer_trx_line_id 
+and rtl.customer_trx_id=rta.CUSTOMER_TRX_ID
+and rtl1.LINK_TO_CUST_TRX_LINE_ID(+)=rtl.CUSTOMER_TRX_LINE_ID
+and rta.CUST_TRX_TYPE_ID=rca.CUST_TRX_TYPE_ID
+and rga.gl_date between (select start_date from apps.gl_periods where period_set_name='CAL_BMC' and period_name='FEB-05')
+and (select end_date from apps.gl_periods where period_set_name='CAL_BMC' and period_name='FEB-05')
+and rga.code_combination_id=gcc.CODE_COMBINATION_ID 	  
+and rtl.inventory_item_id=mib.inventory_item_id(+)
+and ooh.order_number(+)=rtl.sales_order
+and ooh.sold_to_org_id=rc.customer_id(+)
+and ooh.header_id=ola.header_id
+and ooh.ship_to_org_id=rsu.site_use_id
+and rsu.address_id=raa.address_id(+)
+and mib.ORGANIZATION_ID(+)=81
+and rca.org_id=81;
+
+

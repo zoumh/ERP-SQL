@@ -1,0 +1,37 @@
+
+
+select a.NAME,to_char(c.ORDER_NUMBER),c.BOOKED_DATE
+,b.ORDERED_ITEM,b.ORDERED_QUANTITY,b.FULFILLED_QUANTITY
+from apps.ra_cust_trx_types_all a,apps.OE_ORDER_lineS_all b,apps.OE_ORDER_headers_all c,apps.OE_transaction_TYPES_all d
+where c.ORDER_TYPE_ID=d.TRANSACTION_TYPE_ID
+and a.CUST_TRX_TYPE_ID=d.CUST_TRX_TYPE_ID
+and b.HEADER_ID=c.HEADER_ID
+and b.FLOW_STATUS_CODE='FULFILLED'
+
+
+select count(*)
+from apps.OE_ORDER_lineS_all where FLOW_STATUS_CODE='FULFILLED'
+
+
+-------------------------------------------Clear Request_ID, to import AR Invoice
+
+
+select *
+from apps.ra_interface_lines_all
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+select INTERFACE_LINE_ATTRIBUTE1,interface_line_id,customer_trx_id,request_id, link_to_line_id
+from apps.ra_interface_lines_all
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+UPDATE ra_interface_lines_all
+SET interface_line_id = null,
+		    customer_trx_id = null,
+		    request_id = null,
+		    link_to_line_id = null
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+
+
+Select object_name, object_type, owner       from all_objects       where status = 'INVALID'
+

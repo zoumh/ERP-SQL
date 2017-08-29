@@ -1,0 +1,116 @@
+
+
+1. The one who allocat MO will be creator of mtl_Transaction (of MO transfer)
+   fill in QUANTITY_DETAILED in MO_line table
+
+2. The one who transact MO will be last_update of MO_line & Mtl_transaction tables,  
+   MO line last update_date should be same with Mtl_Transaction's create_date / transaction_date
+   Also fill in QUANTITY_DELIVERED in MO_line table
+
+3. As Mtl_transaction's last_update_by will be override by sysadmin (cost processor)
+   In case MO_line's last_update_by also has problem not be the MO transact person, how to find the person?
+   ----- In mtl_transaction's transfer_lpn, find the lpn's create_by,lpn.creation_date=mtl_transaction.creation_date
+
+
+-------SQL :
+
+----find MO header_id
+select b.LAST_UPDATE_DATE,b.CREATION_DATE,
+a.HEADER_ID,a.request_number Move_Order_num,b.line_number,d.transaction_type_name Trans_type,a.ORGANIZATION_ID Org,
+decode(a.move_order_type,1,'Requisition',2,'Replenishment',3,'Pick Wave') move_order_type,
+a.date_required Head_Req_Date,
+decode(a.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,
+b.FROM_SUBINVENTORY_CODE Fr_WH,b.TO_SUBINVENTORY_CODE To_WH,
+c.segment1 Item,b.REVISION,b.quantity,b.quantity_delivered,b.quantity_detailed,b.primary_quantity,b.date_required Line_Req_Date,b.transaction_header_id,
+b.txn_source_id,b.txn_source_line_id,e.user_name UserID,e.description User_Name
+from apps.mtl_txn_request_headers a,apps.mtl_txn_request_lines b,apps.mtl_system_items_b c,
+apps.mtl_transaction_types d,apps.FND_USER e
+where a.transaction_type_id=d.transaction_type_id
+and a.header_id=b.header_id and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and b.inventory_item_id=c.INVENTORY_ITEM_ID
+and e.USER_ID=b.LAST_UPDATED_BY 
+and a.request_number in ('080815-B-BSE-21:00-1')
+order by a.request_number,b.line_number
+
+
+----Find user_id / name
+select * from apps.fnd_user where  user_id in (1142,1220)
+
+
+----list MO line
+select * from apps.mtl_txn_request_lines where header_id=1612022
+
+----allocate trans_temp
+select * from apps.mtl_material_transactions_temp where TRANSACTION_SOURCE_ID=1612022
+
+----list mtl_transaction
+select * from apps.mtl_material_transactions where --MOVE_ORDER_LINE_ID=7268296 or 
+TRANSACTION_SOURCE_ID=1612022
+
+----list LPN info
+select * from apps.wms_license_plate_numbers WHERE  lpn_id in 
+(select distinct TRANSFER_LPN_ID from apps.mtl_material_transactions where TRANSACTION_SOURCE_ID=1612022)
+
+----list lpn_content
+select * from apps.wms_lpn_contents WHERE parent_lpn_id in 
+(select distinct TRANSFER_LPN_ID from apps.mtl_material_transactions where TRANSACTION_SOURCE_ID=1612022)
+
+
+------------Find All Transaction of this LPN,make sure the only one create/update this lpn is the MO transact
+select   mmt.transaction_date, mmt.LPN_ID,lpn.LICENSE_PLATE_NUMBER Transfer_lpn_num,mmt.CONTENT_LPN_ID,
+        'Transfer-LPN' LPN_Type,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.subinventory_code, 
+     mmt.TRANSACTION_QUANTITY as Qty, 
+         mmt.transaction_id, 
+         mtt.DESCRIPTION                     Type_Description, 
+         mmt.REVISION, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.wms_license_plate_numbers LPN
+where  
+        mtt.transaction_type_id = mmt.transaction_type_id 
+and     msi.inventory_item_id = mmt.inventory_item_id  
+and     mmt.organization_id = msi.organization_id 
+and     mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+and (mmt.LPN_ID in 
+(4108601,
+4108602,
+4108603,
+4108604,
+4108605,
+4108606,
+4108607,
+4108608) 
+or mmt.TRANSFER_LPN_ID in 
+(4108601,
+4108602,
+4108603,
+4108604,
+4108605,
+4108606,
+4108607,
+4108608)
+or mmt.CONTENT_LPN_ID in 
+(4108601,
+4108602,
+4108603,
+4108604,
+4108605,
+4108606,
+4108607,
+4108608))
+
+
+
+
+

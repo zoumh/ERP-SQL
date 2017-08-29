@@ -1,0 +1,99 @@
+
+
+
+---------Job Order Header Info
+select wip_entity_name,a.class_code,decode(a.job_type,1,'Std',3,'Non-Std') JOB_Type,b.segment1 Assembly,
+a.BOM_REVISION Rev,b.ITEM_TYPE,a.status_type_disp
+from apps.WIP_DISCRETE_JOBS_V a,apps.mtl_system_items_b b 
+where a.ORGANIZATION_ID =b.ORGANIZATION_ID
+and a.PRIMARY_ITEM_ID=b.INVENTORY_ITEM_ID 
+and a.ORGANIZATION_ID=130
+and b.ITEM_TYPE in ('DPY','KRH')
+and a.status_type_disp not in ('Cancelled','Closed')
+
+
+----------Job Order Open Qty
+
+
+
+
+
+
+
+
+---------Job Order info ,status,date,qty,type
+
+select start_quantity,quantity_remaining,net_quantity,last_update_date,decode(status_Type,1,'Unreleased',3,'Released',4,'Complete',
+5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',
+11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+Class_Code,Material_Account,Resource_Account,material_Variance_Account,Resource_Variance_Account,Std_Cost_Adjustment_Account,
+Date_Released,Date_Completed,Date_Closed,Entity_Type,Job_Type,wip_entity_name 
+from apps.WIP_DISCRETE_JOBS_V 
+where class_code='Var_Assemb' and (start_quantity<>0 or quantity_remaining<>0)
+--and start_quantity<>net_quantity
+
+
+
+-----------Std JO during period
+select wip_entity_name ,start_quantity,quantity_remaining,net_quantity,last_update_date,decode(status_Type,1,'Unreleased',3,'Released',4,'Complete',
+5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',
+11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+Class_Code,Date_Released,Date_Completed,Date_Closed,decode(Job_Type,1,'Std',3,'NonStd','Else') Job_Type
+from apps.WIP_DISCRETE_JOBS_V 
+where class_code not like 'Var%' 
+and creation_date>=to_date('2006-10-15','YYYY-MM-DD')
+and creation_date<=to_date('2006-11-14','YYYY-MM-DD')
+and Job_Type=1 
+and ORGANIZATION_ID =130
+
+
+
+
+
+WIP_DISCRETE_JOBS.JOB_TYPE
+1 Standard
+3 Non¨Cstandard
+
+
+(Entity_Type is same as Job_Type)
+
+
+
+
+WIP_DISCRETE_JOBS.STATUS_TYPE 
+
+decode(status_Type,1,'Unreleased',3,'Released',4,'Complete',
+5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',
+11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+
+
+WIP_DISCRETE_JOBS.STATUS_TYPE 
+1 Unreleased
+3 Released
+4 Complete
+5 Complete ¨C No Charges
+6 On Hold
+7 Cancelled
+8 Pending Bill Load
+9 Failed Bill Load
+10 Pending Routing Load
+11 Failed Routing Load
+12 Closed
+13 Pending ¨C Mass Loaded
+14 Pending Close
+15 Failed Close
+
+
+
+
+WIP_DISCRETE_JOBS.WIP_SUPPLY_TYPE 
+1 Push
+2 Assembly Pull
+3 Operation Pull
+4 Bulk
+5 Supplier
+6 Phantom
+7 Based on Bill
+
+
+

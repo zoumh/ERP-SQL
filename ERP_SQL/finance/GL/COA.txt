@@ -1,0 +1,93 @@
+
+----------Key Flexfield segments
+select SEGMENT_NAME,FLEX_VALUE_SET_ID,SEGMENT_NUM,ID_FLEX_NUM, APPLICATION_ID,ID_FLEX_CODE
+from apps.FND_ID_FLEX_SEGMENTS_VL where SEGMENT_NAME like '%BMC%'
+and SEGMENT_NAME in ('BMC_CCC','BMC_ACC','BMC_PRD','BMC_PRJ')
+
+
+
+---List FLEX_VALUE_SET_ID, Value set (Name & ID)
+select FLEX_VALUE_SET_ID,FLEX_VALUE_SET_NAME 
+from apps.FND_FLEX_VALUE_SETS where FLEX_VALUE_SET_NAME like '%BMC%'
+
+
+---Values for BMC_ACC:
+select * from apps.FND_FLEX_VALUES where FLEX_VALUE_SET_ID=1007641
+
+
+---Values for BMC_CCC:
+select * from apps.FND_FLEX_VALUES where FLEX_VALUE_SET_ID=1007640
+
+
+
+------Parent Account number
+select PARENT_FLEX_VALUE from apps.FND_FLEX_VALUE_HIERARCHIES
+where FLEX_VALUE_SET_ID=1007641 --BMC_ACCsegment
+order by PARENT_FLEX_VALUE
+
+
+
+
+
+
+-----Find Account's Description
+
+select * from apps.FND_FLEX_VALUES_VL  where DESCRIPTION like '%Expense-ISIT-LAN Related Services'
+
+select d.DESCRIPTION as Account_Desc,b.segment3 as Account
+from apps.GL_CODE_combinations b
+,apps.FND_FLEX_VALUES_VL d
+where d.FLEX_VALUE=b.segment3
+
+
+
+-------List CHA description (for CC)
+select a.FLEX_VALUE,a.DESCRIPTION,b.LANGUAGE,b.DESCRIPTION CHN_Desc
+from apps.FND_FLEX_VALUES_vl a,apps.FND_FLEX_VALUES_TL b 
+where a.FLEX_VALUE_ID=b.FLEX_VALUE_ID
+and a.FLEX_VALUE_SET_ID=1007640
+order by Flex_value
+
+
+
+
+Find the empty Acc.
+select * from GL_CODE_combinations where segment1='01' and segment2='0000' and segment3='0000' and segment4='000000' and segment5='0000' and segment6='000000'
+
+
+
+
+Find Code combination exist or not ?
+
+select * from apps.GL_CODE_combinations where segment2='1650' 
+
+
+-------list CC's date
+
+select a.FLEX_VALUE CC,a.DESCRIPTION,a.CREATION_DATE,a.LAST_UPDATE_DATE,a.START_DATE_ACTIVE,a.END_DATE_ACTIVE,
+ENABLED_FLAG ,SUMMARY_FLAG,b.user_name Create_UID, b.description Create_UName
+,c.user_name Last_update_UID, c.description Last_update_UName
+from apps.FND_FLEX_VALUES_VL a,apps.fnd_user b,apps.fnd_user c
+where a.FLEX_VALUE_SET_ID=1007640
+and b.user_id=a.CREATED_BY
+and c.user_id=a.LAST_UPDATED_BY
+order by FLEX_VALUE
+
+
+
+--------------COA values Last update by who since 20080101
+ 
+select c.FLEX_VALUE_SET_NAME,a.FLEX_VALUE, a.CREATION_DATE, a.LAST_UPDATE_DATE,b.USER_NAME Last_update_by,
+a.START_DATE_ACTIVE,a.END_DATE_ACTIVE,
+a.ENABLED_FLAG,a.SUMMARY_FLAG,a.COMPILED_VALUE_ATTRIBUTES,a.HIERARCHY_LEVEL
+from apps.FND_FLEX_VALUES a,apps.fnd_user b,apps.FND_FLEX_VALUE_SETS c
+where a.LAST_UPDATED_BY=b.user_id
+and a.FLEX_VALUE_SET_ID=c.FLEX_VALUE_SET_ID
+--and a.FLEX_VALUE_SET_ID=1007641
+and a.LAST_UPDATE_DATE>=to_date('2008-01-01','yyyy-mm-dd')
+and c.FLEX_VALUE_SET_NAME in ('BMC_COA_CCC','BMC_COA_ACC','BMC_COA_PRD','BMC_COA_PRJ')
+order by c.FLEX_VALUE_SET_NAME,a.FLEX_VALUE
+
+
+
+

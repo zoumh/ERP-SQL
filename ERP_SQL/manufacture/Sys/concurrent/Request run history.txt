@@ -1,0 +1,38 @@
+
+
+select  TRUNC ((a.actual_completion_date - a.actual_start_date),5)*1000 min_execution_time,a.REQUEST_DATE,
+request_id,REQUESTOR,PHASE_CODE,STATUS_CODE,COMPLETION_TEXT
+from apps.fnd_conc_req_summary_v a where a.user_concurrent_program_name ='BMC Bill Of Material Report For RTK Items'
+order by a.REQUEST_DATE desc
+
+
+
+---------Find out all request & Program name & Responsibility by run Parameter (like a move order number)
+select a.request_id,--REQUESTED_START_DATE,
+a.ACTUAL_START_DATE,a.ACTUAL_COMPLETION_DATE,c.RESPONSIBILITY_NAME RESPONSIBILITY,
+a.PROGRAM,a.ARGUMENT_TEXT,
+a.REQUESTOR, --USER_CONCURRENT_PROGRAM_NAME,
+a.PHASE_CODE,a.STATUS_CODE,a.EXECUTION_METHOD_CODE,a.RESPONSIBILITY_ID,a.COMPLETION_TEXT
+from apps.FND_CONC_REQ_SUMMARY_V a,apps.FND_RESPONSIBILITY_TL c 
+where a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.LANGUAGE='US'
+and a.request_id =29238386
+--a.ARGUMENT_TEXT like '%SD-W910-01.29-16:00-DPY%'
+order by a.ACTUAL_START_DATE
+
+
+---------All request run around a time
+
+select a.actual_start_date,a.actual_completion_date,a.REQUEST_DATE,a.user_concurrent_program_name,
+request_id,REQUESTOR,PHASE_CODE,STATUS_CODE,COMPLETION_TEXT
+from apps.fnd_conc_req_summary_v a where-- a.user_concurrent_program_name ='BMC Bill Of Material Report For RTK Items'
+a.actual_start_date>to_date('20081010 10:00:00','YYYYMMDD HH24:MI:SS')
+and a.actual_start_date<to_date('20081010 10:49:00','YYYYMMDD HH24:MI:SS')
+and a.actual_completion_date<to_date('20081010 12:39:00','YYYYMMDD HH24:MI:SS')
+and a.actual_completion_date>to_date('20081010 10:47:00','YYYYMMDD HH24:MI:SS')
+order by a.REQUEST_DATE desc
+
+
+
+
+

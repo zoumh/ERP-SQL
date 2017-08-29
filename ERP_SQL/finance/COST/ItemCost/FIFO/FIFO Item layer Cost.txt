@@ -1,0 +1,80 @@
+
+------How can I find the earlier costs of an inventory item after an average cost update? 
+
+The information is stored in the MTL_MATERIAL_TRANSACTIONS table and the 
+CST_QUANTITY_LAYERS.
+
+The CST_CG_COST_HISTORY_V view is used by the form to gather the information 
+for display in the form
+
+
+
+--------Find current Layer Cost(Avg Cost) of Item
+
+select b.INVENTORY_ITEM_ID, a.ORGANIZATION_ID ,a.CREATION_DATE,
+b.SEGMENT1 Item,b.DESCRIPTION,a.ITEM_COST Average_Cost,
+b.ENABLED_FLAG,a.COST_GROUP_ID
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and b.SEGMENT1='RNH 942 276.R2A'
+and a.ORGANIZATION_ID>127 
+
+
+select * from apps.CST_QUANTITY_LAYERS where INVENTORY_ITEM_ID=77088 and 
+ORGANIZATION_ID>127  
+
+select * from apps.CST_LAYER_COST_DETAILS where layer_id=19676--RNH 942 276.R2A
+
+select * from apps.mtl_cst_actual_cost_details where layer_id=19676--CST_CG_COST_HISTORY_V
+
+CST_CG_COST_HISTORY_V
+
+
+-------FIFO current Layer Cost(Avg Cost) Item COST (PRJ Org)
+select
+b.SEGMENT1 Item,b.DESCRIPTION,a.ITEM_COST Average_Cost,
+b.ENABLED_FLAG,a.COST_GROUP_ID
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=86 and b.ORGANIZATION_ID=86
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+--and b.SEGMENT1='BKE 902 019/14'
+
+
+
+------------- Amount
+
+select a.ORGANIZATION_ID Org_ID,
+b.SEGMENT1 Item,b.DESCRIPTION,a.LAYER_QUANTITY,a.ITEM_COST Average_Cost,nvl(a.ITEM_COST,0) *nvl(a.LAYER_QUANTITY,0) Amount,
+b.ENABLED_FLAG Item_Enable,b.INVENTORY_ITEM_STATUS_CODE Item_Status,a.COST_GROUP_ID
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+
+
+
+select a.ORGANIZATION_ID, 
+sum(a.ITEM_COST *a.LAYER_QUANTITY) Amount
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+group by a.ORGANIZATION_ID
+
+
+----------FIFO cost onhand value
+select b.segment1 Item, a.subinventory_code,
+sum(a.transaction_quantity) Qty,sum(d.item_cost* a.transaction_quantity) amt
+,d.item_cost*sum( a.transaction_quantity) amt,d.item_cost
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b,-- apps.cst_cost_groups c, 
+apps.cst_item_costs d--,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f
+where a.organization_id=b.organization_id
+and a.organization_id=d.organization_id
+and a.organization_id=132
+and a.inventory_item_id=b.inventory_item_id 
+and a.inventory_item_id=d.inventory_item_id
+and d.cost_type_id=5 --FIFO cost type
+--and (d.item_cost is not null and d.item_cost<>0 and a.transaction_quantity is not null and a.transaction_quantity<>0)
+--and b.segment1 like 'SXK 109 7706/1%'
+group by b.segment1 ,a.subinventory_code
+,d.item_cost
+

@@ -1,0 +1,49 @@
+
+Receiving value report is based on RCV_RECEIVING_VALUE_VIEW (which in turn is driven through mtl_supply) 
+
+
+CREATE OR REPLACE VIEW RCV_RECEIVING_VALUE_VIEW
+(ITEM_ID, ITEM_REVISION, ITEM_DESCRIPTION, UNIT_OF_MEASURE, LOCATION_ID, 
+ TO_ORGANIZATION_ID, TO_ORG_PRIMARY_QUANTITY, RECEIPT_DATE, RECEIPT_NUM, SHIPMENT_NUM, 
+ SHIPPED_DATE, FREIGHT_CARRIER_CODE, QUANTITY_SHIPPED, DESTINATION_TYPE_CODE, PACKING_SLIP, 
+ SOURCE_DOCUMENT_CODE, DELIVER_TO_LOCATION_ID, SOURCE_DOCUMENT, DOCUMENT_LINE_NUM, ACTUAL_PRICE, 
+ VENDOR_ID, RCV_TRANSACTION_ID, BOM_RESOURCE_ID, WIP_ENTITY_ID, WIP_RESOURCE_SEQ_NUM, 
+ WIP_OPERATION_SEQ_NUM, WIP_REPETITIVE_SCHEDULE_ID)
+AS 
+
+SELECT rs.item_id, rs.item_revision, rsl.item_description, rs.unit_of_measure, rs.location_id, 
+rs.to_organization_id, rs.to_org_primary_quantity, rs.receipt_date, rsh.receipt_num, rsh.shipment_num, 
+rsh.shipped_date, rsh.freight_carrier_code, rsl.quantity_shipped, rs.destination_type_code, 
+nvl(rsl.packing_slip,rsh.packing_slip), rsl.source_document_code, decode(rsl.source_document_code, 
+'INV', rsl.deliver_to_location_id, 'PO', pd.deliver_to_location_id, 'REQ', 
+prl.deliver_to_location_id) deliver_to_location_id, decode(rsl.source_document_code, 'INV', 
+rsh.shipment_num, 'PO', ph.segment1, 'REQ', prh.segment1) source_document, 
+decode(rsl.source_document_code, 'INV', rsl.line_num, 'PO', pl.line_num, 'REQ', prl.line_num) document_line_num, 
+decode(rsl.source_document_code, 'INV', (rsl.shipment_unit_price * nvl(ph.rate,1)) * (rct.source_doc_quantity/rct.primary_quantity), 'PO', (pll.price_override * nvl(ph.rate,1)) * (rct.source_doc_quantity/rct.primary_quantity), 'REQ', prl.unit_price * (rct.source_doc_quantity / rct.primary_quantity)) actual_price, rsh.vendor_id, rs.rcv_transaction_id, pd.bom_resource_id, pd.wip_entity_id, pd.wip_resource_seq_num, pd.wip_operation_seq_num, pd.wip_repetitive_schedule_id 
+
+FROM 
+
+MTL_SUPPLY RS,
+RCV_SHIPMENT_HEADERS RSH,
+RCV_SHIPMENT_LINES RSL,
+PO_HEADERS PH,
+PO_LINES PL,
+PO_LINE_LOCATIONS PLL,
+PO_DISTRIBUTIONS PD,
+PO_REQUISITION_HEADERS PRH,
+PO_REQUISITION_LINES PRL,
+RCV_TRANSACTIONS RCT 
+
+where rsh.shipment_header_id = rs.shipment_header_id 
+and rsl.shipment_line_id = rs.shipment_line_id 
+and ph.po_header_id (+) = rs.po_header_id 
+and pl.po_line_id (+) = rs.po_line_id 
+and pll.line_location_id (+) = rs.po_line_location_id 
+and pd.po_distribution_id (+) = rs.po_distribution_id 
+and prh.requisition_header_id (+) = rs.req_header_id 
+and prl.requisition_line_id (+) = rs.req_line_id 
+and rs.rcv_transaction_id = rct.transaction_id 
+and rs.supply_type_code = 'RECEIVING';
+
+
+RCV_RECEIVING_VALUE_VIEW 

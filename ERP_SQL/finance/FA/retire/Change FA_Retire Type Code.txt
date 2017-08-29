@@ -1,0 +1,123 @@
+
+To Update the lookup code of 'RETIREMENT'
+1.Previous Retire Type:
+. Extrodinary
+. Sales
+
+2.New Retire Type (After change)
+. Scrap (Change old Transaction has used 'Extrodinary' to this 'Scrap')
+. Sales (no change, remain old)
+. Donate (new added)
+. Invest (new added)
+. Lost
+
+3. Retire Type After change
+. Extrodinary  (Disabled)
+. Scrap (Change old Transaction has used 'Extrodinary' to this 'Scrap')
+. Sales (no change, remain old)
+. Donate (new added)
+. Invest (new added)
+. Lost
+
+
+---------Run this to Change old Transaction has used 'Extrodinary' to this 'Scrap'
+
+update FA_RETIREMENTS 
+set RETIREMENT_TYPE_CODE='SCRAP'
+WHERE RETIREMENT_TYPE_CODE='EXTRAORDINARY'
+
+commit
+
+
+--------------------------
+
+--check Table
+select RETIREMENT_TYPE_CODE,a.BOOK_TYPE_CODE,a.ASSET_ID,a.ASSET_NUMBER,a.RETIREMENT_TYPE_CODE,a.COST,a.COST_RETIRED,a.NBV_RETIRED,a.GAIN_LOSS_AMOUNT,a.DATE_RETIRED,a.STATUS 
+,b.DATE_PLACED_IN_SERVICE,b.DEPRN_START_DATE,b.DEPRN_METHOD_CODE,b.LIFE_IN_MONTHS,b.SALVAGE_VALUE,RETIREMENT_TYPE_CODE
+from apps.FA_RETIREMENTS_V a, apps.FA_BOOKS_V b 
+where a.BOOK_TYPE_CODE=b.BOOK_TYPE_CODE
+and a.ASSET_ID=b.ASSET_ID 
+and RETIREMENT_TYPE_CODE is not null
+
+
+FA:
+12002551
+12002086
+12000660
+
+Table value of 'Retire Type':
+SALE
+
+
+Screen of 'Retire Type':
+DONATE
+
+
+----------------------------------------------
+14000052
+14000007
+13000486
+
+Table value of 'Retire Type':
+EXTRAORDINARY
+
+
+Screen of 'Retire Type':
+SCRAP
+
+
+----------------------------------------------
+
+DVP
+
+Table value of 'Retire Type':
+SALE
+
+
+Screen of 'Retire Type':
+sale
+
+12002086
+12002121
+12001616
+12002122
+12002143
+15000006
+
+
+Table value of 'Retire Type':
+Extrodinary
+
+
+Screen of 'Retire Type':
+Scrap
+
+12002938
+13000402
+14000011
+12000567
+14000050
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

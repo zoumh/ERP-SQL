@@ -1,0 +1,56 @@
+
+-------AP payment ,with invocie matched PO in same period,Invoice GL date in same period
+
+select a.INVOICE_NUM,a.INVOICE_TYPE_LOOKUP_CODE Inv_Type,
+a.GL_DATE Invoice_GL_Date,b.accounting_date Paid_date,
+b.amount Paid_Amt,--a.AMOUNT_PAID paid_Amt_on_Inv,
+c.This_Period_Match_PO_amt,
+a.INVOICE_CURRENCY_CODE Curr,a.INVOICE_AMOUNT,
+b.REVERSAL_FLAG,a.INVOICE_DATE,a.DESCRIPTION
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a,
+(
+select b.INVOICE_NUM,a.INVOICE_ID,sum(a.AMOUNT) This_Period_Match_PO_amt
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and a.ORG_ID=b.ORG_ID
+and a.ORG_ID=c.ORG_ID
+and a.ORG_ID=d.ORG_ID
+and a.ORG_ID=e.ORG_ID
+and a.ORG_ID=f.ORG_ID
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and a.PERIOD_NAME='JAN-09'     -----Parameter
+and  a.po_distribution_id is not null
+group by a.INVOICE_ID,b.INVOICE_NUM
+) c
+where a.INVOICE_ID=b.INVOICE_ID
+and a.INVOICE_ID=c.INVOICE_ID(+)
+and b.ORG_ID=a.ORG_ID
+and b.accounting_date>to_date('2009-1-1','yyyy-mm-dd') -----Parameter
+and b.accounting_date<to_date('2009-2-1','yyyy-mm-dd') -----Parameter
+and a.GL_DATE>to_date('2009-1-1','yyyy-mm-dd')         -----Parameter
+and a.GL_DATE<to_date('2009-2-1','yyyy-mm-dd')         -----Parameter
+and a.INVOICE_TYPE_LOOKUP_CODE<>'EXPENSE REPORT'
+--and (b.REVERSAL_FLAG='Y' or b.REVERSAL_FLAG is null)
+--and a.INVOICE_NUM='00473443'
+--and (c.This_Period_Match_PO_amt is null or c.This_Period_Match_PO_amt=0)
+order by a.INVOICE_NUM
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,9 @@
+
+FRM-40654:  Record has been updated. Re-query block
+
+Update (delete the space in Description field in these two tables)
+
+
+select * from apps.mtl_system_items where segment1='1204-8144.3'
+
+select * from apps.mtl_system_items_tl where INVENTORY_ITEM_ID=200249

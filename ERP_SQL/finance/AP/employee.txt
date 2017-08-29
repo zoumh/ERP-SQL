@@ -1,0 +1,58 @@
+---------Check Employee laster date
+select PERSON_ID,LAST_UPDATE_DATE,EMPLOYEE_NUMBER,FULL_NAME,EFFECTIVE_START_DATE,EFFECTIVE_END_DATE,ATTRIBUTE1 BANK_ACCOUNT_NO
+from apps.PER_PEOPLE_V7 where EMPLOYEE_NUMBER in ('28945495','28952413')
+--PERSON_ID=13695
+
+---------Check Employee Assigment laster date
+select  LAST_UPDATE_DATE,ASSIGNMENT_NUMBER from apps.PER_ASSIGNMENTS_V7 where PERSON_ID in (947,4440)
+
+
+select EMPLOYEE_NUMBER,FULL_NAME,EFFECTIVE_START_DATE,EFFECTIVE_END_DATE,ATTRIBUTE1 BANK_ACCOUNT_NO
+from apps.PER_PEOPLE_V7 
+--PERSON_ID=13695
+
+
+select * from apps.PER_ASSIGNMENTS_V7 where assignment_number='953542'
+--PERSON_ID=13695
+
+------Employee with Assigment number
+select a.EMPLOYEE_NUMBER,a.FULL_NAME,b.assignment_number,a.EFFECTIVE_START_DATE,a.EFFECTIVE_END_DATE,a.ATTRIBUTE1 BANK_ACCOUNT_NO,a.PERSON_ID
+from apps.PER_PEOPLE_V7 a,apps.PER_ASSIGNMENTS_V7 b 
+where a.PERSON_ID=b.PERSON_ID 
+and  b.assignment_number like '%954078%'
+
+
+----------Employee & the Assigment's last_update_by
+select a.LAST_UPDATE_DATE Employee_last_update_date,c.user_name Employee_last_update_by,
+b.LAST_UPDATE_DATE Assign_Last_update_date,d.user_name Assign_last_update_by,
+a.EMPLOYEE_NUMBER,a.FULL_NAME,b.assignment_number,a.EFFECTIVE_START_DATE,a.EFFECTIVE_END_DATE
+from apps.PER_PEOPLE_V7 a,apps.PER_ASSIGNMENTS_V7 b ,apps.fnd_user c,apps.fnd_user d
+where a.PERSON_ID=b.PERSON_ID 
+and a.LAST_UPDATED_BY=c.user_id
+and b.LAST_UPDATED_BY=d.user_id
+and  a.EMPLOYEE_NUMBER in  ('259','22966145','22708772')
+
+
+--------Find All User/Empyloee of a position
+SELECT b.person_id,a.USER_Name Login_ID,a.description Login_Name,b.full_name Employee_Name,b.employee_number,
+c.D_POSITION_ID,c.D_JOB_ID 
+FROM apps.FND_USER a,apps.PER_PEOPLE_V7 b,apps.PER_ASSIGNMENTS_V7 c
+WHERE a.EMPLOYEE_ID=b.person_id
+and b.person_id=c.person_id
+and D_POSITION_ID='JIT HANDLER'
+
+
+
+-----------Employee type Vendor link with employee
+select a.VENDOR_NAME, a.SEGMENT1 Vendor_Number,b.EMPLOYEE_NUMBER,b.FULL_NAME,
+a.VENDOR_TYPE_LOOKUP_CODE Supplier_Type, 
+c.Description Create_By,c.Description LAST_UPDATED_BY,
+a.CREATION_DATE,a.LAST_UPDATE_DATE,a.PAY_GROUP_LOOKUP_CODE Pay_group,a.INVOICE_CURRENCY_CODE Curr,a.END_DATE_ACTIVE
+from apps.PO_VENDORS a ,apps.PER_PEOPLE_V7 b,apps.FND_USER c,apps.FND_USER d
+where a.EMPLOYEE_ID=b.PERSON_ID(+)
+and a.CREATED_BY=c.user_id
+and a.LAST_UPDATED_BY=d.user_id
+and a.VENDOR_TYPE_LOOKUP_CODE ='EMPLOYEE'
+--and a.EMPLOYEE_ID is null
+--and a.VENDOR_NAME<>b.FULL_NAME
+

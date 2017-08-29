@@ -1,0 +1,835 @@
+
+
+------------------(2005-6-6, not update View) Mtl Trans & Accounts with locator info
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 	 mta.primary_quantity  as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization , 
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost, 
+		 trunc(mmt.transaction_date) as Trans_Date, 
+		 to_char(oeh.ORDER_NUMBER) Order_number, 
+		 mtt.DESCRIPTION  		   		Type_Description, 
+		 mmt.REVISION, 
+		 MGD.SEGMENT1  	 				Alias_SOURCE, 
+		 MMT.TRANSACTION_REFERENCE 			Trans_Reference, 
+		 mtr.reason_name,
+		 mmt.subinventory_code 	   			Source_WareHouse,
+		 locator1.segment2||'.'||locator1.segment3||'.'||locator1.segment4||'.'||locator1.segment5 Source_Locator,
+		 mmt.transfer_subinventory 			Destination_WareHouse,
+		 locator2.segment2||'.'||locator2.segment3||'.'||locator2.segment4||'.'||locator2.segment5 Destin_Locator,
+		 poh.SEGMENT1   				PO,
+		 gcc.segment2					Cost_Center,
+		 mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst, 
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh,
+  apps.MTL_TRANSACTION_REASONS   mtr,
+  apps.PO_HEADERS_ALL 			 poh,
+  apps.mtl_item_locations		 locator1,  apps.mtl_item_locations		 locator2 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and    mtr.reason_id(+)=mmt.reason_id 
+and	   mmt.TRANSACTION_SOURCE_ID=poh.PO_HEADER_ID(+)
+and    mmt.locator_id=locator1.inventory_location_id(+)
+and    mmt.TRANSFER_LOCATOR_ID=locator2.inventory_location_id(+)
+and    mmt.organization_id =locator1.organization_id (+)
+and    mmt.organization_id =locator2.organization_id (+)
+and    mta.gl_batch_id=6397
+and    gcc.code_combination_id in (1267,16058)
+and    mta.base_transaction_value in (34.88,-34.88)
+and    trunc(mmt.transaction_date)=to_date('2005-5-31','yyyy-mm-dd')
+
+
+
+-------(Update Qty,Add Actual_Cost) List COST Transaction for CST Accountant2 (For Pia Monthly KRH and DPY WIP and Shipment transaction)
+
+
+CREATE OR REPLACE VIEW BMC_CST_TRANS_LIST2
+AS 
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 --mmt.TRANSACTION_QUANTITY as Qty,
+	 mta.primary_quantity  as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization , 
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost, 
+		 trunc(mmt.transaction_date) as Trans_Date, 
+		 to_char(oeh.ORDER_NUMBER) Order_number, 
+		 mtt.DESCRIPTION  		   		Type_Description, 
+		 mmt.REVISION, 
+		 MGD.SEGMENT1  	 				Alias_SOURCE, 
+		 MMT.TRANSACTION_REFERENCE 			Trans_Reference, 
+		 mtr.reason_name,
+		 mmt.subinventory_code 	   			Source_WareHouse,
+		 mmt.transfer_subinventory 			Destination_WareHouse,
+		 poh.SEGMENT1   				PO,
+		 gcc.segment2					Cost_Center,
+		 mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst, 
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh,
+  apps.MTL_TRANSACTION_REASONS   mtr,
+  apps.PO_HEADERS_ALL 			 poh 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+--and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and    mtr.reason_id(+)=mmt.reason_id 
+and	   mmt.TRANSACTION_SOURCE_ID=poh.PO_HEADER_ID(+)
+--and    trunc(mmt.transaction_date) >= to_date('20050411','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20051231','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue';
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer')
+--and mst.transaction_source_type_name='Account alias' 
+--and gcc.segment3='123203'
+
+----------Add PO Number
+
+CREATE OR REPLACE VIEW BMC_CST_TRANS_LIST2
+AS 
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 mmt.TRANSACTION_QUANTITY as Qty, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization , 
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost, 
+		 trunc(mmt.transaction_date) as Trans_Date, 
+		 to_char(oeh.ORDER_NUMBER) Order_number, 
+		 mtt.DESCRIPTION  		   			Type_Description, 
+		 mmt.REVISION, 
+		 MGD.SEGMENT1  	 					Alias_SOURCE, 
+		 MMT.TRANSACTION_REFERENCE 			Trans_Reference, 
+		 mtr.reason_name									 , 
+		 mmt.subinventory_code 	   			Source_WareHouse, 
+		 mmt.transfer_subinventory 			Destination_WareHouse, 
+		 poh.SEGMENT1   					PO 
+,		 gcc.segment2						Cost_Center 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst, 
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh, 
+  apps.MTL_TRANSACTION_REASONS   mtr, 
+  apps.PO_HEADERS_ALL 			 poh 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    mtr.reason_id(+)=mmt.reason_id 
+and	   mmt.TRANSACTION_SOURCE_ID=poh.PO_HEADER_ID(+) 
+and    trunc(mmt.transaction_date) >= to_date('20050411','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20051231','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue'; 
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer') 
+--and mst.transaction_source_type_name='Account alias' 
+--and gcc.segment3='5401010101';
+
+
+----------Add reason code
+CREATE OR REPLACE VIEW BMC_CST_TRANS_LIST2
+AS 
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 mmt.TRANSACTION_QUANTITY as Qty, mta.primary_quantity Booked_Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization , 
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost, 
+		 trunc(mmt.transaction_date) as Trans_Date, 
+		 to_char(oeh.ORDER_NUMBER) Order_number, 
+		 mtt.DESCRIPTION  		   			Type_Description, 
+		 mmt.REVISION, 
+		 MGD.SEGMENT1  	 					Alias_SOURCE, 
+		 MMT.TRANSACTION_REFERENCE 			Trans_Reference, 
+		 mtr.reason_name									 ,
+		 mmt.subinventory_code 	   			Source_WareHouse,
+		 mmt.transfer_subinventory 			Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst, 
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh,
+  apps.MTL_TRANSACTION_REASONS   mtr 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+--and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and    mtr.reason_id(+)=mmt.reason_id 
+--and    trunc(mmt.transaction_date) >= to_date('20050311','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20051231','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue';
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer')
+--and mst.transaction_source_type_name='Account alias' 
+
+
+
+-----------------Trans 41010101 account Mtl Trans
+select   mmt.transaction_date,-- mmt.CREATED_BY,usr.user_name,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION,
+		 MGD.SEGMENT1 Alias_SOURCE,
+		 MMT.TRANSACTION_REFERENCE Trans_Reference
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+  --,apps.FND_USER usr
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    trunc(mmt.transaction_date) >= to_date('20041201','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041231','YYYYMMDD')
+and gcc.segment3='41010101' 
+
+
+----------- add :Who make this Trans
+select   mmt.transaction_date, mmt.CREATED_BY,usr.user_name,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION,
+		 MGD.SEGMENT1 Alias_SOURCE,
+		 MMT.TRANSACTION_REFERENCE Trans_Reference
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh,apps.FND_USER usr
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+--and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+--and    trunc(mmt.transaction_date) >= to_date('20040924','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20040924','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue'
+and MGD.SEGMENT1='RMA RM (BMC own) Return'
+and usr.user_id=mmt.CREATED_BY
+
+
+
+
+
+-------(Update --Add Trans_Type_Source) List COST Transaction for CST Accountant2 (For Pia Monthly KRH and DPY WIP and Shipment transaction)
+
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION,
+		 MGD.SEGMENT1 Alias_SOURCE,
+		 MMT.TRANSACTION_REFERENCE Trans_Reference
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+--and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+--and    trunc(mmt.transaction_date) >= to_date('20040924','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20040924','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue'
+
+
+
+-------PO receive Mtl Trans with PO No
+select   mmt.transaction_date, b.SEGMENT1 as PO,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.OE_ORDER_HEADERS_ALL		 oeh,apps.PO_HEADERS_ALL b
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+and    trunc(mmt.transaction_date) >= to_date('20040701','YYYYMMDD') 
+and gcc.segment3='121105'
+and mmt.transaction_type_id=18  --PO receive transaction
+and mmt.TRANSACTION_SOURCE_ID=b.PO_HEADER_ID
+
+
+
+select b.SEGMENT1 as PO,  d.SEGMENT3 as Account from   apps.MTL_MATERIAL_TRANSACTIONS a,apps.PO_HEADERS_ALL b ,apps.PO_DISTRIBUTIONS_ALL c,
+apps.GL_CODE_COMBINATIONS d
+where      --trunc(transaction_date) = to_date('20040724','YYYYMMDD') 
+   transaction_type_id=18 
+  and a.TRANSACTION_SOURCE_ID=b.PO_HEADER_ID and a.TRANSACTION_SOURCE_ID=18172
+  and c.PO_HEADER_ID=b.PO_HEADER_ID
+  and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+
+
+
+
+---PRD Trans List (Update from Pia's Ship WIP list, add Type Desc)
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+and    trunc(mmt.transaction_date) = to_date('20040609','YYYYMMDD') 
+and  msi.segment1='SXK 107 1506'
+
+
+
+
+------PRJ Trans List for Mona 
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+		 mmt.transaction_id, 
+		 mmt.actual_cost,
+	mtt.DESCRIPTION as Type_Description
+		 from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst
+--  apps.cst_item_costs            cst
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = 86 and mmt.organization_id = 86 and msi.organization_id = 86 
+and    mmt.transaction_date >= to_date('20040501 00:00:00','YYYYMMDD HH24:MI:SS') 
+and    mmt.transaction_date <= to_date('20040530 23:59:59','YYYYMMDD HH24:MI:SS') 
+
+
+
+---ARC Trans List for Mona 
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+--		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+--		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD',84,'ARC',86,'PRJ','Unknown') Organization ,
+	mtt.DESCRIPTION as Type_Description
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = 84 and mmt.organization_id = 84 and msi.organization_id = 84 
+--and    mmt.transaction_date >= to_date('20040401 00:00:00','YYYYMMDD HH24:MI:SS') 
+--and    mmt.transaction_date <= to_date('20040430 23:59:59','YYYYMMDD HH24:MI:SS') 
+
+
+and trunc(mmt.transaction_date) = to_date('2004-05-27','YYYY-MM-DD')
+
+
+
+APR Trans List (WIP) for Mona
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+--and    mmt.transaction_date >= to_date('20040401 00:00:00','YYYYMMDD HH24:MI:SS') 
+--and    mmt.transaction_date <= to_date('20040430 23:59:59','YYYYMMDD HH24:MI:SS') 
+
+
+
+
+Mar Trans List (Matl , no WIP)
+
+(This one was update by me)
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.transaction_date >= to_date('20040426 00:00:00','YYYYMMDD HH24:MI:SS') 
+and    mmt.transaction_date <= to_date('20040429 23:59:59','YYYYMMDD HH24:MI:SS') 
+and    mta.PRIMARY_QUANTITY>0
+--and msi.segment1='DPY 101 2755R2A'
+--and transaction_type_name='Sales Order Pick'
+--and mmt.transaction_id=1663728
+order by 3,1
+
+
+(This has multi records in mta)
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.transaction_date >= to_date('20040301 00:00:00','YYYYMMDD HH24:MI:SS') 
+and    mmt.transaction_date <= to_date('20040331 23:59:59','YYYYMMDD HH24:MI:SS') 
+order by 1
+
+
+
+
+
+========================
+Feb Inventory/wip transactions:
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.transaction_date >= to_date('20040127 00:00:00','YYYYMMDD HH24:MI:SS') 
+and    mmt.transaction_date <= to_date('20040229 23:59:59','YYYYMMDD HH24:MI:SS') 
+
+
+-------------------------------------------------monthend onhand report by PRD & ARC Org
+
+--PRD On hand
+select b.segment1, sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group
+--,f.segment1 family_class, f.segment2 sub_class
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d--, apps.mtl_item_categories e, apps.mtl_categories_b f
+where a.organization_id=83 and b.organization_id=83 and c.organization_id=83 and d.organization_id=83
+--and e.organization_id=84  and a.inventory_item_id=e.inventory_item_id
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+--and category_set_id = 1100000001 
+--and structure_id=101 
+--and e.category_id=f.category_id
+--and b.segment1='A/12000030010075'
+group by b.segment1, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999) 
+--,f.segment1, f.segment2 
+order by a.subinventory_code, b.segment1
+
+
+--ARC On hand
+ 
+select b.segment1, sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group
+--,f.segment1 family_class, f.segment2 sub_class
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d--, apps.mtl_item_categories e, apps.mtl_categories_b f
+where a.organization_id=84 and b.organization_id=84 and c.organization_id=84 and d.organization_id=84
+--and e.organization_id=84  and a.inventory_item_id=e.inventory_item_id
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+--and category_set_id = 1100000001 
+--and structure_id=101 
+--and e.category_id=f.category_id
+--and b.segment1='A/12000030010075'
+group by b.segment1, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999) 
+--,f.segment1, f.segment2 
+order by a.subinventory_code, b.segment1
+
+
+
+----------------Old, duplicate on Category
+
+--PRD
+select b.segment1, sum(a.transaction_quantity) onhand, to_number(d.item_cost,999999.99999) cost
+,to_number(d.item_cost,999999.99999) *sum(a.transaction_quantity)  as Amt
+,a.subinventory_code, c.cost_group, 
+ f.segment1 family_class, f.segment2 sub_class
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d, apps.mtl_item_categories e, apps.mtl_categories_b f
+where a.organization_id=83 and b.organization_id=83 and c.organization_id=83 and d.organization_id=83
+and e.organization_id=83 and a.inventory_item_id=e.inventory_item_id
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and category_set_id = 1 and structure_id=101 and e.category_id=f.category_id
+group by b.segment1, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999), 
+f.segment1, f.segment2 order by a.subinventory_code, b.segment1
+
+
+
+--ARC
+select b.segment1, sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group
+,f.segment1 family_class, f.segment2 sub_class
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d, apps.mtl_item_categories e, apps.mtl_categories_b f
+where a.organization_id=84 and b.organization_id=84 and c.organization_id=84 and d.organization_id=84
+and e.organization_id=84 and a.inventory_item_id=e.inventory_item_id
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and category_set_id = 1100000001 and structure_id=101 and e.category_id=f.category_id
+group by b.segment1, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999), 
+f.segment1, f.segment2 order by a.subinventory_code, b.segment1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

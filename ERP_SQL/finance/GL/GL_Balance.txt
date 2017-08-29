@@ -1,0 +1,89 @@
+
+
+--------To list one account's YOB,PTD,YTD Balance
+select a.PERIOD_NAME,sum(a.Begin_Balance_Dr) POB_Dr,sum(a.Begin_Balance_Cr) POB_Cr,
+sum(a.Begin_Balance_Dr)-sum(a.Begin_Balance_Cr) POB,
+sum(a.PERIOD_NET_DR) PDR,sum(a.PERIOD_NET_CR) PCR,
+sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,a.period_num
+from apps.GL_Balances a,apps.GL_CODE_combinations b 
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+  and a.ACTUAL_FLAG='A' 
+  and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+  and a.CURRENCY_CODE='CNY'
+  and b.segment3='100101'
+  and a.period_year='2005'
+  group by a.PERIOD_NAME,a.period_num,b.segment3
+  order by a.period_num
+  
+
+
+
+select a.PERIOD_year,a.period_num,a.PERIOD_NAME,a.begin_balance_dr,a.begin_balance_cr,(a.begin_balance_dr-a.begin_balance_cr) OB,
+a.PERIOD_NET_DR,a.PERIOD_NET_CR,(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,b.SEGMENT3 as Account,b.segment2 cc,b.segment4 PRD,b.segment5 PRJ
+from apps.GL_Balances a,apps.GL_CODE_combinations b 
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+  and a.ACTUAL_FLAG='A' 
+  and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+  and a.CURRENCY_CODE='CNY'
+  and b.segment3='100101'
+order by a.PERIOD_year,a.period_num
+
+
+
+select * from apps.GL_Balances a,apps.GL_CODE_combinations b where 
+a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+and b.DETAIL_POSTING_ALLOWED_FLAG='Y'
+and ACTUAL_FLAG='A' and PERIOD_NAME='MAY-04' and b.segment3='21210298'
+
+
+select a.CODE_COMBINATION_ID,(BEGIN_BALANCE_DR-BEGIN_BALANCE_CR) as POB,(PERIOD_NET_DR-PERIOD_NET_CR) as PTD,
+(BEGIN_BALANCE_DR-BEGIN_BALANCE_CR)+(PERIOD_NET_DR-PERIOD_NET_CR) as PCB
+,CURRENCY_CODE,SEGMENT3 as Account,SEGMENT2 as CC,SEGMENT4 as PRD,SEGMENT5 as PRJ,
+BEGIN_BALANCE_DR,BEGIN_BALANCE_CR,PERIOD_NET_DR,PERIOD_NET_CR,PERIOD_NAME
+ from apps.GL_Balances a,apps.GL_CODE_combinations b where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and b.DETAIL_POSTING_ALLOWED_FLAG='Y'
+and ACTUAL_FLAG='A' and a.PERIOD_NAME='APR-04' and b.segment3='15010105'
+
+
+
+select * from apps.GL_Balances where ACTUAL_FLAG='A' and PERIOD_NAME='FEB-04'
+
+select PERIOD_NET_DR,PERIOD_NET_CR from apps.GL_Balances where ACTUAL_FLAG='A' and PERIOD_NAME='FEB-04'
+
+select CODE_COMBINATION_ID,segment2,segment3 from apps.GL_CODE_combinations where segment3='10020101' and ( segment2='0000' or segment2='6010')
+and b.DETAIL_POSTING_ALLOWED_FLAG='Y'
+
+
+
+select b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME as Journal_Name,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,b.HEADER_DESCRIPTION,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+--and  (b.PERIOD_NAME='MAY-04')
+--and a.segment3='120100'
+
+
+
+
+
+
+
+
+----------------- 1002 银行存款 & 1009 其他货币资金
+select a.CODE_COMBINATION_ID,b.segment2,b.segment3,b.segment4,CURRENCY_CODE,PERIOD_NET_DR,PERIOD_NET_CR,BEGIN_BALANCE_DR,BEGIN_BALANCE_CR 
+,PERIOD_NET_DR_BEQ,PERIOD_NET_CR_BEQ,BEGIN_BALANCE_DR_BEQ,BEGIN_BALANCE_CR_BEQ
+from apps.GL_Balances a,apps.GL_CODE_combinations b where ACTUAL_FLAG='A' and PERIOD_NAME='FEB-04'
+and a.CODE_COMBINATION_ID in
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='1002' or segment3='1009')-- and ( segment2='0000' or segment2='6010')
+and a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+order by CURRENCY_CODE
+
+
+select sum(PERIOD_NET_DR_BEQ) as P_Dr,sum(PERIOD_NET_CR_BEQ) as P_Cr,sum(BEGIN_BALANCE_DR_BEQ) as POB_Dr,sum(BEGIN_BALANCE_CR_BEQ) as POB_Cr
+from apps.GL_Balances a,apps.GL_CODE_combinations b where ACTUAL_FLAG='A' and PERIOD_NAME='FEB-04'
+and a.CODE_COMBINATION_ID in
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='1002' or segment3='1009')
+and a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+
+------------------------

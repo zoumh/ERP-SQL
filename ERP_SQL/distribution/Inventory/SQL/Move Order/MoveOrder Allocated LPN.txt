@@ -1,0 +1,28 @@
+
+
+----------Find allocated Mo info (LPN, locator)
+select a.ALLOCATED_LPN_ID,LICENSE_PLATE_NUMBER, 
+d.REQUEST_NUMBER,c.ORGANIZATION_ID,c.segment1 Item,a.TRANSACTION_QUANTITY,
+--a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+--a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,
+g.segment2||'.'||g.segment3||'.'||g.segment4||'.'||g.segment5 Locator,a.SUBINVENTORY_CODE WH,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved','Un-Know') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved','Un-Know') line_status,e.transaction_type_name Trans_type
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e,apps.wms_license_plate_numbers f,
+apps.mtl_item_locations g
+where 
+d.REQUEST_NUMBER like 'SD%' and 
+c.segment1='1200-0112.4' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+a.TRANSACTION_SOURCE_ID =d.HEADER_ID and
+a.move_order_line_id=b.line_id and
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+and f.lpn_id(+)=a.ALLOCATED_LPN_ID
+and a.LOCATOR_ID=g.Inventory_LOCATion_ID(+)
+AND a.organization_id=g.organization_id(+)
+order by TRANSACTION_DATE desc

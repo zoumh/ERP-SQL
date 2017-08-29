@@ -1,0 +1,49 @@
+
+
+------------Job Order Info update Trace (except JO Name Change)
+select a.wip_entity_name Job_Order,a.start_quantity New_start_quantity,b.START_QUANTITY Old_start_quantity,
+a.net_quantity New_net_quantity,b.NET_QUANTITY Old_NET_QUANTITY,a.BOM_REVISION New_BOM_REVISION,b.BOM_REVISION Old_BOM_REVISION,
+decode(a.STATUS_TYPE,1,'Unreleased',3,'Released',4,'Complete',5,'Complete No Charges',6,'On Hold',7,'Cancelled',12,'Closed',14,'Pending Close',15,'Failed Close') New_STATUS,
+decode(b.STATUS_TYPE,1,'Unreleased',3,'Released',4,'Complete',5,'Complete No Charges',6,'On Hold',7,'Cancelled',12,'Closed',14,'Pending Close',15,'Failed Close') Old_STATUS,
+b.AUDIT_TIMESTAMP Time_Date,b.AUDIT_USER_NAME User_Name,b.ATTRIBUTE2 SO_line_ID,b.JOB_TYPE ,
+b.AUDIT_SEQUENCE_ID
+from apps.WIP_DISCRETE_JOBS_V a,apps.WIP_DISCRETE_JOBS_A b  
+where a.WIP_ENTITY_ID=b.WIP_ENTITY_ID
+and a.ORGANIZATION_ID =130
+and a.wip_entity_name like '0070464932/1'
+order by a.wip_entity_name,b.AUDIT_SEQUENCE_ID
+
+
+------------Job Order Name Change Audit
+select WIP_ENTITY_ID,WIP_ENTITY_NAME,AUDIT_TIMESTAMP,AUDIT_USER_NAME,AUDIT_TRANSACTION_TYPE,ENTITY_TYPE,ORGANIZATION_ID from apps.WIP_ENTITIES_A
+where WIP_ENTITY_ID=602226
+--wip_entity_name='0070538652/1'
+
+
+---------Clear the table
+
+select * from apps.WIP_DISCRETE_JOBS_A where trunc(AUDIT_TIMESTAMP)<sysdate-10--to_Date('2006-3-1','yyyy-mm-dd') 
+
+delete from apps.WIP_DISCRETE_JOBS_A where trunc(AUDIT_TIMESTAMP)<sysdate-10
+
+select * from apps.WIP_ENTITIES_A where trunc(AUDIT_TIMESTAMP)<sysdate-10--to_Date('2006-3-1','yyyy-mm-dd') 
+
+delete from apps.WIP_ENTITIES_A where trunc(AUDIT_TIMESTAMP)<sysdate-10--to_Date('2006-3-1','yyyy-mm-dd') 
+
+
+
+
+--------------------Review Problem JO
+
+select b.WIP_ENTITY_NAME,b.LAST_UPDATE_DATE JO_Last_update,a.AUDIT_TIMESTAMP,
+a.AUDIT_TRANSACTION_TYPE,a.AUDIT_USER_NAME,
+decode(a.status_Type,1,'Unreleased',3,'Released',4,'Complete',5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close') Audit_Status,
+a.START_QUANTITY,a.QUANTITY_COMPLETED,a.NET_QUANTITY,
+a.BOM_REVISION,a.AUDIT_TRUE_NULLS,
+decode(b.status_Type,1,'Unreleased',3,'Released',4,'Complete',5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Curr_Status
+from apps.WIP_DISCRETE_JOBS_A a ,apps.WIP_DISCRETE_JOBS_V b
+where trunc(a.AUDIT_TIMESTAMP)>=to_Date('2006-11-1','yyyy-mm-dd') 
+and b.WIP_ENTITY_ID =a.WIP_ENTITY_ID 
+and b.WIP_ENTITY_NAME in ('0070516333/1')--,'0070474097/1','0070489294/1','0070502186/1','0070509665/1','0070513914/1','0070514457/1','0070516425/1')
+order by b.WIP_ENTITY_NAME,audit_timestamp 
+

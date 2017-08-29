@@ -1,0 +1,20 @@
+
+
+----- check out REQUEST_ID not null, to make them null to be able to import into AR
+----Harris
+
+select *
+from apps.ra_interface_lines_all
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+select INTERFACE_LINE_ATTRIBUTE1,interface_line_id,customer_trx_id,request_id, link_to_line_id
+from apps.ra_interface_lines_all
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+UPDATE ra_interface_lines_all
+SET interface_line_id = null,
+		    customer_trx_id = null,
+		    request_id = null,
+		    link_to_line_id = null
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+

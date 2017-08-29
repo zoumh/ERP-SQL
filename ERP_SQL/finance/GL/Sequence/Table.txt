@@ -1,0 +1,11 @@
+
+FND_DOCUMENT_CATEGORIES Document categories (See page 3 每 133)
+FND_DOCUMENT_CATEGORIES_TL Translation table for FND_DOCUMENT_CATEGORIES(See page 3 每 135)
+FND_DOCUMENT_DATATYPES Document datatypes (See page 3 每 136)
+FND_DOCUMENT_ENTITIES Document entities (See page 3 每 138)
+FND_DOCUMENT_ENTITIES_TL Translation table for FND_DOCUMENT_ENTITIES (See page 3 每 139)
+FND_DOCUMENT_SEQUENCES Document sequences registered with Oracle Application
+Object Library (See page 3 每 140)
+FND_DOC_CATEGORY_USAGES Relationships between document categories and form or
+form functions (See page 3 每 142)
+FND_DOC_SEQUENCE_ASSIGNMENTS Assigns a sequence to a document (See

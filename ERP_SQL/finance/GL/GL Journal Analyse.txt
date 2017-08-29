@@ -1,0 +1,117 @@
+
+
+
+---------Posted GL Journal by Account,Source,Category
+
+SELECT a.segment3 as Account,
+  LINE_ACCOUNTED_DR,
+  LINE_ACCOUNTED_CR,
+  b.JE_SOURCE,
+  c.USER_JE_CATEGORY_NAME JE_Category, 
+  b.PERIOD_NAME,
+  b.BATCH_NAME,
+  b.HEADER_NAME JOURNAL_NAME,
+  b.CURRENCY_CODE,
+  b.LINE_ENTERED_DR,
+  b.LINE_ENTERED_CR,
+  b.LINE_DESCRIPTION,
+  b.HEADER_DESCRIPTION,
+  LINE_REFERENCE_4 ,
+  LINE_REFERENCE_5,
+  b.LINE_EFFECTIVE_DATE,
+  b.CREATION_DATE,
+  a.segment2 as CC,
+  a.SEGMENT4 as PRD,
+  a.segment5 as PRJ,HEADER_STATUS, HEADER_POSTED_DATE ,
+  b.ACTUAL_FLAG   
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b ,
+  apps.GL_CODE_combinations a,apps.GL_JE_CATEGORIES c
+WHERE 
+b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID  
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and b.PERIOD_NAME='MAY-06'
+--and b.PERIOD_YEAR=2009
+and a.segment3 in ('212000','120100')
+and HEADER_STATUS ='P'
+and ACTUAL_FLAG='A'
+
+---------summary by source,category
+
+SELECT a.segment3 as Account,
+  sum(LINE_ACCOUNTED_DR) Dr,
+  sum(LINE_ACCOUNTED_CR) Cr, sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) PTD,
+  b.JE_SOURCE,
+  c.USER_JE_CATEGORY_NAME JE_Category
+--  b.PERIOD_NAME,
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b ,
+  apps.GL_CODE_combinations a,apps.GL_JE_CATEGORIES c
+WHERE 
+b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID  
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and b.PERIOD_NAME in ('MAY-06')--,'JAN-06','FEB-06','MAR-06','APR-06')
+--and b.PERIOD_YEAR=2009
+and a.segment3 ='120100'--in ('212000','120100')
+and HEADER_STATUS ='P'
+and ACTUAL_FLAG='A'
+group by b.JE_SOURCE,c.USER_JE_CATEGORY_NAME ,a.segment3
+
+
+---- Period PTD summary by account,Source
+SELECT b.JE_SOURCE,
+  sum(LINE_ACCOUNTED_DR),
+  sum(LINE_ACCOUNTED_CR),sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b,
+  apps.GL_CODE_combinations a
+WHERE
+b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and b.PERIOD_NAME='MAY-06'
+--and b.PERIOD_YEAR=2009
+and a.segment3='55031002'
+and ACTUAL_FLAG='A'
+group by b.JE_SOURCE
+
+
+------------Find Post Error Batch whose CC's CCID or Value were disabled
+SELECT b.BATCH_STATUS,b.HEADER_STATUS,
+a.END_DATE_ACTIVE CCID_end_date,d.END_DATE_ACTIVE Value_end_date,
+a.ENABLED_FLAG CCID_Enable,d.ENABLED_FLAG Value_Enable,
+  b.PERIOD_NAME,
+  b.BATCH_NAME,
+  b.HEADER_NAME JOURNAL_NAME,
+  LINE_ACCOUNTED_DR,
+  LINE_ACCOUNTED_CR,
+  b.CURRENCY_CODE,
+  b.LINE_ENTERED_DR,
+  b.LINE_ENTERED_CR,
+  b.LINE_DESCRIPTION,
+  b.JE_SOURCE,
+  c.USER_JE_CATEGORY_NAME JE_Category,
+  b.HEADER_DESCRIPTION,
+  b.CREATION_DATE,
+  a.segment3 as Account,
+  a.segment2 as CC,
+  a.SEGMENT4 as PRD,
+  a.segment5 as PRJ,
+  b.ACTUAL_FLAG   
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b ,
+  apps.GL_CODE_combinations a,apps.GL_JE_CATEGORIES c,
+  (select FLEX_VALUE,ENABLED_FLAG,END_DATE_ACTIVE from apps.FND_FLEX_VALUES where FLEX_VALUE_SET_ID=1007640) d
+WHERE 
+  b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID  
+  and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+  and d.FLEX_VALUE=a.SEGMENT2
+--  and BATCH_STATUS='Z'
+  and HEADER_STATUS='F'
+--and b.PERIOD_NAME<>'DEC-08'
+--and b.PERIOD_YEAR=2009
+--and b.HEADER_NAME not like 'Reverses %13%'
+and (a.ENABLED_FLAG <>'Y' or a.END_DATE_ACTIVE<=sysdate or d.ENABLED_FLAG='N' or d.END_DATE_ACTIVE<=sysdate)  
+--and (a.SEGMENT4<>'000000' or a.SEGMENT5<>'0000')
+
+
+
+

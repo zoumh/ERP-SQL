@@ -1,0 +1,65 @@
+
+BOM Supplier List: (Name,Site,number) 
+select VENDOR_NAME,a.SEGMENT1 as Supplier_Num,b.VENDOR_SITE_CODE as Site,b.PAY_GROUP_LOOKUP_CODE as Pay_Grp,VENDOR_TYPE_LOOKUP_CODE as V_Type 
+from apps.PO_VENDORS a,apps.PO_VENDOR_sites_all b
+where a.VENDOR_ID=b.VENDOR_ID 
+and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+order by to_number(a.SEGMENT1) ,b.VENDOR_SITE_CODE
+
+
+
+
+Invoice _ Pay group:
+select INVOICE_NUM,EXCLUSIVE_PAYMENT_FLAG,PAYMENT_STATUS_FLAG ,PAY_CURR_INVOICE_AMOUNT from 	apps.AP_INVOICES_ALL where PAY_GROUP_LOOKUP_CODE='MW'
+order by PAYMENT_STATUS_FLAG
+
+
+------------to find out wrong VAT & Terms on Supplier:
+select VENDOR_TYPE_LOOKUP_CODE As Type,
+c.SEGMENT1 As Vender_Num,convert(c.VENDOR_NAME,'ZHS16GBK') as Name  ,b.VENDOR_SITE_CODE,b.ADDRESS_LINE1,b.VAT_CODE
+,a.DUE_DAYS as Pay_Terms_Day,d.SEGMENT3 as Pay_Acc,e.SEGMENT3 as PREPAY_ACC
+from apps.AP_TERMS_LINES a,apps.PO_VENDOR_SITES_ALL b,apps.PO_VENDORS c,apps.GL_CODE_combinations d,apps.GL_CODE_combinations e
+where
+a.TERM_ID=b.TERMS_ID
+and b.ACCTS_PAY_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and b.PREPAY_CODE_COMBINATION_ID=e.CODE_COMBINATION_ID
+and b.VENDOR_ID=c.VENDOR_ID
+and VENDOR_TYPE_LOOKUP_CODE<>'EMPLOYEE'
+order by b.VENDOR_ID,b.VENDOR_SITE_CODE
+
+
+
+
+select VENDOR_NAME,a.SEGMENT1 as Vender_ID,b.VENDOR_SITE_CODE,b.ADDRESS_LINE1,c.segment4, c.segment5
+from apps.PO_VENDORS a,apps.PO_VENDOR_sites_all b,apps.GL_CODE_combinations c,apps.GL_CODE_combinations d
+where a.VENDOR_ID=b.VENDOR_ID and b.ACCTS_PAY_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID 
+and b.PREPAY_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and (c.segment4 is null or c.segment5 is null or c.segment4='000000' or c.segment5='0000')
+
+
+select 
+c.SEGMENT1 As Vender_Num,c.VENDOR_NAME,b.VENDOR_SITE_CODE,b.ADDRESS_LINE1,b.VAT_CODE
+,a.DUE_DAYS as Pay_Terms_Day,d.SEGMENT3 as Pay_Acc,e.SEGMENT3 as PREPAY_ACC
+from apps.AP_TERMS_LINES a,apps.PO_VENDOR_SITES_ALL b,apps.PO_VENDORS c,apps.GL_CODE_combinations d,apps.GL_CODE_combinations e
+where
+a.TERM_ID=b.TERMS_ID
+and b.ACCTS_PAY_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and b.PREPAY_CODE_COMBINATION_ID=e.CODE_COMBINATION_ID
+and b.VENDOR_ID=c.VENDOR_ID
+order by b.VENDOR_ID,b.VENDOR_SITE_CODE
+
+
+
+select 
+to_char(b.VENDOR_ID),c.VENDOR_NAME,b.VENDOR_SITE_CODE,b.ADDRESS_LINE1,b.VAT_CODE,b.TERMS_ID,b.ACCTS_PAY_CODE_COMBINATION_ID,e.SEGMENT3,b.PREPAY_CODE_COMBINATION_ID
+,d.SEGMENT3
+from apps.AP_TERMS_LINES a,apps.PO_VENDOR_SITES_ALL b,apps.PO_VENDORS c,apps.GL_CODE_combinations d,apps.GL_CODE_combinations e
+where
+a.TERM_ID=b.TERMS_ID
+and b.ACCTS_PAY_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and b.PREPAY_CODE_COMBINATION_ID=e.CODE_COMBINATION_ID
+and b.VENDOR_ID=c.VENDOR_ID
+order by b.VENDOR_ID,b.VENDOR_SITE_CODE
+
+
+

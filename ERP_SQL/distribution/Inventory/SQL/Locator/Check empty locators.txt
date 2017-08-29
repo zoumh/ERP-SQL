@@ -1,0 +1,97 @@
+
+----------List empty active Locators of a WH , date is effective
+select c.ORGANIZATION_ID,c.SUBINVENTORY_CODE,--b.Qty,
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator, 
+decode(c.status_id,1,'Inactive',21,'Active',20,'On Hold') Status, c.DISABLE_DATE  
+from apps.mtl_item_locations c
+where c.INVENTORY_LOCATION_ID not in 
+    (select LOCATOR_ID from apps.MTL_ONHAND_QUANTITIES_DETAIl
+    where organization_id=:Org--130 
+    and SUBINVENTORY_CODE=:WH--'SG'
+    group by LOCATOR_ID
+    having sum(PRIMARY_TRANSACTION_QUANTITY)<>0
+    )
+and c.SUBINVENTORY_CODE=:WH--'SG'
+and c.organization_id=:Org--130
+and c.STATUS_ID=21
+and (c.DISABLE_DATE is null or c.DISABLE_DATE>sysdate)
+order by c.organization_id,c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5
+
+
+----------List empty active Locators of a kinds of Rack in a WH ,date is effective
+select c.ORGANIZATION_ID,c.SUBINVENTORY_CODE,--b.Qty,
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator, 
+decode(c.status_id,1,'Inactive',21,'Active',20,'On Hold') Status, c.DISABLE_DATE  
+from apps.mtl_item_locations c
+where c.INVENTORY_LOCATION_ID not in 
+    (select LOCATOR_ID from apps.MTL_ONHAND_QUANTITIES_DETAIl a,apps.mtl_item_locations b
+    where a.LOCATOR_ID=b.INVENTORY_LOCATION_ID
+    and a.organization_id=b.organization_id
+    and a.organization_id=:Org--130 
+    and a.SUBINVENTORY_CODE=:WH--'SG'
+    and b.segment2=:Locator_Rack
+    group by a.LOCATOR_ID
+    having sum(a.PRIMARY_TRANSACTION_QUANTITY)<>0
+    )
+and c.SUBINVENTORY_CODE=:WH--'SG'
+and c.organization_id=:Org--130
+and c.STATUS_ID=21
+and c.segment2=:Locator_Rack
+and (c.DISABLE_DATE is null or c.DISABLE_DATE>sysdate)
+order by c.organization_id,c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5
+
+
+
+
+----------empty Locators of 'DA.x.x.x'  ?????
+
+select c.ORGANIZATION_ID,c.SUBINVENTORY_CODE,--b.Qty,
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator, 
+c.STATUS_ID, c.DISABLE_DATE  
+from apps.mtl_item_locations c
+where c.INVENTORY_LOCATION_ID not in 
+(select LOCATOR_ID from 
+(select a.LOCATOR_ID, sum(a.PRIMARY_TRANSACTION_QUANTITY) Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a,apps.mtl_item_locations b 
+where a.organization_id=b.organization_id and a.SUBINVENTORY_CODE=b.SUBINVENTORY_CODE
+and a.LOCATOR_ID =b.INVENTORY_LOCATION_ID
+and b.segment2 ='DA'
+group by a.LOCATOR_ID,a.organization_id,a.SUBINVENTORY_CODE)
+)
+and c.segment2 ='DA'
+and c.organization_id=130
+and c.STATUS_ID=21
+and (c.DISABLE_DATE is null or c.DISABLE_DATE>sysdate)
+--and b.Qty=0
+order by c.organization_id,c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5
+
+
+
+
+----------------All actived locators have no empty?
+
+select c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+decode(status_id,1,'Inactive',21,'Active',20,'On Hold') Status,disable_date,empty_flag,
+description,subinventory_code
+from apps.mtl_item_locations  c 
+where subinventory_code='SEFG' and ORGANIZATION_ID=133
+and status_id=21 
+and status_id not in 
+(SELECT distinct c.Inventory_LOCATion_ID	
+FROM   apps.MTL_SYSTEM_ITEMS_B a,
+	   apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+	   apps.mtl_item_locations c
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+	  AND b.LOCATOR_ID=c.Inventory_LOCATion_ID 
+	  AND a.organization_id=133
+	  AND a.organization_id=b.organization_id
+	  and c.organization_id=a.organization_id
+	  AND (b.subinventory_code='SEFG')
+--	  AND a.inventory_item_status_code='Active'
+GROUP BY  a.segment1 ,a.organization_id,
+	   b.revision,
+	   b.subinventory_code , 
+	   c.segment2,c.segment3,c.segment4,c.segment5 
+,a.inventory_item_status_code,c.Inventory_LOCATion_ID
+having SUM(b.primary_transaction_quantity)<>0
+)

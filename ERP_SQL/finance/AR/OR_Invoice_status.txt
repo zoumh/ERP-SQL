@@ -1,0 +1,52 @@
+
+
+-------Check Order Status & Invoice Status
+
+select to_char(b.order_number),to_char(a.LINE_NUMBER) Line,a.ORDERED_ITEM,a.ORDERED_QUANTITY,a.SHIPPING_QUANTITY,a.UNIT_SELLING_PRICE,a.INVOICED_QUANTITY,
+a.INVOICE_INTERFACE_STATUS_CODE,a.FLOW_STATUS_CODE ,a.SCHEDULE_SHIP_DATE,a.TAX_CODE,TAX_VALUE
+from apps.OE_ORDER_LINES_all a,apps.OE_ORDER_HEADERS_all b
+where a.HEADER_ID=b.HEADER_ID
+and b.order_number not like '8%' 
+and b.order_number not like '44%' 
+and b.order_number not like'455%'
+--and (a.INVOICE_INTERFACE_STATUS_CODE is null or a.INVOICE_INTERFACE_STATUS_CODE='NOT_ELIGIBLE') 
+--and a.FLOW_STATUS_CODE='CLOSED'
+and (b.order_number in
+('800237',
+'300302',
+'300321',
+'300322',
+'300346',
+'300320',
+'300332',
+'300345',
+'300347',
+'300335',
+'300370',
+'300321',
+'300322',
+'300346',
+'300321',
+'300322',
+'300254',
+'300237',
+'300361',
+'300323',
+'300340',
+'300307',
+'300324',
+'300331',
+'300339',
+'300339',
+'300346',
+'300367',
+'300348',
+'300287',
+'300380',
+'300304',
+'300327',
+'300340',
+'300324',
+'300331',
+'300349')
+)

@@ -1,0 +1,52 @@
+
+
+SELECT fav.asset_number
+,	fav.description
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),1,2) as MajCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as MinCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as StatusCat
+,      fak.segment1 as Prj
+,      fak.segment2 as Prd
+,	fab.DATE_PLACED_IN_SERVICE
+,	fab.COST
+,	fab.SALVAGE_VALUE
+,	fab.DEPRECIATE_FLAG
+,	fab.RECOVERABLE_COST
+,	FAD.DEPRN_AMOUNT
+,	FAD.YTD_DEPRN
+,	FAD.DEPRN_RESERVE as Depr_Accmu
+,	FAD.DEPRN_SOURCE_CODE
+,	fad.DEPRN_RUN_DATE
+,	fab.COST-FAD.DEPRN_RESERVE as NTValue
+,	GLC.SEGMENT2 as Depr_CC
+,	GLC.SEGMENT3 as Depr_Acc
+,	FAP.PERIOD_NAME
+,	FAD.PERIOD_COUNTER
+FROM apps.FA_ADDITIONS_V fav
+,    apps.FA_ASSET_KEYWORDS fak
+,    apps.FA_BOOKS_V fab
+,	 apps.FA_deprn_summary FAD
+,	 apps.GL_CODE_COMBINATIONS GLC
+,	 apps.FA_DISTRIBUTION_HISTORY FAH
+,	 apps.FA_deprn_periods FAP
+WHERE fav.ASSET_KEY_CCID = fak.CODE_COMBINATION_ID 
+AND fav.asset_id=fab.asset_id 
+AND fab.asset_id=FAD.ASSET_ID
+AND fab.BOOK_TYPE_CODE='BMC_FA_BOOK' 
+and fad.DEPRN_SOURCE_CODE like 'D%'
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+AND FAH.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.ASSET_ID=fav.asset_id
+and fad.book_type_code='BMC_FA_BOOK' 
+AND FAD.PERIOD_COUNTER=FAP.PERIOD_COUNTER
+AND FAP.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and FAP.PERIOD_NAME='FEB-04'
+order by fav.asset_number
+
+
+
+select * from apps.FA_deprn_summary where ASSET_ID=100000000 and BOOK_TYPE_CODE='BMC_FA_BOOK' and PERIOD_COUNTER=24050--FA_ADDITIONS_V
+
+select * from apps.FA_ADDITIONS_V where asset_number='11000001'
+
+select * from apps.FA_deprn_periods

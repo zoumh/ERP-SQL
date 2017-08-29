@@ -1,0 +1,37 @@
+
+
+----------check duplicate item's user define cost (after conversion)
+
+
+select ct.item_number,ct.organization_id,ci.cost_type_id,count(ci.USAGE_RATE_OR_AMOUNT) count
+from CST_ITEM_COST_DETAILS ci,CST_ITEM_COST_TYPE_V ct
+where ct.inventory_item_id=ci.inventory_item_id
+  and ct.organization_id=ci.organization_id
+  and ci.Cost_Type_Id=3
+  and ct.cost_type_id=ci.cost_type_id
+  and ci.cost_element_id=1
+  and ci.level_type=1
+group by ct.item_number,ct.organization_id,ci.cost_type_id
+having count(ci.USAGE_RATE_OR_AMOUNT)>1
+
+
+
+---------with onhand qty
+
+
+select ct.item_number,ct.organization_id,ci.cost_type_id,count(ci.USAGE_RATE_OR_AMOUNT) count,
+sum(oo.onhand) ONHAND_Qty 
+from CST_ITEM_COST_DETAILS ci,CST_ITEM_COST_TYPE_V ct,
+(select sum(o.transaction_quantity) onhand,o.inventory_item_id,o.organization_id 
+from inv.mtl_onhand_quantities_detail o 
+group by o.inventory_item_id , o.organization_id ) oo 
+where ct.inventory_item_id=ci.inventory_item_id
+  and ct.organization_id=ci.organization_id
+  and ci.Cost_Type_Id=3
+  and ct.cost_type_id=ci.cost_type_id
+  and ci.cost_element_id=1
+  and ci.level_type=1 
+  and oo.inventory_item_id (+)= ct.inventory_item_id 
+  and oo.organization_id  (+)= ct.organization_id 
+group by ct.item_number,ct.organization_id,ci.cost_type_id
+having count(ci.USAGE_RATE_OR_AMOUNT)>1

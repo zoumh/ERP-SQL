@@ -1,0 +1,196 @@
+
+
+
+------------Find All Transaction of this LPN
+select   mmt.transaction_date, mmt.LPN_ID,lpn.LICENSE_PLATE_NUMBER Transfer_lpn_num,mmt.CONTENT_LPN_ID,
+        'Transfer-LPN' LPN_Type,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.TRANSACTION_QUANTITY as Qty,  
+--         mtt.DESCRIPTION                     Type_Description, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse,
+         mmt.REVISION,
+         mmt.transaction_id         
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.wms_license_plate_numbers LPN
+where  
+        mtt.transaction_type_id = mmt.transaction_type_id 
+and     msi.inventory_item_id = mmt.inventory_item_id  
+and     mmt.organization_id = msi.organization_id 
+and     mmt.CREATION_DATE >to_date('20081125 00:00:00','YYYYMMDD HH24:MI:SS') 
+and     mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+and (mmt.LPN_ID=4686565 or mmt.TRANSFER_LPN_ID=4686565 or mmt.CONTENT_LPN_ID=4686565)
+
+
+
+
+ST:
+1. SO Issue, use content_LPN
+2. Account Alias , use Transfer_LPN
+ 
+
+
+------------Find all possible LPN Trans for an Item (include LPN,Transfer_LPN,also include content_LPN --which use netterm do MO task or subinvtransfer)
+select   mmt.transaction_date, lpn.LICENSE_PLATE_NUMBER Transfer_lpn,
+        'Transfer-LPN' LPN_Type,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.subinventory_code, 
+     mmt.TRANSACTION_QUANTITY as Qty, 
+         mmt.transaction_id, 
+         mtt.DESCRIPTION                     Type_Description, 
+         mmt.REVISION, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.wms_license_plate_numbers LPN
+where  
+        mtt.transaction_type_id = mmt.transaction_type_id 
+and     msi.inventory_item_id = mmt.inventory_item_id  
+and     mmt.organization_id = msi.organization_id 
+and     msi.segment1='DPY 101 1474/126'
+and     trunc(mmt.transaction_date) >= to_date('20070330','YYYYMMDD') 
+and     trunc(mmt.transaction_date) <= to_date('20070410','YYYYMMDD') 
+and     mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+--and mst.transaction_source_type_name='Move order'
+and   lpn.LICENSE_PLATE_NUMBER='CNCB5+DVQ139' 
+union
+select   mmt.transaction_date, lpn.LICENSE_PLATE_NUMBER Transfer_lpn,
+        'LPN' LPN_Type,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.subinventory_code, 
+     mmt.TRANSACTION_QUANTITY as Qty, 
+         mmt.transaction_id, 
+         mtt.DESCRIPTION                     Type_Description, 
+         mmt.REVISION, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.wms_license_plate_numbers LPN
+where  
+        mtt.transaction_type_id = mmt.transaction_type_id 
+and     msi.inventory_item_id = mmt.inventory_item_id  
+and     mmt.organization_id = msi.organization_id 
+and     msi.segment1='DPY 101 1474/126'
+and     trunc(mmt.transaction_date) >= to_date('20070330','YYYYMMDD') 
+and     trunc(mmt.transaction_date) <= to_date('20070410','YYYYMMDD') 
+and     mmt.LPN_ID =LPN.LPN_ID(+)
+--and mst.transaction_source_type_name='Move order'
+and   lpn.LICENSE_PLATE_NUMBER='CNCB5+DVQ139' 
+union
+select   mmt.transaction_date, lpn.LICENSE_PLATE_NUMBER Transfer_lpn,
+        'Content-LPN' LPN_Type,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.subinventory_code, 
+     mmt.TRANSACTION_QUANTITY as Qty, 
+         mmt.transaction_id, 
+         mtt.DESCRIPTION                     Type_Description, 
+         mmt.REVISION, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.wms_license_plate_numbers LPN
+where  
+        mtt.transaction_type_id = mmt.transaction_type_id 
+and     msi.inventory_item_id = mmt.inventory_item_id  
+and     mmt.organization_id = msi.organization_id 
+and     msi.segment1='DPY 101 1474/126'
+and     trunc(mmt.transaction_date) >= to_date('20070330','YYYYMMDD') 
+and     trunc(mmt.transaction_date) <= to_date('20070410','YYYYMMDD') 
+and     mmt.CONTENT_LPN_ID =LPN.LPN_ID(+)
+--and mst.transaction_source_type_name='Move order'
+and   lpn.LICENSE_PLATE_NUMBER in ('CNCB5+DVQ12B','CNCB5+DVQ11V') 
+
+
+
+-----with LPN & Transfer LPN (only could use one of LPN or Transfer LPN  as condiction)
+select   mmt.transaction_date, lpn1.LICENSE_PLATE_NUMBER lpn,lpn2.LICENSE_PLATE_NUMBER Transfer_LPN,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+	 mmt.subinventory_code, 
+	 mmt.TRANSACTION_QUANTITY as Qty, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 mtt.DESCRIPTION  		   		Type_Description, 
+		 mmt.REVISION, 
+		 mmt.subinventory_code 	   			Source_WareHouse, 
+		 mmt.transfer_subinventory 			Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.wms_license_plate_numbers LPN1,apps.wms_license_plate_numbers LPN2
+where  
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+--and    msi.segment1='KRH 101 363/1.R2B'
+and    mmt.LPN_ID =LPN1.LPN_ID(+)
+--and mst.transaction_source_type_name='Move order'
+and	   (lpn1.LICENSE_PLATE_NUMBER='SG00063162-B')-- or lpn2.LICENSE_PLATE_NUMBER='SG00063162-B')
+--and    trunc(mmt.transaction_date) = to_date('20050829','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20051231','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue'; 
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer') 
+--and mst.transaction_source_type_name='Account alias' 
+and mmt.TRANSFER_LPN_ID =LPN2.LPN_ID(+)
+
+
+------------- with transfer_LPN
+
+select   mmt.transaction_date, lpn.LICENSE_PLATE_NUMBER Transfer_lpn,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.subinventory_code, 
+     mmt.TRANSACTION_QUANTITY as Qty, 
+         mmt.transaction_id, 
+         mst.transaction_source_type_name, 
+         mtt.DESCRIPTION                     Type_Description, 
+         mmt.REVISION, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, apps.wms_license_plate_numbers LPN
+where  
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+--and    msi.segment1='RLE 908 26'
+and    mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+--and mst.transaction_source_type_name='Move order'
+and       lpn.LICENSE_PLATE_NUMBER='SE070208010B-B'
+--and    trunc(mmt.transaction_date) = to_date('20050829','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20051231','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue'; 
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer') 
+--and mst.transaction_source_type_name='Account alias' 
+

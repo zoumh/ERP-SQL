@@ -1,0 +1,72 @@
+
+SR Number  7003884.994 
+ 
+1. Download undoatg.zip from ftp://ftp.oracle.com/support/hidden/patchsets/AP/scripts/undoatg.zip
+
+2. Stop all users from using concurrent or on-line accounting until this process is finished.
+
+3. Create a table of the events to undo.
+
+create table TAR_7003884_994_aae as
+select distinct accounting_event_id 
+from ap_accounting_events_all
+where accounting_event_id in (449915,451395,449913)
+and source_id in (397316,397314);
+
+4. Undo the Events and report for later GL manipulation
+
+Run UndoAtgh.sql
+Enter Org ID: 127
+Enter option 1 for Display Selected Event Details 
+Enter option 1 to display AP Accounting Data
+Enter option 3 for Accounting Events in an Existing Table 
+Enter table name = TAR_7003884_994_aae
+Enter Y to Undo the Events Now: Y
+Enter Y to Sweep to Currently Open Period
+Enter the Currently Open Period Name: XXX-05
+Enter N to not delete events IDs (You will only get this prompt on 11i.AP.K and above)
+
+commit;
+
+5. Verify if the Invoices got swept:
+
+SELECT accounting_date FROM from ap_accounting_events_all
+where accounting_event_id in (449915,451395,449913);
+
+
+
+
+
+---------not confirmed this solution (samilar with unaccounting SQL)
+
+select *--INVOICE_ID 
+from AP_INVOICES_ALL  where Invoice_Num='1234'
+
+
+171457
+
+
+select invoice_distribution_id,ACCOUNTING_EVENT_ID from AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_ID=171457
+
+select * from AP_ACCOUNTING_EVENTS_ALL where SOURCE_ID=171457
+
+ACCOUNTING_EVENT_ID=182643
+
+select * from AP_AE_HEADERS_ALL where ACCOUNTING_EVENT_ID=182643
+
+
+select * from AP_AE_LINES_ALL where ae_header_id=147184
+
+
+delete from AP_ACCOUNTING_EVENTS_ALL where ACCOUNTING_EVENT_ID=182643
+
+
+delete from AP_AE_HEADERS_ALL where ACCOUNTING_EVENT_ID=182641
+
+delete from AP_AE_LINES_ALL where ae_header_id=147184
+
+delete from ap_invoice_distributions_all where invoice_distribution_id =493907
+
+rollback
+
+commit

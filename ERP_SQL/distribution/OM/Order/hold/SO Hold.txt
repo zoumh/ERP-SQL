@@ -1,0 +1,19 @@
+
+--------Hold Source
+select * From apps.OE_HOLD_SOURCES_ALL where HOLD_ENTITY_ID in 
+    (select HEADER_ID from apps.OE_ORDER_HEADERS_all where order_number='258587')
+
+HOLD_ENTITY_CODE  : (Order,Customer, Item etc)
+
+
+
+---------Hold Release    
+select * from apps.OE_HOLD_RELEASES where HOLD_SOURCE_ID in 
+   ( select HOLD_SOURCE_ID From apps.OE_HOLD_SOURCES_ALL where HOLD_ENTITY_ID= 
+      (select HEADER_ID from apps.OE_ORDER_HEADERS_all where order_number='258587'))
+
+
+
+
+
+

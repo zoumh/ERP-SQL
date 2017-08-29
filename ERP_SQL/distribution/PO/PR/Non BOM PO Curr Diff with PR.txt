@@ -1,0 +1,37 @@
+
+
+----------Npn BOM PO Currency diff with PR's Currency (Frank)
+
+
+select a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type, 
+c.DISTRIBUTION_NUM PR_Dist,b.CREATION_DATE PR_Created_date, 
+b.ITEM_DESCRIPTION PR_Item_Desc,b.CURRENCY_CODE,b.CURRENCY_UNIT_PRICE,
+a.authorization_status PR_Status,
+poh.segment1 PO_Num,pol.line_num PO_Line,potp.LINE_TYPE PO_Type, 
+pod.DISTRIBUTION_NUM PO_Dist, 
+pod.QUANTITY_ORDERED PO_Qty,pol.creation_date PO_Create_Date,poh.authorization_status PO_Status, 
+pol.cancel_flag PO_Line_cancel_Flag,
+pol.UNIT_PRICE PO_Price,POH.CURRENCY_CODE,pos.NEED_BY_DATE,
+pol.ITEM_DESCRIPTION PO_item_Desc,po_org.NAME PO_Org_Code,pr_org.NAME PR_Org_Code 
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c, 
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,apps.po_Line_locations_all pos, 
+(select * from apps.PO_LINE_TYPES_tl where LANGUAGE='US') PRTP, 
+apps.PO_LINE_TYPES_tl POTP, 
+HR_ORGANIZATION_UNITS_V PR_Org ,HR_ORGANIZATION_UNITS_V PO_Org
+where a.requisition_header_id(+)=b.requisition_header_id 
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID(+) 
+and c.DISTRIBUTION_ID=POD.REQ_DISTRIBUTION_ID 
+and poh.po_header_id=pol.po_header_id 
+and poh.po_header_id=pod.po_header_id 
+and pol.po_line_id=pod.po_line_id 
+--and pol.CREATION_DATE >=to_date('2006-11-1','yyyy-mm-dd') 
+--and pol.CREATION_DATE <=to_date('2006-12-10','yyyy-mm-dd') 
+and potp.LANGUAGE='US' 
+and prtp.LINE_TYPE_ID(+)=b.LINE_TYPE_ID and potp.LINE_TYPE_ID=pol.LINE_TYPE_ID 
+and poh.po_header_id=pos.po_header_id 
+and pol.po_line_id=pos.po_line_id 
+and pos.LINE_LOCATION_ID =pod.LINE_LOCATION_ID 
+and pr_org.ORGANIZATION_ID(+)=b.DESTINATION_ORGANIZATION_ID
+and po_org.ORGANIZATION_ID=pos.SHIP_TO_ORGANIZATION_ID
+and potp.LINE_TYPE='Non-BOM Purchasing'
+and b.CURRENCY_CODE<>poh.CURRENCY_CODE 

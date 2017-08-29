@@ -1,0 +1,20 @@
+
+select * from all_objects where object_name like '%BMC_AUTO%' AND OBJECT_TYPE='TABLE'
+
+
+BMC_AUTO_PK_SO_INFO
+
+BMC_AUTO_PK_LPN_PROCESS
+
+BMC_AUTO_PK_LPN_INFO
+
+BMC_AUTOLPN_TYPE_T
+
+select * from apps.BMC_AUTO_LPN_NEW where so_NUMBER in ('306244')
+
+select * from apps.BMC_AUTO_SO_NEW where so_NUMBER in ('306244')
+
+select * from apps.BMC_AUTO_SO_BAK_V  (for SE receipt)
+
+select * from apps.BMC_AUTO_SO_BAK_V where so_NUMBER in ('305001')
+

@@ -1,0 +1,18 @@
+
+
+
+
+select ACCOUNTING_DATE ,b.reference4 PO_Num,b.source_doc_quantity Qty,
+(b.ACCOUNTED_DR) Dr_Amt_CNY,(b.ACCOUNTED_CR) Cr_Amt_CNY,
+gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account,
+(b.ENTERED_DR) Dr_Amt,(b.ENTERED_CR) Cr_Amt ,b.CURRENCY_CODE,b.CURRENCY_CONVERSION_RATE Rate,b.period_name,
+b.chart_of_accounts_id,b.code_combination_id,b.je_batch_name,b.je_header_name
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_HEADERS_ALL POH,
+apps.gl_code_combinations gcc
+WHERE b.REFERENCE4=POH.segment1
+and gcc.code_combination_id =b.code_combination_id 
+and b.reference4='1024137'
+and b.period_name='MAR-06'
+
+

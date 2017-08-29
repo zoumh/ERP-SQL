@@ -1,0 +1,74 @@
+
+------------AP Invoice matched PO number more then 6
+select c.INVOICE_NUM,count(distinct f.segment1) Diff_PO_Num,c.PAYMENT_STATUS_FLAG,apb.BATCH_NAME as InvBatch,
+c.invoice_currency_code Curr
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+,apps.AP_BATCHES_ALL apb
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and f.po_header_id(+)=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and c.BATCH_ID=apb.BATCH_ID
+and a.accounting_date>=to_date('2005-06-01','yyyy-mm-dd')
+--and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')
+group by c.INVOICE_NUM,PAYMENT_STATUS_FLAG,apb.BATCH_NAME,c.invoice_currency_code
+having count(distinct f.segment1)>3--and PAYMENT_STATUS_FLAG ='N'
+
+
+
+------------No Paid AP Invoice matched PO number more then 6
+select c.INVOICE_NUM,count(distinct f.segment1) Diff_PO_Num,c.PAYMENT_STATUS_FLAG,apb.BATCH_NAME as InvBatch,
+c.invoice_currency_code Curr
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+,apps.AP_BATCHES_ALL apb
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and f.po_header_id(+)=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and c.BATCH_ID=apb.BATCH_ID
+and a.accounting_date>=to_date('2005-06-01','yyyy-mm-dd')
+--and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')
+group by c.INVOICE_NUM,PAYMENT_STATUS_FLAG,apb.BATCH_NAME,c.invoice_currency_code
+having count(distinct f.segment1)>1 and PAYMENT_STATUS_FLAG in ('P','N')
+
+
+------------Detail of the AP Invoice matched PO number more then 6
+select c.INVOICE_NUM,a.DISTRIBUTION_LINE_NUMBER Inv_Dist_num,(f.segment1) Diff_PO_Num,c.invoice_currency_code Curr,
+a.amount Inv_Dis_Amt,c.PAYMENT_STATUS_FLAG,c.PAY_GROUP_LOOKUP_CODE
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+--and b.segment3='41059903'
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and f.po_header_id(+)=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and INVOICE_NUM='SFZ-540278'
+
+
+

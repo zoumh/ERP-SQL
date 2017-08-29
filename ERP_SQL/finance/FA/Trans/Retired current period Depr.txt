@@ -1,0 +1,57 @@
+
+------------The depr amt of current period Retired Asset
+
+CREATE OR REPLACE VIEW BMC_RETIRE_DEPRN_BY_PERIOD
+(ASSET_NUMBER, COST, DEPRN_AMOUNT, STATUS, RETIREMENT_TYPE_CODE, 
+ BOOK_TYPE_CODE, PERIOD_NAME, DATE_RETIRED, MAJ_CATE, MIN_CATE)
+AS 
+select 
+distinct 
+d.ASSET_NUMBER, 
+c.COST, 
+a.DEPRN_AMOUNT summary_deprn, 
+f.STATUS, 
+f.RETIREMENT_TYPE_CODE, 
+a.BOOK_TYPE_CODE, 
+b.PERIOD_NAME, 
+f.DATE_RETIRED, 
+--to_char(DATE_RETIRED), 
+g.SEGMENT1, 
+g.SEGMENT2 
+  from 
+FA_DEPRN_SUMMARY a, 
+FA_DEPRN_PERIODS b, 
+FA_DEPRN_DETAIL c, 
+FA_ADDITIONS_B d, 
+fa_retirements  f, 
+ apps.FA_CATEGORIES_VL g,apps.FA_CATEGORY_BOOKS h,apps.FA_CATEGORY_BOOK_DEFAULTS i 
+ where a.PERIOD_COUNTER = b.PERIOD_COUNTER 
+and a.BOOK_TYPE_CODE = b.BOOK_TYPE_CODE 
+--and a.BOOK_TYPE_CODE = 'BMC_TAX_BOOK' 
+and a.PERIOD_COUNTER = c.PERIOD_COUNTER 
+and a.BOOK_TYPE_CODE = c.BOOK_TYPE_CODE 
+and a.ASSET_ID= c.ASSET_ID 
+and a.ASSET_ID = d.ASSET_ID 
+and a.ASSET_ID = f.ASSET_ID 
+and a.BOOK_TYPE_CODE  = f.BOOK_TYPE_CODE 
+and  d.ASSET_ID = f.asset_id 
+and g.CATEGORY_ID =h.CATEGORY_ID 
+and i.BOOK_TYPE_CODE=h.BOOK_TYPE_CODE 
+and i.CATEGORY_ID=h.CATEGORY_ID 
+--and d.ASSET_NUMBER  = '13000435' 
+--and b.PERIOD_NAME = 'MAR-06' 
+--and f.DATE_RETIRED  	 >= to_date('2006-03-01','YYYY-MM-DD') 
+--and  	f.DATE_RETIRED  	 <= to_date('2006-03-31','YYYY-MM-DD') 
+--and g.SEGMENT1  = '01' --FA 
+--and g.SEGMENT2  = '02' --prod 
+and substr(d.ATTRIBUTE_CATEGORY_CODE,1,2)  =  g.SEGMENT1 
+and substr(d.ATTRIBUTE_CATEGORY_CODE,4,2)  = g.SEGMENT2 
+order by d.ASSET_NUMBER;
+
+
+select * from apps.BMC_RETIRE_DEPRN_BY_PERIOD 
+where period_name='MAY-06'
+and BOOK_TYPE_CODE='BMC_FA_BOOK'
+
+
+

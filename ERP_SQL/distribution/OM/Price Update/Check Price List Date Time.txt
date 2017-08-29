@@ -1,0 +1,15 @@
+
+
+select a.Name Price_List_Name,b.OPERAND Price,b.creation_date,b.last_update_date,
+b.start_date_active,b.end_date_active,a.currency_code,
+c.user_name Create_User,c.description Create_User_ID,
+d.user_name Last_Update_User_ID,d.description Last_Update_User,
+a.active_flag,decode(list_type_code,'PRL','Price List',list_type_code) Type,
+a.list_header_id,b.created_by,b.last_updated_by
+from apps.qp_list_headers a,apps.qp_list_lines_v b,apps.FND_USER c,apps.FND_USER d
+where a.list_header_id=b.list_header_id 
+and c.USER_ID=b.created_by and d.user_id=b.last_updated_by
+and a.name='DC DPY Price List'
+and b.PRODUCT_ATTR_VAL_DISP='A/1294LMSP65F309'
+
+

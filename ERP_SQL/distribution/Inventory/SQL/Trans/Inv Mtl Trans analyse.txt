@@ -1,0 +1,81 @@
+
+select  count(*), mmt.organization_id,--mmt.transaction_id,
+TRANSACTION_SOURCE_TYPE_NAME,mtt.transaction_type_name,
+decode(LPN_ID,null,'N','Y'),decode(content_LPN_ID,null,'N','Y'),decode(Transfer_LPN_ID,null,'N','Y')
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_txn_source_types      mst
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    trunc(mmt.transaction_date) >= to_date('20060601','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20061001','YYYYMMDD') 
+group by mmt.organization_id,--mmt.transaction_id,
+TRANSACTION_SOURCE_TYPE_NAME,mtt.transaction_type_name,
+decode(LPN_ID,null,'N','Y'),decode(content_LPN_ID,null,'N','Y'),decode(Transfer_LPN_ID,null,'N','Y')
+
+
+
+select  cat.segment1 Model, mmt.organization_id,mmt.transaction_id,
+TRANSACTION_SOURCE_TYPE_NAME,mtt.transaction_type_name,
+LPN_ID,Transfer_LPN_ID,content_LPN_ID,
+msi.segment1 Item,
+mmt.TRANSACTION_QUANTITY,mmt.ACTUAL_COST,mmt.transaction_date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_item_categories_v     cat
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cat.organization_id=mmt.organization_id
+and cat.inventory_item_id = mmt.inventory_item_id 
+and cat.category_set_id=1 
+and mmt.organization_id = msi.organization_id  
+and    trunc(mmt.transaction_date) >= to_date('20061008','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20061021','YYYYMMDD') 
+and mtt.transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Cost Group Transfer') 
+and mtt.transaction_type_name not like '%Move Order Transfer%'
+and mtt.transaction_type_name not like '%Container%'
+and msi.Item_Type in ('KRH','DPY')
+order by mmt.transaction_id
+
+select * from apps.mtl_material_transactions where transaction_id in (32879221,32879222,32879223)
+
+select organization_id,organization_code,primary_cost_method,lpn_prefix,lpn_suffix,lpn_starting_number,wms_enabled_flag
+from APPS.mtl_parameters
+
+
+
+
+
+
+select  cat.segment1 Model, msi.segment1 Item,
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+sum(mmt.TRANSACTION_QUANTITY) as Qty,mtt.transaction_type_name
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_item_categories_v     cat
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cat.organization_id=mmt.organization_id
+and cat.inventory_item_id = mmt.inventory_item_id  
+and mmt.organization_id = msi.organization_id  
+and    trunc(mmt.transaction_date) >= to_date('20060301','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20060311','YYYYMMDD') 
+and mtt.transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Internal Order Pick','Cost Group Transfer') 
+and mtt.transaction_type_name not like '%Move Order Transfer%'
+and mtt.transaction_type_name not like '%Container%'
+and msi.PLANNING_MAKE_BUY_CODE=1
+and cat.segment2 in ('DC','DM','KRC','KRH','ROA','ROAS')
+group by cat.segment1,msi.segment1,mtt.transaction_type_name
+order by cat.segment1,msi.segment1,mtt.transaction_type_name

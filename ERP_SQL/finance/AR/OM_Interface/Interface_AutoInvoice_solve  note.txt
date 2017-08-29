@@ -1,0 +1,56 @@
+Note:175733
+
+fact: Oracle Receivables
+fact: RAXTRX - Autoinvoice Import Program
+symptom: Rows are not picked up by Autoinvoice
+symptom: Rows are stuck in the RA_INTERFACE_LINES_ALL Table
+symptom: RA_INTERFACE_LINES_ALL.REQUEST_ID is not null
+symptom: RA_INTERFACE_LINES_ALL.INTERFACE_STATUS is not equal to 'P'
+cause: If the request_id is not null then any run of Autoinvoice with a 
+different request id will ignore that line.
+
+This situation will happen if Autoinvoice has a fatal error.
+
+
+
+
+fix:
+
+Clear the request IDs so that Autoinvoice can pick up the line.
+
+1.  First be sure that Autoinvoice is not running.
+
+2.  Clear the request ids.
+
+		UPDATE ra_interface_lines_all
+		SET interface_line_id = null,
+		    customer_trx_id = null,
+		    request_id = null,
+		    link_to_line_id = null
+		WHERE nvl(interface_status,'x') != 'P';
+
+3.  Commit;
+
+4.  Rerun Autoinvoice and check the log.
+
+
+
+
+-------------------Actural 
+
+select *
+from apps.ra_interface_lines_all
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+select INTERFACE_LINE_ATTRIBUTE1,interface_line_id,customer_trx_id,request_id, link_to_line_id
+from apps.ra_interface_lines_all
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+UPDATE ra_interface_lines_all
+SET interface_line_id = null,
+		    customer_trx_id = null,
+		    request_id = null,
+		    link_to_line_id = null
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+

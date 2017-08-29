@@ -1,0 +1,96 @@
+
+
+hi harris,
+someone might delete that (when he thinks there is an error on line level). so, if we find this case next time, then update TRANSFERRED_TO_OE_FLAG to N 
+select ROWID, a. * from PO_REQUISITION_HEADERS_ALL A
+
+where REQUISITION_HEADER_ID in ('58025')
+
+then run: 
+1. create internal order (PO0
+2. order import (SO)
+
+
+----------------------------------My Solution
+
+1. Check PR Status
+select a.segment1 PR_num,a.requisition_header_id,a.Type_lookup_Code PR_Type,a.authorization_status Appr_Status,a.TRANSFERRED_TO_OE_FLAG,
+b.line_num,b.DESTINATION_TYPE_CODE,b.item_description,b.unit_price,b.quantity,b.source_type_code,b.currency_code,b.rate,b.tax_code_id
+from apps.po_requisition_lines_all b,apps.po_requisition_headers_all a 
+where a.requisition_header_id=b.requisition_header_id 
+and a.segment1 in ('4363')
+
+
+2. Check OE Interface (check the requisition_header_id with orig_sys_document_ref )
+select orig_sys_document_ref from apps.oe_headers_iface_all where order_source_id = 10
+
+3. Check SO (if this PR has been imported)
+select * from apps.OE_ORDER_HEADERS_all  where orig_sys_document_ref='4363'
+ 
+4. If sure this PR has created Transfer & not exist in OE interface & not exist in SO
+update PO_REQUISITION_HEADERS_ALL set TRANSFERRED_TO_OE_FLAG='N' where segment1 in ('4363')
+
+then run: <create internal order>
+
+
+--------if need to correction at OE_Interface correction form:
+to clear error flag at header & line level
+to delete duplicate line records 
+them to push (B) import , should be OK
+
+
+
+--or use the SQL to update
+m
+Update Apps.Oe_Headers_Iface_All
+ Set ERROR_FLAG = Null
+ Where a.Order_Source_Id = 10 And
+      a.Orig_Sys_Document_Ref =71486
+      
+Delete From  Apps.Oe_Lines_Iface_All b
+  Where b.Order_Source_Id = 10 And
+      b.Orig_Sys_Document_Ref =71486  And b.orig_sys_line_ref=109350 
+      And Rownum =1
+      
+Delete From  Apps.Oe_Lines_Iface_All b
+  Where b.Order_Source_Id = 10 And
+      b.Orig_Sys_Document_Ref =71486  And b.orig_sys_line_ref=109349 
+      And Rownum =1
+
+ 
+
+
+
+---------------to delete from interface table then re-create Internal SO
+
+select * from apps.po_requisition_headers_all where segment1 in ('10962')
+
+82813
+
+select * from apps.po_requisition_lines_all where requisition_header_id in (82813)
+
+
+select orig_sys_document_ref from apps.oe_headers_iface_all where order_source_id = 10
+and orig_sys_document_ref=82813
+
+select * from apps.oe_lines_iface_all where order_source_id = 10
+and orig_sys_document_ref=82813
+
+
+create table BMC_BKUP_OEIFACEHEAD as select * from apps.oe_headers_iface_all where order_source_id = 10
+and orig_sys_document_ref=82813
+
+
+create table BMC_BKUP_OEIFACELINE as select * from apps.oe_lines_iface_all where order_source_id = 10
+and orig_sys_document_ref=82813
+
+delete from apps.oe_headers_iface_all where order_source_id = 10
+and orig_sys_document_ref=82813
+
+delete from apps.oe_lines_iface_all where order_source_id = 10
+and orig_sys_document_ref=82813
+
+
+
+update PO_REQUISITION_HEADERS_ALL set TRANSFERRED_TO_OE_FLAG='N' where segment1 in ('10962')
+

@@ -1,0 +1,81 @@
+
+------------IMP Item like  'IPM%' , Type NBOM'
+select count(*)
+from apps.mtl_system_items_b
+where organization_id=130 
+--and LOT_CONTROL_CODE=2
+and segment1 like 'IPM%'
+--and INVENTORY_ITEM_FLAG='NBOM'
+order by CREATION_DATE
+
+------------LOT_CONTROL_CODE=2  , IMP item'slot control=Full
+
+select CREATION_DATE,
+segment1 Item,
+INVENTORY_ASSET_FLAG
+,INVENTORY_ITEM_FLAG,
+ITEM_TYPE 
+from apps.mtl_system_items_b
+where organization_id=130 
+--and LOT_CONTROL_CODE=2  
+and INVENTORY_ITEM_FLAG='NBOM'
+order by CREATION_DATE
+
+
+-----Find the receive WH
+select * from apps.MTL_SYSTEM_ITEMS_FVL where inventory_item_id=151382 and organization_id=130 
+
+
+
+----------list non-bom item with category
+select a.CREATION_DATE,a.ATTRIBUTE3 Bond-Flag,
+a.segment1 Item,a.DESCRIPTION,
+a.ITEM_TYPE,b.segment1,b.segment2,b.segment3,b.segment4,
+a.INVENTORY_ASSET_FLAG
+,a.INVENTORY_ITEM_FLAG
+from apps.mtl_system_items_b a,apps.mtl_item_categories_v b 
+where a.organization_id=130 
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+and ITEM_TYPE ='NBOM'
+--and LOT_CONTROL_CODE=2  
+order by CREATION_DATE desc
+
+
+
+--------------Check Expense item Attribute
+select --a.CREATION_DATE,a.last_update_date,a.CREATED_BY,a.LAST_UPDATED_BY, 
+a.segment1 Item,a.DESCRIPTION,ORGANIZATION_CODE Org,
+a.ITEM_TYPE,a.INVENTORY_ITEM_STATUS_CODE Status,
+b.segment1 Cat1,b.segment2 Cat2,--b.segment3 Cat3,b.segment4 Cat4,
+a.INVENTORY_ASSET_FLAG INVENTORY_ASSET,
+a.COSTING_ENABLED_FLAG COSTING_ENABLED,
+a.INVENTORY_ITEM_FLAG INVENTORY_ITEM,
+a.MTL_TRANSACTIONS_ENABLED_FLAG TransactAble,
+a.STOCK_ENABLED_FLAG STOCK_ENABLED,
+a.PURCHASING_ITEM_FLAG PURCHASING_ITEM,
+a.PURCHASING_ENABLED_FLAG PURCHASING_ENABLED,
+decode(a.RECEIVING_ROUTING_ID,1,'Std',2,'Inspect',3,'Direct','NA') RECEIVING_ROUTING,
+a.ALLOW_ITEM_DESC_UPDATE_FLAG,
+decode(a.LOT_CONTROL_CODE,1,'No',2,'Full') LOT_CONTROL, 
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,
+a.ATTRIBUTE3 Bond_Flag,
+d.segment2 CC,d.segment3 Acc,d.segment4 Prd,d.segment5 Prj
+from apps.mtl_system_items_b a,apps.mtl_item_categories_v b,
+apps.org_organization_definitions c ,apps.gl_code_combinations d
+where --a.organization_id=130 and 
+a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.EXPENSE_ACCOUNT=d.CODE_COMBINATION_ID(+)
+and a.ITEM_TYPE ='EXP'
+and a.segment1 like 'CON002%'
+
+
+
+
+
+
+

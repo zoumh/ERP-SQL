@@ -1,0 +1,20 @@
+
+----------Find trip info from Trip_id
+select delivery_detail_id,NAME trip_name,trip_id,status_name,activity_code,creation_date
+from apps.WSH_DELIVERABLE_TRIPS_V   where trip_id=325773
+
+
+----------Find Stop info from Trip_ID (trip_name=trip_id)
+select stop_id,trip_name,delivery_detail_id,status_name,creation_date,activity_code 
+from apps.WSH_DELIVERABLE_STOPS_V  where  trip_id=325773
+
+
+
+---------Find All Delivery_Detail_id (include type='C') from delivery_id
+select * from  apps.WSH_DELIVERABLES_V where delivery_id=800143942
+
+
+---------Find trip_id stop_id from delivery_id
+select trip_id,trip_name,pick_up_stop_id,drop_off_stop_id,
+delivery_id,delivery_name,creation_date from apps.wsh_bols_db_v where delivery_id =800143942
+

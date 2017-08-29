@@ -1,0 +1,68 @@
+
+Doc ID:  Note:133941.1 
+
+Troubleshooting When Setting Up Preferences On The Planners Workbench
+
+The default cutoff date on the preferences of the planner workbench is
+set as following :
+ The FIRST time when you open the workbench for a particular plan, 
+ the cutoff date by default is = the sysdate + the value entered 
+ in the profile option MRP: Cutoff Date Offset Months 
+
+This happens only the first time.
+
+Then you can update this cutoff date as explained in the user¡¯s guide :
+In the Supply/Demand alternative region, enter a Cutoff Date, 
+and Default Job Status. 
+When the Planner Workbench creates discrete jobs from implemented 
+planned orders, it assigns the job status you had entered in the 
+Preferences window.  
+
+If the cutoff date is now changed manually, the date that would appear in 
+the cutoff date would be the last date saved and would no longer default from
+any value. 
+
+If you don't pay attention to this, the result of this change for the 
+current user will be : 
+After a while, the query of suggested orders on the workbench 
+will bring less and less orders, until you will have ¡®no data found¡¯. 
+
+That is because the date on the preferences will not any more reflect 
+the supply cutoff date.
+
+So if you want to see a cutoff date greater than the one displayed 
+(after the first manual change), you MUST update this cutoff date manually.
+
+This is as designed.
+
+If you wish to reset the behavior to default the date from the profile, 
+then try the following:
+We have had success using the steps below.
+1. Open the Preferences and null the date, then Apply, then Save
+2. Change profile -- e.g from 6 to 7 then save
+3. Change profile back to original value -- e.g. 7 to 6 then save
+4. Enter the workbench again 
+5. Check the date and then exit without making changes
+6. Check the date again tomorrow and it should be incremented.
+
+ADVISE : It is better not to update this cut off date within the
+preferences of the workbench, to make sure to be able to see your suggested
+orders. But if USER still wants to update it manually, don't forget that
+this particular USER will HAVE TO update it each time they query 
+for suggested orders on the workbench.
+
+
+
+
+
+If you wish to reset the behavior to default the date from the profile, 
+then try the following:
+We have had success using the steps below.
+1. Open the Preferences and null the date, then Apply, then Save
+2. Change profile -- e.g from 6 to 7 then save
+3. Change profile back to original value -- e.g. 7 to 6 then save
+4. Enter the workbench again 
+5. Check the date and then exit without making changes
+6. Check the date again tomorrow and it should be incremented.
+
+

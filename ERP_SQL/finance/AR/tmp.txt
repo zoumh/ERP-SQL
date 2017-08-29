@@ -1,0 +1,42 @@
+select CUSTOMER_TRX_ID,LINE_NUMBER,LINE_TYPE,CUSTOMER_TRX_LINE_ID,LINK_TO_CUST_TRX_LINE_ID,TAXABLE_AMOUNT,REVENUE_AMOUNT,EXTENDED_AMOUNT,TAX_RATE,VAT_TAX_ID,TAX_EXEMPT_FLAG from apps.ra_customer_trx_lines_all where CUSTOMER_TRX_ID=4338
+
+
+
+select * from apps.ra_customer_trx_all where TRX_NUMBER='10629'
+
+select * from apps.ra_customer_trx_all where CUSTOMER_TRX_ID=3950
+
+select * from apps.RA_CUST_TRX_LINE_GL_DIST_all where CUSTOMER_TRX_ID=3950
+
+select * from apps.RA_CUST_TRX_LINE_GL_DIST_all where CUSTOMER_TRX_LINE_ID=11807
+
+
+select * from apps.AR_POSTING_CONTROL where POSTING_CONTROL_ID=1120
+
+select * from apps.ra_customer_trx_lines_all where CUSTOMER_TRX_ID=3950
+
+select * from apps.ra_customer_trx_lines_all where CUSTOMER_TRX_LINE_ID=11807
+
+select * from apps.RA_CUST_TRX_LINE_GL_DIST_all where CUSTOMER_TRX_ID=3950
+
+
+select CUSTOMER_TRX_ID,CODE_COMBINATION_ID,AMOUNT,ACCTD_AMOUNT,GL_DATE,GL_POSTED_DATE,ACCOUNT_CLASS from apps.RA_CUST_TRX_LINE_GL_DIST_all where CUSTOMER_TRX_ID=3950 and ACCOUNT_CLASS<>'REC'
+
+
+
+
+select * from apps.ra_customer_trx_all where TRX_NUMBER='10726'
+
+select * from apps.ra_customer_trx_all where CUSTOMER_TRX_ID=4338
+
+select * from apps.RA_CUST_TRX_LINE_GL_DIST_all where CUSTOMER_TRX_ID=4338
+
+select * from apps.RA_CUST_TRX_LINE_GL_DIST_all where CUSTOMER_TRX_LINE_ID=11807
+
+select * from apps.AR_POSTING_CONTROL where POSTING_CONTROL_ID=1120
+
+STATUS='DONE'
+
+select * from apps.ra_customer_trx_lines_all where CUSTOMER_TRX_ID=4338
+
+select * from apps.ra_customer_trx_lines_all where CUSTOMER_TRX_LINE_ID=11807

@@ -1,0 +1,6 @@
+
+
+select TRX_NUMBER,CREATION_DATE,CREATED_BY from apps.ra_customer_trx_all where CREATED_BY=1071
+
+select * from apps.FND_USER where user_name='ETMPHUG' or user_id=1075
+

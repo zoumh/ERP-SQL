@@ -1,0 +1,128 @@
+ShowDoc    Bookmarks Admin Profile Feedback Sign Out Help 
+
+        HeadlinesKnowledge Service RequestConfiguration Support ManagerPatches & 
+      UpdatesForumsCertify
+        Knowledge Browser   Advanced Search   Bug Search  Secure Enterprise 
+      Search  
+
+                        Quick Find 
+                     All Sources Knowledge Base Knowledge Base (Including 
+                    Archived Articles) Bug Database Technical Forums Document ID 
+                    (Knowledge Base, Forum, or Bug) Service Request Number Error 
+                    Code Patch Number  Go 
+                    Secure Enterprise Search    Advanced   Saved Searches
+
+
+
+            Did this article help solve your problem?  Select Yes No Does Not 
+              Apply Would you recommend this document to others?  Select Yes No 
+              Not Sure   
+                        
+
+       
+                        TIP: Click help for a detailed explanation of this page.
+                  BookmarkGo to End
+
+                  Subject: View Status of a Delivery Line
+                   Doc ID: Note:205708.1Type: BULLETIN
+                   Last Revision Date: 28-OCT-2002Status: PUBLISHED
+
+
+PURPOSE
+-------
+
+To aid in problem resolution.
+
+ 
+SCOPE & APPLICATION
+-------------------
+
+Users of Oracle Shipping Execution application.
+
+
+View Status of a Delivery Line
+-----------------------------
+ 
+The released status of a delivery line identifies its progress through the 
+shipping process. View released status in either the:
+Oracle Shipping Execution Shipping Transactions window, or
+Oracle Order Management Orders window, Actions button, Additional
+  information, Deliveries tabbed region
+
+To view the status of a delivery line:
+
+1. Navigate to the Query Manager window, and find the delivery lines.
+   The delivery lines display in the Shipping Transactions window.
+
+2. Select the line and click the Detail button to display the line details.
+   In the Pick Status field, the current status of the delivery line is 
+   displayed.
+
+3. Click the Done button to return to the Main tab.
+
+4. Alternately, in the Main tab, you can use the right scroll arrow to scroll 
+   to the Pick Status column and view the status of the delivery line(s).
+
+The different delivery line statuses are:
+- Not Applicable (Code X)
+  The delivery line is invoicable but non-shippable, for example, a service line
+  or a warranty line.
+- Not Ready for Release (Code N)
+  The delivery line is not eligible for pick release.
+  Occurs when the order line is manually imported into Oracle Shipping Execution
+  using the Import Delivery Line concurrent process. It has not reached the
+  Awaiting Shipping workflow activity.
+- Ready for Release (Code R)
+  The delivery line is eligible for pick release.
+  Occurs when the order line has reached the Awaiting Shipping workflow activity 
+  (it is booked, scheduled, and in Oracle Shipping Execution).
+- Submitted to Warehouse (Code S)
+  Pick release has processed the delivery line and has:
+  Created move order headers and lines.
+  Found available quantity and created inventory allocations.
+  Not pick confirmed. If you are using auto-pick confirm, it changes release
+  status to Staged. If you are not using auto-pick confirm and want to progress 
+  the delivery lines, navigate to Oracle Inventory Move Order Transaction window
+  and perform manual pick confirm.
+- Staged (Code Y)
+  The delivery line is pick confirmed; inventory is transferred from storage
+  subinventory to staging subinventory. It remains staged until ship confirm.
+- Backordered (Code B)
+  Any of the following circumstances occurs:
+  Pick release has processed the delivery line and cannot find the entire 
+  quantity.  This typically occurs when the Oracle Inventory inventory balance 
+  indicates that there is not enough material (either because there is not 
+  enough material or because the inventory balance is incorrect).
+  At ship confirm, you:
+  Enter Shipped Quantity that is less than Original Requested Quantity
+  Backorder the entire delivery quantity
+  Transfer a reservation to cycle count
+  This typically occurs when the material that you want to ship:
+  Has become unavailable, for example, damaged, between picking and shipping.
+  Is available and you backorder material for specific business reasons. For
+  example, all available material has been allocated to a specific customer
+  when you find out additional supply for other orders will be delayed.
+  For information on the backorder processing in pick release and ship confirm, 
+  see those topics.
+- Shipped (Code C)
+  The delivery line’s delivery is ship confirmed and posted as intransit, OM 
+  Interface and Inventory Interface have processed, and the trip is closed.
+- Cancelled (Code D)
+  The order line that the delivery line supports is cancelled.
+
+
+RELATED DOCUMENTS
+-----------------
+
+Oracle Shipping Execution, Part No. A77030-
+
+. 
+               
+
+            Bookmarks Admin Profile Feedback Sign Out Help 
+
+            Copyright © 2006, Oracle. All rights reserved. Legal Notices  and 
+            Terms of Use | Privacy Statement 
+
+
+

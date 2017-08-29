@@ -1,0 +1,130 @@
+
+
+----------After change RMA return Type
+CREATE OR REPLACE VIEW BMC_STOCK_FORM_V AS
+select mot.organization_id,
+       ood.organization_code Org,
+       mot.subinventory_code,
+       mot.inventory_item_id,
+       mot.item,
+       mot.revision,
+       mot.uom,
+       sum(mot.on_hand) on_hand,
+       BMC_GET_RESERVED(mot.inventory_item_id,mot.organization_id,mot.subinventory_code) reserved
+  from mtl_onhand_total_mwb_v mot,
+       org_organization_definitions ood
+ where ood.organization_id = mot.organization_id
+ group by mot.organization_id,
+       mot.subinventory_code,
+       mot.inventory_item_id,
+       mot.item,
+       mot.revision,
+       mot.uom,
+       ood.organization_code
+union all
+SELECT rt.organization_id,
+       BMC_GET_ORG_CODE(rt.organization_id) Org,
+       'Receiving' subinventory_code,
+       rl.item_id inventory_item_id,
+       msi.segment1 item,
+       bmc_get_item_rev(rl.item_id,rt.organization_id) revision,
+       msi.primary_uom_code uom,
+       NVL(SUM(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,'RETURN TO CUSTOMER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO VENDOR',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO VENDOR',-1,0) * rt.quantity),0) on_hand,
+       0 reserved
+  FROM rcv_transactions     rt,
+       rcv_transactions     rt3,
+       rcv_shipment_lines   rl,
+       mtl_system_items_fvl msi
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from rcv_transactions rt2,
+                           rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+ GROUP BY rt.organization_id,
+          rl.item_id,
+          msi.segment1,
+          msi.primary_uom_code
+ HAVING NVL(SUM(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,'RETURN TO CUSTOMER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO VENDOR',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO VENDOR',-1,0) * rt.quantity),0) <>0
+
+
+
+
+-----------------Before
+
+CREATE OR REPLACE VIEW BMC_STOCK_FORM_V AS
+select mot.organization_id,
+       ood.organization_code Org,
+       mot.subinventory_code,
+       mot.inventory_item_id,
+       mot.item,
+       mot.revision,
+       mot.uom,
+       sum(mot.on_hand) on_hand,
+       BMC_GET_RESERVED(mot.inventory_item_id,mot.organization_id,mot.subinventory_code) reserved
+  from mtl_onhand_total_mwb_v mot,
+       org_organization_definitions ood
+ where ood.organization_id = mot.organization_id
+ group by mot.organization_id,
+       mot.subinventory_code,
+       mot.inventory_item_id,
+       mot.item,
+       mot.revision,
+       mot.uom,
+       ood.organization_code
+union all
+SELECT rt.organization_id,
+       BMC_GET_ORG_CODE(rt.organization_id) Org,
+       'Receiving' subinventory_code,
+       rl.item_id inventory_item_id,
+       msi.segment1 item,
+       bmc_get_item_rev(rl.item_id,rt.organization_id) revision,
+       msi.primary_uom_code uom,
+       NVL(SUM(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO VENDOR',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO VENDOR',-1,0) * rt.quantity),0) on_hand,
+       0 reserved
+  FROM rcv_transactions     rt,
+       rcv_transactions     rt3,
+       rcv_shipment_lines   rl,
+       mtl_system_items_fvl msi
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from rcv_transactions rt2,
+                           rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+ GROUP BY rt.organization_id,
+          rl.item_id,
+          msi.segment1,
+          msi.primary_uom_code
+ HAVING NVL(SUM(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO VENDOR',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO VENDOR',-1,0) * rt.quantity),0) <>0
+

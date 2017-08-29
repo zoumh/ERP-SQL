@@ -1,0 +1,49 @@
+
+-----------------TO reconcile Inventory Distribution with GL Journal
+
+
+
+---- Inventory Account Distribution (Sum & Detail) by Batch_ID & CCID
+
+select * from apps.MTL_TRANSACTION_ACCOUNTS where GL_BATCH_ID=4027 and REFERENCE_ACCOUNT=1231
+
+
+select sum(BASE_TRANSACTION_VALUE) from apps.MTL_TRANSACTION_ACCOUNTS where GL_BATCH_ID=4027 and REFERENCE_ACCOUNT=1231
+
+
+
+
+
+------GL journal by Batch ID & CCID
+
+select BATCH_NAME,HEADER_NAME as Journal,LINE_CODE_COMBINATION_ID,LINE_PERIOD_NAME,LINE_DESCRIPTION,CURRENCY_CONVERSION_TYPE,CURRENCY_CONVERSION_RATE,CURRENCY_CODE,LINE_ENTERED_DR,LINE_ENTERED_CR,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR
+,LINE_REFERENCE_1,LINE_REFERENCE_2,LINE_REFERENCE_4,CREATION_DATE,BATCH_DESCRIPTION,JE_SOURCE,b.segment3,b.segment2,b.segment4,b.segment5
+ from apps.GL_JE_JOURNAL_LINES_V a,apps.GL_CODE_combinations b 
+where a.LINE_CODE_COMBINATION_ID =b.CODE_COMBINATION_ID 
+and a.LINE_CODE_COMBINATION_ID=1231
+and a.BATCH_NAME like '%4027%'
+
+
+
+----------After find the Item , List item's Mtl_transaction creation Date/time to compare with Trans_Date
+select   mmt.transaction_date,mmt.CREATION_DATE,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, mmt.TRANSACTION_QUANTITY as Qty,
+         mmt.ACTUAL_COST,
+         mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+         mmt.transaction_id,
+         mmt.organization_id Organization 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+and    trunc(mmt.transaction_date) >= to_date('20070831','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20070901','YYYYMMDD')
+--and mtt.transaction_type_name not in ('Sales Order Pick','Container Pack','Subinventory Transfer')
+--and mmt.TRANSACTION_QUANTITY>0
+and msi.segment1='RNH 942 268.R1B'
+order by trunc(mmt.transaction_date),mmt.transaction_id
+

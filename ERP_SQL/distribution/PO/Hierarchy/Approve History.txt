@@ -1,0 +1,160 @@
+
+
+-----Approve action History of a PR with Hierarchy Name (only show happend & next step , not include future approver steps)
+SELECT HI.ACTION_DATE, hir.NAME Hierarchy_Name,
+pr.creation_date PR_Date_Time,PR.AUTHORIZATION_STATUS PR_Status,
+PR.SEGMENT1 Req_Num,hi.SEQUENCE_NUM Seq_Num,
+HI.OBJECT_TYPE_CODE Doc_Type,
+HI.ACTION_CODE,
+PE.FULL_NAME To_Whom,PE.EMPLOYEE_NUMBER,
+PR.NOTE_TO_AUTHORIZER,
+PR.DESCRIPTION DESC_OR_COMMENTS,
+PR.REQUISITION_HEADER_ID Hearder_ID,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY HI,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.PER_PEOPLE_V7 PE,
+apps.PER_PEOPLE_V7 PE2,
+apps.PER_POSITION_STRUCTURES Hir
+WHERE
+PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and hi.APPROVAL_PATH_ID=hir.POSITION_STRUCTURE_ID(+)
+--AND PR.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+--and HI.ACTION_CODE is null
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.PREPARER_ID=PE2.PERSON_ID
+and HI.OBJECT_TYPE_CODE='REQUISITION'
+and HI.ACTION_DATE>to_date('2009-8-11','yyyy-mm-dd')
+and PR.SEGMENT1='50394'
+--and PE.EMPLOYEE_NUMBER='259'
+--and hi.CREATION_DATE>=to_date('2009-10-6','yyyy-mm-dd')
+order by HI.ACTION_DATE desc
+
+
+
+--------XXXXX ???? Changed wrong !  Full Path of PR (with Hierarchy name) , include future approver steps
+--------Actual approved & needs approve path
+select hir.NAME Hierarchy_Name,a.CREATION_DATE Submit_Date,
+PR.SEGMENT1 PR_Num,c.FULL_NAME To_Whom,b.sequence_num Appro_Seq,b.STATUS,pr.AUTHORIZATION_STATUS PR_Status,
+d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,apps.PO_APPROVAL_LIST_LINES b,apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,apps.PER_POSITION_STRUCTURES Hir
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PR.REQUISITION_HEADER_ID=a.document_id
+and a.APPROVAL_PATH_ID=hir.POSITION_STRUCTURE_ID
+and PR.SEGMENT1='49594'
+and b.creation_date>to_date('2009-1-11','yyyy-mm-dd')
+order by PR.SEGMENT1,b.CREATION_DATE desc ,b.sequence_num desc
+
+
+----a PO's Approve History , 
+SELECT po.AUTHORIZATION_STATUS,hi.OBJECT_TYPE_CODE,hi.SEQUENCE_NUM,HI.ACTION_CODE,PE.FULL_NAME To_Whom,
+PE.EMPLOYEE_NUMBER,
+hi.ACTION_DATE,
+PO.SEGMENT1 PO_Number,
+convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY  HI,
+apps.PO_HEADERS_ALL     PO,
+apps.PER_PEOPLE_V7      PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PO.PO_HEADER_ID=HI.OBJECT_ID
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PO.AGENT_ID=PE2.PERSON_ID
+and po.org_id>=127
+and hi.OBJECT_TYPE_CODE='PO' --'PA' for blanket PO
+and PO.SEGMENT1='1087029'
+--and PE.EMPLOYEE_NUMBER='259'
+--and hi.CREATION_DATE>=to_date('2009-10-6','yyyy-mm-dd')
+order by hi.SEQUENCE_NUM 
+
+
+
+----Po Approve History ,with line,Amount,Action code,WHo
+SELECT hi.SEQUENCE_NUM,HI.ACTION_CODE,PE.FULL_NAME To_Whom,
+hi.creation_date,
+PO.SEGMENT1 PO_Number,pl.LINE_NUM, 
+(pl.QUANTITY*pl.UNIT_PRICE) amt,po.CURRENCY_CODE,
+ (NVL(po.RATE,1)*pl.QUANTITY*pl.UNIT_PRICE) CNY_Amt,
+convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY  HI,
+apps.PO_HEADERS_ALL     PO,
+apps.PO_LINES_ALL       PL,
+apps.PER_PEOPLE_V7      PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PO.PO_HEADER_ID=HI.OBJECT_ID
+and PO.PO_HEADER_ID=PL.PO_HEADER_ID
+and --PO.AUTHORIZATION_STATUS in ('APPROVED')
+--and HI.ACTION_CODE is null and 
+HI.EMPLOYEE_ID=PE.PERSON_ID
+and PO.AGENT_ID=PE2.PERSON_ID
+--AND PE.EMPLOYEE_NUMBER ='249'--23000946'
+and po.org_id>=127
+and (pl.CANCEL_FLAG<>'Y' or pl.CANCEL_FLAG is null)
+and po.creation_date>to_date('2008-1-1','yyyy-mm-dd')
+and hi.OBJECT_TYPE_CODE='PO'
+and PO.SEGMENT1='1087029'
+order by hi.SEQUENCE_NUM 
+
+
+
+--------------List PR Approver, Creator,CC,Acc,Hierarchy, approve_steps,
+select --pr.TYPE_LOOKUP_CODE,
+hir.NAME Hierarchy_Name,
+PR.SEGMENT1 PR_Num,e.LINE_NUM,f.DISTRIBUTION_NUM Dist_num,
+--PE.EMPLOYEE_NUMBER  Approved_By,
+pe.FULL_NAME Person,HI.ACTION_CODE,--HI.CREATION_DATE Hi_DATE,
+g.segment2 CC,g.segment3 Acc,usr.description PR_Created_By ,
+pr.DESCRIPTION,
+e.ITEM_DESCRIPTION,e.UNIT_PRICE,f.REQ_LINE_QUANTITY Qty,
+PR.AUTHORIZATION_STATUS PR_Status,e.CANCEL_FLAG,pr.CREATION_DATE,
+decode(e.DESTINATION_ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+e.DESTINATION_TYPE_CODE Dest_Type,
+e.UNIT_PRICE*f.REQ_LINE_QUANTITY Dist_Line_Amt,
+pr.ORG_ID
+from apps.PO_ACTION_HISTORY HI,
+apps.PER_PEOPLE_V7 pe,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+apps.fnd_user usr,apps.PER_POSITION_STRUCTURES Hir,
+    (select distinct PR.REQUISITION_HEADER_ID --------who has approved this PR
+    FROM apps.PO_ACTION_HISTORY HI,
+        apps.PO_REQUISITION_HEADERS_ALL PR,
+        apps.PER_PEOPLE_V7 PE
+    WHERE 
+        PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+        and HI.EMPLOYEE_ID=PE.PERSON_ID
+        AND PR.AUTHORIZATION_STATUS='APPROVED'
+        and PE.EMPLOYEE_NUMBER='23004931'  -------Approvor 
+        and HI.OBJECT_TYPE_CODE='REQUISITION'
+        and HI.ACTION_CODE='APPROVE'
+        and pr.CREATION_DATE>=to_date('2009-07-23','yyyy-mm-dd')
+    ) h
+where PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and pr.REQUISITION_HEADER_ID=h.REQUISITION_HEADER_ID
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and pr.requisition_header_id=e.requisition_header_id
+and hi.APPROVAL_PATH_ID=hir.POSITION_STRUCTURE_ID
+and pr.ORG_ID=e.ORG_ID
+and f.created_By =usr.user_id
+--and PREPARER_ID=5019  
+--and  d.employee_number='22070480'  --Approver
+--and hi.CREATION_DATE>=to_date('2009-7-23','yyyy-mm-dd') 
+and hi.OBJECT_TYPE_CODE='REQUISITION'
+--and HI.ACTION_CODE ='APPROVE'
+and g.segment3 not in ('41059903','41050706','41059908','41059909')
+--and PE.EMPLOYEE_NUMBER='23004931'
+--and PR.SEGMENT1='50548'
+and (e.CANCEL_FLAG is null or e.CANCEL_FLAG='N')
+--and e.DESTINATION_ORGANIZATION_ID<>130
+order by  PR.SEGMENT1 ,e.LINE_NUM,f.DISTRIBUTION_NUM,hi.SEQUENCE_NUM --b.creation_date desc,PR.SEGMENT1
+

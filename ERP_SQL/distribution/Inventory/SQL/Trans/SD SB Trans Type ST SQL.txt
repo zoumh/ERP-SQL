@@ -1,0 +1,30 @@
+
+--------------
+select   mtt.transaction_type_name,sum(mmt.TRANSACTION_QUANTITY) Qty
+--,mmt.subinventory_code From_WH, mmt.TRANSFER_SUBINVENTORY
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst--,apps.mtl_item_locations a,apps.mtl_item_locations b
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer','SH Move Order Transfer')
+and    trunc(mmt.transaction_date) >= to_date('20060103','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20070930','YYYYMMDD')
+and (mmt.subinventory_code in ('SB','SD') or mmt.TRANSFER_SUBINVENTORY in ('SB','SD'))
+group by mtt.transaction_type_name
+
+
+
+select count(*) count,VDR.VENDOR_NAME
+from apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+where VDR.VENDOR_ID=c.VENDOR_ID
+and c.GL_DATE >=to_date('2007-07-01','yyyy-mm-dd')
+and c.GL_DATE < to_date('2007-10-01','yyyy-mm-dd')
+group by VDR.VENDOR_NAME
+

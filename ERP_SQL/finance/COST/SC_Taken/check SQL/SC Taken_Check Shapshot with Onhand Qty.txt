@@ -1,0 +1,132 @@
+
+
+
+------------After SnapShot, check Snapshoot Qty with Onhand Qty by LPN/Item
+
+select a.SYSTEM_QUANTITY,b.Onhand_Qty
+,c.LICENSE_PLATE_NUMBER LPN,d.segment1 Item,a.REVISION
+,e.SEGMENT1 Category1,e.SEGMENT2 Category2
+,a.INVENTORY_ITEM_ID,b.lpn_id
+from apps.mtl_physical_adjustments a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,REVISION,ORGANIZATION_ID,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl gg
+group by lpn_id,INVENTORY_ITEM_ID,REVISION) b,
+apps.wms_license_plate_numbers c,
+apps.mtl_system_items d,
+apps.mtl_item_categories_v e
+where a.physical_inventory_id =:d
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.Item_ID
+and a.PARENT_LPN_ID=b.lpn_id
+and a.INVENTORY_ITEM_ID=d.inventory_item_id
+and b.lpn_id=c.lpn_id
+and d.ORGANIZATION_ID=c.ORGANIZATION_ID
+and c.ORGANIZATION_ID=e.ORGANIZATION_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and e.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.REVISION=b.REVISION
+and a.SYSTEM_QUANTITY<>b.Onhand_Qty
+
+
+---old
+
+select a.SYSTEM_QUANTITY,b.Onhand_Qty
+,c.LICENSE_PLATE_NUMBER LPN,d.segment1 Item,a.REVISION
+,e.SEGMENT1 Category1,e.SEGMENT2 Category2
+,a.INVENTORY_ITEM_ID,b.lpn_id
+from apps.mtl_physical_adjustments a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,REVISION,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a
+where ORGANIZATION_ID=83 
+group by lpn_id,INVENTORY_ITEM_ID,REVISION) b,
+apps.wms_license_plate_numbers c,
+apps.mtl_system_items d,
+apps.mtl_item_categories_v e
+where a.physical_inventory_id =:d
+and a.ORGANIZATION_ID=83 
+and a.INVENTORY_ITEM_ID=b.Item_ID
+and a.PARENT_LPN_ID=b.lpn_id
+and a.INVENTORY_ITEM_ID=d.inventory_item_id
+and b.lpn_id=c.lpn_id
+and d.ORGANIZATION_ID=83 
+and c.ORGANIZATION_ID=83
+and e.ORGANIZATION_ID=83
+and e.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.REVISION=b.REVISION
+and a.SYSTEM_QUANTITY<>b.Onhand_Qty
+
+
+
+select a.SYSTEM_QUANTITY,b.Onhand_Qty
+,a.INVENTORY_ITEM_ID,b.lpn_id,a.REVISION
+from apps.mtl_physical_adjustments a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,REVISION,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a
+where ORGANIZATION_ID=83 
+group by lpn_id,INVENTORY_ITEM_ID,REVISION) b
+where a.physical_inventory_id =:d
+and a.ORGANIZATION_ID=83 
+and a.INVENTORY_ITEM_ID=b.Item_ID
+and a.PARENT_LPN_ID=b.lpn_id
+and a.REVISION=b.REVISION
+and a.SYSTEM_QUANTITY<>b.Onhand_Qty
+
+
+
+
+----------TO Check LPN's Qty with Inventory Onhand Qty
+
+
+
+select  a.LPN_Qty,b.Onhand_Qty,c.LICENSE_PLATE_NUMBER LPN,
+d.segment1 Item,e.SEGMENT1 Category1,e.SEGMENT2 Category2,
+a.LPN_ID,a.Item_ID
+from
+(select PARENT_LPN_ID LPN_ID,INVENTORY_ITEM_ID Item_ID,
+sum(QUANTITY) LPN_Qty
+from apps.wms_lpn_contents b
+where ORGANIZATION_ID=83 
+group by PARENT_LPN_ID,INVENTORY_ITEM_ID) a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a
+where ORGANIZATION_ID=83 
+group by lpn_id,INVENTORY_ITEM_ID) b,
+apps.wms_license_plate_numbers c,
+apps.mtl_system_items d,
+apps.mtl_item_categories_v e
+where a.LPN_ID=b.LPN_ID 
+and a.Item_ID=b.Item_ID
+and a.Item_ID=d.inventory_item_id
+and a.lpn_id=c.lpn_id
+and d.ORGANIZATION_ID=83 
+and c.ORGANIZATION_ID=83
+and e.ORGANIZATION_ID=83
+and e.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.LPN_Qty<>b.Onhand_Qty
+
+
+---------------To find out Duplicate Tags in snapshoot (LPN_Contxt=4)
+
+select f.tag_number,b.segment1 item,LPN_CONTEXT,
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty
+from apps.mtl_physical_adjustments a,apps.wms_license_plate_numbers d, apps.mtl_physical_inventory_tags f 
+, apps.mtl_system_items b, apps.mtl_item_locations c
+where d.lpn_id=a.parent_lpn_id and a.adjustment_id=f.adjustment_id
+and a.inventory_item_id=b.inventory_item_id
+and a.organization_id=b.organization_id
+and a.locator_id=c.inventory_location_id and c.organization_id=a.organization_id
+and a.physical_inventory_id =:d and LPN_CONTEXT not in (1,11)
+order by f.tag_number
+
+
+
+
+
+
+
+

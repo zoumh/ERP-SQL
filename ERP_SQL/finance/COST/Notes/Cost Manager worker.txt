@@ -1,0 +1,36 @@
+
+
+
+<check cost manager submit request ID>:
+
+SELECT request_id, argument1 org, phase_code
+FROM apps.fnd_concurrent_requests FCR
+WHERE program_application_id = 702
+AND concurrent_program_id = 33733
+AND phase_code <> 'C'; 
+
+
+
+<check matl cost worker submit request ID>:
+
+SELECT request_id, argument1 org, phase_code
+FROM apps.fnd_concurrent_requests FCR
+WHERE program_application_id = 702
+AND concurrent_program_id = 33734
+AND phase_code <> 'C';
+
+
+
+-----------Get scheduled cost Manager request_ID
+
+SELECT request_id RequestId,
+request_date RequestDt,
+phase_code Phase,
+status_code Status FROM
+fnd_concurrent_requests fcr, 
+fnd_concurrent_programs fcp
+WHERE fcp.application_id = 702 AND
+fcp.concurrent_program_name = 'CMCTCM' AND
+fcr.concurrent_program_id = fcp.concurrent_program_id AND
+fcr.program_application_id = 702 AND fcr.phase_code <> 'C'
+

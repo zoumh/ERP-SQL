@@ -1,0 +1,148 @@
+
+
+SO problem on shipping:
+Head=Closed
+Line=Closed
+Ship Trans line=Shiped (should be interfaced)
+SRS Trip Stop report --->Yellow
+Accounting Period has pending ship Transaction
+AR Invoice has been created!
+But Reservation Qty was not issued out !
+
+--------Slove:
+
+
+select  shipped_quantity ,ordered_quantity,
+       shipping_quantity , ordered_quantity,
+       last_update_date , sysdate,
+       last_updated_by  from apps.oe_order_lines_all
+where  line_id = 287431;
+
+
+--Find SO Deliver_ID,Delivery_Detail_ID
+
+select d.FLOW_STATUS_CODE,b.RELEASED_STATUS_NAME , 
+ c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and c.ORDER_NUMBER='5003212'
+
+
+
+select    oe_interfaced_flag,
+       last_update_date , sysdate,
+       last_updated_by  from apps.wsh_delivery_details
+where  DELIVERY_DETAIL_ID = 420001;
+
+
+
+
+update oe_order_lines_all
+set    shipped_quantity = ordered_quantity,
+       shipping_quantity = ordered_quantity,
+       last_update_date = sysdate,
+       last_updated_by = -11
+where  line_id = 287431;
+
+update wsh_delivery_details
+set    oe_interfaced_flag = 'Y',
+       last_update_date = sysdate,
+       last_updated_by = -11
+where  delivery_detail_id = 420001;
+
+Then run SRS Trip Stop report, OK !
+
+
+-----------------------------My SQL for a Invoiced, no Mtl Issue 
+select shipping_quantity,ordered_quantity,d.FLOW_STATUS_CODE,b.RELEASED_STATUS_NAME , 
+ c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and c.ORDER_NUMBER='401071'
+
+
+select    oe_interfaced_flag,inv_interfaced_flag,
+       last_update_date , sysdate,
+       last_updated_by  from apps.wsh_delivery_details
+where  DELIVERY_DETAIL_ID = 752200
+
+UPDATE wsh_delivery_details wdd
+    SET wdd.inv_interfaced_flag = 'Y'
+  WHERE wdd.delivery_detail_id in(752200)
+
+      SELECT wnd.NAME
+              ,wdd.delivery_detail_id
+              ,wts.stop_id
+              ,wdd.released_status
+              ,wdd.source_code
+              ,wnd.status_code
+              ,wdd.inv_interfaced_flag
+              ,wts.pending_interface_flag
+          FROM apps.wsh_delivery_details wdd, apps.wsh_delivery_assignments wda,
+               apps.wsh_new_deliveries wnd, apps.wsh_delivery_legs wdl, apps.wsh_trip_stops wts
+         WHERE wdd.source_code = 'OE'
+           AND wdd.released_status = 'C'
+           AND wdd.inv_interfaced_flag in ('N' ,'P')
+           --AND wdd.organization_id = 130
+           AND wda.delivery_detail_id = wdd.delivery_detail_id
+           AND wnd.delivery_id = wda.delivery_id
+           AND wnd.status_code in ('CL','IT')
+           AND wdl.delivery_id = wnd.delivery_id
+           --AND TO_CHAR(trunc(wts.actual_departure_date),'DD-MON-YYYY') between '01-JAN-2006' and '30-JAN-2006'
+           AND wdl.pick_up_stop_id = wts.stop_id
+        ORDER BY wnd.NAME;  
+ 
+select *--pending_interface_flag 
+from apps.wsh_trip_stops
+where stop_id = 248573
+
+select *--
+from apps.wsh_trip_stops
+where pending_interface_flag ='Y'
+
+update wsh_trip_stops
+set pending_interface_flag = null
+where stop_id = 248573
+
+UPDATE wsh_delivery_details wdd
+    SET wdd.inv_interfaced_flag = 'Y'
+  WHERE wdd.delivery_detail_id in(752200)
+  
+commit
+
+select   from apps.mtl_system_items where segment1='DPA  301 12/1.R4A/2'
+
+select reservation_id
+from mtl_reservations where INVENTORY_ITEM_ID=102914 and ORGANIZATION_ID= 132
+
+
+select * from mtl_demand  
+where n_column1 in 
+(select reservation_id from mtl_reservations where 
+reservation_id=1258385);
+ 
+ 
+delete from mtl_demand  
+where n_column1 in 
+(select reservation_id from mtl_reservations where 
+reservation_id=1258385);

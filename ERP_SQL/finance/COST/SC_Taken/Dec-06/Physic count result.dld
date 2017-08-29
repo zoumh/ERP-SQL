@@ -1,0 +1,1144 @@
+begindelays
+DataDelay=0
+CellDelay=0.2
+FormDelay=0.25
+KeyHold=50
+SystemHold=50
+MenuCall=250
+HourGlass=1000
+TAB=0
+ENT=0
+*UP=0
+*DN=0
+*LT=0
+*RT=0
+*SP=0
+*SAVE=0
+*NB=0
+*PB=0
+*NF=0
+*PF=0
+*NR=0
+*PR=0
+*FR=0
+*LR=0
+*ER=0
+*DR=0
+*SB=0
+*ST=0
+*BM=0
+*QE=0
+*QR=0
+*FI=0
+*FA=0
+*IR=0
+*CL=0
+*FE=0
+*AA=0
+*AB=0
+*AC=0
+*AD=0
+*AE=0
+*AF=0
+*AG=0
+*AH=0
+*AI=0
+*AJ=0
+*AK=0
+*AL=0
+*AM=0
+*AN=0
+*AO=0
+*AP=0
+*AQ=0
+*AR=0
+*AS=0
+*AT=0
+*AU=0
+*AV=0
+*AW=0
+*AX=0
+*AY=0
+*AZ=0
+enddelays
+beginheader
+	*DN	*SL0.5
+endheader
+beginother
+Window=Oracle Applications - PROD
+Description=
+CommandGroup=11i
+endother
+begindata
+8	*DN	*SL0.5
+12	*DN	*SL0.5
+171	*DN	*SL0.5
+295	*DN	*SL0.5
+793	*DN	*SL0.5
+772	*DN	*SL0.5
+1782	*DN	*SL0.5
+18	*DN	*SL0.5
+6	*DN	*SL0.5
+1	*DN	*SL0.5
+31	*DN	*SL0.5
+85	*DN	*SL0.5
+5600	*DN	*SL0.5
+180	*DN	*SL0.5
+48	*DN	*SL0.5
+6	*DN	*SL0.5
+306	*DN	*SL0.5
+1302	*DN	*SL0.5
+678	*DN	*SL0.5
+32	*DN	*SL0.5
+108	*DN	*SL0.5
+587	*DN	*SL0.5
+1927	*DN	*SL0.5
+63	*DN	*SL0.5
+22	*DN	*SL0.5
+10	*DN	*SL0.5
+111	*DN	*SL0.5
+12	*DN	*SL0.5
+3	*DN	*SL0.5
+1	*DN	*SL0.5
+4	*DN	*SL0.5
+4	*DN	*SL0.5
+259	*DN	*SL0.5
+2019	*DN	*SL0.5
+133	*DN	*SL0.5
+68	*DN	*SL0.5
+3636	*DN	*SL0.5
+256	*DN	*SL0.5
+2228	*DN	*SL0.5
+5357	*DN	*SL0.5
+140	*DN	*SL0.5
+1065	*DN	*SL0.5
+1080	*DN	*SL0.5
+1093	*DN	*SL0.5
+44524	*DN	*SL0.5
+49307	*DN	*SL0.5
+1	*DN	*SL0.5
+2	*DN	*SL0.5
+15	*DN	*SL0.5
+415	*DN	*SL0.5
+111	*DN	*SL0.5
+111	*DN	*SL0.5
+90	*DN	*SL0.5
+348	*DN	*SL0.5
+75	*DN	*SL0.5
+248	*DN	*SL0.5
+107	*DN	*SL0.5
+9372	*DN	*SL0.5
+3772	*DN	*SL0.5
+14975	*DN	*SL0.5
+191	*DN	*SL0.5
+95	*DN	*SL0.5
+22712	*DN	*SL0.5
+43	*DN	*SL0.5
+234	*DN	*SL0.5
+51	*DN	*SL0.5
+88	*DN	*SL0.5
+35	*DN	*SL0.5
+1677	*DN	*SL0.5
+48	*DN	*SL0.5
+265	*DN	*SL0.5
+57	*DN	*SL0.5
+982	*DN	*SL0.5
+1074	*DN	*SL0.5
+416	*DN	*SL0.5
+90	*DN	*SL0.5
+238	*DN	*SL0.5
+262	*DN	*SL0.5
+176	*DN	*SL0.5
+8	*DN	*SL0.5
+157	*DN	*SL0.5
+2	*DN	*SL0.5
+61	*DN	*SL0.5
+939	*DN	*SL0.5
+2049	*DN	*SL0.5
+95	*DN	*SL0.5
+1425	*DN	*SL0.5
+42	*DN	*SL0.5
+300	*DN	*SL0.5
+3771	*DN	*SL0.5
+1	*DN	*SL0.5
+6	*DN	*SL0.5
+37	*DN	*SL0.5
+1	*DN	*SL0.5
+5	*DN	*SL0.5
+375	*DN	*SL0.5
+77	*DN	*SL0.5
+198	*DN	*SL0.5
+49	*DN	*SL0.5
+1001	*DN	*SL0.5
+15	*DN	*SL0.5
+82	*DN	*SL0.5
+822	*DN	*SL0.5
+6	*DN	*SL0.5
+11	*DN	*SL0.5
+22	*DN	*SL0.5
+450	*DN	*SL0.5
+45	*DN	*SL0.5
+1638	*DN	*SL0.5
+1	*DN	*SL0.5
+299	*DN	*SL0.5
+13	*DN	*SL0.5
+269	*DN	*SL0.5
+9	*DN	*SL0.5
+36	*DN	*SL0.5
+75	*DN	*SL0.5
+1	*DN	*SL0.5
+4718	*DN	*SL0.5
+3069	*DN	*SL0.5
+43	*DN	*SL0.5
+973	*DN	*SL0.5
+38	*DN	*SL0.5
+249	*DN	*SL0.5
+451	*DN	*SL0.5
+6771	*DN	*SL0.5
+163	*DN	*SL0.5
+1179	*DN	*SL0.5
+633	*DN	*SL0.5
+609	*DN	*SL0.5
+388	*DN	*SL0.5
+1	*DN	*SL0.5
+2	*DN	*SL0.5
+79	*DN	*SL0.5
+10	*DN	*SL0.5
+1	*DN	*SL0.5
+2	*DN	*SL0.5
+4	*DN	*SL0.5
+48	*DN	*SL0.5
+10	*DN	*SL0.5
+28	*DN	*SL0.5
+1551	*DN	*SL0.5
+1114	*DN	*SL0.5
+14	*DN	*SL0.5
+205	*DN	*SL0.5
+66	*DN	*SL0.5
+8	*DN	*SL0.5
+884	*DN	*SL0.5
+1060	*DN	*SL0.5
+116	*DN	*SL0.5
+541	*DN	*SL0.5
+48	*DN	*SL0.5
+146	*DN	*SL0.5
+1412	*DN	*SL0.5
+53	*DN	*SL0.5
+1458	*DN	*SL0.5
+1	*DN	*SL0.5
+263	*DN	*SL0.5
+61	*DN	*SL0.5
+60	*DN	*SL0.5
+15	*DN	*SL0.5
+127	*DN	*SL0.5
+996	*DN	*SL0.5
+2	*DN	*SL0.5
+244	*DN	*SL0.5
+4	*DN	*SL0.5
+3872	*DN	*SL0.5
+6	*DN	*SL0.5
+1611	*DN	*SL0.5
+51	*DN	*SL0.5
+18	*DN	*SL0.5
+22	*DN	*SL0.5
+270	*DN	*SL0.5
+9358	*DN	*SL0.5
+758	*DN	*SL0.5
+2888	*DN	*SL0.5
+1491	*DN	*SL0.5
+723	*DN	*SL0.5
+2	*DN	*SL0.5
+117	*DN	*SL0.5
+284	*DN	*SL0.5
+261	*DN	*SL0.5
+3234	*DN	*SL0.5
+16	*DN	*SL0.5
+25	*DN	*SL0.5
+2	*DN	*SL0.5
+1	*DN	*SL0.5
+979	*DN	*SL0.5
+696	*DN	*SL0.5
+1757	*DN	*SL0.5
+10476	*DN	*SL0.5
+873	*DN	*SL0.5
+28	*DN	*SL0.5
+460	*DN	*SL0.5
+2128	*DN	*SL0.5
+18	*DN	*SL0.5
+160	*DN	*SL0.5
+34	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+4	*DN	*SL0.5
+5	*DN	*SL0.5
+1	*DN	*SL0.5
+48	*DN	*SL0.5
+2	*DN	*SL0.5
+33	*DN	*SL0.5
+2	*DN	*SL0.5
+2	*DN	*SL0.5
+7607	*DN	*SL0.5
+10	*DN	*SL0.5
+141	*DN	*SL0.5
+1164	*DN	*SL0.5
+120	*DN	*SL0.5
+1051	*DN	*SL0.5
+8293	*DN	*SL0.5
+162	*DN	*SL0.5
+3	*DN	*SL0.5
+1	*DN	*SL0.5
+321	*DN	*SL0.5
+8	*DN	*SL0.5
+5	*DN	*SL0.5
+119	*DN	*SL0.5
+55	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+4	*DN	*SL0.5
+2	*DN	*SL0.5
+2152	*DN	*SL0.5
+174	*DN	*SL0.5
+3	*DN	*SL0.5
+17	*DN	*SL0.5
+429	*DN	*SL0.5
+24	*DN	*SL0.5
+2	*DN	*SL0.5
+539	*DN	*SL0.5
+6	*DN	*SL0.5
+3	*DN	*SL0.5
+2	*DN	*SL0.5
+3648	*DN	*SL0.5
+58	*DN	*SL0.5
+1	*DN	*SL0.5
+3	*DN	*SL0.5
+16	*DN	*SL0.5
+1	*DN	*SL0.5
+223	*DN	*SL0.5
+18	*DN	*SL0.5
+23	*DN	*SL0.5
+54	*DN	*SL0.5
+20	*DN	*SL0.5
+51	*DN	*SL0.5
+62	*DN	*SL0.5
+15	*DN	*SL0.5
+11	*DN	*SL0.5
+5	*DN	*SL0.5
+1	*DN	*SL0.5
+10	*DN	*SL0.5
+12	*DN	*SL0.5
+7	*DN	*SL0.5
+21	*DN	*SL0.5
+6165	*DN	*SL0.5
+4418	*DN	*SL0.5
+11	*DN	*SL0.5
+117	*DN	*SL0.5
+16	*DN	*SL0.5
+98	*DN	*SL0.5
+24	*DN	*SL0.5
+155	*DN	*SL0.5
+45	*DN	*SL0.5
+112	*DN	*SL0.5
+3	*DN	*SL0.5
+13	*DN	*SL0.5
+38	*DN	*SL0.5
+2	*DN	*SL0.5
+2	*DN	*SL0.5
+15	*DN	*SL0.5
+3	*DN	*SL0.5
+5	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+28	*DN	*SL0.5
+7	*DN	*SL0.5
+26	*DN	*SL0.5
+671	*DN	*SL0.5
+10	*DN	*SL0.5
+2	*DN	*SL0.5
+1	*DN	*SL0.5
+9	*DN	*SL0.5
+1	*DN	*SL0.5
+39	*DN	*SL0.5
+633	*DN	*SL0.5
+2	*DN	*SL0.5
+4	*DN	*SL0.5
+8	*DN	*SL0.5
+3	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+2	*DN	*SL0.5
+2	*DN	*SL0.5
+7	*DN	*SL0.5
+10	*DN	*SL0.5
+276	*DN	*SL0.5
+3	*DN	*SL0.5
+1	*DN	*SL0.5
+84	*DN	*SL0.5
+83	*DN	*SL0.5
+7	*DN	*SL0.5
+9	*DN	*SL0.5
+6	*DN	*SL0.5
+18	*DN	*SL0.5
+9	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+82	*DN	*SL0.5
+22	*DN	*SL0.5
+12	*DN	*SL0.5
+5	*DN	*SL0.5
+991	*DN	*SL0.5
+559	*DN	*SL0.5
+85	*DN	*SL0.5
+2	*DN	*SL0.5
+31	*DN	*SL0.5
+22	*DN	*SL0.5
+55	*DN	*SL0.5
+2	*DN	*SL0.5
+95	*DN	*SL0.5
+145	*DN	*SL0.5
+2	*DN	*SL0.5
+12	*DN	*SL0.5
+9	*DN	*SL0.5
+4	*DN	*SL0.5
+2	*DN	*SL0.5
+10	*DN	*SL0.5
+9	*DN	*SL0.5
+18	*DN	*SL0.5
+174	*DN	*SL0.5
+2	*DN	*SL0.5
+39	*DN	*SL0.5
+667	*DN	*SL0.5
+62	*DN	*SL0.5
+1	*DN	*SL0.5
+12	*DN	*SL0.5
+1	*DN	*SL0.5
+21	*DN	*SL0.5
+97	*DN	*SL0.5
+2	*DN	*SL0.5
+2	*DN	*SL0.5
+177	*DN	*SL0.5
+45	*DN	*SL0.5
+95	*DN	*SL0.5
+72	*DN	*SL0.5
+1975	*DN	*SL0.5
+65	*DN	*SL0.5
+4707	*DN	*SL0.5
+153	*DN	*SL0.5
+143	*DN	*SL0.5
+216	*DN	*SL0.5
+111	*DN	*SL0.5
+111	*DN	*SL0.5
+93	*DN	*SL0.5
+36	*DN	*SL0.5
+49	*DN	*SL0.5
+17	*DN	*SL0.5
+67	*DN	*SL0.5
+243	*DN	*SL0.5
+55	*DN	*SL0.5
+24	*DN	*SL0.5
+156	*DN	*SL0.5
+7	*DN	*SL0.5
+2	*DN	*SL0.5
+3	*DN	*SL0.5
+37000	*DN	*SL0.5
+18	*DN	*SL0.5
+37	*DN	*SL0.5
+33	*DN	*SL0.5
+92	*DN	*SL0.5
+168	*DN	*SL0.5
+232	*DN	*SL0.5
+403	*DN	*SL0.5
+1	*DN	*SL0.5
+2	*DN	*SL0.5
+84	*DN	*SL0.5
+154	*DN	*SL0.5
+93	*DN	*SL0.5
+412	*DN	*SL0.5
+164	*DN	*SL0.5
+41	*DN	*SL0.5
+139	*DN	*SL0.5
+417	*DN	*SL0.5
+3438	*DN	*SL0.5
+512	*DN	*SL0.5
+2622	*DN	*SL0.5
+3	*DN	*SL0.5
+3	*DN	*SL0.5
+4	*DN	*SL0.5
+190	*DN	*SL0.5
+182	*DN	*SL0.5
+1	*DN	*SL0.5
+15	*DN	*SL0.5
+1643	*DN	*SL0.5
+26	*DN	*SL0.5
+19	*DN	*SL0.5
+164	*DN	*SL0.5
+362	*DN	*SL0.5
+3	*DN	*SL0.5
+613	*DN	*SL0.5
+92	*DN	*SL0.5
+843	*DN	*SL0.5
+13000	*DN	*SL0.5
+724	*DN	*SL0.5
+847	*DN	*SL0.5
+624	*DN	*SL0.5
+337	*DN	*SL0.5
+11	*DN	*SL0.5
+22	*DN	*SL0.5
+7717	*DN	*SL0.5
+48	*DN	*SL0.5
+5979	*DN	*SL0.5
+469	*DN	*SL0.5
+672	*DN	*SL0.5
+1143	*DN	*SL0.5
+2	*DN	*SL0.5
+1919	*DN	*SL0.5
+717	*DN	*SL0.5
+54	*DN	*SL0.5
+7	*DN	*SL0.5
+11	*DN	*SL0.5
+47	*DN	*SL0.5
+8	*DN	*SL0.5
+6	*DN	*SL0.5
+832	*DN	*SL0.5
+144	*DN	*SL0.5
+245	*DN	*SL0.5
+102	*DN	*SL0.5
+6996	*DN	*SL0.5
+212	*DN	*SL0.5
+4087	*DN	*SL0.5
+33653	*DN	*SL0.5
+276	*DN	*SL0.5
+1309	*DN	*SL0.5
+32	*DN	*SL0.5
+76	*DN	*SL0.5
+4897	*DN	*SL0.5
+14662	*DN	*SL0.5
+1	*DN	*SL0.5
+14	*DN	*SL0.5
+2101	*DN	*SL0.5
+1679	*DN	*SL0.5
+4237	*DN	*SL0.5
+155	*DN	*SL0.5
+399	*DN	*SL0.5
+249	*DN	*SL0.5
+407	*DN	*SL0.5
+2	*DN	*SL0.5
+38	*DN	*SL0.5
+15834	*DN	*SL0.5
+9594	*DN	*SL0.5
+910	*DN	*SL0.5
+28	*DN	*SL0.5
+3572	*DN	*SL0.5
+3707	*DN	*SL0.5
+783	*DN	*SL0.5
+324	*DN	*SL0.5
+2792	*DN	*SL0.5
+128380	*DN	*SL0.5
+32	*DN	*SL0.5
+18	*DN	*SL0.5
+3824	*DN	*SL0.5
+76	*DN	*SL0.5
+122	*DN	*SL0.5
+2	*DN	*SL0.5
+812	*DN	*SL0.5
+1354	*DN	*SL0.5
+203	*DN	*SL0.5
+194	*DN	*SL0.5
+19000	*DN	*SL0.5
+650	*DN	*SL0.5
+49	*DN	*SL0.5
+71	*DN	*SL0.5
+270	*DN	*SL0.5
+519	*DN	*SL0.5
+3	*DN	*SL0.5
+129	*DN	*SL0.5
+301	*DN	*SL0.5
+170	*DN	*SL0.5
+341	*DN	*SL0.5
+39	*DN	*SL0.5
+26	*DN	*SL0.5
+14	*DN	*SL0.5
+38	*DN	*SL0.5
+51	*DN	*SL0.5
+20	*DN	*SL0.5
+65	*DN	*SL0.5
+87	*DN	*SL0.5
+3927	*DN	*SL0.5
+505	*DN	*SL0.5
+272	*DN	*SL0.5
+267	*DN	*SL0.5
+399	*DN	*SL0.5
+135	*DN	*SL0.5
+2716	*DN	*SL0.5
+546	*DN	*SL0.5
+1170	*DN	*SL0.5
+892	*DN	*SL0.5
+30	*DN	*SL0.5
+42	*DN	*SL0.5
+115	*DN	*SL0.5
+10	*DN	*SL0.5
+2	*DN	*SL0.5
+4	*DN	*SL0.5
+4	*DN	*SL0.5
+1	*DN	*SL0.5
+33	*DN	*SL0.5
+14	*DN	*SL0.5
+3	*DN	*SL0.5
+74	*DN	*SL0.5
+6	*DN	*SL0.5
+13	*DN	*SL0.5
+1	*DN	*SL0.5
+58	*DN	*SL0.5
+1335	*DN	*SL0.5
+663	*DN	*SL0.5
+2	*DN	*SL0.5
+10	*DN	*SL0.5
+2077	*DN	*SL0.5
+1	*DN	*SL0.5
+35	*DN	*SL0.5
+1240	*DN	*SL0.5
+48	*DN	*SL0.5
+341	*DN	*SL0.5
+1000	*DN	*SL0.5
+318	*DN	*SL0.5
+8032	*DN	*SL0.5
+2371	*DN	*SL0.5
+15	*DN	*SL0.5
+9	*DN	*SL0.5
+2	*DN	*SL0.5
+16	*DN	*SL0.5
+20298	*DN	*SL0.5
+3	*DN	*SL0.5
+13	*DN	*SL0.5
+1	*DN	*SL0.5
+3	*DN	*SL0.5
+39	*DN	*SL0.5
+16	*DN	*SL0.5
+23880	*DN	*SL0.5
+133	*DN	*SL0.5
+3	*DN	*SL0.5
+2	*DN	*SL0.5
+1	*DN	*SL0.5
+2	*DN	*SL0.5
+310000	*DN	*SL0.5
+17	*DN	*SL0.5
+2	*DN	*SL0.5
+1	*DN	*SL0.5
+4	*DN	*SL0.5
+1	*DN	*SL0.5
+17	*DN	*SL0.5
+78	*DN	*SL0.5
+2	*DN	*SL0.5
+2	*DN	*SL0.5
+2035	*DN	*SL0.5
+13	*DN	*SL0.5
+1140	*DN	*SL0.5
+14	*DN	*SL0.5
+3	*DN	*SL0.5
+65	*DN	*SL0.5
+66	*DN	*SL0.5
+69	*DN	*SL0.5
+178	*DN	*SL0.5
+7	*DN	*SL0.5
+575	*DN	*SL0.5
+4	*DN	*SL0.5
+3013	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+19	*DN	*SL0.5
+122	*DN	*SL0.5
+10	*DN	*SL0.5
+4	*DN	*SL0.5
+4	*DN	*SL0.5
+10	*DN	*SL0.5
+1	*DN	*SL0.5
+8176	*DN	*SL0.5
+4	*DN	*SL0.5
+519	*DN	*SL0.5
+45	*DN	*SL0.5
+43	*DN	*SL0.5
+2	*DN	*SL0.5
+40	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+9	*DN	*SL0.5
+2	*DN	*SL0.5
+10	*DN	*SL0.5
+1	*DN	*SL0.5
+9	*DN	*SL0.5
+3	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+7	*DN	*SL0.5
+768	*DN	*SL0.5
+50	*DN	*SL0.5
+108	*DN	*SL0.5
+78	*DN	*SL0.5
+4	*DN	*SL0.5
+4	*DN	*SL0.5
+636	*DN	*SL0.5
+34	*DN	*SL0.5
+106	*DN	*SL0.5
+221	*DN	*SL0.5
+77	*DN	*SL0.5
+4	*DN	*SL0.5
+73	*DN	*SL0.5
+11	*DN	*SL0.5
+1	*DN	*SL0.5
+2	*DN	*SL0.5
+802	*DN	*SL0.5
+5	*DN	*SL0.5
+701	*DN	*SL0.5
+1751	*DN	*SL0.5
+1636	*DN	*SL0.5
+1	*DN	*SL0.5
+291	*DN	*SL0.5
+186	*DN	*SL0.5
+1	*DN	*SL0.5
+8	*DN	*SL0.5
+9	*DN	*SL0.5
+6	*DN	*SL0.5
+272	*DN	*SL0.5
+381	*DN	*SL0.5
+196	*DN	*SL0.5
+53	*DN	*SL0.5
+309	*DN	*SL0.5
+7	*DN	*SL0.5
+6	*DN	*SL0.5
+200	*DN	*SL0.5
+18	*DN	*SL0.5
+58	*DN	*SL0.5
+302	*DN	*SL0.5
+16	*DN	*SL0.5
+17	*DN	*SL0.5
+13	*DN	*SL0.5
+260	*DN	*SL0.5
+1	*DN	*SL0.5
+32	*DN	*SL0.5
+14	*DN	*SL0.5
+113	*DN	*SL0.5
+66	*DN	*SL0.5
+78	*DN	*SL0.5
+194	*DN	*SL0.5
+10	*DN	*SL0.5
+33	*DN	*SL0.5
+5	*DN	*SL0.5
+3	*DN	*SL0.5
+1	*DN	*SL0.5
+14	*DN	*SL0.5
+13	*DN	*SL0.5
+56	*DN	*SL0.5
+6	*DN	*SL0.5
+20	*DN	*SL0.5
+324	*DN	*SL0.5
+114	*DN	*SL0.5
+13	*DN	*SL0.5
+276	*DN	*SL0.5
+557	*DN	*SL0.5
+3	*DN	*SL0.5
+5816	*DN	*SL0.5
+1	*DN	*SL0.5
+83	*DN	*SL0.5
+51	*DN	*SL0.5
+141	*DN	*SL0.5
+102	*DN	*SL0.5
+8	*DN	*SL0.5
+15	*DN	*SL0.5
+107	*DN	*SL0.5
+10	*DN	*SL0.5
+309	*DN	*SL0.5
+30	*DN	*SL0.5
+422	*DN	*SL0.5
+5722	*DN	*SL0.5
+12	*DN	*SL0.5
+228	*DN	*SL0.5
+132	*DN	*SL0.5
+105	*DN	*SL0.5
+109	*DN	*SL0.5
+1398	*DN	*SL0.5
+10	*DN	*SL0.5
+177	*DN	*SL0.5
+1	*DN	*SL0.5
+59	*DN	*SL0.5
+301	*DN	*SL0.5
+4	*DN	*SL0.5
+2	*DN	*SL0.5
+7302	*DN	*SL0.5
+1316	*DN	*SL0.5
+68	*DN	*SL0.5
+7	*DN	*SL0.5
+90	*DN	*SL0.5
+760	*DN	*SL0.5
+31	*DN	*SL0.5
+72	*DN	*SL0.5
+17	*DN	*SL0.5
+175	*DN	*SL0.5
+561	*DN	*SL0.5
+553	*DN	*SL0.5
+24	*DN	*SL0.5
+528	*DN	*SL0.5
+30	*DN	*SL0.5
+8	*DN	*SL0.5
+383	*DN	*SL0.5
+4247	*DN	*SL0.5
+30	*DN	*SL0.5
+10	*DN	*SL0.5
+4	*DN	*SL0.5
+2	*DN	*SL0.5
+3148	*DN	*SL0.5
+3881	*DN	*SL0.5
+1	*DN	*SL0.5
+37	*DN	*SL0.5
+9	*DN	*SL0.5
+406	*DN	*SL0.5
+938	*DN	*SL0.5
+141	*DN	*SL0.5
+4709	*DN	*SL0.5
+23	*DN	*SL0.5
+66	*DN	*SL0.5
+9619	*DN	*SL0.5
+5	*DN	*SL0.5
+2451	*DN	*SL0.5
+49	*DN	*SL0.5
+2174	*DN	*SL0.5
+187	*DN	*SL0.5
+14	*DN	*SL0.5
+1605	*DN	*SL0.5
+2829	*DN	*SL0.5
+2186	*DN	*SL0.5
+14	*DN	*SL0.5
+61	*DN	*SL0.5
+409	*DN	*SL0.5
+185	*DN	*SL0.5
+74	*DN	*SL0.5
+2	*DN	*SL0.5
+2	*DN	*SL0.5
+26	*DN	*SL0.5
+1	*DN	*SL0.5
+6	*DN	*SL0.5
+15	*DN	*SL0.5
+3	*DN	*SL0.5
+1	*DN	*SL0.5
+50	*DN	*SL0.5
+31	*DN	*SL0.5
+28	*DN	*SL0.5
+2	*DN	*SL0.5
+3	*DN	*SL0.5
+193	*DN	*SL0.5
+129	*DN	*SL0.5
+5	*DN	*SL0.5
+51	*DN	*SL0.5
+8752	*DN	*SL0.5
+412	*DN	*SL0.5
+304	*DN	*SL0.5
+2	*DN	*SL0.5
+206	*DN	*SL0.5
+7	*DN	*SL0.5
+290	*DN	*SL0.5
+3	*DN	*SL0.5
+2	*DN	*SL0.5
+425	*DN	*SL0.5
+322	*DN	*SL0.5
+3586	*DN	*SL0.5
+18	*DN	*SL0.5
+700	*DN	*SL0.5
+1254	*DN	*SL0.5
+859	*DN	*SL0.5
+4	*DN	*SL0.5
+76	*DN	*SL0.5
+1592	*DN	*SL0.5
+4	*DN	*SL0.5
+5	*DN	*SL0.5
+12	*DN	*SL0.5
+9	*DN	*SL0.5
+34	*DN	*SL0.5
+51	*DN	*SL0.5
+3986	*DN	*SL0.5
+3708	*DN	*SL0.5
+132	*DN	*SL0.5
+58	*DN	*SL0.5
+962	*DN	*SL0.5
+1308	*DN	*SL0.5
+3991	*DN	*SL0.5
+306	*DN	*SL0.5
+4445	*DN	*SL0.5
+18	*DN	*SL0.5
+26	*DN	*SL0.5
+268	*DN	*SL0.5
+92	*DN	*SL0.5
+11	*DN	*SL0.5
+8	*DN	*SL0.5
+162	*DN	*SL0.5
+3	*DN	*SL0.5
+2186	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+114	*DN	*SL0.5
+2500	*DN	*SL0.5
+2	*DN	*SL0.5
+4586	*DN	*SL0.5
+2	*DN	*SL0.5
+106	*DN	*SL0.5
+2	*DN	*SL0.5
+15	*DN	*SL0.5
+30	*DN	*SL0.5
+121	*DN	*SL0.5
+1	*DN	*SL0.5
+294	*DN	*SL0.5
+5	*DN	*SL0.5
+9	*DN	*SL0.5
+453	*DN	*SL0.5
+1980	*DN	*SL0.5
+5975	*DN	*SL0.5
+326	*DN	*SL0.5
+56	*DN	*SL0.5
+1357	*DN	*SL0.5
+22	*DN	*SL0.5
+278	*DN	*SL0.5
+151	*DN	*SL0.5
+95	*DN	*SL0.5
+326	*DN	*SL0.5
+11	*DN	*SL0.5
+4	*DN	*SL0.5
+1	*DN	*SL0.5
+18	*DN	*SL0.5
+10	*DN	*SL0.5
+331	*DN	*SL0.5
+5208	*DN	*SL0.5
+83	*DN	*SL0.5
+11	*DN	*SL0.5
+249	*DN	*SL0.5
+205	*DN	*SL0.5
+1	*DN	*SL0.5
+7	*DN	*SL0.5
+300	*DN	*SL0.5
+19	*DN	*SL0.5
+10	*DN	*SL0.5
+3516	*DN	*SL0.5
+6199	*DN	*SL0.5
+277	*DN	*SL0.5
+8	*DN	*SL0.5
+47	*DN	*SL0.5
+7253	*DN	*SL0.5
+53	*DN	*SL0.5
+268	*DN	*SL0.5
+2	*DN	*SL0.5
+3986	*DN	*SL0.5
+230	*DN	*SL0.5
+89	*DN	*SL0.5
+4197	*DN	*SL0.5
+1030	*DN	*SL0.5
+399	*DN	*SL0.5
+1323	*DN	*SL0.5
+26	*DN	*SL0.5
+3318	*DN	*SL0.5
+243	*DN	*SL0.5
+155	*DN	*SL0.5
+5	*DN	*SL0.5
+107	*DN	*SL0.5
+9	*DN	*SL0.5
+224	*DN	*SL0.5
+27	*DN	*SL0.5
+60	*DN	*SL0.5
+6	*DN	*SL0.5
+39	*DN	*SL0.5
+111	*DN	*SL0.5
+114	*DN	*SL0.5
+806	*DN	*SL0.5
+11175	*DN	*SL0.5
+6	*DN	*SL0.5
+386	*DN	*SL0.5
+22	*DN	*SL0.5
+8	*DN	*SL0.5
+212	*DN	*SL0.5
+4256	*DN	*SL0.5
+7	*DN	*SL0.5
+6	*DN	*SL0.5
+2336	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+78	*DN	*SL0.5
+79	*DN	*SL0.5
+491	*DN	*SL0.5
+1	*DN	*SL0.5
+123	*DN	*SL0.5
+3204	*DN	*SL0.5
+507	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+6	*DN	*SL0.5
+5	*DN	*SL0.5
+1	*DN	*SL0.5
+169	*DN	*SL0.5
+2	*DN	*SL0.5
+10	*DN	*SL0.5
+547	*DN	*SL0.5
+2	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+2	*DN	*SL0.5
+58	*DN	*SL0.5
+1	*DN	*SL0.5
+1	*DN	*SL0.5
+12	*DN	*SL0.5
+246	*DN	*SL0.5
+543	*DN	*SL0.5
+43	*DN	*SL0.5
+1272	*DN	*SL0.5
+386	*DN	*SL0.5
+362	*DN	*SL0.5
+48	*DN	*SL0.5
+4	*DN	*SL0.5
+172	*DN	*SL0.5
+43	*DN	*SL0.5
+65	*DN	*SL0.5
+51	*DN	*SL0.5
+1629	*DN	*SL0.5
+1	*DN	*SL0.5
+97	*DN	*SL0.5
+4673	*DN	*SL0.5
+945	*DN	*SL0.5
+6	*DN	*SL0.5
+18	*DN	*SL0.5
+126	*DN	*SL0.5
+57	*DN	*SL0.5
+143	*DN	*SL0.5
+2	*DN	*SL0.5
+7	*DN	*SL0.5
+2	*DN	*SL0.5
+30	*DN	*SL0.5
+14	*DN	*SL0.5
+803	*DN	*SL0.5
+30	*DN	*SL0.5
+31	*DN	*SL0.5
+180	*DN	*SL0.5
+490	*DN	*SL0.5
+1479	*DN	*SL0.5
+450	*DN	*SL0.5
+62	*DN	*SL0.5
+170	*DN	*SL0.5
+23	*DN	*SL0.5
+122	*DN	*SL0.5
+4434	*DN	*SL0.5
+5419	*DN	*SL0.5
+62488	*DN	*SL0.5
+129	*DN	*SL0.5
+16	*DN	*SL0.5
+17	*DN	*SL0.5
+89	*DN	*SL0.5
+522	*DN	*SL0.5
+523	*DN	*SL0.5
+49	*DN	*SL0.5
+2	*DN	*SL0.5
+1	*DN	*SL0.5
+36	*DN	*SL0.5
+315	*DN	*SL0.5
+3	*DN	*SL0.5
+287	*DN	*SL0.5
+8	*DN	*SL0.5
+534	*DN	*SL0.5
+10	*DN	*SL0.5
+181	*DN	*SL0.5
+5	*DN	*SL0.5
+344	*DN	*SL0.5
+4058	*DN	*SL0.5
+21115	*DN	*SL0.5
+1730	*DN	*SL0.5
+2792	*DN	*SL0.5
+1	*DN	*SL0.5
+15000	*DN	*SL0.5
+17000	*DN	*SL0.5
+9	*DN	*SL0.5
+10	*DN	*SL0.5
+27	*DN	*SL0.5
+4	*DN	*SL0.5
+8	*DN	*SL0.5
+4	*DN	*SL0.5
+1	*DN	*SL0.5
+102	*DN	*SL0.5
+18	*DN	*SL0.5
+41	*DN	*SL0.5
+408	*DN	*SL0.5
+54	*DN	*SL0.5
+137	*DN	*SL0.5
+60	*DN	*SL0.5
+14754	*DN	*SL0.5
+6122	*DN	*SL0.5
+92	*DN	*SL0.5
+2	*DN	*SL0.5
+4299	*DN	*SL0.5
+3	*DN	*SL0.5
+6	*DN	*SL0.5
+1	*DN	*SL0.5
+enddata
+beginoptions
+AutoTab=false
+HourGlass=false
+AutoInsert=true
+ProgressBar=true
+TitleSize=false
+DataColour=16777215
+CommandColour=16777215
+KeystrokeColour=16777215
+DataSource=0
+ImportLoad=0
+endoptions
+beginformat
+endformat
+begincommands
+Command	Playback	11i	NCA	10SC	Other	Description
+TAB	Next_item	\{TAB}	\{TAB}	\{TAB}	\{TAB}	TAB Key
+ENT	[various]	\{ENTER}	\{ENTER}	\{ENTER}	\{ENTER}	Enter
+*UP	Key Up	\{UP}	\{UP}	\{UP}	\{UP}	Up arrow key
+*DN	Key Down	\{DOWN}	\{DOWN}	\{DOWN}	\{DOWN}	Down arrow key
+*LT	[various]	\{LEFT}	\{LEFT}	\{LEFT}	\{LEFT}	Left arrow key
+*RT	[various]	\{RIGHT}	\{RIGHT}	\{RIGHT}	\{RIGHT}	Right arrow key
+*SP	MENU CUSTOM FILE ACCEPT	\%F%V	\%A{DOWN 4}{ENTER}	\%A%A		Save & Proceed
+*SAVE	Key Commit_form	\^S	\^S	\{F10}		Save
+*NB	Key Next_block	\+{PGDN}	\+{PGDN}	\^{PGDN}		Next Block
+*PB	Key Previous_block	\+{PGUP)	\+{PGUP)	\^{PGUP}		Previous Block
+*NF	Next_item	\{TAB}	\%G{DOWN}{ENTER}	\{TAB}		Next Field
+*PF	Key Previous_item	\+{TAB}	\%G{DOWN 2}{ENTER}	\+{TAB}		Previous Field
+*NR	Key Down	\{DOWN}	\%G{DOWN 3}{ENTER}	\+{DOWN}		Next record
+*PR	Key Up	\{UP}	\%G{DOWN 4}{ENTER}	\+{UP}		Previous record
+*FR	MENU CUSTOM RECORD FIRST	\%V%DF	\%G{DOWN 5}{ENTER}	\%G%F		First record
+*LR	MENU CUSTOM RECORD LAST	\%V%DL	\%G{DOWN 6}{ENTER}	\%G%L		Last record
+*ER	Key Clear_record	\{F6}	\{F6}	\+{F4}		Erase record
+*DR	Key Delete_record	\^{UP}	\^{UP}	\+{F6}		Delete record
+*SB	[various]	\ 	\ 	\ 	\ 	Space bar
+*ST	[none]	\{HOME}+{END}	\{HOME}+{END}	\{HOME}+{END}		Select field text
+*BM	Key Block_menu	\^B	\^B	\{F5}		Block menu
+*QE	Key Enter_query	\{F11}	\{F11}	\{F7}		Query enter
+*QR	Key Execute_query	\^{F11}	\^{F11}	\{F8}		Query run
+*FI	MENU CUSTOM VIEW FIND	\%V%F	\%Q{DOWN}{ENTER}			Find
+*FA	MENU CUSTOM VIEW FIND_ALL	\%V%I	\%Q{DOWN 2}{ENTER}			Find all
+*IR	Key Create_record	\^{DOWN}	\^{DOWN}	\{F6}		Insert record
+*CL	Key Clear_item	\{F5}	\{F5}	\^U		Clear field
+*FE	Key Edit	\^E	\^E	\^E		Field edit
+*AA	[various]	\%A	\%A	\%A	\%A	Alt A
+*AB	[various]	\%B	\%B	\%B	\%B	Alt B
+*AC	[various]	\%C	\%C	\%C	\%C	Alt C
+*AD	[various]	\%D	\%D	\%D	\%D	Alt D
+*AE	[various]	\%E	\%E	\%E	\%E	Alt E
+*AF	[various]	\%F	\%F	\%F	\%F	Alt F
+*AG	[various]	\%G	\%G	\%G	\%G	Alt G
+*AH	[various]	\%H	\%H	\%H	\%H	Alt H
+*AI	[various]	\%I	\%I	\%I	\%I	Alt I
+*AJ	[various]	\%J	\%J	\%J	\%J	Alt J
+*AK	[various]	\%K	\%K	\%K	\%K	Alt K
+*AL	[various]	\%L	\%L	\%L	\%L	Alt L
+*AM	[various]	\%M	\%M	\%M	\%M	Alt M
+*AN	[various]	\%N	\%N	\%N	\%N	Alt N
+*AO	[various]	\%O	\%O	\%O	\%O	Alt O
+*AP	[various]	\%P	\%P	\%P	\%P	Alt P
+*AQ	[various]	\%Q	\%Q	\%Q	\%Q	Alt Q
+*AR	[various]	\%R	\%R	\%R	\%R	Alt R
+*AS	[various]	\%S	\%S	\%S	\%S	Alt S
+*AT	[various]	\%T	\%T	\%T	\%T	Alt T
+*AU	[various]	\%U	\%U	\%U	\%U	Alt U
+*AV	[various]	\%V	\%V	\%V	\%V	Alt V
+*AW	[various]	\%W	\%W	\%W	\%W	Alt W
+*AX	[various]	\%X	\%X	\%X	\%X	Alt X
+*AY	[various]	\%Y	\%Y	\%Y	\%Y	Alt Y
+*AZ	[various]	\%Z	\%Z	\%Z	\%Z	Alt Z
+endcommands

@@ -1,0 +1,21 @@
+
+-------------Apple yearly query for SE internal AP AR net
+
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,aps.VENDOR_SITE_CODE
+,VDR.SEGMENT1 as Supplier_Num, 
+api.invoice_num,api.INVOICE_CURRENCY_CODE Curr,api.EXCHANGE_RATE Rate,api.INVOICE_AMOUNT,api.amount_paid,
+api.INVOICE_TYPE_LOOKUP_CODE,aid.DIST_MATCH_TYPE
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+,		apps.AP_INVOICE_DISTRIBUTIONS_all aid
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and api.GL_DATE>=to_date('2005-01-1','yyyy-mm-dd')
+and api.GL_DATE<=to_date('2005-12-31','yyyy-mm-dd')
+and api.WFAPPROVAL_STATUS='MANUALLY APPROVED'
+and api.INVOICE_AMOUNT<>0 -- not cancelled
+and api.INVOICE_ID=aid.INVOICE_ID
+and aid.po_distribution_id is null
+and aid.LINE_TYPE_LOOKUP_CODE='ITEM'

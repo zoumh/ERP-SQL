@@ -1,0 +1,19 @@
+
+
+--------FIFO cost Type (equal to the Current layer avg weight cost !)
+
+select c.ITEM_NUMBER,b.segment1 as Item, item_type, inventory_item_status_code,
+a.item_cost cost,c.COST_TYPE,a.organization_id,c.DESCRIPTION
+from apps.cst_item_costs a, apps.mtl_system_items b 
+,apps.CST_ITEM_COST_TYPE_V c
+where 
+ a.inventory_item_id=b.inventory_item_id and b.segment1 != 'FORKLIFT' and item_type != 'CTR'
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.cost_type_id=c.cost_type_id
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+
+
+and c.COST_TYPE_ID=5 --FIFO
+and c.COST_TYPE='FIFO'
+

@@ -1,0 +1,15 @@
+
+------SO line Type
+select b.NAME Line_Type, a.TRANSACTION_TYPE_ID Line_type_id
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b 
+where a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID
+--and a.TRANSACTION_TYPE_ID=c.ORDER_TYPE_ID
+and b.LANGUAGE='US'
+and a.org_id>=127
+and TRANSACTION_TYPE_CODE='LINE'
+
+
+
+--------SO assign flow
+select ORDER_TYPE_ID,LINE_TYPE_ID,PROCESS_NAME,CREATION_DATE,START_DATE_ACTIVE,END_DATE_ACTIVE
+from apps.oe_workflow_assignments

@@ -1,0 +1,52 @@
+
+
+-----PO Header, BMC DFF, Order_Class 
+
+select ATTRIBUTE2 Order_Class from apps.PO_HEADERS_ALL where segment1='1031658'
+
+
+
+--------PO Type,Head Class,Line Type
+
+select distinct a.TYPE_LOOKUP_CODE,a.ATTRIBUTE2 Order_Class,LINE_TYPE 
+from 	apps.PO_HEADERS_ALL a
+,		apps.PO_LINES_ALL b
+,		apps.PO_line_types f
+where a.po_header_id=b.po_header_id
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N')
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and a.CREATION_DATE >to_date('2006-1-1','yyyy-mm-dd')
+
+
+----------------PO tables  
+select * from apps.po_headers_all where segment1='1077251'
+
+select * from apps.po_lines_all where PO_HEADER_ID=190016
+
+select * from apps.po_line_locations_all where PO_HEADER_ID=190016 and PO_LINE_ID=508698
+
+
+-----------PO shipment line's RECEIVING_ROUTING_ID
+select RECEIVING_ROUTING_ID from apps.po_line_locations_all where PO_HEADER_ID=190016 and PO_LINE_ID=508698
+
+1  Standard Receipt
+2  Inspection Required
+3  Direct Delivery
+
+
+PO shipment line's RECEIVING_ROUTING_ID is come from Ship_to_org's Item's RECEIVING_ROUTING_ID
+
+select RECEIVING_ROUTING_ID from apps.mtl_system_items where segment1='1205-6581.4' and organization_id=127--130
+
+decode(a.RECEIVING_ROUTING_ID,1,'Std',2,'Inspect',3,'Direct','NA') RECEIVING_ROUTING
+
+
+
+
+
+
+
+

@@ -1,0 +1,18 @@
+
+
+----------------For HK Customers, actual ship date is early then schedule Good Issue date
+
+select c.CUST_PO_NUMBER, c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,
+d.SCHEDULE_SHIP_DATE,d.ACTUAL_SHIPMENT_DATE,c.ORDER_TYPE,
+c.CUSTOMER_NUMBER,c.SHIP_TO,c.SHIP_TO_ADDRESS1,c.SHIP_TO_ADDRESS5 , 
+--b.source_header_type_name SO_Type,
+d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status
+from apps.OE_ORDER_HEADERS_v c,apps.OE_ORDER_lineS_all d,ra_customers a
+where c.header_id=d.header_id
+and c.SHIP_TO_ADDRESS5 like '%HK%'
+and a.CUSTOMER_NUMBER=c.CUSTOMER_NUMBER 
+and trunc(d.SCHEDULE_SHIP_DATE)>trunc(d.ACTUAL_SHIPMENT_DATE)
+order by c.ORDER_NUMBER
+
+
+

@@ -1,0 +1,5 @@
+
+
+SubLedger --GL transfer record table
+apps.xla_gl_transfer_batches_all
+

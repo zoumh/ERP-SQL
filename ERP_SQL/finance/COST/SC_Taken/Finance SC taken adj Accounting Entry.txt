@@ -1,0 +1,58 @@
+
+
+
+
+-----------------------------------List Finance Entry of adjustment
+select * from apps.CST_INV_DISTRIBUTION_V  
+where TRANSACTION_SOURCE_TYPE_NAME='Physical Inventory' and TRANSACTION_TYPE_NAME='Physical Inv Adjust'
+and MTA_TRANSACTION_DATE=to_date('2004-6-23','YYYY-MM-DD')
+
+
+
+Inv -- Physical Inventory -- Tools -- Launch Adjustment (assign the variance account)
+
+Inv -- Transfer to GL
+
+The post of Physical Iventory adjustment entry would mixed with other Transactions.
+
+If need to review the posted Physical Inventory Adjustment,query on the  'variance account' from GL, drill down
+
+
+---------First use this to find out the post date
+select * from apps.CST_INV_DISTRIBUTION_V  
+where TRANSACTION_SOURCE_TYPE_NAME='Physical Inventory' and TRANSACTION_TYPE_NAME='Physical Inv Adjust'
+and MTA_TRANSACTION_DATE=to_date('2004-6-23','YYYY-MM-DD')
+
+
+
+---------by post date
+
+select a.TRANSACTION_ID,
+to_char(a.TRANSACTION_ORGANIZATION_ID) TRANSACTION_ORGANIZATION_ID,
+to_char(a.ORGANIZATION_ID) ORGANIZATION_ID,
+to_char(a.TRANSACTION_TYPE_ID) TRANSACTION_TYPE_ID,
+to_char(a.TRANSACTION_SOURCE_ID) TRANSACTION_SOURCE_ID,
+to_char(a.GL_BATCH_ID) GL_BATCH_ID,
+to_char(INVENTORY_ITEM_ID) INVENTORY_ITEM_ID,
+a.DESCRIPTION Item_Desc,
+a.REVISION,
+a.SUBINVENTORY_CODE WH,
+b.segment3 Account,
+a.TRANSACTION_TYPE_NAME,
+a.TRANSACTION_SOURCE_TYPE_NAME,
+a.TRANSACTION_SOURCE_NAME,
+a.TRANSACTION_REFERENCE,
+a.TRANSACTION_DATE,
+a.CREATION_DATE,
+a.TRANSACTION_QUANTITY,
+a.BASE_TRANSACTION_VALUE,
+a.RATE_OR_AMOUNT,
+a.UNIT_COST,
+a.REFERENCE_ACCOUNT,
+a.LAST_UPDATE_LOGIN,
+a.REQUEST_ID
+from apps.CST_INV_DISTRIBUTION_V  a,apps.gl_code_combinations b
+where TRANSACTION_SOURCE_TYPE_NAME='Physical Inventory' and TRANSACTION_TYPE_NAME='Physical Inv Adjust'
+and a.reference_account = b.code_combination_id 
+and (MTA_TRANSACTION_DATE=to_date('2004-3-26','YYYY-MM-DD') or MTA_TRANSACTION_DATE=to_date('2004-3-31','YYYY-MM-DD'))
+order by a.TRANSACTION_ID

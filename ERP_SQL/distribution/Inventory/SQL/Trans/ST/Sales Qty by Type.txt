@@ -1,0 +1,53 @@
+
+----------------Mtl Trans lined SO, Item,SO Type,Category,
+select f.segment1 Model,d.NAME SO_Type,c.ORDER_NUMBER,b.LINE_NUMBER,a.TRANSACTION_QUANTITY,
+b.ITEM_REVISION,b.ITEM_TYPE_CODE,b.UNIT_SELLING_PRICE,
+a.transaction_ID,
+a.creation_Date Close_Date,b.ACTUAL_SHIPMENT_DATE
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c,
+apps.oe_transaction_types_tl d,apps.mtl_system_items_b e,
+apps.mtl_item_categories_v f
+where a.SOURCE_LINE_ID =b.LINE_ID
+--and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+and c.ORDER_NUMBER='203546'
+and e.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and d.TRANSACTION_TYPE_ID=c.ORDER_TYPE_ID 
+and d.LANGUAGE='US'
+and a.organization_id=e.organization_id
+--and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.creation_Date>=to_date('2007-11-9','yyyy-mm-dd')
+--and trunc(a.creation_Date)<>trunc(ACTUAL_SHIPMENT_DATE)
+and f.category_set_id=1
+and f.inventory_item_id = a.inventory_item_id
+and a.organization_id=f.organization_id
+
+
+------------An Item's SO Issue with SO Type
+select   mmt.transaction_date, --mmt.TRANSACTION_SOURCE_TYPE_ID,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, mso.SEGMENT1 SO,mso.SEGMENT2 Type,
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+ 	     mmt.transaction_id, 
+		 mmt.organization_id  Organization ,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.MTL_SALES_ORDERS 		 mso --,apps.oe_transaction_types_tl a
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+and mmt.TRANSACTION_SOURCE_ID =mso.SALES_ORDER_ID
+--and mso.segment1='5002015'
+and mmt.TRANSACTION_SOURCE_TYPE_ID in (2,12) --- SO & RMA
+and mtt.transaction_type_name in ('Sales order issue','RMA Receipt')
+and msi.segment1 like 'DPY 101 2723%'
+
+
+

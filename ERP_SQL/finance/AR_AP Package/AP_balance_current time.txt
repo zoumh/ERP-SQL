@@ -1,0 +1,122 @@
+
+--invoice sum (with balance)
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'CNY',1,api.EXCHANGE_RATE)) as CNY_INV_Amt
+,sum((Api.INVOICE_AMOUNT-nvl(api.AMOUNT_PAID,0))*decode(Api.INVOICE_CURRENCY_CODE,'CNY',1,Api.EXCHANGE_RATE)) as Remain_Amt_CNY
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW','JZ'))
+and api.GL_DATE>=to_date('2004-01-1','yyyy-mm-dd')
+and api.GL_DATE<=to_date('2004-06-30','yyyy-mm-dd')
+and api.WFAPPROVAL_STATUS='MANUALLY APPROVED'
+and VDR.SEGMENT1=109
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE--,api.INVOICE_CURRENCY_CODE
+order by to_number(VDR.SEGMENT1)
+
+
+inv-detail
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num,api.VENDOR_ID
+,api.INVOICE_NUM,api.INVOICE_DATE,api.GL_DATE
+,aps.VENDOR_SITE_CODE as Site
+,api.INVOICE_CURRENCY_CODE as Inv_Curr,(api.INVOICE_AMOUNT) 
+,(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'CNY',1,api.EXCHANGE_RATE)) as CNY_INV_Amt
+,(api.AMOUNT_PAID*decode(api.INVOICE_CURRENCY_CODE,'CNY',1,api.EXCHANGE_RATE)) as CNY_Paid_Amt,
+(Api.INVOICE_AMOUNT-nvl(api.AMOUNT_PAID,0))*decode(Api.INVOICE_CURRENCY_CODE,'CNY',1,Api.EXCHANGE_RATE) as Remain_Amt_CNY
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW','JZ'))
+and api.GL_DATE>=to_date('2000-01-1','yyyy-mm-dd')
+and api.GL_DATE<=to_date('2004-06-30','yyyy-mm-dd')
+and api.WFAPPROVAL_STATUS='MANUALLY APPROVED'
+and VDR.SEGMENT1 =109
+--group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE,api.INVOICE_CURRENCY_CODE
+order by to_number(VDR.SEGMENT1)
+
+
+
+
+select * from apps.AP_INVOICES_ALL 
+
+
+
+Pay sum
+
+select to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (a.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW','JZ'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2004-01-1','yyyy-mm-dd')
+and b.accounting_date<=to_date('2004-06-30','yyyy-mm-dd')
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+and VDR.SEGMENT1=109
+group by to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE),VDR.VENDOR_NAME,VDR.SEGMENT1,aps.VENDOR_SITE_CODE order by to_number(VDR.SEGMENT1)
+
+
+pay detail
+
+select to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,a.INVOICE_NUM,a.INVOICE_AMOUNT
+--,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as Paid_Amt
+,b.amount,a.INVOICE_CURRENCY_CODE,b.EXCHANGE_RATE
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (a.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW','JZ'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2004-01-1','yyyy-mm-dd')
+and b.accounting_date<=to_date('2004-06-30','yyyy-mm-dd')
+and VDR.SEGMENT1=109
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+
+
+
+SELECT A.INVOICE_NUM,C.VENDOR_NAME SUPPLIER,A.INVOICE_CURRENCY_CODE CURRENCY,A.INVOICE_AMOUNT,a.AMOUNT_PAID,
+(A.INVOICE_AMOUNT-nvl(a.AMOUNT_PAID,0))*decode(A.INVOICE_CURRENCY_CODE,'CNY',1,A.EXCHANGE_RATE) as Remain_Amt_CNY,
+--A.BASE_AMOUNT FUNCTIONAL_AMOUNT,decode(A.INVOICE_CURRENCY_CODE,'CNY',A.INVOICE_AMOUNT,A.BASE_AMOUNT ) as InvoiceAmt_CNY,
+A.EXCHANGE_RATE,A.PAY_GROUP_LOOKUP_CODE PAY_GROUP,
+A.GL_DATE,a.WFAPPROVAL_STATUS Approve_status,
+B.SEGMENT1 AP_COM,B.SEGMENT2 AP_CCC,B.SEGMENT3 AP_ACC,B.SEGMENT4 AP_PRD,B.SEGMENT5 AP_PRJ,B.SEGMENT6 AP_SPA,
+A.PAYMENT_STATUS_FLAG Payment_status 
+FROM APPS.AP_INVOICES_ALL A,apps.GL_CODE_COMBINATIONS_V B,apps.po_vendors C
+WHERE A.ACCTS_PAY_CODE_COMBINATION_ID=B.CODE_COMBINATION_ID 
+AND A.VENDOR_ID=C.VENDOR_ID
+and INVOICE_AMOUNT<>0
+and PAYMENT_STATUS_FLAG<>'Y'
+and gl_date<to_date('2004-07-1','YYYY-MM-DD' )
+--and A.PAYMENT_STATUS_FLAG='P'
+order by B.SEGMENT3
+

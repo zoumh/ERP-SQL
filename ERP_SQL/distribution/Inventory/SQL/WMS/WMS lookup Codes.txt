@@ -1,0 +1,111 @@
+
+
+MTL_ONHAND_QUANTITIES_DETAIl.CONTAINERIZED_FLAG=
+1=Packed
+2=Un-Packed 
+
+----------apps.wms_license_plate_numbers.lpn_context 
+
+lpn_context 
+
+Code 	Meaning 			Description 
+1 	Resides in Inventory 		Resides in Inventory 
+2 	Resides in WIP 			Resides in WIP 
+3 	Resides in Receiving 		Resides in Receiving 
+4 	Issued out of Stores 		Issued out of Stores 
+5 	Defined but not used 		Defined but not used 
+6 	Resides in Intransit 		Resides in Intransit 
+7 	Resides in Vendor 		Resides in Vendor 
+8 	Packing context 		Packing context 
+9 	Loaded to Dock 			Loaded to Dock 
+10 	Prepack for WIP 		Prepack for WIP 
+11 	Picked 				Picked 
+
+
+
+
+-----------WMS_TASK_STATUS
+WMS_DISPATCHED_TASKS.Status
+
+Code 	Meaning 			Description 
+1 	Pending 			Pending Tasks 
+2 	Queued 				Queued Tasks 
+3 	Dispatched 			Dispatched Tasks 
+4 	Loaded 				Loaded Tasks 
+5 	Error 				Errored Tasks 
+6 	Completed 			Completed Tasks 
+7 	Hold 				Tasks on Hold 
+8 	Unreleased 			Unreleased Tasks 
+9 	Active 				Active Tasks 
+10 	Suspended 			Suspended Tasks 
+
+
+
+-----------WMS TASK TYPES
+Code 	Meaning 
+1 	Pick  
+2 	Putaway  
+3 	Cycle Count  
+4 	Replenish  
+5 	Move Order Transfer  
+6 	Move Order Issue  
+7 	Staging Move 
+
+
+
+-----------WMS_OPERATION_TYPE
+Code 	Meaning 	Description 
+1 	Load 		Load material from a locator 
+2 	Drop 		Drop material to a locator 
+3 	Sort 		Drop material to a locator and sort 
+4 	Consolidate 	Drop material to a locator and consolidate 
+5 	Pack 		Packing 
+6 	Load shipment 	Load material to dock door prior to shipping 
+7 	Ship 		Ship material out of the warehouse 
+8 	Cycle count	 Cycle count 
+9 	Inspect 	Inspect 
+
+
+
+-----------WMS_BUS_EVENT_TYPES
+Code 	Meaning 		Description 
+1 	Direct Receipt 		Direct Receipt 
+2 	Inspection 		Inspection 
+3 	PutAway Drop 		PutAway Drop 
+4 	Cycle Count 		Cycle Count 
+5 	Misc/Acct Receipt 	Miscellaneous/Account Receipt 
+51 	Task Complete 		Task Complete 
+52 	Task Skip 		Task Skip 
+53 	Task Cancel 		Task Cancel 
+54 	Task Confirm 		Task Confirm 
+6 	Misc/Acct Issue 	Miscellaneous/Account Issue 
+7 	Subinventory Transfer 	Subinventory Transfer 
+8 	Organization Transfer 	Organization Transfer 
+9 	Pick Drop 		Pick Drop 
+10 	Pick Load 		Pick Load 
+11 	Pick Release 		Pick Release 
+12 	WIP Pick Release 	WIP Pick Release 
+13 	Ship Confirm 		Ship Confirm 
+
+
+
+-----------WMS_ACTION_TYPE
+Code 	Meaning 			Description 
+1 	Put away 			Put away 
+2 	Pick 				Pick 
+3 	Task Type Assignment 		Task Type Assignment 
+4 	Label Format 			Label Format 
+5 	Cost Group Assignment 		Cost Group Assignment 
+7 	Operation Plan Selection 	Operation Plan Selection 
+98 	Cost Group Strategy Search 	Cost Group Strategy Search 
+99 	Strategy Search 		Strategy Search 
+
+
+
+
+
+-----------
+
+
+
+

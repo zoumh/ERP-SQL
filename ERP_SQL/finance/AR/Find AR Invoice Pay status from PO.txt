@@ -1,0 +1,61 @@
+
+--------Customer PO on SO & AR Invoice
+1. After SO shipconfirm & create AR invoice,SO line status=Closed,
+still could change the 'Customer PO number' at SO header, but it won't change 'Customer PO number' at SO line
+
+2.Find the 'Customer PO number' at AR Invoice header is come from SO line's the 'Customer PO number' !
+
+3.After SO Header closed,can't change the 'Customer PO number' at SO header
+
+
+
+---------Find AR Invoice Pay status from the PO on AR Invoice header
+select b.PURCHASE_ORDER,a.TRX_NUMBER Invoice,AMOUNT_DUE_ORIGINAL Amount,
+a.INVOICE_CURRENCY_CODE,decode(AMOUNT_DUE_REMAINING,0,'Paied','Un-Pay') Paied
+from apps.ar_payment_schedules_all a,apps.ra_customer_trx_all b 
+where a.CUSTOMER_TRX_ID =b.CUSTOMER_TRX_ID
+--and a.TRX_NUMBER='319376'
+and (b.PURCHASE_ORDER like '%30073080%'
+     or b.PURCHASE_ORDER like '%30072898%'
+     or b.PURCHASE_ORDER like '%30074522%'
+     or b.PURCHASE_ORDER like '%30069437%'
+     or b.PURCHASE_ORDER like '%30066276%'
+     or b.PURCHASE_ORDER like '%30066799%'
+     or b.PURCHASE_ORDER like '%30070470%'
+     or b.PURCHASE_ORDER like '%30069437%'
+     or b.PURCHASE_ORDER like '%30070738%'
+     or b.PURCHASE_ORDER like '%30074015%'
+     or b.PURCHASE_ORDER like '%30073951%'
+     or b.PURCHASE_ORDER like '%30074845%')
+
+
+
+--------PO number on SO Head / line & AR_Invoice_Head (Find from AR Invoice)
+select c.Inv_Number,c.line_number Inv_Line,a.ORDER_NUMBER SO_Num,b.LINE_NUMBER SO_line,a.CUST_PO_NUMBER PO_At_SO_Head,b.CUST_PO_NUMBER PO_At_SO_Line,
+c.PO_At_Invoice,
+b.LAST_UPDATE_DATE,b.CREATION_DATE
+from apps.OE_ORDER_HEADERS_ALL a,apps.OE_ORDER_lines_all b, 
+(select 
+b.purchase_order PO_At_Invoice,h.sales_order,h.sales_order_line,to_char(b.TRX_NUMBER) as Inv_Number,h.line_number
+from apps.ra_cust_trx_types_all a,
+apps.ra_customer_trx_all b
+,apps.ra_customer_trx_lines_all h
+,apps.mtl_system_items_b g
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID and 
+b.CUSTOMER_TRX_ID=h.CUSTOMER_TRX_ID
+and g.organization_id=127
+and g.inventory_item_id=h.inventory_item_id
+and h.line_type<>'TAX'
+and b.TRX_NUMBER in ('326516')
+) c
+where 
+a.HEADER_ID=b.HEADER_ID
+and b.ORG_ID=a.ORG_ID
+and a.ORDER_NUMBER=c.sales_order
+and b.LINE_NUMBER=c.sales_order_line
+and b.ORG_ID=127
+--and a.ORDER_NUMBER in ('404022','41002017')
+--and c.Inv_Number in ('305517','302667','305145')
+order by a.ORDER_NUMBER,b.LINE_NUMBER
+
+

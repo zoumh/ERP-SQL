@@ -1,0 +1,47 @@
+
+
+
+---------if WH Code not same, then form won't show LPN
+
+select b.LICENSE_PLATE_NUMBER,b.LPN_CONTEXT,b.COST_GROUP_ID from
+apps.MTL_ONHAND_QUANTITIES_DETAIl a,apps.wms_license_plate_numbers b
+where a.LPN_ID =b.LPN_ID 
+and a.LOCATOR_ID =b.LOCATOR_ID 
+and a.INVENTORY_ITEM_ID =b.INVENTORY_ITEM_ID 
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and  a.SUBINVENTORY_CODE<>b.SUBINVENTORY_CODE
+
+
+----------if WH Code/Locator not same
+select b.LICENSE_PLATE_NUMBER,b.LPN_CONTEXT,b.COST_GROUP_ID from
+apps.MTL_ONHAND_QUANTITIES_DETAIl a,apps.wms_license_plate_numbers b
+where a.LPN_ID =b.LPN_ID 
+and a.INVENTORY_ITEM_ID =b.INVENTORY_ITEM_ID 
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and ( a.SUBINVENTORY_CODE<>b.SUBINVENTORY_CODE
+or  a.LOCATOR_ID <>b.LOCATOR_ID )
+
+
+
+---------If SUBINVENTORY_CODE, LOCATOR_ID is null for LPN , then the onhand LPN can't show LPN, but is Packed
+
+
+select b.LICENSE_PLATE_NUMBER,b.LPN_CONTEXT,b.COST_GROUP_ID from
+apps.MTL_ONHAND_QUANTITIES_DETAIl a,apps.wms_license_plate_numbers b
+where a.LPN_ID =b.LPN_ID 
+--and a.INVENTORY_ITEM_ID =b.INVENTORY_ITEM_ID 
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and  (b.SUBINVENTORY_CODE is null or b.LOCATOR_ID is null)
+
+
+select a.ORGANIZATION_ID,b.LICENSE_PLATE_NUMBER,b.LPN_CONTEXT,b.COST_GROUP_ID from
+apps.MTL_ONHAND_QUANTITIES_DETAIl a,apps.wms_license_plate_numbers b
+where a.LPN_ID =b.LPN_ID 
+--and a.INVENTORY_ITEM_ID =b.INVENTORY_ITEM_ID 
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and a.ORGANIZATION_ID=130
+and  (a.SUBINVENTORY_CODE<>b.SUBINVENTORY_CODE or a.LOCATOR_ID <>b.LOCATOR_ID )
+
+
+
+

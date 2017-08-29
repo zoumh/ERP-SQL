@@ -1,0 +1,31 @@
+
+
+----------------Mtl_Transaction link SO
+select c.ORDER_NUMBER,b.LINE_NUMBER,a.TRANSACTION_QUANTITY,a.transaction_ID,
+a.creation_Date
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+and c.ORDER_NUMBER='1000089'
+
+
+
+mtl_material_transactions.SOURCE_LINE_ID	=OE_ORDER_lineS_all.LINE_ID
+mtl_material_transactions.TRX_SOURCE_LINE_ID	=OE_ORDER_lineS_all.LINE_ID
+
+mtl_material_transactions.TRANSACTION_REFERENCE =to_char(OE_ORDER_HEADERS_ALL.HEADER_ID)
+
+OE_ORDER_lineS_all.OE_ORDER_HEADERS_ALL.HEADER_ID
+
+
+
+
+---??
+select b.SEGMENT1 SO,b.segment2 SO_Type,TRANSACTION_QUANTITY 
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.MTL_SALES_ORDERS b
+where a.TRANSACTION_SOURCE_ID =b.SALES_ORDER_ID
+and b.SEGMENT1='5002639'
+

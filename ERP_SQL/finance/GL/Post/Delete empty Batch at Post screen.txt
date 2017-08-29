@@ -1,0 +1,12 @@
+
+
+
+
+select * from apps.GL_JE_BATCHES where NAME='AL0608A'
+
+select * from apps.gl_je_headers where je_batch_id = 1070164
+
+delete from apps.GL_JE_BATCHES where NAME='AL0608A'
+
+commit
+

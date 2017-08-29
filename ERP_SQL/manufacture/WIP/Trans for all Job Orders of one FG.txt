@@ -1,0 +1,102 @@
+
+
+---------WIP Trans/Account for an FG Item's Job Orders
+
+select a.transaction_date, a.base_transaction_value value
+/*,c.TRANSACTION_TYPE,
+a.primary_quantity Qty,a.rate_or_amount Rate_Amt,
+c.transaction_quantity,c.TRansaction_uom,c.USAGE_RATE_OR_AMOUNT*/,
+decode(a.accounting_line_type,1,'Inv valuation',2,'Account',4,'Resource absorption',7,'WIP valuation',8,'WIP variance',9,'Inter Corg payables') accounting_line_type,
+b.segment3 Acc,b.segment2 CC,
+d.WIP_ENTITY_NAME Job_Order,e.MEANING Trans_Type,d.class_code
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_DISCRETE_JOBS_V d,
+apps.MFG_LOOKUPS e,
+apps.mtl_system_items_b f
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and f.organization_id=a.organization_id
+and f.inventory_item_id=d.PRIMARY_ITEM_ID
+and a.transaction_date<=to_date('2005-04-28','yyyy-mm-dd')
+and a.transaction_date>=to_date('2004-04-01','yyyy-mm-dd')
+--and d.class_code='Var_Assemb'
+and f.segment1='KRH 101 203R1B'
+order by a.transaction_date
+
+
+
+select d.WIP_ENTITY_NAME Job_Order,f.segment1 FG_Item,a.base_transaction_value value,a.primary_quantity Qty,
+decode(a.accounting_line_type,1,'Inv valuation',2,'Account',4,'Resource absorption',7,'WIP valuation',8,'WIP variance',a.accounting_line_type) accounting_line_type,
+b.segment3 Acc,b.segment2 CC,b.segment4 PRD, b.segment5 PRJ,
+a.transaction_date, 
+a.rate_or_amount Rate_Amt,
+c.TRANSACTION_TYPE,e.MEANING
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_DISCRETE_JOBS_V d,
+apps.MFG_LOOKUPS e,
+apps.mtl_system_items_b f
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and a.transaction_date>=to_date('2005-4-1','yyyy-mm-dd')
+and a.transaction_date<=to_date('2005-4-30','yyyy-mm-dd')
+and f.segment1 in ('KRH 101 203R1B','KRH 101 204R1B')
+and f.organization_id=a.organization_id
+and d.PRIMARY_ITEM_ID=f.INVENTORY_ITEM_ID
+order by d.WIP_ENTITY_NAME
+
+
+---------Mtl Trans for an FG Item's Job Orders
+ 
+select  wip_entity_name Job_Order,d.segment1 FG_Item,msi.segment1 RM_Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date,to_char(mmt.transaction_id) Trans_ID
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.mtl_system_items_b		 d,
+  apps.WIP_DISCRETE_JOBS_V 		 Wet  -- ( or use apps.WIP_DISCRETE_JOBS_V)
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = 83 and msi.organization_id = 83 and d.organization_id = 83 
+and    d.INVENTORY_ITEM_ID=wet.PRIMARY_ITEM_ID
+and	   wet.wip_entity_id=mmt.transaction_source_id
+--and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and    trunc(mmt.transaction_date) >= to_date('20050401','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20050430','YYYYMMDD')
+and    mst.transaction_source_type_name='Job or Schedule'
+and    d.segment1='KRH 101 203R1B'
+order by wip_entity_name
+
+
+---------Mtl Trans of a JO , component item
+select  wip_entity_name Job_Order,msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.wip_entities 		 Wet  -- ( or use apps.WIP_DISCRETE_JOBS_V)
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and mst.transaction_source_type_name='Job or Schedule'
+and wip_entity_name='060506-D-6714R1A-SA2'
+

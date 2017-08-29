@@ -1,0 +1,161 @@
+
+----------Vendor site CFS flag check
+select b.ATTRIBUTE15,
+VENDOR_TYPE_LOOKUP_CODE As Type,ORG_ID,b.HOLD_UNMATCHED_INVOICES_FLAG , 
+c.SEGMENT1 As Vender_Num,convert(c.VENDOR_NAME,'ZHS16GBK') as Name  ,b.VENDOR_SITE_CODE,b.ADDRESS_LINE1,b.VAT_CODE
+,a.DUE_DAYS as Pay_Terms_Day,d.SEGMENT3 as Pay_Acc,e.SEGMENT3 as PREPAY_ACC,b.PAY_GROUP_LOOKUP_CODE as Pay_Grp
+,b.CREATION_DATE,b.LAST_UPDATE_DATE,f.USER_NAME as Create_by,b.INVOICE_CURRENCY_CODE Currency,trunc(b.INACTIVE_DATE) Site_Inactive_Date,
+b.MATCH_OPTION Site_Match_Option,b.INVOICE_CURRENCY_CODE Site_Inc_Curr,b.PAYMENT_CURRENCY_CODE Site_Pay_Curr,
+c.MATCH_OPTION	Supplier_Match_Option,c.INVOICE_CURRENCY_CODE	Supplier_Inv_Curr,
+c.PAYMENT_CURRENCY_CODE	Supplier_Pay_Curr,b.ORG_ID
+from apps.AP_TERMS_LINES a,apps.PO_VENDOR_SITES_ALL b,apps.PO_VENDORS c,apps.GL_CODE_combinations d
+,apps.GL_CODE_combinations e,apps.FND_USER f
+where a.TERM_ID=b.TERMS_ID
+and b.ACCTS_PAY_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and b.PREPAY_CODE_COMBINATION_ID=e.CODE_COMBINATION_ID
+and b.VENDOR_ID=c.VENDOR_ID
+and b.CREATED_BY =f.USER_ID
+and b.ATTRIBUTE15 is not null
+--and VENDOR_TYPE_LOOKUP_CODE<>'EMPLOYEE'
+--and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+order by b.VENDOR_ID,b.VENDOR_SITE_CODE
+
+
+-----------AP Bank Accounts with CFS_flag (apps.AP_BANK_ACCOUNTS_all.ATTRIBUTE15 CFS_flag)
+select a.ATTRIBUTE15 CFS_flag,e.BANK_NAME,e.BANK_NUMBER,e.BANK_NUM Branch_Num,to_char(a.BANK_ACCOUNT_ID) Bank_Account_ID,
+a.BANK_ACCOUNT_NAME,a.BANK_ACCOUNT_NUM,a.CURRENCY_CODE Currency,a.DESCRIPTION,
+b.SEGMENT2||'.'||b.SEGMENT3||'.'||b.SEGMENT4||'.'||b.SEGMENT5||'.'||b.SEGMENT6 Cash_Acc,
+g.SEGMENT2||'.'||g.SEGMENT3||'.'||g.SEGMENT4||'.'||g.SEGMENT5||'.'||g.SEGMENT6 Cash_Clear_Acc,
+h.SEGMENT2||'.'||h.SEGMENT3||'.'||h.SEGMENT4||'.'||h.SEGMENT5||'.'||h.SEGMENT6 Bank_Charg_Acc,
+i.SEGMENT2||'.'||i.SEGMENT3||'.'||i.SEGMENT4||'.'||i.SEGMENT5||'.'||i.SEGMENT6 Unidentfy_Acc,
+--a.MULTI_CURRENCY_FLAG Multi_Curr, a.ZERO_AMOUNTS_ALLOWED Allow_Zero,--a.RECEIPT_MULTI_CURRENCY_FLAG,
+c.SEGMENT2||'.'||c.SEGMENT3||'.'||c.SEGMENT4||'.'||c.SEGMENT5||'.'||c.SEGMENT6 Gain_Acc,
+d.SEGMENT2||'.'||d.SEGMENT3||'.'||d.SEGMENT4||'.'||d.SEGMENT5||'.'||d.SEGMENT6 Loss_Acc,
+f.name Doc_Name,j.name Payment_Format,j.Payment_method_lookup_code,
+a.INACTIVE_DATE,a.RECEIPT_MULTI_CURRENCY_FLAG
+from apps.AP_BANK_ACCOUNTS_all a,apps.GL_CODE_COMBINATIONs b,apps.GL_CODE_COMBINATIONs c,apps.GL_CODE_COMBINATIONs d
+,apps.AP_BANK_BRANCHES e,apps.AP_CHECK_STOCKS_all f,apps.GL_CODE_COMBINATIONs g,apps.GL_CODE_COMBINATIONs h,
+apps.GL_CODE_COMBINATIONs i,apps.AP_CHECK_FORMATS j
+where a.ASSET_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.GAIN_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID (+)
+and a.loss_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID (+)
+and a.BANK_BRANCH_ID=e.BANK_BRANCH_ID
+and f.BANK_ACCOUNT_ID=a.BANK_ACCOUNT_ID
+and a.CASH_CLEARING_CCID =g.CODE_COMBINATION_ID(+)
+and a.BANK_CHARGES_CCID =h.CODE_COMBINATION_ID(+)
+and a.UNIDENTIFIED_CCID =i.CODE_COMBINATION_ID(+)
+and j.check_format_id=f.check_format_id
+--and a.BANK_ACCOUNT_ID=10000
+--and a.BANK_ACCOUNT_NAME='ICBC Tianzhu-RMB(10020101)'
+and (a.ATTRIBUTE15 is null or a.ATTRIBUTE15<>'N')
+--and e.BANK_NAME Like '%Dummy%'
+order by e.BANK_NUMBER,e.BANK_NUM,a.BANK_ACCOUNT_ID,a.BANK_ACCOUNT_NAME
+
+
+------------payment invoice info linked from payment trans
+select a.INVOICE_NUM,a.AMOUNT_PAID,a.ATTRIBUTE15,
+--,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+ (b.amount) as Paid_Amt,a.INVOICE_CURRENCY_CODE,vdr.VENDOR_NAME,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,        apps.PO_VENDORS VDR
+,        apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2007-6-1','yyyy-mm-dd')
+and b.accounting_date<to_date('2007-7-1','yyyy-mm-dd')
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+--and a.INVOICE_DATE >=to_date('2005-01-01','yyyy-mm-dd') -- new add at Nov-04
+order by a.INVOICE_CURRENCY_CODE,to_number(VDR.SEGMENT1)
+
+----Payment amt summary by CFS AP category
+select sum(a.AMOUNT_PAID*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) inv_paid_amt,
+a.ATTRIBUTE15,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,        apps.PO_VENDORS VDR
+,        apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2007-6-1','yyyy-mm-dd')
+and b.accounting_date<to_date('2007-7-1','yyyy-mm-dd')
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+--and a.INVOICE_DATE >=to_date('2005-01-01','yyyy-mm-dd') -- new add at Nov-04
+--and vdr.SEGMENT1 in ('1859')
+group by a.ATTRIBUTE15
+
+
+---------PTD of Cash Amount
+SELECT  
+  sum(LINE_ACCOUNTED_DR) Dr,
+  sum(LINE_ACCOUNTED_CR) Cr, sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) PTD 
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b ,
+  apps.GL_CODE_combinations a
+WHERE 
+b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID  
+and b.PERIOD_NAME in ('JUN-08')--, 
+and HEADER_STATUS ='P'
+and ACTUAL_FLAG='A'
+and a.segment3 in 
+(
+select flex_value Account 
+from apps.FND_FLEX_VALUES_VL--FND_FLEX_VALUES 
+where FLEX_VALUE_SET_ID=1007641 and flex_value like '1%' 
+and attribute10='Y'
+)
+
+
+---------PTD cash amount by Source/Category/Curr
+select sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) PTD
+,b.JE_SOURCE,--JE_CATEGORY,
+c.USER_JE_CATEGORY_NAME,
+b.CURRENCY_CODE
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,
+apps.GL_JE_CATEGORIES c
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME in ('JUN-08'))
+and ACTUAL_FLAG='A'
+and HEADER_STATUS ='P'
+--and (b.JE_SOURCE='Manual' or JE_CATEGORY ='Adjustment')
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and a.segment3 in
+(
+select flex_value Account 
+from apps.FND_FLEX_VALUES_VL--FND_FLEX_VALUES 
+where FLEX_VALUE_SET_ID=1007641 and flex_value like '1%' 
+and attribute10='Y'
+)
+group by b.JE_SOURCE, 
+c.USER_JE_CATEGORY_NAME,
+b.CURRENCY_CODE
+
+
+---------PTD Exchange Rate GnL Amt
+SELECT  a.segment3,
+  sum(LINE_ACCOUNTED_DR) Dr,
+  sum(LINE_ACCOUNTED_CR) Cr, sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) PTD 
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b ,
+  apps.GL_CODE_combinations a
+WHERE 
+b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID  
+and b.PERIOD_NAME in ('JUN-08')--, 
+and HEADER_STATUS ='P'
+and ACTUAL_FLAG='A'
+and a.segment3 like  '550310%'
+group by a.segment3
+
+
+
+ 
+
+

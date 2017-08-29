@@ -1,0 +1,117 @@
+
+'Synchronize WF Local Tables' program please reference Note 171703.1
+
+
+---------------------Note 330311.1
+Doc ID:  Note:330311.1 
+Subject:  Position Shows No Holder in Hierarchy Form after Adding Assignment 
+Type:  PROBLEM 
+Status:  PUBLISHED 
+ Content Type:  TEXT/X-HTML 
+Creation Date:  04-AUG-2005 
+Last Revision Date:  12-AUG-2005 
+ 
+
+In this Document
+  Symptoms
+  Cause
+  Solution
+  References
+
+
+
+--------------------------------------------------------------------------------
+
+
+
+Applies to: 
+Oracle Human Resources - Version: 11.5.9
+This problem can occur on any platform.
+FORM:PERWSDPH.FMB - Define Position Hierarchy 
+Symptoms
+After a new employee is added to the system the assigned position
+cannot be viewed in the Hierarchies screen. The position shows
+no holders
+
+Form Name : PERWSDPH
+Form Version : 11.5.34
+
+STEPS
+-----------------------
+1. The employee adds a new employee using the Purchasing responsibility
+2. Navigate Setup / Personnel / Employees:
+3. Query on employee name. Click on More. Click on Assignment
+4. Copy position name.
+5. Navigate Setup/ Personnel / Position Hierarchy:
+6. Query on hierarchy
+7. Query on version
+8. Query on position (paste position name from employee record)
+Position shows No Holders. 
+Cause
+Employee has no rows in per_person_type_usages_f
+
+Bug: 4342932:  PERWSDPH NO HOLDERS POSITION HIERARCHY FORM
+This is data corruption of unknown origin
+
+Solution
+1.  Run peptufxu.sql script passing in the person_id of the employee
+
+This will create person type usage records based on the person records.
+
+2.  Retest the functionality
+
+3.  If previous steps are successful, run the script peptufxp.sql.  
+
+This creates PTU records for the person_ids which are missing PTU records. 
+
+4.  Retest this functionality
+
+
+NOTE:
+
+--------
+
+The scripts described in the solution above need to be obtained from HRMS support;  SR should be directed to HRMS support to verify the issue and confirm suitability of the use of these scripts.
+
+
+References
+Bug 4342932 - Act: Perwsdph No Holders Position Hierarchy Form
+
+Key Facts
+
+
+-------------------------------------
+After a new employee is added to the system the assigned position
+cannot be viewed in the Hierarchies screen. The position shows
+no holders
+
+STEPS
+-----------------------
+1. The employee adds a new employee using the Purchasing responsibility
+2. Navigate Setup / Personnel / Employees:
+3. Query on employee name. Click on More. Click on Assignment
+4. Copy position name.
+5. Navigate Setup/ Personnel / Position Hierarchy:
+6. Query on hierarchy
+7. Query on version
+8. Query on position (paste position name from employee record)
+Position shows No Holders. 
+Cause
+Employee has no rows in per_person_type_usages_f
+
+Bug: 4342932: PERWSDPH NO HOLDERS POSITION HIERARCHY FORM
+This is data corruption of unknown origin
+
+Solution
+1. Run peptufxu.sql script passing in the person_id of the employee
+
+This will create person type usage records based on the person records.
+
+2. Retest the functionality
+
+3. If previous steps are successful, run the script peptufxp.sql. 
+
+This creates PTU records for the person_ids which are missing PTU records. 
+
+4. Retest this functionality
+

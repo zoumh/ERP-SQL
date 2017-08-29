@@ -1,0 +1,6 @@
+
+
+
+
+select detail_posting_allowed_flag Post_Allow,detail_budgeting_allowed_flag Bud_Allow,account_type,enabled_flag,summary_flag,segment1,segment2,segment3 from apps.gl_code_combinations where segment3 like '4101%'
+

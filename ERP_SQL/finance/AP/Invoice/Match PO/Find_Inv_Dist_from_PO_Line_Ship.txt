@@ -1,0 +1,138 @@
+
+Find out Invoice distribute line from matched PO/line/Receipt Line
+
+select d.INVOICE_NUM,c.DISTRIBUTION_LINE_NUMBER as Invoice_Dist_Line
+,c.AMOUNT
+,f.SEGMENT1 as PO,e.LINE_NUM as PO_Line
+,a.LINE_NUM as Recept_Line,a.QUANTITY_SHIPPED,a.QUANTITY_RECEIVED
+,b.TRANSACTION_DATE,b.QUANTITY,b.TRANSACTION_TYPE,c.DIST_MATCH_TYPE
+,c.BASE_AMOUNT,c.QUANTITY_INVOICED
+,d.INVOICE_CURRENCY_CODE
+from apps.rcv_shipment_lines a
+,apps.rcv_transactions b
+,APPS.AP_INVOICE_DISTRIBUTIONS_ALL c
+,apps.AP_INVOICES_ALL d
+,apps.PO_lines_all e
+,apps.PO_headers_all f
+where a.SHIPMENT_LINE_ID=b.SHIPMENT_LINE_ID
+and c.RCV_TRANSACTION_ID=b.TRANSACTION_ID
+and d.INVOICE_ID=c.INVOICE_ID
+--and a.PO_LINE_ID=1838 
+and e.PO_HEADER_ID=f.PO_HEADER_ID
+and e.PO_LINE_ID=a.PO_LINE_ID
+and f.SEGMENT1='TP28350' 	-- PO
+and e.LINE_NUM=3   		--PO line number
+and a.LINE_NUM=18  		--Shipment number
+
+
+
+
+Find out Matched PO information from Invoice number:
+
+select d.INVOICE_NUM,c.DISTRIBUTION_LINE_NUMBER as Invoice_Dist_Line
+,c.AMOUNT
+,f.SEGMENT1 as PO,e.LINE_NUM as PO_Line
+,a.LINE_NUM as Ship_Line,a.QUANTITY_SHIPPED,a.QUANTITY_RECEIVED
+,b.TRANSACTION_DATE,b.QUANTITY,b.TRANSACTION_TYPE,c.DIST_MATCH_TYPE
+,c.BASE_AMOUNT,c.QUANTITY_INVOICED
+,d.INVOICE_CURRENCY_CODE
+from apps.rcv_shipment_lines a
+,apps.rcv_transactions b
+,APPS.AP_INVOICE_DISTRIBUTIONS_ALL c
+,apps.AP_INVOICES_ALL d
+,apps.PO_lines_all e
+,apps.PO_headers_all f
+where a.SHIPMENT_LINE_ID=b.SHIPMENT_LINE_ID
+and c.RCV_TRANSACTION_ID=b.TRANSACTION_ID
+and d.INVOICE_ID=c.INVOICE_ID
+--and a.PO_LINE_ID=1838 
+and e.PO_HEADER_ID=f.PO_HEADER_ID
+and e.PO_LINE_ID=a.PO_LINE_ID
+and d.INVOICE_NUM='2004030312'
+
+
+------Non_BOM PO Matched Invoice details
+select b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist
+,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+order by d.segment1--b.INVOICE_NUM
+
+
+Find out AP Invoice from Pay Group/GL-Date
+select a.INVOICE_NUM,c.DIST_MATCH_TYPE from apps.AP_INVOICES_ALL a,APPS.AP_INVOICE_DISTRIBUTIONS_ALL c
+ where a.PAY_GROUP_LOOKUP_CODE='KY' and a.GL_DATE<to_date('2004-03-20','yyyy-mm-dd')
+ and a.GL_DATE>to_date('2004-03-1','yyyy-mm-dd')
+ and a.INVOICE_ID=c.INVOICE_ID
+
+
+-----------------------------
+
+Old one:
+select a.LINE_NUM as Ship_Line,a.QUANTITY_SHIPPED,a.QUANTITY_RECEIVED
+,b.TRANSACTION_DATE,b.SHIPMENT_LINE_ID,b.QUANTITY,b.PRIMARY_QUANTITY,b.PO_HEADER_ID,b.PO_LINE_ID,b.TRANSACTION_TYPE
+,c.INVOICE_ID,c.AMOUNT,c.BASE_AMOUNT,c.QUANTITY_INVOICED,c.DIST_MATCH_TYPE,c.RCV_TRANSACTION_ID,c.INVOICE_DISTRIBUTION_ID
+,c.DISTRIBUTION_LINE_NUMBER,d.INVOICE_NUM,d.INVOICE_CURRENCY_CODE
+,e.LINE_NUM as PO_Line,f.SEGMENT1 as PO
+from apps.rcv_shipment_lines a
+,apps.rcv_transactions b
+,APPS.AP_INVOICE_DISTRIBUTIONS_ALL c
+,apps.AP_INVOICES_ALL d
+,apps.PO_lines_all e
+,apps.PO_headers_all f
+where a.SHIPMENT_LINE_ID=b.SHIPMENT_LINE_ID
+and c.RCV_TRANSACTION_ID=b.TRANSACTION_ID
+and d.INVOICE_ID=c.INVOICE_ID
+--and a.PO_LINE_ID=1838 
+and e.PO_HEADER_ID=f.PO_HEADER_ID
+and e.PO_LINE_ID=a.PO_LINE_ID
+and f.SEGMENT1='TP28350' 	-- PO
+and e.LINE_NUM=3   		--PO line number
+and a.LINE_NUM=18  		--Shipment number
+
+
+
+
+
+
+
+
+
+
+
+
+
+select * from APPS.AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_ID=17264
+
+RCV_TRANSACTION_ID,INVOICE_DISTRIBUTION_ID
+
+
+select * from apps.AP_INVOICES_ALL where INVOICE_NUM='1080272126'
+
+select  INVOICE_ID,AMOUNT,BASE_AMOUNT,QUANTITY_INVOICED,DIST_MATCH_TYPE,RCV_TRANSACTION_ID,INVOICE_DISTRIBUTION_ID  from APPS.AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_ID=17264
+
+select  base_quantity_variance from APPS.AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_ID=17264
+
+select * from apps.rcv_transactions where PO_LINE_ID=1838  and SHIPMENT_LINE_ID=13495
+
+select * from apps.PO_headers_all where SEGMENT1='TP28350'
+
+PO_HEADER_ID=757
+
+select * from apps.PO_lines_all where PO_HEADER_ID=757 and PO_LINE_ID=1838
+
+select * from apps.rcv_shipment_lines where PO_HEADER_ID=757 and PO_LINE_ID=1838 and LINE_NUM=18

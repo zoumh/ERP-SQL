@@ -1,0 +1,24 @@
+
+
+-------Clear reservation
+
+Find reservation_id from Reservation Screen
+
+select * from mtl_reservations where reservation_id=959479
+ 
+select * from mtl_demand  
+where n_column1 in 
+(select reservation_id from mtl_reservations where 
+reservation_id=959479);
+ 
+ 
+delete from mtl_demand  
+where n_column1 in 
+(select reservation_id from mtl_reservations where 
+reservation_id=959479);
+
+
+commit
+
+
+

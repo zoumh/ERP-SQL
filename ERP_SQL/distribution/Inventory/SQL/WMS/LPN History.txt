@@ -1,0 +1,9 @@
+
+
+
+select * from apps.WMS_LPN_HISTORIES where --lpn_id in (1175665,1242483)
+--LICENSE_PLATE_NUMBER  in ('DA00052015-B','E00053344-B')
+parent_lpn_id in (1175665,1242483)
+
+
+

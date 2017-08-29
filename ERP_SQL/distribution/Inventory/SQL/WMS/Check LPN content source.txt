@@ -1,0 +1,28 @@
+
+
+----------If LPN Content.source_name is not null, then LPN can't un-pack, can't be used in MO (pick not success)
+
+select a.LICENSE_PLATE_NUMBER LPN_Num,c.SUBINVENTORY_CODE WH,
+d.segment2||'.'||d.segment3||'.'||d.segment4||'.'||d.segment5 Locator,
+e.segment1 Item,c.Qty,a.lpn_id
+from apps.wms_license_plate_numbers a,apps.wms_lpn_contents b,
+(select sum(TRANSACTION_QUANTITY) Qty,lpn_id,INVENTORY_ITEM_ID,ORGANIZATION_ID,SUBINVENTORY_CODE,LOCATOR_ID 
+from apps.MTL_ONHAND_QUANTITIES_DETAIl group by INVENTORY_ITEM_ID,ORGANIZATION_ID,SUBINVENTORY_CODE,LOCATOR_ID,lpn_id) c,
+apps.mtl_item_locations d,apps.mtl_system_items e
+where b.parent_lpn_id=a.lpn_id
+and c.lpn_id=a.lpn_id
+and c.LOCATOR_ID=d.INVENTORY_LOCATION_ID
+and e.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and a.ORGANIZATION_ID=e.ORGANIZATION_ID
+and b.source_name is not null
+--and a.lpn_id=2022458
+
+
+
+insert into BMC_BKUP_LPNCONTENT070215 select * from apps.wms_lpn_contents WHERE parent_lpn_id in (2016786)
+
+update apps.wms_lpn_contents set source_name=null WHERE parent_lpn_id in (2016786)
+

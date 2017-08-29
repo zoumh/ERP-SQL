@@ -1,0 +1,48 @@
+
+If Order line can't be imported into AR, theck Item invoice enable flag in Org & MAS
+
+
+---- to list Master Item's Invoice Flag for pending at Interface (wit Error Msg)
+select sales_order SO,MESSAGE_TEXT,INVALID_VALUE,sales_order_line line, purchase_order SE_PO,interface_line_attribute2 SO_Type,b.segment1 Item,
+b.INVOICEABLE_ITEM_FLAG,b.INVOICE_ENABLED_FLAG
+--,TRX_DATE ,GL_DATE,SHIP_DATE_ACTUAL,SALES_ORDER_DATE   
+from apps.RA_INTERFACE_LINES_all a,apps.mtl_system_items b,apps.ra_interface_errors_all c 
+where a.request_id is not null
+and a.inventory_item_id=b.inventory_item_id
+and b.organization_id=127
+and c.INTERFACE_LINE_ID(+)=a.INTERFACE_LINE_ID
+--and MESSAGE_TEXT is not null
+ 
+
+select sales_order SO,sales_order_line line, purchase_order SE_PO,interface_line_attribute2 SO_Type,b.segment1 Item,
+b.INVOICEABLE_ITEM_FLAG,b.INVOICE_ENABLED_FLAG
+--,TRX_DATE ,GL_DATE,SHIP_DATE_ACTUAL,SALES_ORDER_DATE   
+from apps.RA_INTERFACE_LINES_all a,apps.mtl_system_items b 
+where a.request_id is not null
+and a.inventory_item_id=b.inventory_item_id
+and b.organization_id=127
+
+
+
+1. Find INTERFACE_LINE_ID/OR No/Item ID/line amount from screen
+
+
+
+2. Find OR line,Type (ORG) from INTERFACE_LINE_ID
+
+select SALES_ORDER,INTERFACE_LINE_ATTRIBUTE1,INTERFACE_LINE_ATTRIBUTE2,INTERFACE_LINE_ATTRIBUTE10,DESCRIPTION,CURRENCY_CODE,CONVERSION_RATE,
+AMOUNT,QUANTITY,UNIT_SELLING_PRICE,SALES_ORDER_LINE,LINE_NUMBER,SHIP_DATE_ACTUAL,SALES_ORDER_DATE,INVENTORY_ITEM_ID
+from apps.RA_INTERFACE_LINES_all where INTERFACE_LINE_ID=101199
+
+select * from apps.RA_INTERFACE_LINES_all where INTERFACE_LINE_ID=101199
+
+
+
+3. Find Item from Item_ID/Org
+
+select * from apps.mtl_system_items where inventory_item_id=22000 and organization_id=84
+
+select DESCRIPTION,SEGMENT1 from apps.mtl_system_items where inventory_item_id=22000 and organization_id=84
+
+
+

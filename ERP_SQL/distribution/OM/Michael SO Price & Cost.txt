@@ -1,0 +1,435 @@
+
+
+-----------BMC GM report --USD SO with Model (New OU)
+
+select c.NAME SO_Type,d.segment1 Item,g.segment1 Model,to_char(a.ship_from_org_id) Ship_From_Org,
+e.standard_cost/(f.CONVERSION_RATE*decode(b.unit_selling_price,0,0.0001,b.unit_selling_price)) COS_100,
+b.unit_selling_price Price,
+f.CONVERSION_RATE*b.unit_selling_price CNY_Price--,--b.unit_cost Cost
+,e.standard_cost,
+a.transactional_curr_code Curr,f.CONVERSION_RATE Rate,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+f.CONVERSION_RATE*(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price CNY_Amt,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+a.order_number SO_Num,to_char(b.line_number) Line_Num,to_char(b.shipment_number) Ship_Num,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e,
+apps.GL_DAILY_RATES f,apps.mtl_item_categories_v g
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=e.organization_id
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+and e.update_date=to_date(b.fulfillment_date)
+and f.conversion_type='Corporate'
+and f.to_currency='CNY'
+and f.from_currency<>'CNY'
+and f.from_currency=a.transactional_curr_code
+and f.conversion_date=to_date(b.pricing_date)
+and a.transactional_curr_code<>'CNY'
+/*and c.name not like 'ARC%'
+and c.name not like '%Proto%'
+and c.name not like '%cancellation%'
+and c.name not like 'Internal%'
+and c.name not like 'Temp%'*/
+and b.schedule_ship_date >=to_date('2006-1-01','YYYY-MM-DD')
+--and b.schedule_ship_date <=to_date('2005-5-31','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+and g.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=e.organization_id
+and g.category_set_id=1
+order by d.segment1,a.order_number,b.line_number
+
+---old OU
+select c.NAME SO_Type,d.segment1 Item,g.segment1 Model,to_char(a.ship_from_org_id) Ship_From_Org,
+e.standard_cost/(f.CONVERSION_RATE*decode(b.unit_selling_price,0,0.0001,b.unit_selling_price)) COS_100,
+b.unit_selling_price Price,
+f.CONVERSION_RATE*b.unit_selling_price CNY_Price--,--b.unit_cost Cost
+,e.standard_cost,
+a.transactional_curr_code Curr,f.CONVERSION_RATE Rate,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+f.CONVERSION_RATE*(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price CNY_Amt,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+a.order_number SO_Num,to_char(b.line_number) Line_Num,to_char(b.shipment_number) Ship_Num,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e,
+apps.GL_DAILY_RATES f,apps.mtl_item_categories_v g
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=83 
+and e.organization_id=83 
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+and e.update_date=to_date(b.fulfillment_date)
+and f.conversion_type='Corporate'
+and f.to_currency='CNY'
+and f.from_currency<>'CNY'
+and f.from_currency=a.transactional_curr_code
+and f.conversion_date=to_date(b.pricing_date)
+and a.transactional_curr_code<>'CNY'
+/*and c.name not like 'ARC%'
+and c.name not like '%Proto%'
+and c.name not like '%cancellation%'
+and c.name not like 'Internal%'
+and c.name not like 'Temp%'*/
+and b.schedule_ship_date >=to_date('2005-5-01','YYYY-MM-DD')
+and b.schedule_ship_date <=to_date('2005-5-31','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+and g.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=83
+and g.category_set_id=1
+order by d.segment1,a.order_number,b.line_number
+
+
+-------CNY SO with Model (New OU)
+
+select c.NAME SO_Type,d.segment1 Item,g.segment1 Model,to_char(a.ship_from_org_id) Ship_From_Org,
+e.standard_cost/decode(b.unit_selling_price,0,0.0001,b.unit_selling_price) COS_100,
+b.unit_selling_price Price,b.unit_selling_price CNY_Price,
+e.standard_cost,a.transactional_curr_code Curr,'1' Rate,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price CNY_Amt,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+a.order_number SO_Num,to_char(b.line_number) Line_Num,to_char(b.shipment_number) Ship_Num,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e,apps.mtl_item_categories_v g
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=e.organization_id
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+and e.update_date=to_date(b.fulfillment_date)
+and a.transactional_curr_code='CNY'
+and b.schedule_ship_date >=to_date('2006-1-01','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+and g.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=e.organization_id
+and g.category_set_id=1
+order by d.segment1,a.order_number,b.line_number
+
+
+----Old OU
+select c.NAME SO_Type,d.segment1 Item,g.segment1 Model,to_char(a.ship_from_org_id) Ship_From_Org,
+e.standard_cost/decode(b.unit_selling_price,0,0.0001,b.unit_selling_price) COS_100,
+b.unit_selling_price Price,b.unit_selling_price CNY_Price,
+e.standard_cost,a.transactional_curr_code Curr,'1' Rate,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price CNY_Amt,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+a.order_number SO_Num,to_char(b.line_number) Line_Num,to_char(b.shipment_number) Ship_Num,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e,apps.mtl_item_categories_v g
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=83 
+and e.organization_id=83 
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+and e.update_date=to_date(b.fulfillment_date)
+and a.transactional_curr_code='CNY'
+and b.schedule_ship_date >=to_date('2005-5-01','YYYY-MM-DD')
+and b.schedule_ship_date <=to_date('2005-5-31','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+and g.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=83
+and g.category_set_id=1
+order by d.segment1,a.order_number,b.line_number
+
+------------------- old no model
+ 
+select c.NAME SO_Type,d.segment1 Item,to_char(a.ship_from_org_id) Ship_From_Org,
+e.standard_cost/(f.CONVERSION_RATE*decode(b.unit_selling_price,0,0.0001,b.unit_selling_price)) COS_100,
+b.unit_selling_price Price,
+f.CONVERSION_RATE*b.unit_selling_price CNY_Price--,--b.unit_cost Cost
+,e.standard_cost,
+a.transactional_curr_code Curr,f.CONVERSION_RATE Rate,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+f.CONVERSION_RATE*(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price CNY_Amt,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+a.order_number SO_Num,to_char(b.line_number) Line_Num,to_char(b.shipment_number) Ship_Num,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e,
+apps.GL_DAILY_RATES f
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=83 
+and e.organization_id=83 
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+and e.update_date=to_date(b.fulfillment_date)
+and f.conversion_type='Corporate'
+and f.to_currency='CNY'
+and f.from_currency<>'CNY'
+and f.from_currency=a.transactional_curr_code
+and f.conversion_date=to_date(b.pricing_date)
+and a.transactional_curr_code<>'CNY'
+/*and c.name not like 'ARC%'
+and c.name not like '%Proto%'
+and c.name not like '%cancellation%'
+and c.name not like 'Internal%'
+and c.name not like 'Temp%'*/
+and b.schedule_ship_date >=to_date('2005-5-01','YYYY-MM-DD')
+and b.schedule_ship_date <=to_date('2005-5-31','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+
+union
+
+select c.NAME SO_Type,d.segment1 Item,to_char(a.ship_from_org_id) Ship_From_Org,
+e.standard_cost/decode(b.unit_selling_price,0,0.0001,b.unit_selling_price) COS_100,
+b.unit_selling_price Price,b.unit_selling_price CNY_Price,
+e.standard_cost,a.transactional_curr_code Curr,'1' Rate,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price CNY_Amt,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+a.order_number SO_Num,to_char(b.line_number) Line_Num,to_char(b.shipment_number) Ship_Num,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=83 
+and e.organization_id=83 
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+and e.update_date=to_date(b.fulfillment_date)
+and a.transactional_curr_code='CNY'
+and b.schedule_ship_date >=to_date('2005-5-01','YYYY-MM-DD')
+and b.schedule_ship_date <=to_date('2005-5-31','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+
+
+
+
+---------Check CNY SO 's Price & Std Cost
+
+
+select d.segment1 Item,to_char(a.ship_from_org_id) Org,
+e.standard_cost/decode(b.unit_selling_price,0,0.0001,b.unit_selling_price) GM_100,
+b.unit_selling_price Price,--b.unit_cost Cost,
+e.standard_cost,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+c.NAME SO_Type,to_char(a.order_number) SO,to_char(b.line_number) Line,to_char(b.shipment_number) Ship,
+a.transactional_curr_code Curr,b.Ordered_Item,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Revenu_Amt,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=83 
+and e.organization_id=83 
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+--and e.COST_TYPE='Frozen' 
+and e.update_date=to_date(b.fulfillment_date)
+and a.transactional_curr_code='CNY'
+/*and c.name not like 'ARC%'
+and c.name not like '%Proto%'
+and c.name not like '%cancellation%'
+and c.name not like 'Internal%'
+and c.name not like 'Temp%'*/
+and b.schedule_ship_date >=to_date('2005-4-01','YYYY-MM-DD')
+and b.schedule_ship_date <=to_date('2005-4-30','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+--and b.unit_selling_price<>0
+order by a.order_number,b.line_number
+
+--old
+select d.segment1 Item,
+e.standard_cost/decode(b.unit_selling_price,0,0.0001,b.unit_selling_price) Profit_Rate,
+b.unit_selling_price Price,b.unit_cost Cost,e.standard_cost,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+c.NAME SO_Type,to_char(a.order_number) SO,to_char(b.line_number) Line,to_char(b.shipment_number) Ship,
+a.transactional_curr_code Curr,b.Ordered_Item,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Revenu_Amt,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=83 
+and e.organization_id=83 
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+--and e.COST_TYPE='Frozen' 
+and e.update_date=to_date(b.fulfillment_date)
+and a.transactional_curr_code='CNY'
+/*and c.name not like 'ARC%'
+and c.name not like '%Proto%'
+and c.name not like '%cancellation%'
+and c.name not like 'Internal%'
+and c.name not like 'Temp%'*/
+and b.schedule_ship_date >=to_date('2005-4-01','YYYY-MM-DD')
+and b.schedule_ship_date <=to_date('2005-4-30','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+--and b.unit_selling_price<>0
+order by a.order_number,b.line_number
+
+
+
+
+---------Check Foreign SO 's Price & Std Cost
+
+select d.segment1 Item,to_char(a.ship_from_org_id) Org,
+e.standard_cost/(f.CONVERSION_RATE*decode(b.unit_selling_price,0,0.0001,b.unit_selling_price)) GM_100,
+b.unit_selling_price Price,
+f.CONVERSION_RATE*b.unit_selling_price CNY_Price--,--b.unit_cost Cost
+,e.standard_cost,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+c.NAME SO_Type,a.order_number SO,b.line_number Line,b.shipment_number Ship,
+a.transactional_curr_code Curr,f.CONVERSION_RATE,b.Ordered_Item,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+f.CONVERSION_RATE*(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price CNY_Amt,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.pricing_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e,
+apps.GL_DAILY_RATES f
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=83 
+and e.organization_id=83 
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+--and e.COST_TYPE='Frozen' 
+and e.update_date=to_date(b.fulfillment_date)
+and f.conversion_type='Corporate'
+and f.to_currency='CNY'
+and f.from_currency<>'CNY'
+and f.from_currency=a.transactional_curr_code
+and f.conversion_date=to_date(b.pricing_date)
+and a.transactional_curr_code<>'CNY'
+and c.name not like 'ARC%'
+and c.name not like '%Proto%'
+and c.name not like '%cancellation%'
+and c.name not like 'Internal%'
+and c.name not like 'Temp%'
+and b.schedule_ship_date >=to_date('2005-4-01','YYYY-MM-DD')
+and b.schedule_ship_date <=to_date('2005-4-30','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+--and b.cancelled_quantity<>b.shipped_quantity
+--and b.unit_selling_price=0
+order by a.order_number,b.line_number
+
+
+---old
+select d.segment1 Item,
+e.standard_cost/(f.CONVERSION_RATE*decode(b.unit_selling_price,0,0.0001,b.unit_selling_price)) Profit_Rate,
+b.unit_selling_price Price,
+f.CONVERSION_RATE*b.unit_selling_price CNY_Price,b.unit_cost Cost
+,e.standard_cost,
+b.shipped_quantity,b.fulfilled_quantity,b.invoiced_quantity,
+b.ordered_quantity,b.cancelled_quantity,
+c.NAME SO_Type,a.order_number SO,b.line_number Line,b.shipment_number Ship,
+a.transactional_curr_code Curr,f.CONVERSION_RATE,b.Ordered_Item,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+f.CONVERSION_RATE*(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price CNY_Amt,
+b.pricing_date ,b.fulfillment_date,b.actual_shipment_date,b.schedule_ship_date,b.request_date,b.promise_date,b.creation_date,b.pricing_date,b.last_update_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.mtl_system_items_b d,apps.CST_COST_HISTORY_V e,
+apps.GL_DAILY_RATES f
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and b.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and d.organization_id=83 
+and e.organization_id=83 
+and b.INVENTORY_ITEM_ID=e.INVENTORY_ITEM_ID
+--and e.COST_TYPE='Frozen' 
+and e.update_date=to_date(b.fulfillment_date)
+and f.conversion_type='Corporate'
+and f.to_currency='CNY'
+and f.from_currency<>'CNY'
+and f.from_currency=a.transactional_curr_code
+and f.conversion_date=to_date(b.pricing_date)
+and a.transactional_curr_code<>'CNY'
+and c.name not like 'ARC%'
+and c.name not like '%Proto%'
+and c.name not like '%cancellation%'
+and c.name not like 'Internal%'
+and c.name not like 'Temp%'
+and b.schedule_ship_date >=to_date('2005-4-01','YYYY-MM-DD')
+and b.schedule_ship_date <=to_date('2005-4-30','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+--and b.cancelled_quantity<>b.shipped_quantity
+--and b.unit_selling_price=0
+order by a.order_number,b.line_number
+
+
+--------Mtl Trans check Cost
+
+select   mmt.transaction_date,-- mmt.CREATED_BY,usr.user_name,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 mmt.TRANSACTION_QUANTITY as Qty,mta.primary_quantity Booked_Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION,
+		 MGD.SEGMENT1 Alias_SOURCE,
+		 MMT.TRANSACTION_REFERENCE Trans_Reference
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+  --,apps.FND_USER usr
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    trunc(mmt.transaction_date) >= to_date('20050301','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20050403','YYYYMMDD')
+--and gcc.segment3='41010101' 
+--and    mtt.transaction_type_name='Account alias issue'
+and msi.segment1='DPY 101 2790/1R8A'
+and oeh.ORDER_NUMBER='106158'
+--and usr.user_id=mmt.CREATED_BY

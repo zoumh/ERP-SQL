@@ -1,0 +1,164 @@
+
+AP - ONE BY ONE IN CNY
+SUPPLIER NAME
+SUPPLIER ADDRESS
+YTD BOM AP INVOICE INPUT at Invoice @
+YTD BOM GOODS VALUE RECEIVED BUT NOT MATCHED at RMB Std. Cost
+ - YTD Value Purchased
+AVERAGE MONTH-END AP
+
+
+
+
+Sum with Supplier & Curr (for BOM AP): 
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,aps.VENDOR_SITE_CODE
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as CNY_Amt
+,api.INVOICE_CURRENCY_CODE as Inv_Curr,sum(api.INVOICE_AMOUNT) as Amount
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY'))
+and api.INVOICE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE,api.INVOICE_CURRENCY_CODE
+
+
+
+Detail with Invoice (for BOM AP):
+select VDR.VENDOR_NAME as Supplier,aps.VENDOR_SITE_CODE,vdr.VENDOR_TYPE_LOOKUP_CODE
+,api.INVOICE_NUM
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1) as CNY_Amt
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY'))
+order by VDR.VENDOR_NAME,api.INVOICE_CURRENCY_CODE
+
+
+
+
+Sum with YTD BOM GOODS VALUE RECEIVED BUT NOT MATCHED at RMB Std. Cost:
+
+select VDR.VENDOR_NAME as Supplier,aps.VENDOR_SITE_CODE
+,sum((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)*h.ITEM_COST) as Amount
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+and (c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)>0
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and c.LAST_UPDATE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and c.LAST_UPDATE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE
+
+
+
+
+Detail with YTD BOM GOODS VALUE RECEIVED BUT NOT MATCHED at RMB Std. Cost:
+
+select VDR.VENDOR_NAME as Supplier,a.SEGMENT1 as PO,b.LINE_NUM,c.SHIPMENT_NUM--,b.PO_HEADER_ID
+,c.QUANTITY_RECEIVED
+,c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED as Qty_Un_Match
+,c.QUANTITY_BILLED
+,c.QUANTITY_CANCELLED
+,b.UNIT_PRICE
+,h.ITEM_COST
+,a.CURRENCY_CODE as Curr
+,(c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)*h.ITEM_COST as Amount
+,a.RATE
+,a.CREATION_DATE as PO_Date
+,a.ORG_ID
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+and (c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)>0
+order by a.CURRENCY_CODE ,a.SEGMENT1 ,b.LINE_NUM,c.SHIPMENT_NUM
+
+
+
+
+
+
+
+------AP report package ---BOM Supplier List: (Name,Site,number) 
+(Inclued PayGrp = null)
+
+select VENDOR_NAME,a.SEGMENT1 as Supplier_Num,b.VENDOR_SITE_CODE as Site,b.PAY_GROUP_LOOKUP_CODE as Pay_Grp,VENDOR_TYPE_LOOKUP_CODE as V_Type 
+from apps.PO_VENDORS a,apps.PO_VENDOR_sites_all b
+where a.VENDOR_ID=b.VENDOR_ID 
+and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+order by to_number(a.SEGMENT1) ,b.VENDOR_SITE_CODE
+
+
+
+
+-----------------------------------Supplier Finance Information List 
+Usage: 
+1.BOM Supplier List:  (For AP Report -- NiFang)
+2.Supplier File's Finance Information check
+
+BMC AP SUPPLIER FINANCE CHECK
+BMC AP REPORT PACKAGE SUPPLIER LIST
+
+CREATE OR REPLACE VIEW APPS.BMC_AP_SUPPLIER_CHK
+AS
+select (c.SEGMENT1)||(b.VENDOR_SITE_CODE) as ID,VENDOR_TYPE_LOOKUP_CODE As Type,
+c.SEGMENT1 As Vender_Num,convert(c.VENDOR_NAME,'ZHS16GBK') as Name  ,b.VENDOR_SITE_CODE,b.ADDRESS_LINE1,b.VAT_CODE
+,a.DUE_DAYS as Pay_Terms_Day,d.SEGMENT3 as Pay_Acc,e.SEGMENT3 as PREPAY_ACC,b.PAY_GROUP_LOOKUP_CODE as Pay_Grp
+,b.CREATION_DATE,b.LAST_UPDATE_DATE,f.USER_NAME as Create_by
+from apps.AP_TERMS_LINES a,apps.PO_VENDOR_SITES_ALL b,apps.PO_VENDORS c,apps.GL_CODE_combinations d
+,apps.GL_CODE_combinations e,apps.FND_USER f
+where a.TERM_ID=b.TERMS_ID
+and b.ACCTS_PAY_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and b.PREPAY_CODE_COMBINATION_ID=e.CODE_COMBINATION_ID
+and b.VENDOR_ID=c.VENDOR_ID
+and b.CREATED_BY =f.USER_ID
+--and VENDOR_TYPE_LOOKUP_CODE<>'EMPLOYEE'
+--and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+order by b.VENDOR_ID,b.VENDOR_SITE_CODE
+
+
+

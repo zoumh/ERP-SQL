@@ -1,0 +1,31 @@
+
+DELIVERY IS INTERFACED BUT NO MATERIAL TRANSACTIONS FOR THE SO line
+SO line closed (ship transaction status='Interfaced') but no material transaction created:
+-------This update will create mtl_transaction for an closed/Interface SO line
+
+
+select * from apps.OE_ORDER_HEADERS_all  where ORDER_NUMBER in ('309138')
+
+
+----get DELIVERY_DETAIL_ID,Released_Status ,Inv_Interfaced_Flag,Pickable_Flag for SO 309138
+select Source_Header_Id,Released_Status ,Inv_Interfaced_Flag,Pickable_Flag,DELIVERY_DETAIL_ID from Apps.Wsh_Delivery_Details where Source_Header_Id In (777653)
+
+----get trip name for SO 309138
+select TRIP_NAME,TRIP_ID,DELIVERY_DETAIL_ID from apps.WSH_DELIVERABLE_STOPS_V where DELIVERY_DETAIL_ID=2400332
+
+----get trip_stop info for SO 309138
+select TRIP_ID,Pending_Interface_Flag,STOP_SEQUENCE_NUMBER,STATUS_CODE,STOP_LOCATION_ID,STOP_ID from apps.Wsh_Trip_Stops Where Trip_Id=408342
+-- And Stop_Sequence_Number = 20
+
+
+---Update for SO 309138
+Update Apps.Wsh_Delivery_Details
+Set Released_Status = 'C', Inv_Interfaced_Flag = 'N', Pickable_Flag = 'Y'
+Where Source_Header_Id In (777653)
+
+---Update for SO 309138
+Update Wsh_Trip_Stops Ts
+Set Ts.Pending_Interface_Flag = 'Y'
+Where Ts.Trip_Id In (Select t.Trip_Id From apps.Wsh_Trips t Where t.Name In (408342)) --And Stop_Sequence_Number = 20
+
+

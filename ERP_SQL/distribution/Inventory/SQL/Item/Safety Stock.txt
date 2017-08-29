@@ -1,0 +1,11 @@
+
+
+
+--------Safety stock list
+select b.ORGANIZATION_CODE,c.segment1 Item,c.description,safety_stock_quantity,a.effectivity_date
+from apps.MTL_SAFETY_STOCKS_VIEW a,apps.org_organization_definitions b,apps.mtl_system_items c
+where a.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+order by b.ORGANIZATION_CODE,c.segment1
+

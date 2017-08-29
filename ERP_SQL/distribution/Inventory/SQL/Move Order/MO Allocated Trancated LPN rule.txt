@@ -1,0 +1,38 @@
+
+
+----------Picked MO not follow the LPN pick FIFO rule
+ 
+select decode(f.LICENSE_PLATE_NUMBER,g.lpn,'First_Resv','May Wrong') Is_Err, 
+f.LICENSE_PLATE_NUMBER Reserved_LPN,g.lpn onhand_Smallest_LPN,d.REQUEST_NUMBER MO_Num,b.LINE_NUMBER MO_Line,
+a.TRANSACTION_QUANTITY Trans_Qty,QUANTITY_DETAILED Alloca_Qty,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type,c.segment1 Item,
+a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e,apps.wms_license_plate_numbers f,
+(SELECT min(e.license_plate_number) lpn,b.INVENTORY_ITEM_ID
+FROM   apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+	   apps.wms_license_plate_numbers e
+WHERE  b.LPN_ID=e.LPN_id
+AND (b.subinventory_code='SG')
+AND b.organization_id=130 
+AND e.organization_id=130 
+group by b.INVENTORY_ITEM_ID) g
+where 
+--d.REQUEST_NUMBER='HZMV01' and 
+--c.segment1='KRH 101 385/2.R6A' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+a.TRANSACTION_SOURCE_ID =d.HEADER_ID and
+a.move_order_line_id=b.line_id and
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+and b.FROM_SUBINVENTORY_CODE ='SG'
+and f.lpn_id=a.allocated_lpn_id
+and f.LICENSE_PLATE_NUMBER>=g.lpn
+and b.INVENTORY_ITEM_ID=g.INVENTORY_ITEM_ID
+and a.creation_date>=to_date('20061129 09:30:12','YYYYMMDD HH24:MI:SS')
+order by TRANSACTION_DATE desc

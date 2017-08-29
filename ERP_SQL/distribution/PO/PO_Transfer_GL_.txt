@@ -1,0 +1,46 @@
+
+
+APPS.RCV_RECEIVING_SUB_LEDGER
+
+select * FROM APPS.RCV_RECEIVING_SUB_LEDGER b
+WHERE CODE_COMBINATION_ID IN (select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='120100' )
+and  (b.PERIOD_NAME='APR-04' or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04')
+--and (JE_BATCH_NAME is null or JE_HEADER_NAME is null)
+
+
+apps.GL_JE_JOURNAL_LINES_V
+
+select * from apps.GL_JE_JOURNAL_LINES_V b where b.LINE_CODE_COMBINATION_ID in 
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='120100' )
+--and b.BATCH_NAME like 'PRD Purchasing%'
+and b.JE_CATEGORY='Receiving'
+and  (b.PERIOD_NAME='APR-04' or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04')
+
+
+Above two tables are concile with GL.
+
+
+PO APPS.RCV_RECEIVING_SUB_LEDGER:
+select ACCOUNTED_DR,ACCOUNTED_CR ,PERIOD_NAME,ACCOUNTING_DATE ,TRANSACTION_DATE ,PERIOD_NAME,REFERENCE4 as PO
+,CURRENCY_CODE,CURRENCY_CONVERSION_RATE as Rate
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b
+WHERE CODE_COMBINATION_ID IN (select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='120100' )
+and  (b.PERIOD_NAME='APR-04' or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04')
+
+_________________________
+
+Find out PO receiving journals stuck here, import in GL manually, using 'group_id is null' option
+
+apps.GL_interface
+
+select * from apps.GL_interface
+where GROUP_ID is not null
+
+
+
+-----Purge of this table in one case: If STATUS='PROCESSED' , then these records here can be delete ! Because they are already be imported into GL
+use 'GROUP_ID' to find in GL Batch name, make sure this batch was imported !
+
+delete from from apps.GL_interface where STATUS='PROCESSED' 
+
+

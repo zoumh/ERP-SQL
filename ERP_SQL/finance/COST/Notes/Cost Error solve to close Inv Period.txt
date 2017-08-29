@@ -1,0 +1,23 @@
+
+
+
+TAR Number  4039644.996 
+
+
+Apply patch 3948311 , tested solved the issue.
+
+But BMC won't apply it because too many modules was impacted.
+
+
+
+---------->have use SQL update to close Inv Period
+
+
+update mtl_material_transactions
+set costed_flag =null
+where TRANSACTION_ID in ('5798526')
+
+
+-------->This can close Inventory Period Oct/Nov
+
+

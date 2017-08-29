@@ -1,0 +1,108 @@
+
+
+---Status from APPS.AP_INVOICES_V  (Run by Apps only)
+
+select
+APPROVAL_STATUS_LOOKUP_CODE,PREPAYMENTS_APPLIED_FLAG,GL_DATE,AMOUNT_PAID,DESCRIPTION,INVOICE_NUM,BATCH_NAME,INVOICE_CURRENCY_CODE,INVOICE_TYPE,PAYMENT_STATUS
+from APPS.AP_INVOICES_v 
+where INVOICE_TYPE_LOOKUP_CODE='PREPAYMENT' 
+and PAY_GROUP_LOOKUP_CODE='EM' 
+
+
+
+select INVOICE_NUM,
+decode(APPROVAL_STATUS_LOOKUP_CODE,'APPROVED','Validated','NEEDS REAPPROVAL','Needs Revalidation','CANCELLED','Cancelled',APPROVAL_STATUS_LOOKUP_CODE) Status,WFAPPROVAL_STATUS
+,APPROVAL_READY_FLAG,PAYMENT_STATUS_FLAG,POSTING_FLAG,
+INVOICE_AMOUNT,BASE_AMOUNT,AMOUNT_PAID,EXCHANGE_RATE,INVOICE_CURRENCY_CODE Curr,
+B.SEGMENT3 Cr_ACCOUNT,INVOICE_TYPE,PAY_GROUP_LOOKUP_CODE Pay_Group,VENDOR_NAME,VENDOR_NUMBER,VENDOR_SITE_CODE,
+BATCH_NAME,INVOICE_DATE,TERMS_NAME,GL_DATE,PERIOD_NAME
+PO_NUMBER,RECEIPT_NUMBER,B.SEGMENT2 Cr_CostCenter,B.SEGMENT4 Cr_Prod,B.SEGMENT5 Cr_proj
+from APPS.AP_INVOICES_V a,apps.GL_CODE_COMBINATIONS_V B
+WHERE A.ACCTS_PAY_CODE_COMBINATION_ID=B.CODE_COMBINATION_ID 
+and APPROVAL_STATUS_LOOKUP_CODE<>'CANCELLED'
+and PAYMENT_STATUS_FLAG<>'Y'
+
+
+
+
+
+--------Approval Status:
+
+-- 1.
+APPS.AP_INVOICES_ALL.WFAPPROVAL_STATUS
+
+
+
+-- 2.
+AP_INVOICE_DISTRIBUTIONS_ALL.MATCH_STATUS_FLAG
+
+There is actually no column on the AP_INVOICES_ALL table that corresponds to  the Approval Status of the Invoice.  
+
+The value that appears on the Invoice form is derived from the AP_INVOICE_DISTRIBUTIONS_ALL rows related to the invoice from the column MATCH_STATUS_FLAG.  MATCH_STATUS_FLAG can have the following values: NULL, "A" (Approved), "N" (Not Approved), "T" (Tested).  
+
+
+The Approval Status is derived as follows:  An Invoice is Never Approved if ALL distributions have MATCH_STATUS_FLAG = NULL An Invoice is Approved if ALL distributions have MATCH_STATUS_FLAG = "A".   If encumbrances are not being used then an Invoice is Approved if ALL  distributions have MATCH_STATUS_FLAG = "A" or "T".  An Invoice is Needs Reapproval if ANY distributions have MATCH_STATUS_FLAG = "N". If encumbrances are being used then an Invoice is Needs Approved if ALL  distributions have MATCH_STATUS_FLAG = "N" or "T".  We also look at unreleased holds on the invoice.  You can have all distributions approved and still have a hold on the invoice. This will set the status to Needs Reapproval for the invoice.  
+
+
+
+
+
+
+---------Cancel Status:
+--AP_Invoice_all.INVOICE_AMOUNT=0
+
+--AP_Invoice_all.REVERSAL_FLAG
+and (f.REVERSAL_FLAG<>'Y' or f.REVERSAL_FLAG is null)
+
+
+APPS.AP_INVOICES_V.APPROVAL_STATUS_LOOKUP_CODE='CANCELLED'  ---> use same DB fields as below
+
+
+
+---Or use view to list
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('81');
+END;
+
+
+select TERMS_DATE,INVOICE_NUM ,APPROVAL_STATUS_LOOKUP_CODE,PAYMENT_STATUS ,INVOICE_AMOUNT,CANCELLED_AMOUNT,AMOUNT_PAID, PAYMENT_AMOUNT_TOTAL, INVOICE_TYPE   
+from APPS.AP_INVOICES_V where round(sysdate-TERMS_DATE)>365
+and APPROVAL_STATUS_LOOKUP_CODE<>'CANCELLED'
+and (PAYMENT_STATUS is null or PAYMENT_STATUS<>'Yes')
+and INVOICE_TYPE ='Standard'
+
+
+
+
+
+
+--------Validate Status: (CANCELLED, APPROVED,NEEDS REAPPROVAL) Screen Value (cancelled,Validated,needs revalidation)
+--Call package :
+
+AP_INVOICES_PKG.GET_APPROVAL_STATUS( AI.INVOICE_ID, AI.INVOICE_AMOUNT
+, AI.PAYMENT_STATUS_FLAG, AI.INVOICE_TYPE_LOOKUP_CODE) as APPROVAL_STATUS_LOOKUP_CODE 
+
+--Or use View
+select * from APPS.AP_INVOICES_V where INVOICE_NUM='12'
+
+
+
+
+--------Hold Invoice
+SELECT a.INVOICE_NUM,  HOLD_LOOKUP_CODE,HOLD_REASON,HOLD_DATE,
+INVOICE_CURRENCY_CODE Curr,INVOICE_AMOUNT,BASE_AMOUNT,AMOUNT_PAID,INVOICE_TYPE_LOOKUP_CODE Inv_type,
+PAY_GROUP_LOOKUP_CODE Pay_Group,GL_Date,b.RELEASE_LOOKUP_CODE
+FROM APPS.AP_HOLDS_ALL b,APPS.AP_INVOICES_ALL A
+where a.invoice_id=b.invoice_id
+and a.INVOICE_NUM='11'
+and b.RELEASE_LOOKUP_CODE is not null
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,222 @@
+
+----------Std PO (Foreign PO) Matched invoice details in a period
+select b.INVOICE_NUM,a.ACCOUNTING_DATE,b.INVOICE_CURRENCY_CODE Inv_Curr,a.AMOUNT Inv_line_amt,
+d.segment1 as PO,c.CREATION_DATE PO_Dist_Create_Date,d.RATE PO_Rate,c.RATE PO_Dist_Rate,
+d.RATE_DATE PO_Rate_Date,c.RATE_DATE PO_Dist_Rate_date,
+a.EXCHANGE_RATE Inv_Rate,a.EXCHANGE_DATE Inv_Rate_Date,
+a.EXCHANGE_RATE_VARIANCE,
+to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist_num,b.INVOICE_TYPE_LOOKUP_CODE Inv_Type
+,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+a.QUANTITY_INVOICED,a.UNIT_PRICE,
+a.BASE_AMOUNT,
+a.PERIOD_NAME,
+a.PRICE_CORRECT_QTY ,a.INVOICE_PRICE_VARIANCE,a.REVERSAL_FLAG,a.VAT_CODE,a.TAX_RECOVERY_RATE,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+--and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+--and d.segment1
+--and b.INVOICE_NUM='SEP08123007'
+--and d.RATE<>c.RATE 
+--and a.EXCHANGE_RATE_VARIANCE>100
+and a.PERIOD_NAME='JAN-09'
+and b.INVOICE_CURRENCY_CODE<>'CNY'
+order by d.segment1,e.LINE_NUM,f.SHIPMENT_NUM
+
+
+---------AP -PO with Item & price
+select d.segment1 as PO,msi.item,
+b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist_num,
+a.ACCOUNTING_DATE,b.INVOICE_CURRENCY_CODE Inv_Curr,
+a.AMOUNT Inv_line_amt,
+a.QUANTITY_INVOICED,a.UNIT_PRICE Invoice_Price,e.UNIT_PRICE PO_Price,
+a.PRICE_CORRECT_QTY ,a.INVOICE_PRICE_VARIANCE,
+to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+c.CREATION_DATE PO_Dist_Create_Date,d.RATE PO_Rate,c.RATE PO_Dist_Rate,
+d.RATE_DATE PO_Rate_Date,c.RATE_DATE PO_Dist_Rate_date,
+a.EXCHANGE_RATE Inv_Rate,a.EXCHANGE_DATE Inv_Rate_Date,
+a.EXCHANGE_RATE_VARIANCE,
+b.INVOICE_TYPE_LOOKUP_CODE Inv_Type,
+a.REVERSAL_FLAG,a.VAT_CODE,a.TAX_RECOVERY_RATE,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f,
+(select segment1 Item,INVENTORY_ITEM_ID from apps.mtl_system_items_b where organization_id=127) msi
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and e.ITEM_ID= msi.INVENTORY_ITEM_ID(+)
+--and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and a.ACCOUNTING_DATE >=to_Date('2006-1-2','YYYY-MM-DD')
+and d.segment1 in ('1037955','1038344')
+order by d.segment1,e.LINE_NUM,f.SHIPMENT_NUM
+
+
+----------PO Matched iNvoice details (for one PO)
+select b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist
+,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,a.QUANTITY_INVOICED, a.UNIT_PRICE  ,a.PRICE_CORRECT_QTY ,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+--and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and d.segment1='1001512'
+order by d.segment1,e.LINE_NUM,f.SHIPMENT_NUM
+
+
+----------PO Matched iNvoice details (NBOM)
+select b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist
+,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+order by d.segment1--b.INVOICE_NUM
+
+
+
+Realized Exchange Gain Loss come from Invoice (from PO match)
+
+------------ Invoiced XGL amount during May (can trace the Invoice GL-Date)
+
+--'ITEM_TO_PO' ---> OK, my caculated & Oracle's
+
+select f.AMOUNT*(f.EXCHANGE_RATE -g.RATE ) as XGL,
+f.EXCHANGE_RATE_VARIANCE as XSL
+,b.ACCOUNTING_DATE as INV_AccountDate,a.REFERENCE6,a.AE_LINE_TYPE_CODE,a.REFERENCE1 as Supplier--,e.SEGMENT1 as PO
+,trunc(g.CREATION_DATE) as PO_Date,g.QUANTITY_BILLED,g.RATE as PO_Rate,g.AMOUNT_BILLED
+,f.EXCHANGE_RATE as Inv_rate,QUANTITY_INVOICED,POSTED_FLAG,f.UNIT_PRICE as Inv_Price,f.DIST_MATCH_TYPE as Inv_match
+,a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment3 account_number
+,a.REFERENCE5 as Invoice_number,a.CURRENCY_CODE--,a.ENTERED_DR,a.ENTERED_CR,
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.ap_invoices_all d
+,apps.AP_INVOICE_DISTRIBUTIONS_all f,apps.PO_DISTRIBUTIONS_ALL g,apps.po_lines_all e
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and e.PO_LINE_ID=g.PO_LINE_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and a.REFERENCE5=d.INVOICE_NUM
+and a.AE_LINE_TYPE_CODE='ERV'
+and a.SOURCE_TABLE='AP_INVOICE_DISTRIBUTIONS'
+and a.SOURCE_ID=f.invoice_distribution_id
+and f.po_distribution_id=g.po_distribution_id
+and c.segment3='550305'
+and (b.PERIOD_NAME='MAY-04' ) 
+--and a.CURRENCY_CODE='JPY'
+and f.ACCOUNTING_DATE >=to_Date('2004-5-1','YYYY-MM-DD')
+and f.ACCOUNTING_DATE <=to_Date('2004-5-31','YYYY-MM-DD')
+and f.PERIOD_NAME='MAY-04' 
+and f.DIST_MATCH_TYPE ='ITEM_TO_PO'
+--and f.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+--and e.line_type_id<>1020  --- BMO PO
+and g.DESTINATION_TYPE_CODE='INVENTORY'  --BOM PO
+group by a.CURRENCY_CODE
+
+
+select sum(f.AMOUNT*(f.EXCHANGE_RATE -g.RATE )) as XGL,
+sum(f.EXCHANGE_RATE_VARIANCE) as XSL ,a.CURRENCY_CODE
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.ap_invoices_all d
+,apps.AP_INVOICE_DISTRIBUTIONS_all f,apps.PO_DISTRIBUTIONS_ALL g,apps.po_lines_all e
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and e.PO_LINE_ID=g.PO_LINE_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and a.REFERENCE5=d.INVOICE_NUM
+and a.AE_LINE_TYPE_CODE='ERV'
+and a.SOURCE_TABLE='AP_INVOICE_DISTRIBUTIONS'
+and a.SOURCE_ID=f.invoice_distribution_id
+and f.po_distribution_id=g.po_distribution_id
+and c.segment3='550305'
+and (b.PERIOD_NAME='MAY-04' ) 
+--and a.CURRENCY_CODE='USD'
+--and f.ACCOUNTING_DATE >=to_Date('2004-5-1','YYYY-MM-DD')
+--and f.ACCOUNTING_DATE <=to_Date('2004-5-31','YYYY-MM-DD')
+and f.PERIOD_NAME='MAY-04' 
+and f.DIST_MATCH_TYPE ='ITEM_TO_PO'
+--and f.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+--and e.line_type_id<>1020  --- BMO PO
+and g.DESTINATION_TYPE_CODE='INVENTORY'  -- BOM PO
+group by a.CURRENCY_CODE
+
+
+
+
+
+--'ITEM_TO_RECEIPT'
+
+SELECT B.AMOUNT*(B.EXCHANGE_RATE -A.CURRENCY_CONVERSION_RATE ) as XGL , (B.EXCHANGE_RATE_VARIANCE) as XGL_Ora,c.INVOICE_CURRENCY_CODE
+,c.INVOICE_NUM,b.DISTRIBUTION_LINE_NUMBER as Inv_Dist,B.EXCHANGE_RATE as Inv_Rate,B.AMOUNT as Inv_Amt
+,b.QUANTITY_INVOICED,b.UNIT_PRICE as Inv_Price
+,a.CURRENCY_CONVERSION_RATE as Rec_Rate,a.CURRENCY_CONVERSION_DATE as Rec_Date
+,b.ACCOUNTING_DATE as Inv_Book_date,g.CREATION_DATE as PO_date,b.DIST_MATCH_TYPE,b.DESCRIPTION,b.MATCH_STATUS_FLAG
+,a.QUANTITY_BILLED,a.PO_HEADER_ID,a.PO_LINE_LOCATION_ID
+FROM apps.RCV_TRANSACTIONS a,  apps.AP_INVOICE_DISTRIBUTIONS_all b ,apps.ap_invoices_all c,apps.PO_DISTRIBUTIONS_ALL g
+WHERE B.RCV_TRANSACTION_ID=A.TRANSACTION_ID
+--and b.ACCOUNTING_DATE >=to_Date('2004-5-1','YYYY-MM-DD')
+--and b.ACCOUNTING_DATE <=to_Date('2004-5-31','YYYY-MM-DD')
+and b.invoice_id=c.invoice_id
+--and c.INVOICE_CURRENCY_CODE='USD'
+and b.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+and b.PERIOD_NAME='MAY-04' 
+and b.po_distribution_id=g.po_distribution_id
+and g.DESTINATION_TYPE_CODE='INVENTORY'
+
+
+
+
+
+SELECT sum(B.AMOUNT*(B.EXCHANGE_RATE -A.CURRENCY_CONVERSION_RATE )) as XGL , 
+sum(B.EXCHANGE_RATE_VARIANCE) as XGL_Ora,c.INVOICE_CURRENCY_CODE
+FROM apps.RCV_TRANSACTIONS a,  apps.AP_INVOICE_DISTRIBUTIONS_all b ,apps.ap_invoices_all c,apps.PO_DISTRIBUTIONS_ALL g
+WHERE B.RCV_TRANSACTION_ID=A.TRANSACTION_ID
+--and b.ACCOUNTING_DATE >=to_Date('2004-5-1','YYYY-MM-DD')
+--and b.ACCOUNTING_DATE <=to_Date('2004-5-31','YYYY-MM-DD')
+and b.invoice_id=c.invoice_id
+--and c.INVOICE_CURRENCY_CODE='USD'
+and b.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+and b.PERIOD_NAME='MAY-04' 
+and b.po_distribution_id=g.po_distribution_id
+and g.DESTINATION_TYPE_CODE='INVENTORY'
+group by c.INVOICE_CURRENCY_CODE
+

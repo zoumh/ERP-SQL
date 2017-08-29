@@ -1,0 +1,7 @@
+
+
+1. SE Org, Zhang Dong Ling, current LPN organized by Module, not by locator Racks.
+---> want putaway to provide the locator Racks by Module (Each module has one same Rack)
+
+
+

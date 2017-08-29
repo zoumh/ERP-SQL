@@ -1,0 +1,88 @@
+
+Need test
+--SR 16971412.6 LPN DON'T HAVE ONHAND BUT LPN_CONTEXT =1 & HAVE RECORDS IN WMS LPN Content TABLE 
+
+
+
+CREATE TABLE WLC_DIAG AS select parent_lpn_id, serial_summary_entry from
+wms_lpn_contents wlc
+where wlc.parent_lpn_id not in
+(select moqd.lpn_id
+from mtl_onhand_quantities_Detail moqd,
+wms_license_plate_numbers wlpn
+where moqd.containerized_flag = 1
+and moqd.inventory_item_id = wlc.inventory_item_id
+and nvl(moqd.lot_number,'~~') = nvl(wlc.lot_number,'~~')
+and nvl(moqd.revision,'===') = nvl(wlc.revision,'===')
+and moqd.organization_id = wlc.organization_id
+and wlc.parent_lpn_id = wlpn.lpn_id
+and wlpn.lpn_context in (1)
+and wlpn.subinventory_code=moqd.subinventory_Code
+and wlpn.locator_id = moqd.locator_id)
+AND wlc.parent_lpn_id IN (SELECT lpn_id FROM
+wms_license_plate_numbers WHERE lpn_context = 1) ;
+
+.
+2.
+
+SELECT lpn_id, organization_id, subinventory_code, locator_id, lpn_context
+FROM wms_license_plate_numbers
+WHERE lpn_id IN (SELECT parent_lpn_id FROM WLC_DIAG ) 
+
+
+3.
+
+SELECT lpn_content_id, parent_lpn_id, inventory_item_id, lot_number,
+quantity, cost_group_id, source_header_id, source_line_id, source_name
+FROM wms_lpn_contents WHERE parent_lpn_id IN (SELECT parent_lpn_id FROM
+WLC_DIAG ) ;
+
+4.
+
+SELECT lpn_id, organization_id,inventory_item_id,
+lot_number,subinventory_code, locator_id,
+primary_transaction_quantity,cost_group_id
+FROM mtl_onhand_quantities_detail WHERE lpn_id IN (SELECT parent_lpn_id FROM
+WLC_DIAG ) ; 
+
+
+5.
+
+SELECT lpn_id, serial_number, inventory_item_id, current_status,
+current_organization_id, current_subinventory_code, current_locator_id
+group_mark_id, line_mark_id, lot_line_mark_id FROM mtl_serial_numbers WHERE
+current_status = 3
+AND lpn_id IN (select parent_lpn_id from WLC_DIAG
+where serial_summary_entry = 1 ) ;
+
+
+
+
+Through the script I found 15 LPNs with such problem. Here I am providing the
+data-fix script to fix those LPNs. Please apply this data-fix script first on
+test instance. Also please note that these scripts are based on the
+diagnostic script provided on last update so before applying datafix those 
+scripts are needed to be run on test instance.
+
+
+CREATE TABLE WLPN_5753835_BK01 AS
+SELECT * FROM wms_license_plate_numbers WHERE lpn_id IN (SELECT parent_lpn_id
+FROM WLC_DIAG)
+
+CREATE TABLE WLC_5753835_BK01 AS
+SELECT * FROM wms_lpn_contents WHERE parent_lpn_id IN (SELECT parent_lpn_id
+FROM WLC_DIAG);
+
+CREATE TABLE MOQD_5753835_BK01 AS
+SELECT * FROM mtl_onhand_quantities_detail WHERE lpn_id IN (SELECT
+parent_lpn_id FROM WLC_DIAG);
+
+UPDATE wms_license_plate_numbers SET lpn_context = 5, subinventory_code =
+NULL, locator_id = NULL
+WHERE lpn_id IN (SELECT parent_lpn_id FROM WLC_DIAG);
+
+DELETE FROM wms_lpn_contents WHERE parent_lpn_id IN (SELECT parent_lpn_id
+FROM WLC_DIAG);
+
+UPDATE mtl_onhand_quantities_detail SET containerized_flag = 2, lpn_id = NULL
+WHERE lpn_id IN (SELECT parent_lpn_id FROM WLC_DIAG);

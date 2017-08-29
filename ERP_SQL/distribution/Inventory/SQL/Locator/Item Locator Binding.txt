@@ -1,0 +1,35 @@
+
+-------------------Item - WH - Locator Binding
+select a.ORGANIZATION_ID Org,b.segment1 Item,SECONDARY_INVENTORY WH,
+d.SEGMENT1||'.'||d.SEGMENT2||'.'||d.SEGMENT3||'.'||d.SEGMENT4  locator,a.CREATION_DATE 
+from apps.MTL_ITEM_SUB_INVENTORIES_ALL_V a,apps.MTL_SYSTEM_ITEMS_b b,
+apps.MTL_SECONDARY_LOCATORS c,apps.MTL_ITEM_LOCATIONS d
+where --ITEM_DESCRIPTION='Moli/KRH/CMCC keypad,Copper' INVENTORY_ITEM_ID=97295 and 
+a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID(+)
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID (+)
+and a.SECONDARY_INVENTORY=c.SUBINVENTORY_CODE(+)
+and c.ORGANIZATION_ID=d.ORGANIZATION_ID(+)
+and c.SECONDARY_LOCATOR=d.INVENTORY_LOCATION_ID(+)
+and a.ORGANIZATION_ID=130
+and b.segment1='SXA 109 6726.R2A'
+and a.CREATION_DATE>=to_date('2008-7-28','YYYY-MM-DD')
+
+and a.CREATION_DATE<to_date('2008-7-21','YYYY-MM-DD')
+
+
+--------Item / Locator binding
+
+select b.segment1 Item,c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,--c.segment2,c.segment3,c.segment4,c.segment5,
+a.description Locator_Desc,c.description Locator_Desc,a.last_update_date,
+c.disable_date,a.subinventory_code,a.ORGANIZATION_ID 
+from apps.MTL_SECONDARY_LOCATORS_ALL_V a,apps.mtl_system_items_b b ,apps.mtl_item_locations c
+where a.organization_id=b.organization_id
+and a.inventory_item_id=b.inventory_item_id
+and a.secondary_locator=c.inventory_location_id
+and a.organization_id=c.organization_id
+order by a.last_update_date desc
+
+
+

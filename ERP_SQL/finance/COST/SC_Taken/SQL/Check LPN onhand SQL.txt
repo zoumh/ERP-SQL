@@ -1,0 +1,115 @@
+
+--------Find ID
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2006-12-6','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+
+
+
+
+---------------To find out Duplicate Tags in snapshoot (LPN_Contxt=4,5,8 , <>1,11)
+
+select f.tag_number,b.segment1 item,LPN_CONTEXT,
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty
+from apps.mtl_physical_adjustments a,apps.wms_license_plate_numbers d, apps.mtl_physical_inventory_tags f 
+, apps.mtl_system_items b, apps.mtl_item_locations c
+where d.lpn_id=a.parent_lpn_id and a.adjustment_id=f.adjustment_id
+and a.inventory_item_id=b.inventory_item_id
+and a.organization_id=b.organization_id
+and a.locator_id=c.inventory_location_id and c.organization_id=a.organization_id
+and a.physical_inventory_id in (892,893,894,895)
+and LPN_CONTEXT not in (1,11)
+order by f.tag_number
+
+
+----------If snapshoot WH is wrong !
+
+select f.tag_number tag,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty,
+ b.segment1 item, a.revision Rev, a.subinventory_name Snapshoot_WH, c.SUBINVENTORY_CODE Actual_WH,
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c,
+apps.mtl_physical_inventory_tags f
+where  a.physical_inventory_id in (892,893,894,895)
+and a.adjustment_id=f.adjustment_id
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=b.organization_id 
+       and a.locator_id=c.inventory_location_id and c.organization_id=a.organization_id 
+--	   and b.segment1='SXA 109 5261/8'
+and c.SUBINVENTORY_CODE<>a.SUBINVENTORY_NAME  
+order by f.tag_number 
+
+
+------1.Find out onhand qty which was not snapshoot (Because of LPN)
+
+Select Organization_Id, Lpn_Id, Inventory_Item_Id Item_Id, Cost_Group_Id, Sum(Transaction_Quantity) Onhand_Qty
+From   Apps.Mtl_Onhand_Quantities_Detail a
+Where  Lpn_Id Is Not Null
+Group  By Organization_Id, Lpn_Id, Inventory_Item_Id, Cost_Group_Id
+Minus
+Select b.Organization_Id, b.Parent_Lpn_Id Lpn_Id, b.Inventory_Item_Id Item_Id, b.Cost_Group_Id, Sum(Quantity) Lpn_Qty
+From   Apps.Wms_Lpn_Contents b, Apps.Wms_License_Plate_Numbers a
+Where  b.Parent_Lpn_Id = a.Lpn_Id
+-- And LPN_CONTEXT=1
+Group  By b.Organization_Id, b.Parent_Lpn_Id, b.Inventory_Item_Id, b.Cost_Group_Id
+
+
+
+------2. Find out onhand qty which was not snapshoot (Because Item Status is not Active)
+SELECT 	h.organization_code Org_Name, a.segment1 Item_Number,
+        b.Revision,
+	b.subinventory_code Sub_inventory, 
+	c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+	SUM(b.primary_transaction_quantity) Quantities,d.COST_GROUP ,
+	a.inventory_item_status_code
+FROM   apps.MTL_SYSTEM_ITEMS_B a,
+	   apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+	   apps.mtl_item_locations c,
+	   apps.CST_COST_GROUPS_V d,APPS.mtl_parameters h
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+	  AND b.LOCATOR_ID=c.Inventory_LOCATion_ID
+	  AND b.cost_group_id=d.COST_GROUP_ID
+	  ---AND (b.subinventory_code='SH'OR b.subinventory_code='SB')
+	  AND a.inventory_item_status_code<>'Active'
+	  AND a.organization_id>127
+	  AND b.organization_id=a.organization_id
+	--  and a.segment1 ='1BMC/MII-LBL-W600C'--like '%1BMC%'
+--	  and a.segment1  in ('DPY 101 2985/60','DPY 101 2986/11')
+	  and a.organization_id=h.organization_id
+--	  and h.organization_code not in ('CS')
+GROUP BY h.organization_code, a.segment1 ,
+	   b.revision,a.inventory_item_status_code,
+	   b.subinventory_code , 
+	   c.segment2,c.segment3,c.segment4,c.segment5	,d.COST_GROUP  
+
+
+------------After SnapShot, check Snapshoot Qty with Onhand Qty by LPN/Item
+
+select a.SYSTEM_QUANTITY,b.Onhand_Qty
+,c.LICENSE_PLATE_NUMBER LPN,d.segment1 Item,a.REVISION
+,e.SEGMENT1 Category1,e.SEGMENT2 Category2
+,a.INVENTORY_ITEM_ID,b.lpn_id
+from apps.mtl_physical_adjustments a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,REVISION,ORGANIZATION_ID,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl gg
+group by lpn_id,INVENTORY_ITEM_ID,REVISION) b,
+apps.wms_license_plate_numbers c,
+apps.mtl_system_items d,
+apps.mtl_item_categories_v e
+where a.physical_inventory_id in (892,893,894,895)
+and a.ORGANIZATION_ID=d.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.Item_ID
+and a.PARENT_LPN_ID=b.lpn_id
+and a.INVENTORY_ITEM_ID=d.inventory_item_id
+and b.lpn_id=c.lpn_id
+and d.ORGANIZATION_ID=c.ORGANIZATION_ID
+and c.ORGANIZATION_ID=e.ORGANIZATION_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and e.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.REVISION=b.REVISION
+and a.SYSTEM_QUANTITY<>b.Onhand_Qty
+
+
+
+	  

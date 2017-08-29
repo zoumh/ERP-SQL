@@ -1,0 +1,117 @@
+--------PO with Vendor,model,Org,Qty,Price_range,line_type
+select --VDR.VENDOR_NAME as Supplier,
+decode(a.SHIP_TO_ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+d.ITEM_TYPE,to_date(d.CREATION_DATE,'yyyy-mm-dd') Item_date,
+e.segment1 Model,e.segment2 Categ_type2,to_date(a.CREATION_DATE,'yyyy-mm-dd') PO_date,
+b.segment1 PO,c.LINE_NUM,a.SHIPMENT_NUM,d.segment1 Item, d.description Item_Desc,
+(nvl(a.QUANTITY,0)-nvl(a.QUANTITY_CANCELLED,0)) PO_Qty,nvl(a.QUANTITY_RECEIVED,0) Received_Qty,nvl(a.QUANTITY_BILLED,0) Bill_Qty,nvl(a.QUANTITY_CANCELLED,0) cancel_Qty,
+b.TYPE_LOOKUP_CODE PO_Type,b.AUTHORIZATION_STATUS PO_Sattus,
+(case when c.UNIT_PRICE>10 then '>10$' else  '<10$' end ) Price_Buck,
+a.CANCEL_FLAG Ship_Cancel,
+h.FULL_NAME Buyer,vdr.segment1 Vendor_number,vs.VENDOR_SITE_CODE
+from apps.PO_LINE_LOCATIONS_ALL a,apps.PO_HEADERS_ALL b,apps.PO_LINES_ALL c,apps.PO_VENDORS VDR,
+apps.mtl_system_items d ,apps.PO_VENDOR_SITES_ALL VS,apps.PER_PEOPLE_V7 h,apps.mtl_item_categories_v e,
+apps.PO_LINE_TYPES LT
+where c.po_header_id=b.po_header_id
+and a.po_header_id=b.po_header_id
+AND a.PO_LINE_ID = c.PO_LINE_ID
+and c.item_id=d.inventory_item_id
+and e.INVENTORY_ITEM_ID=c.item_id
+and b.VENDOR_SITE_ID =vs.VENDOR_SITE_ID
+and c.org_id=b.org_id
+and vs.org_id=b.org_id
+and VDR.VENDOR_ID=b.VENDOR_ID
+and c.org_id=b.org_id
+and d.ORGANIZATION_ID=e.ORGANIZATION_ID
+and d.ORGANIZATION_ID=a.SHIP_TO_ORGANIZATION_ID 
+and LT.LINE_TYPE_ID = c.LINE_TYPE_ID
+and b.AGENT_ID=h.PERSON_ID (+)
+and c.org_id>=127
+and e.category_set_id=1
+and (b.CREATION_DATE)>=to_date('2009-1-01','YYYY-MM-DD')
+--and VDR.VENDOR_NAME in ('QUALCOMM CDMA TECHNOLOGIES ASIA PACIFIC PTE LTD')
+and vdr.segment1='3248'
+--and e.segment1='RACHAEL'
+--and b.segment1='1091966' and c.LINE_NUM=4
+--and d.segment1 in ('1206-9521.1')--,'1206-9525.1')
+--and (nvl(a.QUANTITY,0)-nvl(a.QUANTITY_CANCELLED,0)) <nvl(a.QUANTITY_RECEIVED,0)
+order by d.segment1,c.LINE_NUM,a.SHIPMENT_NUM
+
+
+
+-------PO Sum with Vendor,model,Org, Price_range,line_type
+select --VDR.VENDOR_NAME as Supplier,
+decode(a.SHIP_TO_ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+d.ITEM_TYPE,
+e.segment1 Model,e.segment2 Categ_type2,
+--b.segment1 PO,c.LINE_NUM,a.SHIPMENT_NUM,
+d.segment1 Item, d.description Item_Desc,
+--a.QUANTITY-a.QUANTITY_CANCELLED Qty,a.QUANTITY_RECEIVED,a.QUANTITY_BILLED,a.QUANTITY_CANCELLED,
+sum(nvl(a.QUANTITY,0)-nvl(a.QUANTITY_CANCELLED,0)) PO_Qty,sum(nvl(a.QUANTITY_RECEIVED,0)) Receive_Qty,
+sum(nvl(a.QUANTITY_CANCELLED,0)) Cancel_Qty,
+--(case when c.UNIT_PRICE>10 then '>10$' else  '<10$' end ) Price_Buck,
+vs.VENDOR_SITE_CODE
+from apps.PO_LINE_LOCATIONS_ALL a,apps.PO_HEADERS_ALL b,apps.PO_LINES_ALL c,apps.PO_VENDORS VDR,
+apps.mtl_system_items d ,apps.PO_VENDOR_SITES_ALL VS,apps.PER_PEOPLE_V7 h,apps.mtl_item_categories_v e,
+apps.PO_LINE_TYPES LT
+where c.po_header_id=b.po_header_id
+and a.po_header_id=b.po_header_id
+AND a.PO_LINE_ID = c.PO_LINE_ID
+and c.item_id=d.inventory_item_id
+and e.INVENTORY_ITEM_ID=c.item_id
+and b.VENDOR_SITE_ID =vs.VENDOR_SITE_ID
+and c.org_id=b.org_id
+and vs.org_id=b.org_id
+and VDR.VENDOR_ID=b.VENDOR_ID
+and c.org_id=b.org_id
+and d.ORGANIZATION_ID=e.ORGANIZATION_ID
+and d.ORGANIZATION_ID=a.SHIP_TO_ORGANIZATION_ID 
+and LT.LINE_TYPE_ID = c.LINE_TYPE_ID
+and b.AGENT_ID=h.PERSON_ID (+)
+and c.org_id>=127
+and e.category_set_id=1
+--and c.line_type_id not in (1020,1021) ---not include Non-BOM POs & CS PO
+and (b.CREATION_DATE)>=to_date('2009-1-01','YYYY-MM-DD')
+--and VDR.VENDOR_NAME in ('QUALCOMM CDMA TECHNOLOGIES ASIA PACIFIC PTE LTD')
+and vdr.segment1='3248'
+--and d.segment1 in ('1206-9521.1')
+group by  vs.VENDOR_SITE_CODE,d.segment1,d.description, 
+d.ITEM_TYPE,e.segment2,e.segment1,a.SHIP_TO_ORGANIZATION_ID
+
+
+
+--------------Sony Group Vendor's PO with Item, category,line type 
+select a.segment1 PO_Num,b.line_num, 
+b.Item_Description,g.segment1 Item,cat.segment1,cat.segment2,cat.segment3,cat.segment4,
+f.LINE_TYPE,b.unit_price,a.RATE,a.currency_code Curr,
+VDR.VENDOR_NAME,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+from     apps.PO_HEADERS_ALL a
+,        apps.PO_LINES_ALL b
+,        apps.PO_VENDORS VDR
+,        apps.PO_VENDOR_SITES_all aps
+,        apps.PO_line_types f
+,        apps.MTL_CATEGORIES_V cat
+,(select segment1,INVENTORY_ITEM_ID from apps.mtl_system_items_b where organization_id=127) g
+where a.po_header_id=b.po_header_id
+and b.CATEGORY_ID=cat.CATEGORY_ID
+and cat.STRUCTURE_ID=101
+--and (b.line_type_id=1020)-- or b.item_id is null)----N-BOM PO Line
+--and VDR.VENDOR_NAME='FOXCONN PRECISION COMPONENT (BEIJING) CO., LTD'
+and VDR.VENDOR_ID=a.VENDOR_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and g.INVENTORY_ITEM_ID(+)=b.item_id 
+and a.ORG_ID=127
+and a.creation_date>=to_date('2007-1-1','yyyy-mm-dd')
+and a.creation_date<to_date('2008-5-1','yyyy-mm-dd')
+--and a.segment1='1058402'
+and vdr.SEGMENT1 in 
+(
+select SEGMENT1
+from apps.PO_VENDORS 
+where VENDOR_TYPE_LOOKUP_CODE='SONY GROUP SUPPLIER'
+)
+order by a.segment1 ,b.line_num

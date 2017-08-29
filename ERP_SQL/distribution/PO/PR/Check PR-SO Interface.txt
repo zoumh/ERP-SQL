@@ -1,0 +1,58 @@
+
+
+-- check interface line mapping pr            
+
+
+Select b.creation_date,a.Segment1 PR_Num,b.Line_Num,  a.Type_Lookup_Code Pr_Type, a.Authorization_Status Appr_Status,
+a.Transferred_To_Oe_Flag,  b.Destination_Type_Code, b.Item_Description, b.Unit_Price, b.Quantity,
+b.Source_Type_Code, b.Currency_Code, b.Rate, b.Tax_Code_Id,a.last_update_date,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer ,a.Requisition_Header_Id
+From Apps.Po_Requisition_Lines_All b, Apps.Po_Requisition_Headers_All a,apps.PER_PEOPLE_V7 PE2 
+Where a.Requisition_Header_Id = b.Requisition_Header_Id 
+and a.PREPARER_ID=PE2.PERSON_ID
+And a.Requisition_Header_Id In (
+	Select Distinct Orig_Sys_Document_Ref
+    From Apps.OE_LINES_IFACE_ALL 
+    Where Order_Source_Id = 10)
+and REQUISITION_LINE_ID in (
+	Select Distinct Orig_Sys_line_Ref
+    From Apps.OE_LINES_IFACE_ALL 
+    Where Order_Source_Id = 10)
+
+
+
+
+Select a.Segment1 PR_Num, a.Requisition_Header_Id, a.Type_Lookup_Code Pr_Type, a.Authorization_Status Appr_Status,
+a.Transferred_To_Oe_Flag, b.Line_Num, b.Destination_Type_Code, b.Item_Description, b.Unit_Price, b.Quantity,
+b.Source_Type_Code, b.Currency_Code, b.Rate, b.Tax_Code_Id,a.last_update_date,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer 
+From Apps.Po_Requisition_Lines_All b, Apps.Po_Requisition_Headers_All a,apps.PER_PEOPLE_V7 PE2 
+Where a.Requisition_Header_Id = b.Requisition_Header_Id 
+and a.PREPARER_ID=PE2.PERSON_ID
+And a.Requisition_Header_Id In (
+	Select Distinct Orig_Sys_Document_Ref
+    From Apps.OE_LINES_IFACE_ALL 
+    Where Order_Source_Id = 10)
+
+
+
+using these sql we found that other 10 pr having the same question, PLS decide what to do next
+
+
+-----------check SO import interface
+select orig_sys_document_ref from apps.oe_headers_iface_all where order_source_id = 10
+
+select a.ORG_ID,a.segment1 PR_num,a.requisition_header_id,a.Type_lookup_Code PR_Type,a.authorization_status Appr_Status,a.TRANSFERRED_TO_OE_FLAG,
+b.line_num,b.DESTINATION_TYPE_CODE,b.item_description,b.unit_price,b.quantity,b.source_type_code,b.currency_code,b.rate,b.tax_code_id
+from apps.po_requisition_lines_all b,apps.po_requisition_headers_all a ,apps.oe_headers_iface_all c--apps.OE_HEADERS_INTERFACE c
+where a.requisition_header_id=b.requisition_header_id --and a.segment1 in ('10308','11043')
+and c.orig_sys_document_ref=a.requisition_header_id
+
+
+
+
+------------Check SO with PR number
+select orig_sys_document_ref PR_Num,ORDER_NUMBER,order_type_id,ORDER_SOURCE_ID 
+from apps.OE_ORDER_HEADERS_all 
+where --ORDER_SOURCE_ID	=10 --Internal
+--and order_type_id=1016 --internal Order and 
+orig_sys_document_ref in ('10308','11043')
+

@@ -1,0 +1,14 @@
+
+
+
+select count(*) from apps.MTL_MATERIAL_TRANSACTIONS a,apps.mtl_transaction_types b,apps.mtl_transaction_types mtt
+where b.transaction_type_id = a.transaction_type_id 
+and a.creation_date < a.transaction_date+1
+and mtt.transaction_type_name='WIP Move Order Issue'
+
+
+select a.creation_date ,a.transaction_date from apps.MTL_MATERIAL_TRANSACTIONS a,apps.mtl_transaction_types b,apps.mtl_transaction_types mtt
+where b.transaction_type_id = a.transaction_type_id 
+and a.creation_date < a.transaction_date+1
+and mtt.transaction_type_name='WIP Move Order Issue'
+

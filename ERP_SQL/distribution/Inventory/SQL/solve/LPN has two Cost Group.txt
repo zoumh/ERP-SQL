@@ -1,0 +1,46 @@
+
+
+select COST_GROUP,DESCRIPTION,ORGANIZATION_ID,COST_GROUP_TYPE,COST_GROUP_ID from apps.cst_cost_groups
+
+
+
+------------One LPN has two Cost_Group, & can't be Unpacked / CostGroup Transfer
+(Because PO line FlexField Bond/NonBond was diff & received in one LPN)
+
+
+select LPN_CONTEXT,lpn_id from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='PC0004871'
+
+
+select COST_GROUP_ID,INVENTORY_ITEM_ID,TRANSACTION_QUANTITY from apps.MTL_ONHAND_QUANTITIES_DETAIl where lpn_id=809437
+
+select COST_GROUP_ID,INVENTORY_ITEM_ID,QUANTITY,SOURCE_NAME    from apps.wms_lpn_contents WHERE parent_lpn_id=809437
+
+
+update MTL_ONHAND_QUANTITIES_DETAIl set COST_GROUP_ID=1003  where lpn_id=809437 and TRANSACTION_QUANTITY=10000
+
+
+
+
+
+
+----------Find out the PO line from LPN
+select c.ATTRIBUTE1 Bond_NBond,e.segment1 PO,c.LINE_NUM, a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_headerS_ALL e
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=83
+and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and b.license_plate_number='PC0004871'
+and e.PO_HEADER_ID=c.PO_HEADER_ID
+and c.ATTRIBUTE1
+
+
+
+

@@ -1,0 +1,37 @@
+
+
+-----Sales Order Price List 
+select a.Name Price_List_Name,b.OPERAND Price,b.creation_date,b.last_update_date,
+b.start_date_active,b.end_date_active,a.currency_code,
+c.user_name Create_User,c.description Create_User_ID,
+d.user_name Last_Update_User_ID,d.description Last_Update_User,
+a.active_flag,decode(list_type_code,'PRL','Price List',list_type_code) Type,
+a.list_header_id,b.created_by,b.last_updated_by
+from apps.qp_list_headers a,apps.qp_list_lines_v b,apps.FND_USER c,apps.FND_USER d
+where a.list_header_id=b.list_header_id 
+and c.USER_ID=b.created_by and d.user_id=b.last_updated_by
+and a.name='DC DPY Price List'
+and b.PRODUCT_ATTR_VAL_DISP='A/1294LMSP65F309'
+
+
+
+----------Price List name on SO
+select d.Name Price_List_Name,b.HEADER_ID,b.ORDER_NUMBER,c.NAME Type_Name,c.description Type_Desc,
+a.LINE_NUMBER,
+a.ACTUAL_SHIPMENT_DATE
+,a.FLOW_STATUS_CODE
+,ORDERED_ITEM
+,SHIPPED_QUANTITY
+,ORDERED_QUANTITY
+,SHIPPING_QUANTITY
+,a.CREATION_DATE
+,a.LAST_UPDATE_DATE
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c,
+apps.qp_list_headers d--,apps.qp_list_lines_v e
+where a.HEADER_ID=b.HEADER_ID
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+and a.price_list_id=d.list_header_id 
+and c.LANGUAGE='US'
+and b.ORDER_NUMBER='48000114'
+
+

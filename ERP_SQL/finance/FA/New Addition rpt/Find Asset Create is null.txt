@@ -1,0 +1,4 @@
+
+----------Find Which Asset's Creation_date is Null (will not include into BMC Asset Detail Report) 
+
+select * from apps.FA_ADDITIONS_V b where creation_date is null order by asset_number

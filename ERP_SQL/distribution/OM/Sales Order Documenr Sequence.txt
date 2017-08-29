@@ -1,0 +1,6 @@
+
+
+----Sales Order Documenr Sequence
+
+select Name Doc_Name,start_date,end_date,decode(Type,'G','GapLess','A','Auto','Manu') Type,initial_value,Table_name 
+from apps.FND_DOCUMENT_SEQUENCES

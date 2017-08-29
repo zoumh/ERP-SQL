@@ -1,0 +1,32 @@
+
+
+select   moh.request_number Move_Order_num,mol.line_number,
+mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.organization_id Organization ,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.mtl_txn_request_headers moh,
+  apps.mtl_txn_request_lines mol 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id  
+and moh.header_id=mol.header_id 
+and moh.organization_id=mol.organization_id
+and moh.organization_id=mmt.organization_id
+and mmt.MOVE_ORDER_LINE_ID=mol.LINE_ID
+and    trunc(mmt.transaction_date) >= to_date('20080420','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050530','YYYYMMDD')
+--and  msi.segment1='RYN 121 6008/1'
+--and mmt.subinventory_code='SG'
+and moh.request_number in ('1446753')--1446468')
+and mtt.transaction_type_name='Move Order Transfer'
+order by trunc(mmt.transaction_date)
+
+

@@ -1,0 +1,40 @@
+
+
+-----------List/confirm  Mtl_Trans Distrib_account_ID for an Trans_Type
+select transaction_id,distribution_account_id,ORGANIZATION_ID,b.segment2,b.segment3,b.segment4,b.segment5 
+from apps.mtl_material_transactions a,apps.GL_CODE_combinations b
+where transaction_id in (28113661,28113609,28113608,35081452) 
+--and transaction_date >to_date('2006-10-1','yyyy-mm-dd')
+and TRANSACTION_TYPE_ID=34 and ORGANIZATION_ID=130
+and a.distribution_account_id=b.CODE_COMBINATION_ID(+)
+
+
+------------Check Internal PR Charge Account (If wrongly set to inventory Account,then can't get mtl_Trans account to cost)
+select c.CODE_COMBINATION_ID,d.segment2 CC,d.segment3 Acc,d.segment4 PRD,d.segment5 PRJ,TYPE_LOOKUP_CODE,TRANSFERRED_TO_OE_FLAG,
+a.segment1 PR_Num,b.line_num,c.DISTRIBUTION_NUM,b.ITEM_DESCRIPTION,b.QUANTITY,b.rate,b.unit_price,b.currency_code,
+b.currency_unit_price,b.creation_date
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.gl_code_combinations d 
+where  PREPARER_ID =5019
+and a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+--and d.segment2 in ('5205','5207','4201')
+--and a.segment1 like '1%'
+and TRANSFERRED_TO_OE_FLAG='Y'
+and TYPE_LOOKUP_CODE='INTERNAL'
+and c.CODE_COMBINATION_ID<>55123
+order by a.segment1 desc--,b.line_num,c.DISTRIBUTION_NUM
+
+
+
+update apps.mtl_material_transactions set distribution_account_id=55123 where transaction_id in (35081452)
+and costed_flag ='E' 
+
+SO
+801551
+PR
+12381
+
+
+

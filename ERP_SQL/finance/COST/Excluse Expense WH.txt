@@ -1,0 +1,12 @@
+
+
+select sum(moq.transaction_quantity)
+				from apps.mtl_onhand_quantities_detail moq
+						,apps.mtl_secondary_inventories sei
+			 where moq.organization_id = sei.organization_id
+				 and moq.subinventory_code = sei.secondary_inventory_name
+				 and sei.asset_inventory = 1 -- ÅÅ³ý·ÑÓÃ×Ó¿â
+				 and moq.organization_id=xpm.old_organization_id
+				 and moq.inventory_item_id=xpm.old_inventory_id
+         and nvl(moq.revision,'0')=xpm.old_revision
+

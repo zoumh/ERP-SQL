@@ -1,0 +1,28 @@
+
+
+-----------Item LT  (For Karen)
+
+SELECT a.segment1 Item,a.description, a.Item_Type,a.PLANNER_CODE, 
+b.segment1 Category1,b.segment2 Category2,b.segment3,b.segment4,
+a.PREPROCESSING_LEAD_TIME,a.POSTPROCESSING_LEAD_TIME,a.FULL_LEAD_TIME Processing_LT,a.FIXED_LEAD_TIME,
+--CUM_MANUFACTURING_LEAD_TIME,CUMULATIVE_TOTAL_LEAD_TIME,
+(nvl(a.PREPROCESSING_LEAD_TIME,0)+nvl(a.POSTPROCESSING_LEAD_TIME,0)+nvl(a.FULL_LEAD_TIME,0)+nvl(a.FIXED_LEAD_TIME,0)) Total_LT,
+a.purchasing_item_Flag,a.purchasing_Enabled_Flag,
+a.WIP_supply_type,a.inventory_item_status_code status,
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,a.mrp_planning_code
+from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID=130
+--and b.segment1=''
+--and  a.segment1='KRE 101 1360'
+and b.category_set_id=1
+and b.segment2='DPY COMP'
+--and b.segment2='KRH COMP'
+order by (nvl(a.PREPROCESSING_LEAD_TIME,0)+nvl(a.POSTPROCESSING_LEAD_TIME,0)+nvl(a.FULL_LEAD_TIME,0)+nvl(a.FIXED_LEAD_TIME,0)) desc
+
+
+
+select distinct segment2 from apps.mtl_item_categories_v where category_set_id=1
+

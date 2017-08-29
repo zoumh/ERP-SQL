@@ -1,0 +1,96 @@
+
+TAR Number  4119880.995 
+
+Please refer the Note 273922.1: INCTPC -Cannot Close Accounting Period Due to Status = Processing
+
+
+After experiencing a problem with the concurrent managers where the log file 
+directory was unavailable, the manager were restarted 
+
+At the time the concurrent manager went down, there were five Close Accounting Period jobs that failed during that time (due to an APP-1084). The Close Accounting Period screen shows a status of Processing.
+
+To determine the status of the processes, use the following:
+---------
+select organization_id, acct_period_id, period_close_date
+from org_acct_periods
+where open_flag = 'P' ; (means processing like in process)
+
+organization_id acct_period_id period_close_date
+203 1403 01-MARCH-2004
+207 1407 01-MARCH-2004
+329 1402 01-MARCH-2004
+349 1409 01-MARCH-2004
+350 1410 01-MARCH-2004
+
+This means it is needed to set the open_flag = Y (open) and the period_close_date = 
+NULL so that the period close process can be resubmitted.
+
+
+Cause
+The customer had a problem with the concurrent managers where the log file 
+directory was unavailable.
+
+The concurrent managers going down caused the period close concurrent processing to be stuck as in process and error out with APP-1084
+
+Fix
+1. Backup the table org_acct_periods (This is a critical step and cannot be skipped)
+
+2. Run the following to determine the process in error:
+
+select organization_id, acct_period_id, period_close_date
+from org_acct_periods
+where open_flag = 'P' ; (means processing like in process)
+
+
+3. Run the following script to reset the organization acct_period in order to close the period again:
+
+Update org_acct_periods
+set open_flag = 'Y',
+period_close_date = NULL
+where organization_id in (203,207,329,349,350)
+and acct_period_id in (1403,1407,1402,1409,1410)
+and open_flag = 'P';
+
+In this case, the update was on the correct 5 rows. 
+Then commit.
+
+3. Rerun the period close process only for one org_id.
+Confirm that it completes successfully. 
+Be sure it launches a transfer to GL concurrent request which should also complete normally. 
+
+4. Check the MTL_TRANSACTION_ACCOUNTS and WIP_TRANSACTION_ACCOUNTS tables so verify there are no longer any records for the period with gl_batch_id = -1 which confirms the records were sent to GL.
+
+5. Continue with closing the remaining periods as returned by the script in #2 above.
+
+References
+<BUG:2637761 > - Aborted Inventory Period Close Process - Plus Non-Certified Upgrade
+
+
+-------------- Solve SQL
+Verify no July Trans not GL Transfer
+
+select TRANSACTION_DATE from apps.MTL_TRANSACTION_ACCOUNTS
+where GL_BATCH_ID=-1 and trunc(TRANSACTION_DATE)<to_date('2004-09-01','yyyy-mm-dd')
+
+
+select TRANSACTION_DATE from apps.WIP_TRANSACTION_ACCOUNTS
+where GL_BATCH_ID=-1 and trunc(TRANSACTION_DATE)>to_date('2004-09-01','yyyy-mm-dd')
+
+
+
+select open_flag,organization_id, acct_period_id, period_close_date
+from apps.org_acct_periods
+where ORGANIZATION_ID in (83,86,85) and ACCT_PERIOD_ID in (206,207,209)
+
+
+Update org_acct_periods
+set open_flag = 'Y',
+period_close_date = NULL
+where organization_id in (83,86,85)
+and acct_period_id in (206,207,209)
+and open_flag = 'P';
+
+
+
+
+

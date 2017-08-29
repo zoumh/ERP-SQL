@@ -1,0 +1,43 @@
+
+--------Get RMA's shipment_header_id 
+SELECT --rt.OE_ORDER_HEADER_ID,
+orh.ORDER_NUMBER,ot.NAME RMA_Type,rt.ORGANIZATION_ID,rl.shipment_header_id,
+rt.transaction_type,rt.destination_type_code,rt.quantity,rt.TRANSACTION_DATE
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi,apps.OE_ORDER_HEADERS_all ORH,apps.oe_transaction_types_tl ot
+ WHERE msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt.oe_order_header_id=orh.HEADER_ID
+   and ot.TRANSACTION_TYPE_ID=orh.ORDER_TYPE_ID
+   and ot.LANGUAGE='US'
+and rt.source_document_code='RMA'
+and orh.ORDER_NUMBER='5024306'
+
+
+
+select * from apps.rcv_shipment_headers where SHIPMENT_HEADER_ID=992697
+
+select * from apps.rcv_shipment_lines where SHIPMENT_HEADER_ID=992697
+
+
+select * from apps.PO_HEADERS_ALL where segment1=''
+
+select * from apps.PO_LINES_ALL where PO_HEADER_ID=
+
+
+select * from apps.OE_ORDER_HEADERS_all where ORDER_NUMBER=''
+
+select * from apps.OE_ORDER_HEADERS_all where HEADER_ID=
+
+
+select OE_ORDER_HEADER_ID,OE_ORDER_LINE_ID,PO_HEADER_ID,PO_LINE_ID,
+SHIPMENT_HEADER_ID,SHIPMENT_LINE_ID,TRANSACTION_DATE,TRANSACTION_TYPE,
+ORGANIZATION_ID,TRANSACTION_ID FROM apps.rcv_transactions
+where OE_ORDER_HEADER_ID=
+PO_HEADER_ID=
+
+
+
+

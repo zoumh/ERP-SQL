@@ -1,0 +1,70 @@
+
+
+---------AR Transaction Type
+
+
+select a.creation_date,a.NAME,a.DESCRIPTION,a.START_DATE, a.END_DATE, 
+a.TYPE,a.STATUS,
+a.CREATION_SIGN,
+a.TAX_CALCULATION_FLAG,
+b.SEGMENT3 as RevenueAcc,
+c.SEGMENT3 as TacAcc, 
+d.SEGMENT3 as ReceiveableAcc,
+a.GL_ID_REV,a.GL_ID_FREIGHT,
+a.GL_ID_REC,
+a.GL_ID_CLEARING,
+a.GL_ID_TAX,
+a.GL_ID_UNBILLED,
+a.GL_ID_UNEARNED,  
+a.ORG_ID 
+from apps.RA_CUST_TRX_TYPES_ALL  a,apps.GL_CODE_COMBINATIONS b
+,apps.GL_CODE_COMBINATIONS c
+,apps.GL_CODE_COMBINATIONS d
+where b.CODE_COMBINATION_ID(+)=a.GL_ID_REV 
+and c.CODE_COMBINATION_ID(+)=a.GL_ID_TAX
+and d.CODE_COMBINATION_ID(+)=a.GL_ID_REC
+and a.org_id=81   ---- important ! there are multi same CUST_TRX_TYPE_ID in RA_CUST_TRX_TYPES_ALL !!\
+--and a.CREATION_SIGN='A'
+order by a.NAME
+
+----------AR Activity
+
+select a.last_update_date,a.name,a.status,a.creation_date,a.Type,b.segment3 Acc,a.end_date_active,a.INACTIVE_DATE, GL_ACCOUNT_SOURCE, TAX_CODE_SOURCE, 
+a.org_id 
+from apps.AR_RECEIVABLES_TRX_all a,apps.GL_CODE_COMBINATIONS b
+where b.CODE_COMBINATION_ID(+)=a.CODE_COMBINATION_ID
+and a.org_id<>-3113
+and a.status='A'
+order by a.org_id,a.creation_date desc
+
+
+----------AR Pay method
+
+select b.name Receipt_Method,--a.BANK_ACCOUNT_ID ,b.RECEIPT_METHOD_ID ,
+c.BANK_ACCOUNT_NAME,
+a.primary_flag,
+--a.UNEDISC_RECEIVABLES_TRX_ID ,a.EDISC_RECEIVABLES_TRX_ID, 
+a.org_id ,a.END_DATE, a.CREATION_DATE ,
+d.BANK_NAME,d.BANK_NUMBER,d.BANK_NUM Branch_Num
+from apps.AR_RECEIPT_METHOD_ACCOUNTS_all a,apps.AR_RECEIPT_METHODS b,
+apps.AP_BANK_ACCOUNTS_all c,apps.AP_BANK_BRANCHES d,
+apps.GL_CODE_COMBINATIONs e,apps.GL_CODE_COMBINATIONs f,
+apps.GL_CODE_COMBINATIONs g,apps.GL_CODE_COMBINATIONs h,
+apps.GL_CODE_COMBINATIONs i--,apps.GL_CODE_COMBINATIONs j
+where a.RECEIPT_METHOD_ID=b.RECEIPT_METHOD_ID
+and c.BANK_BRANCH_ID=d.BANK_BRANCH_ID
+and c.BANK_ACCOUNT_ID=a.BANK_ACCOUNT_ID
+and a.CASH_CCID =e.CODE_COMBINATION_ID (+)
+and a.BANK_CHARGES_CCID  =f.CODE_COMBINATION_ID (+)
+and a.UNAPPLIED_CCID  =g.CODE_COMBINATION_ID (+)
+and a.UNIDENTIFIED_CCID  =h.CODE_COMBINATION_ID (+)
+and a.ON_ACCOUNT_CCID  =i.CODE_COMBINATION_ID (+)
+--and c.BANK_ACCOUNT_NAME='ICBC TianZhu-JPY Account (6003228)'
+order by b.name,d.BANK_NAME,c.BANK_ACCOUNT_NAME --creation_date desc
+
+
+
+
+
+
+

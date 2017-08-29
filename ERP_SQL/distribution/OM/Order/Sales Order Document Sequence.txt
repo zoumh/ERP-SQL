@@ -1,0 +1,16 @@
+
+
+----Sales Order Documenr Sequence
+
+select Name Doc_Name,start_date,end_date,decode(Type,'G','GapLess','A','Auto','Manu') Type,initial_value,Table_name 
+from apps.FND_DOCUMENT_SEQUENCES
+
+
+select a.NAME,b.APPLICATION_NAME,
+decode(a.Type,'G','GapLess','A','Auto','Manu') TYPE,END_DATE,INITIAL_VALUE,TABLE_NAME,DOC_SEQUENCE_ID,a.APPLICATION_ID
+from apps.FND_DOCUMENT_SEQUENCES a,apps.FND_APPLICATION_TL b
+where a.APPLICATION_ID=b.APPLICATION_ID
+--and a.TABLE_NAME is null--
+--and a.TABLE_NAME ='OE_TRANSACTION_TYPES_ALL'
+and  b.LANGUAGE='US'
+and a.APPLICATION_ID=660

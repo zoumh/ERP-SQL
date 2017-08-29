@@ -1,0 +1,25 @@
+
+
+--------Find un-shipped SO ,delivery_details table's pickable_flag=N' (cause can't release/ship)
+select a.ORDER_NUMBER,b.CANCELLED_FLAG,c.INV_INTERFACED_FLAG,
+--c.SOURCE_HEADER_NUMBER,c.SOURCE_LINE_NUMBER line_num,--b.LINE_NUMBER,
+c.SOURCE_HEADER_TYPE_NAME SO_Type,
+a.FLOW_STATUS_CODE head_status,
+b.FLOW_STATUS_CODE line_status,
+c.RELEASED_STATUS,
+c.PICKABLE_FLAG,
+b.ORDERED_ITEM,
+b.ORDERED_QUANTITY,b.SHIPPED_QUANTITY,b.CANCELLED_FLAG,b.SCHEDULE_SHIP_DATE
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lines_all b,apps.wsh_delivery_details c
+where a.HEADER_ID=b.HEADER_ID
+and a.HEADER_ID=c.SOURCE_HEADER_ID
+and b.LINE_ID=c.SOURCE_LINE_ID
+--and a.ORDER_NUMBER='309150'
+and (b.CANCELLED_FLAG='N' or b.CANCELLED_FLAG is null)
+and a.FLOW_STATUS_CODE<>'CLOSED'
+and b.FLOW_STATUS_CODE in ('AWAITING_SHIPPING','BOOKED')
+--and c.OE_INTERFACED_FLAG<>'Y'
+and c.INV_INTERFACED_FLAG<>'Y'
+and c.PICKABLE_FLAG<>'Y'
+and c.RELEASED_STATUS <>'C'
+

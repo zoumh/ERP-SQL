@@ -1,0 +1,116 @@
+
+-------------Trans  by Account PRD (83)
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+	mta.primary_quantity Booked_Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+and    trunc(mmt.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041031','YYYYMMDD')
+and    gcc.segment3='21210300'
+
+
+-------------Trans  by Account ARC
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+	 mmt.subinventory_code, mta.primary_quantity Booked_Qty,
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+--		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+--		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD',84,'ARC',86,'PRJ','Unknown') Organization ,
+	mtt.DESCRIPTION as Type_Description
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = 84 and mmt.organization_id = 84 and msi.organization_id = 84 
+and    trunc(mmt.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041031','YYYYMMDD')
+and    gcc.segment3='21210300'
+
+
+
+-------------Trans  by Account PRJ
+
+select  mmt.transaction_date, 
+        msi.segment1 item_code, 
+        mtt.transaction_type_name, 
+	mmt.subinventory_code, 
+        gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+        to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.transaction_id, 
+	mmt.actual_cost,
+	mtt.DESCRIPTION as Type_Description
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst
+--  apps.cst_item_costs            cst
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = 86 and mmt.organization_id = 86 and msi.organization_id = 86 
+and    trunc(mmt.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041031','YYYYMMDD')
+and    gcc.segment3='21210300'
+
+

@@ -1,0 +1,8 @@
+
+
+---------To see if a RMA was split by system
+
+select * from apps.OE_ORDER_HEADERS_all where ORDER_NUMBER='6034286'
+
+
+select line_id,LINE_NUMBER,SHIPMENT_NUMBER,SPLIT_FROM_LINE_ID,SPLIT_BY,CREATION_DATE  from apps.OE_ORDER_LINES_all where HEADER_ID=812197 and LINE_NUMBER='2' and SHIPMENT_NUMBER in ('1','2','4','5') order by LINE_NUMBER,SHIPMENT_NUMBER

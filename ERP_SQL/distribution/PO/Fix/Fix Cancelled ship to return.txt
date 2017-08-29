@@ -1,0 +1,17 @@
+
+
+---------For Cancelled Ship line, need below fix to make it could return to correct price
+
+
+select * From apps.po_headers_all where segment1='1027562'
+
+select * from apps.po_lines_all where po_header_id=123364 and line_num=29
+
+select CANCEL_FLAG,CANCEL_DATE,CANCELLED_BY,CANCEL_REASON  from apps.po_line_locations_all where po_header_id=123364 and po_line_id=223617
+
+create table BMC_BKUP_PO_SHIP20070124 as select * from apps.po_line_locations_all where po_header_id=123364 and po_line_id=223617
+
+update apps.po_line_locations_all set CANCEL_FLAG=null ,CANCEL_DATE=null, CANCELLED_BY=null,CANCEL_REASON=null  
+where po_header_id=123364 and po_line_id=223617
+
+commit

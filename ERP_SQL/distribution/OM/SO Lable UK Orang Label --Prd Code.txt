@@ -1,0 +1,4 @@
+
+
+
+select global_attribute2 semc_product_code from apps.oe_order_lines_all where line_id=248435 

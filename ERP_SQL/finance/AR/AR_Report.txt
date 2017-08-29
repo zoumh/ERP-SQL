@@ -1,0 +1,96 @@
+
+AR - ONE BY ONE IN CNY
+CUSTOMER NAME
+CUSTOMER ADDRESS
+YTD Sales to CUSTOMER ( Monthly Invoice amount -- Sales with Tax)
+AVERAGE MONTH-END AR ( Current Customer Balance ---Export from Oracle AR-Collection-Customer Account Detail -- Export , Function Balance) 
+
+
+
+Monthly Invoice amount-- Sales with Tax :Sum by Customer
+
+select convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER
+,sum(e.ACCTD_AMOUNT) as CNY_Sales_Amount
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_customers_v f
+where b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and e.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+and e.ACCOUNT_CLASS='REC'
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER
+
+
+
+Current Customer Balance :
+
+select 
+convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER ,sum(a.ACCTD_AMOUNT_DUE_REMAINING) as CNY_Balance
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,a.INVOICE_CURRENCY_CODE 
+
+
+
+
+AR Balance by Currency
+
+select 
+a.INVOICE_CURRENCY_CODE 
+,sum(a.ACCTD_AMOUNT_DUE_REMAINING) as CNY_Balance
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+group by a.INVOICE_CURRENCY_CODE 
+
+
+
+===================================
+Sum by Customer/Curr
+select convert(f.CUSTOMER_NAME,'ZHS16GBK'),f.CUSTOMER_NUMBER
+,sum(e.AMOUNT)  as Amount,b.INVOICE_CURRENCY_CODE as Curr,b.EXCHANGE_RATE,sum(e.ACCTD_AMOUNT) as CNY_Amount
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_customers_v f
+where b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and e.GL_DATE>=to_date('2004-01-27','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-02-29','yyyy-mm-dd')  
+--and b.CUSTOMER_TRX_ID=2752
+and e.ACCOUNT_CLASS='REV'
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,b.INVOICE_CURRENCY_CODE,b.EXCHANGE_RATE
+
+-------Sum Rev acc by Customer
+select sum(c.amount) Amt,sum(c.ACCTD_AMOUNT) CNY_Amt,c.ACCOUNT_CLASS , a.segment3 Acc,
+f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,
+b.invoice_currency_code Currency--,to_char(c.GL_DATE,'yyyy-mm') Period
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all c
+,apps.AR_customers_v f,apps.gl_code_combinations a
+where b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and c.ACCOUNT_CLASS='REV'
+and a.code_combination_id=c.code_combination_id
+and c.GL_DATE >=to_date('2006-01-02','yyyy-mm-dd')
+and c.GL_DATE <=to_date('2006-09-30','yyyy-mm-dd')
+and complete_flag='Y'
+group by c.ACCOUNT_CLASS,f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,b.invoice_currency_code,a.segment3
+
+
+With detail invoices:
+select convert(f.CUSTOMER_NAME,'ZHS16GBK'),f.CUSTOMER_NUMBER,to_char(b.TRX_NUMBER) as Inv_Number,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,b.EXCHANGE_RATE,e.ACCTD_AMOUNT as CNY_Amount
+,b.TRX_DATE as Inv_Date  
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_customers_v f
+where b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and e.GL_DATE>=to_date('2004-01-27','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-02-29','yyyy-mm-dd')  
+--and b.CUSTOMER_TRX_ID=2752
+and e.ACCOUNT_CLASS='REV'
+order by b.TRX_DATE,b.TRX_NUMBER--,d.LINE_NUMBER

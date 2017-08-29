@@ -1,0 +1,113 @@
+
+
+PO Match Option is on:
+
+apps.PO_LINE_LOCATIONS_ALL.MATCH_OPTION
+
+
+from 	apps.PO_HEADERS_ALL a, 
+	apps.PO_LINES_ALL b,
+	apps.PO_LINE_LOCATIONS_ALL c
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+	and b.PO_LINE_ID=c.PO_LINE_ID
+
+----------------------------
+
+AP Match option is on:
+
+AP_INVOICE_DISTRIBUTIONS_ALL.DIST_MATCH_TYPE
+= ( ITEM_TO_RECEIPT,ITEM_TO_PO)
+=Null, Not Matched
+=Other,Other Charge distribution Matched to Receipt
+
+
+Link to AP_INVOICES_ALL on INVOICE_ID
+Link to apps.PO_DISTRIBUTIONS_ALL on po_distribution_id
+
+
+
+
+
+
+
+ITEM_TO_RECEIPT
+invoice_ID=12768
+Inv_number=FHKI4/200402-0003
+
+
+
+
+ITEM_TO_PO
+Invoice_ID=16073
+Inv_number=1917067
+
+
+
+select * from  apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, apps.PO_DISTRIBUTIONS_ALL bb,apps.AP_INVOICES_ALL c
+where aa.po_distribution_id=bb.po_distribution_id
+and aa.invoice_id=c.invoice_id
+and aa.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+and aa.PO_DISTRIBUTION_ID=1139
+
+
+------Non-BOM PO matched Invoice with line num
+select b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist
+,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+order by d.segment1--b.INVOICE_NUM
+
+
+-----PO line Type
+select distinct(description) from apps.PO_LINE_types_tl a,apps.PO_LINEs_all b where a.LINE_TYPE_ID=b.LINE_TYPE_ID
+
+select LINE_TYPE,LINE_TYPE_ID,DESCRIPTION from apps.PO_line_types
+
+
+
+select aa.DIST_MATCH_TYPE as Match_Type,EXCHANGE_RATE_VARIANCE,AMOUNT,aa.BASE_AMOUNT,EXCHANGE_RATE_VARIANCE*AMOUNT as XLS_Amt,
+aa.EXCHANGE_RATE,UNIT_PRICE , c.INVOICE_NUM
+,aa.RECEIPT_CONVERSION_RATE,c.INVOICE_CURRENCY_CODE
+,d.CURRENCY_CONVERSION_RATE as Rec_Rate, d.CURRENCY_CONVERSION_DATE as Rec_Date,d.PO_UNIT_PRICE,d.QUANTITY,(d.PO_UNIT_PRICE*d.QUANTITY*(aa.EXCHANGE_RATE-d.CURRENCY_CONVERSION_RATE)) as XLS_Amt
+,PERIOD_NAME,LINE_TYPE_LOOKUP_CODE as line_type , b.segment3
+ from  apps.AP_INVOICE_DISTRIBUTIONS_ALL aa ,apps.GL_CODE_COMBINATIONS b ,apps.AP_INVOICES_ALL c,apps.RCV_TRANSACTIONS d
+ where  aa.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+ and aa.invoice_id=c.invoice_id
+ and aa.RCV_TRANSACTION_ID=d.TRANSACTION_ID
+ and  PERIOD_NAME='MAY-04'
+ and aa.LINE_TYPE_LOOKUP_CODE='ITEM'
+ and aa.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+ and aa.PO_DISTRIBUTION_ID=1139
+
+
+select f.EXCHANGE_RATE_VARIANCE*f.AMOUNT as XSL,a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment3 account_number
+,a.REFERENCE5 as Invoice_number,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE
+,b.ACCOUNTING_DATE,a.REFERENCE6,a.AE_LINE_TYPE_CODE,a.REFERENCE1 as Supplier--,e.SEGMENT1 as PO
+,trunc(g.CREATION_DATE) as PO_Date,g.QUANTITY_BILLED,g.RATE as PO_Rate,g.AMOUNT_BILLED
+,f.EXCHANGE_DATE as Inv_rate,QUANTITY_INVOICED,POSTED_FLAG,UNIT_PRICE as Inv_Price,DIST_MATCH_TYPE as Inv_match
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.ap_invoices_all d
+,apps.AP_INVOICE_DISTRIBUTIONS_all f,apps.PO_DISTRIBUTIONS_ALL g--,apps.po_headers_all e
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and a.REFERENCE5=d.INVOICE_NUM
+and a.SOURCE_TABLE='AP_INVOICE_DISTRIBUTIONS'
+and a.SOURCE_ID=f.invoice_distribution_id
+and f.po_distribution_id=g.po_distribution_id
+and c.segment3='550305'
+and (b.PERIOD_NAME='MAY-04' ) 
+and a.CURRENCY_CODE='JPY'
+and aa.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'

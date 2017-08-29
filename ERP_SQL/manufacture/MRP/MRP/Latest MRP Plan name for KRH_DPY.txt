@@ -1,0 +1,11 @@
+(  select  compile_designator 
+                           from apps.MRP_SUB_INVENTORIES_V 
+						  where creation_date =  (select max(creation_date) creation_date 
+						                            from apps.MRP_SUB_INVENTORIES_V 
+												   where compile_designator like '%KRH%') 
+						  union   
+                          select  compile_designator 
+                            from apps.MRP_SUB_INVENTORIES_V 
+						    where creation_date =  (select max(creation_date) creation_date 
+							                            from apps.MRP_SUB_INVENTORIES_V 
+													   where compile_designator like '%DPY%' )  )  

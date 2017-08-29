@@ -1,0 +1,189 @@
+
+
+--------Find PR Approve Amt/Account from Requester
+select pr.TYPE_LOOKUP_CODE,h.segment1 Item,e.UNIT_PRICE*f.REQ_LINE_QUANTITY Dist_Line_Amt,g.segment2,g.segment3 Acc,pr.ORG_ID,PR.SEGMENT1 PR_Num,e.LINE_NUM,f.DISTRIBUTION_NUM Dist_num,
+d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.approver_type,b.creation_date line_Created,e.ITEM_DESCRIPTION,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,
+--(select max(sequence_num) sequence_num,APPROVAL_LIST_HEADER_ID from apps.PO_APPROVAL_LIST_LINES  group by --APPROVAL_LIST_HEADER_ID ) aa,
+apps.PO_APPROVAL_LIST_LINES b,
+apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+apps.mtl_system_items h
+where a.approval_list_header_id=b.approval_list_header_id
+--and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PR.REQUISITION_HEADER_ID=a.document_id
+--and aa.sequence_num=b.sequence_num
+--and aa.APPROVAL_LIST_HEADER_ID=b.APPROVAL_LIST_HEADER_ID
+--and PR.SEGMENT1='5523'
+and b.status='APPROVE'
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+--and g.segment3 <'15010000'
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+and h.ORGANIZATION_ID=pr.ORG_ID
+and e.ITEM_ID =h.INVENTORY_ITEM_ID(+)
+--and PREPARER_ID=5019  
+and  d.employee_number='22070480'  --Approver
+and b.CREATION_DATE>=to_date('2007-2-1','yyyy-mm-dd') 
+--and a.OBJECT_TYPE_CODE='REQUISITION' -- 'PO'
+order by  b.creation_date desc,PR.SEGMENT1
+
+
+
+---PR's approve history
+
+SELECT hi.SEQUENCE_NUM, HI.OBJECT_ID,hi.ACTION_CODE,PE.FULL_NAME Action_User,hi.ACTION_DATE ,hi.NOTE NOTE , PR.SEGMENT1 Req_or_PO_Number,
+HI.OBJECT_TYPE_CODE Doc_Type,
+PE.EMPLOYEE_NUMBER Action_Employee_number,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer,
+pr.creation_date Date_Time,trunc(pr.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PR.REQUISITION_HEADER_ID Hearder_ID,
+PR.NOTE_TO_AUTHORIZER,
+PR.DESCRIPTION DESC_OR_COMMENTS
+FROM apps.PO_ACTION_HISTORY          HI,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.PER_PEOPLE_V7              PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+--AND PR.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+--and HI.ACTION_CODE is null
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.PREPARER_ID=PE2.PERSON_ID
+--AND PE.EMPLOYEE_NUMBER IN ('952154','23005956','28946107')
+and PR.SEGMENT1='763'
+and hi.OBJECT_TYPE_CODE='REQUISITION' -- 'PO'
+
+
+-----------Find PR Approve Amt/Account  at dist line
+select --pr.TYPE_LOOKUP_CODE,
+PR.SEGMENT1 PR_Num,e.LINE_NUM,f.DISTRIBUTION_NUM Dist_num,
+e.UNIT_PRICE*f.REQ_LINE_QUANTITY Dist_Line_Amt,
+g.segment2,g.segment3 Acc,pr.ORG_ID,
+PE.EMPLOYEE_NUMBER  Approved_By,pe.FULL_NAME,
+HI.CREATION_DATE Approve_DATE
+from apps.PO_ACTION_HISTORY HI,
+apps.PER_PEOPLE_V7 pe,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g
+where PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+--and PREPARER_ID=5019  
+--and  d.employee_number='22070480'  --Approver
+and hi.CREATION_DATE>=to_date('2009-5-1','yyyy-mm-dd') 
+and hi.OBJECT_TYPE_CODE='REQUISITION'
+and HI.ACTION_CODE ='APPROVE'
+and g.segment3 in ('41059903','41050706','41059908','41059909')
+--and PR.SEGMENT1='46018'
+order by  PR.SEGMENT1 ,e.LINE_NUM,f.DISTRIBUTION_NUM --b.creation_date desc,PR.SEGMENT1
+
+
+-----PR Approve History With Item,amount,account
+
+select pr.AUTHORIZATION_STATUS,
+PR.SEGMENT1 PR_Num,e.LINE_NUM,f.DISTRIBUTION_NUM Dist_num,hi.SEQUENCE_NUM Approve_Seq,
+hi.ACTION_CODE,PE.FULL_NAME Action_User,hi.ACTION_DATE ,hi.NOTE NOTE ,
+pr.TYPE_LOOKUP_CODE,h.segment1 Item,e.UNIT_PRICE*f.REQ_LINE_QUANTITY Dist_Line_Amt,g.segment3 Acc,
+d.FULL_NAME Buyer,e.ITEM_DESCRIPTION,pr.ORG_ID
+from 
+apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+apps.mtl_system_items h,apps.PO_ACTION_HISTORY HI,apps.PER_PEOPLE_V7 PE
+where PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and PR.PREPARER_ID=d.PERSON_ID(+)
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+--and g.segment3 <'15010000'
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+and h.ORGANIZATION_ID=pr.ORG_ID
+and e.ITEM_ID =h.INVENTORY_ITEM_ID(+)
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+--and pe.FULL_NAME in ('Gao, Max','Qi, Jack','Fan, Bin','Song, Lin Yi','Sun, Xiaoying','Wang, lin','Xi Shuiping','Stalnert, Mr. Tomas')
+--and e.CURRENCY_CODE<>'CNY'
+--and PR.SEGMENT1='763'
+and pr.AUTHORIZATION_STATUS<>'CANCELLED'
+and e.ORG_ID=127
+and hi.OBJECT_TYPE_CODE='REQUISITION' -- 'PO'
+order by e.ORG_ID,PR.SEGMENT1,e.LINE_NUM,f.DISTRIBUTION_NUM ,hi.SEQUENCE_NUM
+
+
+
+
+select g.segment3,pr.ORG_ID,PR.SEGMENT1 PR_Num,c.FULL_NAME To_Whom,b.sequence_num Appro_Seq,b.status,d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,
+(select max(sequence_num) sequence_num,APPROVAL_LIST_HEADER_ID from apps.PO_APPROVAL_LIST_LINES  group by APPROVAL_LIST_HEADER_ID ) aa,
+apps.PO_APPROVAL_LIST_LINES b,
+apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PR.REQUISITION_HEADER_ID=a.document_id
+and aa.sequence_num=b.sequence_num
+and aa.APPROVAL_LIST_HEADER_ID=b.APPROVAL_LIST_HEADER_ID
+--and PR.SEGMENT1='5523'
+and b.status='APPROVE'
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and g.segment3 <'15010000'
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+and d.FULL_NAME in ('Gao, Max','Qi, Jack','Fan, Bin','Song, Lin Yi','Sun, Xiaoying','Wang, lin','Xi Shuiping','Stalnert, Mr. Tomas')
+--and hi.OBJECT_TYPE_CODE='REQUISITION' -- 'PO'
+
+------Who has approved
+select pr.TYPE_LOOKUP_CODE,h.segment1 Item,e.UNIT_PRICE*f.REQ_LINE_QUANTITY Dist_Line_Amt,g.segment3 Acc,pr.ORG_ID,PR.SEGMENT1 PR_Num,e.LINE_NUM,f.DISTRIBUTION_NUM Dist_num,
+d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.approver_type,b.creation_date line_Created,e.ITEM_DESCRIPTION,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,
+--(select max(sequence_num) sequence_num,APPROVAL_LIST_HEADER_ID from apps.PO_APPROVAL_LIST_LINES  group by APPROVAL_LIST_HEADER_ID ) aa,
+apps.PO_APPROVAL_LIST_LINES b,
+apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+apps.mtl_system_items h
+where a.approval_list_header_id=b.approval_list_header_id
+--and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PR.REQUISITION_HEADER_ID=a.document_id
+--and aa.sequence_num=b.sequence_num
+--and aa.APPROVAL_LIST_HEADER_ID=b.APPROVAL_LIST_HEADER_ID
+--and PR.SEGMENT1='5523'
+and b.status='APPROVE'
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and g.segment3 <'15010000'
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+and h.ORGANIZATION_ID=pr.ORG_ID
+and e.ITEM_ID =h.INVENTORY_ITEM_ID(+)
+and d.FULL_NAME in ('Gao, Max','Qi, Jack','Fan, Bin','Song, Lin Yi','Sun, Xiaoying','Wang, lin','Xi Shuiping','Stalnert, Mr. Tomas')
+--and e.CURRENCY_CODE<>'CNY'

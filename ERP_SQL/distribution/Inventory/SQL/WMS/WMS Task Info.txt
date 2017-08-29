@@ -1,0 +1,31 @@
+
+
+
+----------Task's Status,Type,Item,Qty,WH,Trans_Type
+After task <Queued to the user/Dispatched to the user/Loaded> , will have records in wms_dispatched_tasks
+
+
+
+
+select segment1 Item,b.status Task_Status,b.task_type,a.transaction_header_id,a.transaction_temp_id,a.creation_date,a.transaction_date,
+a.subinventory_code,a.transfer_subinventory,a.transaction_quantity,MTT.TRANSACTION_TYPE_NAME
+from apps.mtl_material_transactions_temp a,apps.wms_dispatched_tasks b,apps.mtl_system_items c,
+apps.MTL_TRANSACTION_TYPES MTT
+where b.transaction_temp_id=a.transaction_temp_id 
+and c.organization_id=83 and a.inventory_item_id=c.inventory_item_id
+and a.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+--and a.inventory_item_id=18451 and b.status=9
+
+
+
+
+------Table: WMS_DISPATCHED_TASKS
+Comment: Dispatched Tasks Table
+Text:
+Table that holds all the tasks that are :
+(1) Dispatched to the user (user has accepted a task)
+(2) Queued to the user (assigned to the user manually)
+(3) Loaded (user has loaded the task on to his equipment but has not dropped it off yet)
+(4) Erred
+
+

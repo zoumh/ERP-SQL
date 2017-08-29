@@ -1,0 +1,53 @@
+
+---------Overview of things in interface
+1.
+select distinct --group_id,REQUEST_ID,
+status,user_je_category_name,user_je_source_name 
+from apps.GL_interface
+
+2.
+select distinct REQUEST_ID,CREATED_BY, GROUP_ID ,status,user_je_category_name,user_je_source_name from apps.GL_interface
+--where GROUP_ID =945203
+
+
+---------get details with Group_ID,request)ID
+select status,segment2||'.'||segment3 CC_Acc,CREATED_BY,
+(ACCOUNTED_DR),(ACCOUNTED_CR),CURRENCY_CODE,(ENTERED_DR) ,(ENTERED_CR),
+user_je_category_name,user_je_source_name,GROUP_ID ,REQUEST_ID
+from apps.GL_interface where GROUP_ID =945203
+
+
+select to_char(JE_BATCH_ID) BATCH_ID,to_char(JE_HEADER_ID) Journal_Name,
+ACCOUNTED_DR,(ACCOUNTED_CR),(ENTERED_DR) ,(ENTERED_CR),CURRENCY_CODE Currency,STATUS,ACCOUNTING_DATE,USER_JE_CATEGORY_NAME Category,
+USER_JE_SOURCE_NAME Source,SEGMENT1,SEGMENT2,SEGMENT3,SEGMENT4,SEGMENT5,REFERENCE4,REFERENCE5,to_char(JE_LINE_NUM) Line_Num,to_char(CODE_COMBINATION_ID) CCID, 
+to_char(GROUP_ID) Group_ID,to_char(REQUEST_ID) Request_ID
+from apps.GL_interface --where status='PROCESSED'
+where USER_JE_SOURCE_NAME='Spreadsheet'
+
+
+
+select count(*) from apps.GL_interface where USER_JE_SOURCE_NAME='Spreadsheet'
+ 
+
+
+select distinct status,user_je_category_name,user_je_source_name from apps.GL_interface
+
+
+select status,user_je_category_name,user_je_source_name,segment2||'.'||segment3 CC_Acc,
+(ACCOUNTED_DR),(ACCOUNTED_CR),CURRENCY_CODE,(ENTERED_DR) ,(ENTERED_CR),GROUP_ID 
+from apps.GL_interface where status='EU02,P'
+and (ACCOUNTED_DR<>ENTERED_DR or ACCOUNTED_CR<>ENTERED_CR)
+
+
+
+----list interface error group info (user,account--if have,Dr,cr, source)
+select group_id,REQUEST_ID,status,
+--to_char(JE_BATCH_ID) JE_BATCH_ID,to_char(JE_HEADER_ID) JE_HEADER_ID,
+a.REFERENCE4,user_je_category_name category,user_je_source_name source,
+b.segment3 Acc,
+(ACCOUNTED_DR),(ACCOUNTED_CR),CURRENCY_CODE, (ENTERED_DR) , (ENTERED_CR),c.user_name created_by
+from apps.GL_interface a,apps.GL_CODE_combinations b,apps.fnd_user c
+where (status<>'NEW' or group_id=945203)
+and  b.CODE_COMBINATION_ID(+) =a.CODE_COMBINATION_ID 
+and c.user_id=a.CREATED_BY
+

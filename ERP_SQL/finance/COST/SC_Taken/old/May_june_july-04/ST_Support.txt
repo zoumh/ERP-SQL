@@ -1,0 +1,74 @@
+
+
+---- Items numbers & tags numbers  in each WH ,Org , physical Inventory
+select count(distinct(a.INVENTORY_ITEM_ID)) Item_number,
+	   count(distinct(a.ADJUSTMENT_ID)) Tag_number,a.subinventory_name,c.PHYSICAL_INVENTORY_NAME,
+	   a.physical_inventory_id,b.NAME as Organization_Name,a.organization_id
+from   apps.mtl_physical_adjustments a ,apps.HR_ORGANIZATION_UNITS_V b,apps.MTL_PHYSICAL_INVENTORIES c
+where  a.organization_id=c.organization_id
+and a.physical_inventory_id =c.physical_inventory_id 
+and a.physical_inventory_id in (345,347,348,366)
+       --and a.organization_id=84 
+group by a.subinventory_name,a.physical_inventory_id,a.organization_id ,b.NAME,c.PHYSICAL_INVENTORY_NAME
+
+
+
+
+
+
+------------Count value by Total Value (Physic ID , Sub-Inventory)
+
+
+--------all Org / Inv ID
+select  
+       round(sum(a.system_quantity* a.actual_cost),2) High_Value,a.physical_inventory_id 
+from   apps.mtl_physical_adjustments a 
+where  a.actual_cost > 50 
+--       and a.organization_id=83 
+	   --and a.physical_inventory_id =47
+	   --and a.subinventory_name ='SB'
+group by a.physical_inventory_id 
+union
+select  
+       round(sum(a.system_quantity* a.actual_cost),2) High_Value,a.physical_inventory_id 
+from   apps.mtl_physical_adjustments a 
+where   
+--	   a.organization_id=83
+	   --and a.subinventory_name ='SB' 
+	   --and a.physical_inventory_id =47
+	   group by a.physical_inventory_id 
+
+
+
+
+select  
+       sum(a.system_quantity* a.actual_cost) High_Value
+from   apps.mtl_physical_adjustments a 
+where  a.physical_inventory_id =:d and a.actual_cost > 50 
+       and a.organization_id=83 
+	   --and a.subinventory_name ='SB'
+union
+select  
+       round(sum(a.system_quantity* a.actual_cost),2) High_Value
+from   apps.mtl_physical_adjustments a 
+where  a.physical_inventory_id =:d --and a.actual_cost > 20 
+       and a.organization_id=83
+	   --and a.subinventory_name ='SB' 
+
+
+------------Count Item number by Total Item number (Physic ID , Sub-Inventory)
+select  
+       count(distinct(INVENTORY_ITEM_ID)) Qty
+from   apps.mtl_physical_adjustments a 
+where  a.physical_inventory_id =:d and a.actual_cost > 60 
+       and a.organization_id=83 
+	   --and a.subinventory_name ='SB'
+union
+select  
+       count(distinct(INVENTORY_ITEM_ID)) Qty
+from   apps.mtl_physical_adjustments a 
+where  a.physical_inventory_id =:d --and a.actual_cost > 20 
+       and a.organization_id=83
+	   --and a.subinventory_name ='SB' 
+
+

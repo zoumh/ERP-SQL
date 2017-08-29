@@ -1,0 +1,47 @@
+
+
+----- All Cycle count names
+select * from apps.MTL_CYCLE_COUNT_HEADERS_V 
+
+-------------Statistic of schedule count lines by date
+
+select a.CREATION_DATE,count(*) a
+from apps.MTL_CYCLE_COUNT_ENTRIES_V a,apps.MTL_CYCLE_COUNT_HEADERS_V b,
+apps.mtl_system_items c,apps.fnd_user d,apps.fnd_user e,apps.MTL_ITEM_LOCATIONS f
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.INVENTORY_ITEM_ID =c.INVENTORY_ITEM_ID 
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.LOCATOR_ID=f.INVENTORY_LOCATION_ID 
+and a.CREATED_BY =d.user_id
+and a.last_updated_BY =e.user_id
+and b.cycle_count_header_name in ('BMC SG/SGW Cycle Counting')
+group by a.CREATION_DATE 
+
+
+-------------Statistic of schedule count lines,status by date
+select a.CREATION_DATE,count(*) count
+,a.count_status,--c.segment1 Item,
+decode(ENTRY_STATUS_CODE,1,'Uncounted',2,'Pending Approval',3,'Recount',4,'Rejected',5,'Completed') status,
+decode(COUNT_TYPE_CODE,1,'Scheduled',2,'Unscheduled',3,'Control',4,'Zero Count') CT_Type
+from apps.MTL_CYCLE_COUNT_ENTRIES_V a,apps.MTL_CYCLE_COUNT_HEADERS_V b,
+apps.mtl_system_items c,apps.fnd_user d,apps.fnd_user e,apps.MTL_ITEM_LOCATIONS f
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.INVENTORY_ITEM_ID =c.INVENTORY_ITEM_ID 
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.LOCATOR_ID=f.INVENTORY_LOCATION_ID 
+and a.CREATED_BY =d.user_id
+and a.last_updated_BY =e.user_id
+and b.cycle_count_header_name in ('BMC SG/SGW Cycle Counting')
+--and trunc(a.CREATION_DATE)=to_date('2006-9-4','yyyy-mm-dd')
+--and a.count_status='Pending Approval'
+--and a.CYCLE_COUNT_ENTRY_ID  in (64724,64762)
+group by a.CREATION_DATE
+,a.count_status,decode(ENTRY_STATUS_CODE,1,'Uncounted',2,'Pending Approval',3,'Recount',4,'Rejected',5,'Completed'),
+decode(COUNT_TYPE_CODE,1,'Scheduled',2,'Unscheduled',3,'Control',4,'Zero Count')
+
+
+

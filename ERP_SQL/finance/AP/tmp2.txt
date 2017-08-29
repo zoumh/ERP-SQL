@@ -1,0 +1,61 @@
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_AP_t1
+as
+
+select VDR.VENDOR_NAME,
+	   apa.INVOICE_NUM,apa.INVOICE_ID
+,	   apa.INVOICE_AMOUNT as Invoice_Amt
+,	   apa.AMOUNT_PAID as Paid_Amount
+from  	  AP_INVOICES_ALL apa 
+,	  AP_INVOICE_PAYMENTS_ALL app
+,	  PO_VENDORS VDR
+--,	  AP_TERMS_LINES TRM
+--,	  AP_checks_all apc
+--,	  AP_BATCHES_ALL apb
+where VDR.VENDOR_ID=apa.VENDOR_ID
+and apa.INVOICE_ID=app.INVOICE_ID(+)
+--and   apa.SET_OF_BOOKS_ID='1'
+and   app.SET_OF_BOOKS_ID(+)='1'
+--and   TRM.TERM_ID=apa.TERMS_ID 
+--and   apa.BATCH_ID=apb.BATCH_ID
+--and   app.CHECK_ID=apc.CHECK_ID(+)
+and invoice_num='LN1226001'
+order by   apa.INVOICE_DATE desc
+
+select * from AP_INVOICE_PAYMENTS_ALL app where app.INVOICE_ID='10003'
+
+select * from AP_INVOICES_ALL where INVOICE_ID='10003'
+
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_AP_t2
+as
+
+
+select VDR.VENDOR_NAME as Supplier
+,api.INVOICE_NUM
+from 	AP_INVOICES_ALL api
+,	PO_VENDORS VDR
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and invoice_num='LN1226001'
+order by api.INVOICE_DATE desc
+
+
+select * from APPS.BMC_AP_t2,APPS.BMC_AP_t1 
+where APPS.BMC_AP_t2.SUPPLIER=APPS.BMC_AP_t1.VENDOR_NAME 
+and APPS.BMC_AP_t2.INVOICE_NUM=APPS.BMC_AP_t1.INVOICE_NUM
+
+
+select count(*) from APPS.BMC_AP_t2,APPS.BMC_AP_t1 
+where APPS.BMC_AP_t2.SUPPLIER=APPS.BMC_AP_t1.VENDOR_NAME 
+and APPS.BMC_AP_t2.INVOICE_NUM=APPS.BMC_AP_t1.INVOICE_NUM
+
+
+select count(*) 
+from 	AP_INVOICES_ALL api
+,		PO_VENDORS VDR
+,	  	AP_TERMS_LINES TRM
+,	    AP_BATCHES_ALL apb
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+order by api.INVOICE_DATE desc

@@ -1,0 +1,107 @@
+
+
+--1. to check if all non-std JO has no completion value
+select  --wet.JOB_TYPE ,wip_entity_name Job_Order,--msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Complete_Value,
+sum(mmt.TRANSACTION_QUANTITY) as Complete_Qty--,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V 	     Wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id  
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+--and    trunc(mmt.transaction_date) >= to_date('20061101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20061231','YYYYMMDD')
+and wet.CREATION_DATE >= to_date('20061101','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+--and wet.class_code like 'Var%'
+and wet.JOB_TYPE=3 --non-std JO
+--group by wip_entity_name,wet.JOB_TYPE
+--order by wip_entity_name
+
+
+--2. to see non-std JO total balance (mtl issue/return)
+select  --wet.JOB_TYPE,wet.class_code,wip_entity_name Job_Order,--msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,--transaction_type_name,
+sum(mmt.TRANSACTION_QUANTITY) as Qty--,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V 	     Wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id  
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+--and    trunc(mmt.transaction_date) >= to_date('20061101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20061231','YYYYMMDD')
+and wet.CREATION_DATE >= to_date('20061101','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+--and wet.class_code like 'Var%'
+and wet.JOB_TYPE=3
+--group by wet.JOB_TYPE,wip_entity_name,wet.class_code
+--order by wip_entity_name
+
+
+--3. to see each non-std JO's balance (mtl issue/return)
+select  wet.JOB_TYPE,wet.class_code,wip_entity_name Job_Order,--msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,--transaction_type_name,
+sum(mmt.TRANSACTION_QUANTITY) as Qty--,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V 	     Wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id  
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+--and    trunc(mmt.transaction_date) >= to_date('20061101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20061231','YYYYMMDD')
+and wet.CREATION_DATE >= to_date('20061101','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+and wet.class_code like 'Var%'
+and wet.JOB_TYPE=3
+group by wet.JOB_TYPE,wip_entity_name,wet.class_code
+order by wip_entity_name
+
+
+--4. to see each non-std JO each Iyem's balance (mtl issue/return)
+select   wet.class_code,wip_entity_name Job_Order,msi.segment1 Item,--mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,--transaction_type_name,
+sum(mmt.TRANSACTION_QUANTITY) as Qty--,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V 	     Wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id  
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+--and    trunc(mmt.transaction_date) >= to_date('20061101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20061231','YYYYMMDD')
+and wet.CREATION_DATE >= to_date('20061101','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+and wet.class_code like 'Var%'
+and wet.JOB_TYPE=3
+group by  wip_entity_name,wet.class_code,msi.segment1
+order by wip_entity_name
+
+
+

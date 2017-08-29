@@ -1,0 +1,22 @@
+
+-------------MTL_TRANSACTION_ACCOUNTS.ACCOUNTING_LINE_TYPE (MFG_LOOKUPS)
+
+1 Inv valuation
+2 Account
+3 Overhead absorption
+4 Resource absorption
+5 Receiving Inspection
+6 Purchase price variance or
+rate variance
+7 WIP valuation
+8 WIP variance
+9 Inter每org payables
+10 Inter每org receivables
+11 Inter每org transfer credit
+12 Inter每org freight charge
+13 Average cost variance
+14 Intransit Inventory
+15 Encumbrance Reversal
+
+decode(ACCOUNTING_LINE_TYPE,1,'Inv valuation',2,'Account',5,'Receiving_Temp',6,'PPV or Rate var',
+13,'Average cost variance',to_char(ACCOUNTING_LINE_TYPE)) ACCOUNTING_LINE_TYPE

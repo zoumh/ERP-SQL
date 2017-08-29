@@ -1,0 +1,13 @@
+
+
+
+mtl_transaction_interface 和 mtl_material_transactions_temp 的關系是：
+當你寫數據到iterface，run concurrent program之後，數據會經過temp table 最後寫入到transaction table中。 
+
+
+interface表到temp表后再到transactions表,一般都是插入到interface表,但为了图方便也会直接插入到temp表,但是我觉得有问题,
+
+
+我知道的是：
+如果PROCESS_FLAG是Y，那么就是正在处理，一直没有过的话就不行了，有异常
+如果是inv transaction，比如subinventory transfer，material issue等等，如果pengding在mtl_material_transactions_temp表中，那么available的数量就会减少（onhand －mtl_material_transactions_temp表中的数量） ，可以删除表中的记录，然后重做记录。

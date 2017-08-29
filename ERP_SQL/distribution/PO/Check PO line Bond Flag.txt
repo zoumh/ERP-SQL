@@ -1,0 +1,20 @@
+
+
+------------------Two Bond/NonBond flag in one PO easy create one LPN two Cost Group
+
+select c.ATTRIBUTE1 Bond_NBond,e.segment1 PO,c.LINE_NUM, a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_headerS_ALL e
+where 
+a.transfer_lpn_id=b.lpn_id
+and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=83
+and c.line_type_id=1023 --VP Purchasing
+and a.po_line_id=c.po_line_id
+and b.license_plate_number='PC0004871'
+and e.PO_HEADER_ID=c.PO_HEADER_ID
+order by e.segment1 ,c.LINE_NUM
+

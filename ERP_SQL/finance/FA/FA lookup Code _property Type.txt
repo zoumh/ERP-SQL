@@ -1,0 +1,9 @@
+
+
+----------FA lookup Code (property Type)
+select MEANING, DESCRIPTION,LOOKUP_CODE,END_DATE_ACTIVE,ENABLED_FLAG from apps.FA_LOOKUPS_VL 
+where LOOKUP_TYPE='PROPERTY TYPE'
+order by MEANING,LOOKUP_CODE
+
+select * from apps.FA_LOOKUPS_VL where LOOKUP_TYPE='PROPERTY TYPE'
+

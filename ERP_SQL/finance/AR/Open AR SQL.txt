@@ -1,0 +1,126 @@
+
+
+
+
+
+---Open Balance of AR Invoice
+
+select sum(ACCTD_AMOUNT_DUE_REMAINING) Due_Amt--,sum(nvl(a.EXCHANGE_RATE,1)* a.AMOUNT_DUE_ORIGINAL) amt
+from apps.ar_payment_schedules_all a,apps.ra_customer_trx_all b 
+where a.PAYMENT_SCHEDULE_ID>0 and a.AMOUNT_DUE_REMAINING<>0
+and a.GL_DATE>=to_date('2005-6-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2005-6-30','yyyy-mm-dd') 
+and  b.COMPLETE_FLAG='Y'
+and a.CUSTOMER_TRX_ID =b.CUSTOMER_TRX_ID
+
+
+---------Open Balance of Receipt
+select CLASS,AMOUNT_APPLIED,TRX_NUMBER,GL_DATE TRX_DATE,    
+AMOUNT_DUE_REMAINING ,ACCTD_AMOUNT_DUE_REMAINING from apps.AR_PAYMENT_SCHEDULES_ALL where Class='PMT' and status='OP'
+
+
+
+
+Details Balance
+------------------------- 
+
+select --b.CUST_TRX_TYPE_ID,
+b.ORG_ID,--Class,
+b.trx_number Invoice,b.trx_date Invoice_Date,b.COMPLETE_FLAG,
+b.CT_REFERENCE ,b.invoice_currency_code Currency,h.name Source,
+e.Type Class,
+e.name ,c.gl_date,
+b.ATTRIBUTE1 DFF,
+g.CUSTOMER_NUMBER Ship_To_Number,b.SHIP_TO_SITE_USE_ID,
+f.CUSTOMER_NUMBER Bill_To_Number,b.Bill_TO_SITE_USE_ID ,
+(select d.name from apps.ra_terms_tl d where d.term_id=b.term_id and d.language='US') Term,
+b.term_due_date,
+--i.name Sales_Person,
+--(select name from apps.RA_SALESREPS_ALL where SALESREP_ID=b.PRIMARY_SALESREP_ID) Sales_Person,
+b.PURCHASE_ORDER,
+b.comments,j.segment3 Account,j.segment4 PRD_Acc,j.segment5 PRJ_Acc,c.amount,ACCTD_AMOUNT,ACCOUNT_CLASS,  
+b.EXCHANGE_RATE,k.AMOUNT_DUE_ORIGINAL,ACCTD_AMOUNT_DUE_REMAINING Due_CNY_Amt 
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all c
+,apps.AR_customers_v f
+,apps.ra_cust_trx_types_all e
+,apps.AR_customers_v g
+,apps.RA_BATCH_SOURCES_all h
+--,apps.RA_SALESREPS_ALL i
+,apps.GL_CODE_combinations j,
+apps.ar_payment_schedules_all k
+where b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and b.SHIP_TO_CUSTOMER_ID=g.CUSTOMER_ID(+)
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and b.CUST_TRX_TYPE_ID=e.CUST_TRX_TYPE_ID
+and e.org_id=b.ORG_ID
+and c.ACCOUNT_CLASS='REC'
+and b.BATCH_SOURCE_ID=h.BATCH_SOURCE_ID
+--and i.SALESREP_ID(+)=b.PRIMARY_SALESREP_ID
+--and i.org_id=b.ORG_ID
+and c.CODE_COMBINATION_ID=j.CODE_COMBINATION_ID
+and  b.COMPLETE_FLAG='Y'
+and k.CUSTOMER_TRX_ID =b.CUSTOMER_TRX_ID
+and k.PAYMENT_SCHEDULE_ID>0 and k.AMOUNT_DUE_REMAINING<>0
+--and b.ORG_ID=127
+--and k.GL_DATE>=to_date('2005-10-1','yyyy-mm-dd') and k.GL_DATE<=to_date('2005-10-30','yyyy-mm-dd') 
+--and b.trx_number='00952464'
+order by b.ORG_ID,b.trx_number
+
+ 
+----------------count multi SO in one aR invoice
+
+select Invoice,count(*),type from 
+(
+select distinct l.SALES_ORDER,b.trx_number Invoice,e.DESCRIPTION type
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all c
+,apps.AR_customers_v f
+,apps.ra_cust_trx_types_all e
+,apps.ra_terms_tl d
+,apps.AR_customers_v g
+,apps.RA_BATCH_SOURCES_all h
+,apps.RA_SALESREPS_ALL i
+,apps.GL_CODE_combinations j,
+apps.ar_payment_schedules_all k,apps.ra_customer_trx_lines_all l
+where b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and b.SHIP_TO_CUSTOMER_ID=g.CUSTOMER_ID(+)
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and b.CUST_TRX_TYPE_ID=e.CUST_TRX_TYPE_ID
+and d.term_id=b.term_id
+and d.language='US'
+and c.ACCOUNT_CLASS='REC'
+and b.BATCH_SOURCE_ID=h.BATCH_SOURCE_ID
+and i.SALESREP_ID(+)=b.PRIMARY_SALESREP_ID--(+)
+and c.CODE_COMBINATION_ID=j.CODE_COMBINATION_ID
+--and b.trx_number='50930'
+and  b.COMPLETE_FLAG='Y'
+and k.CUSTOMER_TRX_ID =b.CUSTOMER_TRX_ID
+and k.PAYMENT_SCHEDULE_ID>0 and k.AMOUNT_DUE_REMAINING<>0
+and l.line_type<>'TAX'
+and b.CUSTOMER_TRX_ID=l.CUSTOMER_TRX_ID
+and l.SALES_ORDER is not null
+and b.ORG_ID=81
+group by b.trx_number,l.SALES_ORDER,e.DESCRIPTION
+) group by invoice ,type
+having count(*)>1
+
+
+------------------------------
+
+select 
+(case when round(sysdate-TRX_DATE)>365 then '>1Y' else case when round(sysdate-TRX_DATE)>180 then '>6M' else case when round(sysdate-TRX_DATE)>90 then '>3M' else case when round(sysdate-TRX_DATE)>30 then '>1M' else '<1M' end end end end) Due_Date_Fence,
+round(sysdate-TRX_DATE) Due_Date,TRX_DATE ,
+a.TRX_NUMBER as Inv_Num,a.AMOUNT_DUE_ORIGINAL as Inv_Amt,nvl(a.AMOUNT_APPLIED,0) as Paid_Amt,
+a.AMOUNT_DUE_REMAINING as Balance,
+nvl(a.EXCHANGE_RATE,1) as Rate,a.INVOICE_CURRENCY_CODE as Curr,
+convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER 
+--,a.CUSTOMER_ID,a.CUSTOMER_TRX_ID,a.GL_DATE,a.DUE_DATE,a.CREATION_DATE,a.CUST_TRX_TYPE_ID
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+and a.AMOUNT_DUE_REMAINING<>0
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+order by a.TRX_NUMBER
+
+

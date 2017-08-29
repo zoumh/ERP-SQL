@@ -1,0 +1,42 @@
+
+------Inventory Account Alias Define
+select c.ORGANIZATION_CODE,a.DESCRIPTION,b.SEGMENT2 CC,b.SEGMENT3 ACC,a.SEGMENT1 Alias_Name,
+b.SEGMENT1||'.'||b.SEGMENT2||'.'||b.SEGMENT3||'.'||b.SEGMENT4||'.'||b.SEGMENT5||'.'||b.SEGMENT6 Accounts,
+a.ENABLED_FLAG,a.SUMMARY_FLAG,EFFECTIVE_DATE,a.DISABLE_DATE,a.CREATION_DATE,a.START_DATE_ACTIVE,a.END_DATE_ACTIVE
+from apps.MTL_GENERIC_DISPOSITIONS a,apps.GL_Code_Combinations b,apps.org_organization_definitions c
+where a.DISTRIBUTION_ACCOUNT=b.CODE_COMBINATION_ID
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.ORGANIZATION_ID>127
+and a.ENABLED_FLAG='Y'
+and (a.DISABLE_DATE is null or a.DISABLE_DATE<sysdate)
+order by a.ORGANIZATION_ID
+
+
+-------------1 year stastic trans count of all Alias source name in VP
+select a.SEGMENT1 Alias_Name,b.SEGMENT2 CC,b.SEGMENT3 ACC,a.DESCRIPTION,
+b.SEGMENT1||'.'||b.SEGMENT2||'.'||b.SEGMENT3||'.'||b.SEGMENT4||'.'||b.SEGMENT5||'.'||b.SEGMENT6 Accounts,
+d.count
+from apps.MTL_GENERIC_DISPOSITIONS a,apps.GL_Code_Combinations b,apps.org_organization_definitions c,
+(select MGD.SEGMENT1 Alias_SOURCE, count(*) Count
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_generic_dispositions  MGD 
+where 1=1
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id  
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+AND mmt.TRANSACTION_DATE >= sysdate-365--to_Date('2008-12-22','yyyy-mm-dd')
+and ((mst.transaction_source_type_name='Inventory' and mtt.transaction_type_name in ('Miscellaneous issue','Miscellaneous receipt'))
+   or
+   mst.transaction_source_type_name in ('Account alias','Account'))
+and mmt.ORGANIZATION_ID=130   
+group by  MGD.SEGMENT1  
+) d
+where a.DISTRIBUTION_ACCOUNT=b.CODE_COMBINATION_ID
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and  a.SEGMENT1 =d.Alias_SOURCE(+)
+and a.ORGANIZATION_ID=130
+and (a.DISABLE_DATE is null or a.DISABLE_DATE<sysdate)
+and a.ENABLED_FLAG='Y'

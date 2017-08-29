@@ -1,0 +1,83 @@
+
+
+
+  select count(*)
+    into   v_count_1
+    from   MTL_ITEM_LOCATIONS a
+    where  a.location_current_units = 0
+    and    nvl(a.segment2,'A') != 'Full'
+    and    a.subinventory_code = 'SEFG'
+    and    a.organization_id = 133
+    and    a.status_id = 21
+    and    a.INVENTORY_LOCATION_ID not in (SELECT B.LOCATOR_ID FROM mtl_onhand_total_mwb_v B
+                                          WHERE  B.SUBINVENTORY_CODE = 'SEFG'
+                                 AND    B.ORGANIZATION_ID = 133)
+    and    a.inventory_location_id not in (select nvl(loc_id,-1)
+                                           from   bmc_auto_lpn_bak
+                                           where  flag is null
+                                           );
+ 
+    select count(*)
+    into   v_count_2
+    from   bmc_auto_lpn_bak
+    where  so_number = :BMC_AUTO_SO_BAK_V.SO_NUMBER
+    and    so_line_number = :BMC_AUTO_SO_BAK_V.SO_LINE_NUMBER;
+    
+    IF V_COUNT_1 >= v_count_2 THEN
+     GO_BLOCK('BMC_AUTO_LPN_BAK');
+     FIRST_RECORD;
+     Loop
+      v_num := v_num + 1;
+      select loc_name,loc_id
+      into   :BMC_AUTO_LPN_BAK.LOCATOR,:BMC_AUTO_LPN_BAK.loc_id
+      from (
+         select loc_name,loc_id,rownum row_num
+         from   bmc_auto_empty_loc_v
+              )
+         where row_num = v_num;              
+      exit when :system.last_record = 'TRUE';
+      next_record;
+     end loop;
+     First_record;
+     
+     elsif V_COUNT_1 < v_count_2 and v_count_1 > 0 then
+      GO_BLOCK('BMC_AUTO_LPN_BAK');
+      FIRST_RECORD;
+      Loop
+       v_num := v_num + 1;
+       select loc_name,loc_id
+       into   :BMC_AUTO_LPN_BAK.LOCATOR,:BMC_AUTO_LPN_BAK.loc_id
+       from (
+          select loc_name,loc_id,rownum row_num
+          from   bmc_auto_empty_loc_v
+               )
+          where row_num = v_num;              
+       exit when v_num = V_COUNT_1;
+       next_record;
+      end loop;
+      loop
+       select a.segment2||'.'||a.segment3||'.'||a.segment4||'.'||a.segment5
+           ,a.inventory_location_id
+     into   :BMC_AUTO_LPN_BAK.LOCATOR,:BMC_AUTO_LPN_BAK.loc_id
+     from   MTL_ITEM_LOCATIONS a
+     where  a.segment2 = 'Full'
+     and    a.subinventory_code = 'SEFG'
+     and    a.organization_id = 133
+     and    a.status_id = 21
+     and    rownum = 1;
+    exit when :system.last_record = 'TRUE';
+        next_record;
+        end loop;
+      First_record;
+     
+   else
+        select a.segment2||'.'||a.segment3||'.'||a.segment4||'.'||a.segment5
+           ,a.inventory_location_id
+     into   :BMC_AUTO_LPN_BAK.LOCATOR,:BMC_AUTO_LPN_BAK.loc_id
+     from   MTL_ITEM_LOCATIONS a
+     where  a.segment2 = 'Full'
+     and    a.subinventory_code = 'SEFG'
+     and    a.organization_id = 133
+     and    a.status_id = 21
+     and    rownum = 1;   
+    End if;

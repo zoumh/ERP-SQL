@@ -1,0 +1,77 @@
+
+----Locator Type Code:
+decode(inventory_location_type,1,'Dock Door',2,'Staging Lane',3,'Storage Locator',4,'Consolidation Locator',5,'Packing Station') Type,
+
+
+----Locator Status Code
+decode(status_id,1,'Inactive',21,'Active',20,'On Hold') Status
+
+
+
+-------List Locator info (Type,status)
+select c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,inventory_location_type,
+decode(inventory_location_type,1,'Dock Door',2,'Staging Lane',3,'Storage Locator',4,'Consolidation Locator',5,'Packing Station') Type,
+decode(status_id,1,'Inactive',21,'Active',20,'On Hold') Status,description,subinventory_code, 
+disable_date,empty_flag,ORGANIZATION_ID
+from apps.mtl_item_locations  c 
+where --subinventory_code='SB' 
+--and ORGANIZATION_ID =130 and 
+--inventory_location_type<>3
+
+
+-----------Find out empty Locators
+
+select c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,'Y' Empty,
+decode(status_id,1,'Inactive',21,'Active',20,'On Hold') Status,disable_date,empty_flag,
+description,subinventory_code
+from apps.mtl_item_locations  c 
+where subinventory_code='SB' and ORGANIZATION_ID =130
+and c.status_id='21'
+and INVENTORY_LOCATION_ID not in (
+select LOCATOR_ID from apps.MTL_ONHAND_QUANTITIES_DETAIl a 
+where a.ORGANIZATION_ID =c.ORGANIZATION_ID
+and a.SUBINVENTORY_CODE =c.SUBINVENTORY_CODE
+and subinventory_code='SB' and ORGANIZATION_ID =130
+)
+
+
+----------
+
+select INVENTORY_LOCATION_ID  from apps.mtl_item_locations c
+where c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5='SI.10.2.4'
+and organization_id>127
+
+---
+
+select c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+decode(status_id,1,'Inactive',21,'Active',20,'On Hold') Status,disable_date,empty_flag,
+description,subinventory_code
+from apps.mtl_item_locations  c 
+where subinventory_code='SB' 
+and ORGANIZATION_ID =130
+--and c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5='S.11.4.1'
+
+select * from apps.mtl_item_locations  c where subinventory_code='SB' and 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5='S.11.4.1'
+--and disable_date is not null
+
+
+-------find locator id=-1
+select INVENTORY_LOCATION_ID,g.organization_code,c.ORGANIZATION_ID,
+SUBINVENTORY_CODE,c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5  locator
+from apps.mtl_item_locations  c ,APPS.mtl_parameters g where INVENTORY_LOCATION_ID=-1
+and c.ORGANIZATION_ID=g.ORGANIZATION_ID
+
+
+
+
+status_id
+1
+Inactive
+
+21
+Active
+
+
+20
+On Hold

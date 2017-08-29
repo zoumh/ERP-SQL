@@ -1,0 +1,49 @@
+
+
+
+----------rule with strategies
+
+select RULE_ORGANIZATION_ID,STRATEGY_NAME,RULE_NAME,STRATEGY_TYPE_CODE, STRATEGY_TYPE_MEANING, RULE_TYPE_CODE,RULE_TYPE_MEANING,
+RULE_USER_DEFINED_FLAG from apps.WMS_STRATEGY_MEMBERS_V WHERE RULE_USER_DEFINED_FLAG='Y'
+and STRATEGY_ORGANIZATION_ID =RULE_ORGANIZATION_ID 
+order by RULE_ORGANIZATION_ID,STRATEGY_TYPE_CODE,STRATEGY_NAME,RULE_TYPE_CODE,RULE_NAME
+
+
+
+----------rule with details
+select RULE_ORGANIZATION_ID,RULE_NAME,RULE_TYPE_MEANING,SEQUENCE_NUMBER,LOGICAL_OPERATOR_MEANING,
+LEFT_PARAMETER_NAME,LEFT_OBJECT_NAME,OPERATOR_MEANING, 
+OPERAND_TYPE_MEANING,OPERAND_CONSTANT_NUMBER,OPERAND_CONSTANT_CHARACTER,OPERAND_EXPRESSION, 
+RIGHT_PARAMETER_NAME, RIGHT_OBJECT_NAME
+from  apps.WMS_RESTRICTIONS_V where RULE_USER_DEFINED_FLAG='Y'   
+order by RULE_ORGANIZATION_ID,RULE_TYPE_MEANING,RULE_NAME
+
+
+
+
+------------WMS Rule
+select ORGANIZATION_ID,Type_code,Name,Description,enabled_flag,user_defined_flag from apps.WMS_RULES
+where user_defined_flag='Y' and enabled_flag='Y' --and ORGANIZATION_ID=109
+order by ORGANIZATION_ID,Type_code
+
+
+--------Strategies
+
+select ORGANIZATION_ID,type_meaning,type_code,name Strategies,enabled_flag,User_defined_flag from apps.WMS_STRATEGIES_V 
+order by ORGANIZATION_ID,type_code
+
+
+
+
+
+select * from apps.WMS_RULES_VL a,apps.WMS_STRATEGY_MEMBERS b
+where b.strategy_id=10021
+and a.rule_id=b.rule_id
+and a.name in ('PO Rec-DB-L1','PO Rec-DB-S')
+
+
+
+select * from apps.WMS_RULES_TL wrtl ,apps.WMS_RULES_B wrb 
+where wrtl.RULE_ID = wrb.RULE_ID AND wrtl.LANGUAGE = 'US'
+and name in ('PO Rec-DB-L2','PO Rec-DB-S')
+

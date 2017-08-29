@@ -1,0 +1,70 @@
+
+
+
+-------Non canceled, paid status must be in ('N','P')
+select * from apps.AP_INVOICES_ALL c where nvl(c.INVOICE_AMOUNT,0)= nvl(c.AMOUNT_PAID,0)
+and PAYMENT_STATUS_FLAG in ('N','P')
+and INVOICE_AMOUNT<>0
+
+
+
+----------------Open AP Invoice with PO match info
+
+
+
+select c.INVOICE_NUM,f.segment1 PO_Num,sum(a.QUANTITY_INVOICED) Invoice_Qty,
+sum(e.QUANTITY_ORDERED-QUANTITY_CANCELLED) Order_Qty ,sum(e.QUANTITY_DELIVERED) Ship_Qty,sum(e.QUANTITY_BILLED) Billed_Qty,
+sum(a.AMOUNT) Inv_Amt,sum(c.AMOUNT_PAID) Paid_Amt,
+--sum(a.BASE_AMOUNT) Inv_CNY_Amt
+sum(nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)) Open_Amt,
+c.PAYMENT_STATUS_FLAG,apb.BATCH_NAME as InvBatch,
+c.invoice_currency_code Curr,c.INVOICE_TYPE_LOOKUP_CODE Inv_Type,--,c.GL_DATE
+(case when round(sysdate-c.TERMS_DATE)>365 then '>1Y' else case when round(sysdate-c.TERMS_DATE)>180 then '>6M' else case when round(sysdate-c.TERMS_DATE)>90 then '>3M' else case when round(sysdate-c.TERMS_DATE)>30 then '>1M' else '<1M' end end end end) Due_Date_Fence
+,round(sysdate-c.TERMS_DATE) Due_Date,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+,apps.AP_BATCHES_ALL apb
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and f.po_header_id(+)=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and c.BATCH_ID=apb.BATCH_ID
+--and a.accounting_date>=to_date('2005-10-01','yyyy-mm-dd')
+and PAYMENT_STATUS_FLAG in ('N','P')
+and c.INVOICE_TYPE_LOOKUP_CODE='STANDARD'
+--and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')
+--order by c.INVOICE_NUM
+group by c.INVOICE_TYPE_LOOKUP_CODE,c.INVOICE_NUM,f.segment1,PAYMENT_STATUS_FLAG,apb.BATCH_NAME,c.invoice_currency_code,a.DIST_MATCH_TYPE,(sysdate-c.TERMS_DATE)
+--,c.TERMS_DATE
+
+
+---------AP Invoice un-paid , with batch name , AP_Account
+SELECT apb.BATCH_NAME as InvBatch,A.INVOICE_NUM,a.INVOICE_TYPE_LOOKUP_CODE,C.VENDOR_NAME SUPPLIER,A.INVOICE_CURRENCY_CODE CURRENCY,A.INVOICE_AMOUNT,a.AMOUNT_PAID,
+(A.INVOICE_AMOUNT-nvl(a.AMOUNT_PAID,0))*decode(A.INVOICE_CURRENCY_CODE,'CNY',1,A.EXCHANGE_RATE) as Remain_Amt_CNY,
+--A.BASE_AMOUNT FUNCTIONAL_AMOUNT,decode(A.INVOICE_CURRENCY_CODE,'CNY',A.INVOICE_AMOUNT,A.BASE_AMOUNT ) as invoiceAmt_CNY,
+A.EXCHANGE_RATE,A.INVOICE_CURRENCY_CODE,A.PAY_GROUP_LOOKUP_CODE PAY_GROUP,
+A.GL_DATE,a.WFAPPROVAL_STATUS Approve_status,
+B.SEGMENT1 AP_COM,B.SEGMENT2 AP_CCC,B.SEGMENT3 AP_ACC,B.SEGMENT4 AP_PRD,B.SEGMENT5 AP_PRJ,B.SEGMENT6 AP_SPA,
+A.PAYMENT_STATUS_FLAG Payment_status 
+FROM APPS.AP_INVOICES_ALL A,apps.GL_CODE_COMBINATIONS_V B,apps.po_vendors C,apps.AP_BATCHES_ALL apb
+WHERE A.ACCTS_PAY_CODE_COMBINATION_ID=B.CODE_COMBINATION_ID 
+AND A.VENDOR_ID=C.VENDOR_ID
+and INVOICE_AMOUNT<>0
+and PAYMENT_STATUS_FLAG<>'Y'
+and a.BATCH_ID=apb.BATCH_ID
+and a.gl_date<to_date('2004-09-1','YYYY-MM-DD' )
+--and A.PAYMENT_STATUS_FLAG='P'
+and apb.BATCH_NAME like '%RH%'
+and A.INVOICE_AMOUNT-nvl(a.AMOUNT_PAID,0)<>0
+and a.INVOICE_TYPE_LOOKUP_CODE='EXPENSE REPORT'
+order by B.SEGMENT3
+
+

@@ -1,0 +1,40 @@
+
+
+
+--------Find ID
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2006-12-17','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+
+
+--------The dataload data sum (with Org Code)
+select count(*),a.physical_inventory_id,b.ORGANIZATION_CODE
+ from
+apps.mtl_physical_adjustments a,apps.mtl_physical_inventory_tags f ,apps.org_organization_definitions b
+where  a.adjustment_id=f.adjustment_id
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.physical_inventory_id  in (1132,1133,1134,1135,1136)
+group by a.physical_inventory_id,b.ORGANIZATION_CODE
+
+
+
+--------The dataload data (with Org Code)
+select f.tag_number , to_char(a.system_quantity) system_quantity,b.ORGANIZATION_CODE
+from apps.mtl_physical_adjustments a,apps.mtl_physical_inventory_tags f ,apps.org_organization_definitions b
+where  a.adjustment_id=f.adjustment_id
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.physical_inventory_id  in (1132,1133,1134,1135,1136)
+order by b.ORGANIZATION_CODE,f.tag_number
+
+
+------Check no correct load
+select f.tag_number , a.system_quantity,a.count_quantity,(nvl(a.system_quantity,0)-nvl(a.count_quantity,0)) Diff from   
+apps.mtl_physical_adjustments a,apps.mtl_physical_inventory_tags f 
+where  a.adjustment_id=f.adjustment_id
+and a.physical_inventory_id =:d
+--and nvl(a.system_quantity,0)-nvl(a.count_quantity,0)=0
+and nvl(a.system_quantity,0)-nvl(a.count_quantity,0)<>0
+and f.tag_number>5000
+and f.tag_number<=6000
+--and a.count_quantity is not null
+order by f.tag_number

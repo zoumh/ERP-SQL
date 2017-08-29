@@ -1,0 +1,15 @@
+
+
+select poh.status_lookup_code,poh.currency_code,poh.Rate,poh.Rate_type,poh.creation_date,poh.segment1 Quo_Num,
+pol.line_num,msi.segment1 Item,pol.item_revision,pol.item_description,pol.unit_price,pol.quantity,
+pol.attribute1 Customs_Bonded,convert(PE.FULL_NAME,'ZHS16GBK')  Buyer
+from apps.PO_LINES_all POL,apps.MTL_SYSTEM_ITEMS MSI,apps.PO_HEADERS_all POH,
+apps.FINANCIALS_SYSTEM_PARAMS_ALL FSP,apps.PER_PEOPLE_V7 PE 
+where pol.po_header_id=poh.po_header_id and poh.segment1='1001'
+AND POL.ITEM_ID = MSI.INVENTORY_ITEM_ID (+) 
+AND NVL(MSI.ORGANIZATION_ID,FSP.INVENTORY_ORGANIZATION_ID) = FSP.INVENTORY_ORGANIZATION_ID
+and POH.TYPE_LOOKUP_CODE ='QUOTATION'
+and poh.status_lookup_code='A'
+and POH.AGENT_ID=PE.PERSON_ID
+order by poh.segment1,pol.line_num
+

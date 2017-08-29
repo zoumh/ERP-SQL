@@ -1,0 +1,89 @@
+
+---------Harris
+
+1. Find out the PHYSICAL_INVENTORY_ID
+
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2004-12-20','YYYY-MM-DD')
+  and trunc(FREEZE_DATE)<= to_date('2004-12-31','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+
+
+---------------------------------------------------------------------------
+
+----------Data load data	   
+select f.tag_number , to_char(a.system_quantity) system_quantity from
+apps.mtl_physical_adjustments a,apps.mtl_physical_inventory_tags f 
+where  a.adjustment_id=f.adjustment_id
+and a.physical_inventory_id =:d
+order by f.tag_number
+
+
+
+---------Check Load Result
+
+select f.tag_number , a.system_quantity,a.count_quantity,(a.system_quantity-a.count_quantity) Diff from   
+apps.mtl_physical_adjustments a,apps.mtl_physical_inventory_tags f 
+where  a.adjustment_id=f.adjustment_id
+and a.physical_inventory_id =:d
+--and (a.system_quantity-a.count_quantity)<>0
+and nvl(a.system_quantity,0)-nvl(a.count_quantity,0)<>0
+order by f.tag_number
+
+
+select count(*) from   
+apps.mtl_physical_adjustments a,apps.mtl_physical_inventory_tags f 
+where  a.adjustment_id=f.adjustment_id
+and a.physical_inventory_id =:d
+and nvl(a.system_quantity,0)-nvl(a.count_quantity,0)<>0
+order by f.tag_number
+
+
+
+
+
+2. 
+----PRD Counting Result Analysis
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) tag,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty,
+actual_cost Cost,round(nvl(adjustment_quantity*actual_cost,0),2) Diff_Amount,
+ b.segment1 item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+e.cost_group,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN
+--c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=b.organization_id 
+       and a.locator_id=c.inventory_location_id and c.organization_id=a.organization_id 
+       and a.cost_group_id=e.cost_group_id 
+
+
+
+
+---------------------------------------------------------------------------
+
+3. 
+----PRJ Counting Result Analysis
+
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty,
+actual_cost Cost,round(nvl(adjustment_quantity*actual_cost,0),2) Diff_Amount
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c 
+where  a.physical_inventory_id =:d
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=86 and b.organization_id=86 
+       and a.locator_id=c.inventory_location_id and c.organization_id=86 
+	   and a.subinventory_name='SBT'
+union
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+'' Locator,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty,
+actual_cost Cost,round(nvl(adjustment_quantity*actual_cost,0),2) Diff_Amount
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b--, apps.mtl_item_locations c 
+where  a.physical_inventory_id =:d 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=86 and b.organization_id=86
+	   and a.subinventory_name<>'SBT'

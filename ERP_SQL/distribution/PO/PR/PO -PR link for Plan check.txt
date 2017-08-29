@@ -1,0 +1,527 @@
+---new find 2009-7-23
+apps.PO_REQUISITION_LINES_all.LINE_LOCATION_ID
+=
+apps.PO_LINE_LOCATIONS_ALL.LINE_LOCATION_ID
+
+
+
+
+-----------Planning check PO-PR diff (list all PO linked PR & non-linked)
+---Add ORg
+
+
+CREATE OR REPLACE VIEW BMC_PLAN_CHKPRPO
+AS 
+--------------No PO, have PR
+select cat1.segment1 Model,pe.FULL_NAME PR_Requestor, 
+a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type, 
+c.DISTRIBUTION_NUM PR_Dist,b.CREATION_DATE PR_Created_date, 
+msi.segment1 PR_Item,b.ITEM_DESCRIPTION PR_Item_Desc,c.REQ_LINE_QUANTITY PR_Qty,b.cancel_date PR_Cancel_date, 
+b.CANCEL_FLAG PR_Cancel_Flag,a.authorization_status PR_Status,c.REQ_LINE_QUANTITY *nvl(b.rate,1)*b.unit_price PR_Amt, 
+'' PO_Num,null  PO_Line,'' PO_Type, 
+null PO_Dist, 
+null PO_Qty,null PO_Create_Date,'' PO_Created_By,'' PO_Status, 
+'' PO_Line_cancel_Flag,null PO_Qty_delived,null PO_Closed_date, 
+null PO_Price,'' CURRENCY_CODE,null PO_Amt, 
+'' TAX_NAME,null NEED_BY_DATE,'' Contact,null revision_num, 
+'' PO_Item,'' PO_item_Desc,b.CREATION_DATE ,null PO_Org,b.DESTINATION_ORGANIZATION_ID PR_Org
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c, 
+apps.PO_DISTRIBUTIONS_all POD, 
+apps.PO_LINE_TYPES_tl PRTP, 
+apps.PER_PEOPLE_V7 PE,apps.mtl_system_items msi, 
+apps.mtl_item_categories_v cat1 
+where a.requisition_header_id=b.requisition_header_id 
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID 
+and prtp.LANGUAGE='US' 
+and prtp.LINE_TYPE_ID=b.LINE_TYPE_ID 
+and b.to_person_id=pe.person_id 
+and b.DESTINATION_ORGANIZATION_ID=msi.organization_id 
+and b.ITEM_ID=msi.INVENTORY_ITEM_ID 
+and cat1.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID 
+and cat1.ORGANIZATION_ID=msi.ORGANIZATION_ID 
+and cat1.category_set_id=1 
+--and c.REQUISITION_LINE_ID =148390 
+--and a.REQUISITION_HEADER_ID =83635 
+and c.DISTRIBUTION_ID =POD.REQ_DISTRIBUTION_ID (+) 
+and POD.REQ_DISTRIBUTION_ID is null 
+--and b.CREATION_DATE >=to_date('2006-11-1','yyyy-mm-dd') 
+--and b.CREATION_DATE <=to_date('2006-12-10','yyyy-mm-dd') 
+union 
+---------have PO, may have PR
+select cat1.segment1 Model,pe.FULL_NAME PR_Requestor, 
+a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type, 
+c.DISTRIBUTION_NUM PR_Dist,b.CREATION_DATE PR_Created_date, 
+msi.segment1 PR_Item,b.ITEM_DESCRIPTION PR_Item_Desc,c.REQ_LINE_QUANTITY PR_Qty,b.cancel_date PR_Cancel_date, 
+b.CANCEL_FLAG PR_Cancel_Flag,a.authorization_status PR_Status,c.REQ_LINE_QUANTITY *nvl(b.rate,1)*b.unit_price PR_Amt, 
+poh.segment1 PO_Num,pol.line_num PO_Line,potp.LINE_TYPE PO_Type, 
+pod.DISTRIBUTION_NUM PO_Dist, 
+pod.QUANTITY_ORDERED PO_Qty,pol.creation_date PO_Create_Date,usr.description PO_Created_By,poh.authorization_status PO_Status, 
+pol.cancel_flag PO_Line_cancel_Flag,pod.QUANTITY_DELIVERED PO_Qty_delived,pol.CLOSED_DATE PO_Closed_date, 
+pol.UNIT_PRICE PO_Price,POH.CURRENCY_CODE,pod.QUANTITY_ORDERED*nvl(poh.RATE,1)*pol.UNIT_PRICE PO_Amt, 
+pol.TAX_NAME,pos.NEED_BY_DATE,pvc.first_name||' '||pvc.last_name Contact,poh.revision_num, 
+msi2.segment1 PO_Item,pol.ITEM_DESCRIPTION PO_item_Desc,pol.CREATION_DATE,pos.SHIP_TO_ORGANIZATION_ID PO_Org,b.DESTINATION_ORGANIZATION_ID PR_Org 
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c, 
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,apps.po_Line_locations_all pos, 
+(select * from apps.PO_LINE_TYPES_tl where LANGUAGE='US') PRTP, 
+apps.PO_LINE_TYPES_tl POTP, 
+apps.PER_PEOPLE_V7 PE,apps.mtl_system_items msi,apps.mtl_system_items msi2, 
+apps.mtl_item_categories_v cat1, 
+apps.fnd_user usr,apps.po_vendor_contacts pvc 
+where a.requisition_header_id(+)=b.requisition_header_id 
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID(+) 
+and c.DISTRIBUTION_ID(+) =POD.REQ_DISTRIBUTION_ID 
+and poh.po_header_id=pol.po_header_id 
+and poh.po_header_id=pod.po_header_id 
+and pol.po_line_id=pod.po_line_id 
+--and pol.CREATION_DATE >=to_date('2006-11-1','yyyy-mm-dd') 
+--and pol.CREATION_DATE <=to_date('2006-12-10','yyyy-mm-dd') 
+and potp.LANGUAGE='US' 
+and prtp.LINE_TYPE_ID(+)=b.LINE_TYPE_ID and potp.LINE_TYPE_ID=pol.LINE_TYPE_ID 
+and pol.created_By =usr.user_id 
+and b.to_person_id=pe.person_id(+) 
+and b.DESTINATION_ORGANIZATION_ID=msi.organization_id(+) 
+and pod.DESTINATION_ORGANIZATION_ID =msi2.organization_id 
+and b.ITEM_ID=msi.INVENTORY_ITEM_ID(+) 
+and pol.ITEM_ID=msi2.INVENTORY_ITEM_ID 
+and cat1.INVENTORY_ITEM_ID=msi2.INVENTORY_ITEM_ID 
+and cat1.ORGANIZATION_ID=msi2.ORGANIZATION_ID 
+and cat1.category_set_id=1 
+and poh.po_header_id=pos.po_header_id 
+and pol.po_line_id=pos.po_line_id 
+and pos.LINE_LOCATION_ID =pod.LINE_LOCATION_ID 
+--and poh.PO_HEADER_ID=132325--132344 
+and pvc.vendor_contact_id(+)=poh.vendor_contact_id;
+
+
+CREATE OR REPLACE VIEW BMC_PLAN_CHKPRPO
+AS 
+select cat1.segment1 Model,pe.FULL_NAME PR_Requestor, 
+a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type, 
+c.DISTRIBUTION_NUM PR_Dist,b.CREATION_DATE PR_Created_date, 
+msi.segment1 PR_Item,b.ITEM_DESCRIPTION PR_Item_Desc,c.REQ_LINE_QUANTITY PR_Qty,b.cancel_date PR_Cancel_date, 
+b.CANCEL_FLAG PR_Cancel_Flag,a.authorization_status PR_Status,c.REQ_LINE_QUANTITY *nvl(b.rate,1)*b.unit_price PR_Amt, 
+'' PO_Num,null  PO_Line,'' PO_Type, 
+null PO_Dist, 
+null PO_Qty,null PO_Create_Date,'' PO_Created_By,'' PO_Status, 
+'' PO_Line_cancel_Flag,null PO_Qty_delived,null PO_Closed_date, 
+null PO_Price,'' CURRENCY_CODE,null PO_Amt, 
+'' TAX_NAME,null NEED_BY_DATE,'' Contact,null revision_num, 
+'' PO_Item,'' PO_item_Desc,b.CREATION_DATE 
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c, 
+apps.PO_DISTRIBUTIONS_all POD, 
+apps.PO_LINE_TYPES_tl PRTP, 
+apps.PER_PEOPLE_V7 PE,apps.mtl_system_items msi, 
+apps.mtl_item_categories_v cat1 
+where a.requisition_header_id=b.requisition_header_id 
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID 
+and prtp.LANGUAGE='US' 
+and prtp.LINE_TYPE_ID=b.LINE_TYPE_ID 
+and b.to_person_id=pe.person_id 
+and b.DESTINATION_ORGANIZATION_ID=msi.organization_id 
+and b.ITEM_ID=msi.INVENTORY_ITEM_ID 
+and cat1.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID 
+and cat1.ORGANIZATION_ID=msi.ORGANIZATION_ID 
+and cat1.category_set_id=1 
+--and c.REQUISITION_LINE_ID =148390 
+--and a.REQUISITION_HEADER_ID =83635 
+and c.DISTRIBUTION_ID =POD.REQ_DISTRIBUTION_ID (+) 
+and POD.REQ_DISTRIBUTION_ID is null 
+--and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd') 
+--and b.CREATION_DATE <=to_date('2006-8-10','yyyy-mm-dd') 
+union 
+select cat1.segment1 Model,pe.FULL_NAME PR_Requestor, 
+a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type, 
+c.DISTRIBUTION_NUM PR_Dist,b.CREATION_DATE PR_Created_date, 
+msi.segment1 PR_Item,b.ITEM_DESCRIPTION PR_Item_Desc,c.REQ_LINE_QUANTITY PR_Qty,b.cancel_date PR_Cancel_date, 
+b.CANCEL_FLAG PR_Cancel_Flag,a.authorization_status PR_Status,c.REQ_LINE_QUANTITY *nvl(b.rate,1)*b.unit_price PR_Amt, 
+poh.segment1 PO_Num,pol.line_num PO_Line,potp.LINE_TYPE PO_Type, 
+pod.DISTRIBUTION_NUM PO_Dist, 
+pod.QUANTITY_ORDERED PO_Qty,pol.creation_date PO_Create_Date,usr.description PO_Created_By,poh.authorization_status PO_Status, 
+pol.cancel_flag PO_Line_cancel_Flag,pod.QUANTITY_DELIVERED PO_Qty_delived,pol.CLOSED_DATE PO_Closed_date, 
+pol.UNIT_PRICE PO_Price,POH.CURRENCY_CODE,pod.QUANTITY_ORDERED*nvl(poh.RATE,1)*pol.UNIT_PRICE PO_Amt, 
+pol.TAX_NAME,pos.NEED_BY_DATE,pvc.first_name||' '||pvc.last_name Contact,poh.revision_num, 
+msi2.segment1 PO_Item,pol.ITEM_DESCRIPTION PO_item_Desc,pol.CREATION_DATE 
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c, 
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,apps.po_Line_locations_all pos, 
+(select * from apps.PO_LINE_TYPES_tl where LANGUAGE='US') PRTP, 
+apps.PO_LINE_TYPES_tl POTP, 
+apps.PER_PEOPLE_V7 PE,apps.mtl_system_items msi,apps.mtl_system_items msi2, 
+apps.mtl_item_categories_v cat1, 
+apps.fnd_user usr,apps.po_vendor_contacts pvc 
+where a.requisition_header_id(+)=b.requisition_header_id 
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID(+) 
+and c.DISTRIBUTION_ID(+) =POD.REQ_DISTRIBUTION_ID 
+and poh.po_header_id=pol.po_header_id 
+and poh.po_header_id=pod.po_header_id 
+and pol.po_line_id=pod.po_line_id 
+--and pol.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd') 
+--and pol.CREATION_DATE <=to_date('2006-8-10','yyyy-mm-dd') 
+and potp.LANGUAGE='US' 
+and prtp.LINE_TYPE_ID(+)=b.LINE_TYPE_ID and potp.LINE_TYPE_ID=pol.LINE_TYPE_ID 
+and pol.created_By =usr.user_id 
+and b.to_person_id=pe.person_id(+) 
+and b.DESTINATION_ORGANIZATION_ID=msi.organization_id(+) 
+and pod.DESTINATION_ORGANIZATION_ID =msi2.organization_id 
+and b.ITEM_ID=msi.INVENTORY_ITEM_ID(+) 
+and pol.ITEM_ID=msi2.INVENTORY_ITEM_ID 
+and cat1.INVENTORY_ITEM_ID=msi2.INVENTORY_ITEM_ID 
+and cat1.ORGANIZATION_ID=msi2.ORGANIZATION_ID 
+and cat1.category_set_id=1 
+and poh.po_header_id=pos.po_header_id 
+and pol.po_line_id=pos.po_line_id 
+and pos.LINE_LOCATION_ID =pod.LINE_LOCATION_ID 
+--and poh.PO_HEADER_ID=132325--132344 
+and pvc.vendor_contact_id(+)=poh.vendor_contact_id;
+
+
+
+---------verifed,have PO, may have PR
+
+
+select cat1.segment1 Model,pe.FULL_NAME PR_Requestor,
+a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type,
+c.DISTRIBUTION_NUM PR_Dist,b.CREATION_DATE PR_Created_date,
+msi.segment1 PR_Item,b.ITEM_DESCRIPTION PR_Item_Desc,c.REQ_LINE_QUANTITY PR_Qty,b.cancel_date PR_Cancel_date,
+b.CANCEL_FLAG PR_Cancel_Flag,a.authorization_status PR_Status,c.REQ_LINE_QUANTITY *nvl(b.rate,1)*b.unit_price PR_Amt,
+poh.segment1 PO_Num,pol.line_num PO_Line,potp.LINE_TYPE PO_Type,
+pod.DISTRIBUTION_NUM PO_Dist,
+pod.QUANTITY_ORDERED PO_Qty,pol.creation_date PO_Create_Date,usr.description PO_Created_By,poh.authorization_status PO_Status,
+pol.cancel_flag PO_Line_cancel_Flag,pod.QUANTITY_DELIVERED PO_Qty_delived,pol.CLOSED_DATE PO_Closed_date,
+pol.UNIT_PRICE PO_Price,POH.CURRENCY_CODE,pod.QUANTITY_ORDERED*nvl(poh.RATE,1)*pol.UNIT_PRICE PO_Amt,
+pol.TAX_NAME,pos.NEED_BY_DATE,pvc.first_name||' '||pvc.last_name Contact,poh.revision_num,
+msi.segment1 PO_Item,pol.ITEM_DESCRIPTION PO_item_Desc
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,apps.po_Line_locations_all pos,
+(select * from apps.PO_LINE_TYPES_tl where LANGUAGE='US') PRTP, 
+--apps.PO_LINE_TYPES_tl PRTP,
+apps.PO_LINE_TYPES_tl POTP,
+apps.PER_PEOPLE_V7 PE,apps.mtl_system_items msi,apps.mtl_system_items msi2,
+apps.mtl_item_categories_v cat1,--apps.mtl_item_categories_v cat2,
+apps.fnd_user usr,apps.po_vendor_contacts pvc--,apps.PER_PEOPLE_V7 PE2
+where a.requisition_header_id(+)=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID(+)
+and c.DISTRIBUTION_ID(+) =POD.REQ_DISTRIBUTION_ID
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+--and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+--and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd')
+--and b.CREATION_DATE <=to_date('2006-8-10','yyyy-mm-dd')
+--and prtp.LANGUAGE='US' 
+and potp.LANGUAGE='US'
+and prtp.LINE_TYPE_ID(+)=b.LINE_TYPE_ID and potp.LINE_TYPE_ID=pol.LINE_TYPE_ID 
+--and a.segment1='10262'
+and pol.created_By =usr.user_id
+--and a.PREPARER_ID=PE2.PERSON_ID
+and b.to_person_id=pe.person_id(+)
+and b.DESTINATION_ORGANIZATION_ID=msi.organization_id(+)
+and pod.DESTINATION_ORGANIZATION_ID =msi2.organization_id
+and b.ITEM_ID=msi.INVENTORY_ITEM_ID(+)
+and pol.ITEM_ID=msi2.INVENTORY_ITEM_ID
+and cat1.INVENTORY_ITEM_ID=msi2.INVENTORY_ITEM_ID
+and cat1.ORGANIZATION_ID=msi2.ORGANIZATION_ID
+and cat1.category_set_id=1
+and poh.po_header_id=pos.po_header_id
+and pol.po_line_id=pos.po_line_id
+and pos.LINE_LOCATION_ID =pod.LINE_LOCATION_ID 
+and poh.PO_HEADER_ID=132325--132344
+and pvc.vendor_contact_id(+)=poh.vendor_contact_id
+
+
+
+select REQ_DISTRIBUTION_ID,
+cat1.segment1 Model,pe.FULL_NAME PR_Requestor,
+g.segment1 PR_Num,h.line_num PR_Line,prtp.LINE_TYPE PR_Type,
+f.DISTRIBUTION_NUM PR_Dist,h.CREATION_DATE PR_Created_date,
+msi.segment1 PR_Item,h.ITEM_DESCRIPTION PR_Item_Desc,f.REQ_LINE_QUANTITY PR_Qty,h.cancel_date PR_Cancel_date,
+h.CANCEL_FLAG PR_Cancel_Flag,g.authorization_status PR_Status,f.REQ_LINE_QUANTITY *nvl(h.rate,1)*h.unit_price PR_Amt,
+a.SEGMENT1 as PO,b.LINE_NUM,potp.LINE_TYPE PO_Type,
+c.SHIPMENT_NUM,e.DISTRIBUTION_NUM--,b.PO_HEADER_ID
+,e.QUANTITY_ORDERED PO_Qty,b.creation_date PO_Create_Date,usr.description PO_Created_By,
+a.authorization_status PO_Status,
+a.CREATION_DATE as PO_Date
+,e.QUANTITY_ORDERED
+,e.QUANTITY_DELIVERED
+,b.ITEM_DESCRIPTION,
+b.cancel_flag PO_Line_cancel_Flag,e.QUANTITY_DELIVERED PO_Qty_delived,b.CLOSED_DATE PO_Closed_date,
+b.UNIT_PRICE PO_Price,a.CURRENCY_CODE,e.QUANTITY_ORDERED*nvl(a.RATE,1)*b.UNIT_PRICE PO_Amt,
+b.TAX_NAME,c.NEED_BY_DATE,
+msi2.segment1 PO_Item,b.ITEM_DESCRIPTION PO_item_Desc
+from apps.PO_HEADERS_ALL a, apps.PO_LINES_ALL b,apps.PO_LINE_LOCATIONS_ALL c,apps.PO_DISTRIBUTIONS_all e
+,apps.PO_REQ_DISTRIBUTIONS_all f,apps.po_requisition_headers_all g,apps.po_requisition_lines_all h,
+(select * from apps.PO_LINE_TYPES_tl where LANGUAGE='US') PRTP, 
+--apps.PO_LINE_TYPES_tl PRTP, 
+apps.PO_LINE_TYPES_tl POTP,
+apps.mtl_item_categories_v cat1,apps.mtl_system_items msi2,
+--(select * from apps.mtl_item_categories_v where category_set_id=1) cat1,
+apps.mtl_system_items msi,apps.PER_PEOPLE_V7 PE,apps.fnd_user usr--,apps.mtl_system_items msi
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and c.LINE_LOCATION_ID=e.LINE_LOCATION_ID
+and a.PO_HEADER_ID=e.PO_HEADER_ID
+and b.PO_LINE_ID=e.PO_line_ID
+and a.PO_HEADER_ID= 132344
+and f.DISTRIBUTION_ID (+)=e.REQ_DISTRIBUTION_ID 
+and g.requisition_header_id(+)=h.requisition_header_id
+and h.REQUISITION_LINE_ID(+)=f.REQUISITION_LINE_ID
+--and prtp.LANGUAGE='US' 
+and potp.LANGUAGE='US'
+and prtp.LINE_TYPE_ID (+)=h.LINE_TYPE_ID 
+and potp.LINE_TYPE_ID=b.LINE_TYPE_ID 
+--and prtp.LINE_TYPE_ID=b.LINE_TYPE_ID
+and cat1.INVENTORY_ITEM_ID(+)=msi2.INVENTORY_ITEM_ID
+and cat1.ORGANIZATION_ID(+)=msi2.ORGANIZATION_ID
+and cat1.category_set_id=1
+and h.DESTINATION_ORGANIZATION_ID=msi.organization_id(+)
+and h.ITEM_ID=msi.INVENTORY_ITEM_ID(+)
+and h.to_person_id=pe.person_id(+)
+and e.DESTINATION_ORGANIZATION_ID =msi2.organization_id
+and b.ITEM_ID=msi2.INVENTORY_ITEM_ID
+and b.created_By =usr.user_id
+ 
+----------No PO, have PR
+
+select c.REQUISITION_LINE_ID ,cat1.segment1 Model,pe.FULL_NAME PR_Requestor,
+a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type,
+c.DISTRIBUTION_NUM PR_Dist,b.CREATION_DATE PR_Created_date,
+msi.segment1 PR_Item,b.ITEM_DESCRIPTION PR_Item_Desc,c.REQ_LINE_QUANTITY PR_Qty,b.cancel_date PR_Cancel_date,
+b.CANCEL_FLAG PR_Cancel_Flag,a.authorization_status PR_Status,c.REQ_LINE_QUANTITY *nvl(b.rate,1)*b.unit_price PR_Amt,
+'' PO_Num,'' PO_Line,'' PO_Type,
+'' PO_Dist,
+'' PO_Qty,'' PO_Create_Date,'' PO_Created_By,'' PO_Status,
+'' PO_Line_cancel_Flag,'' PO_Qty_delived,'' PO_Closed_date,
+'' PO_Price,'' CURRENCY_CODE,'' PO_Amt,
+'' TAX_NAME,'' NEED_BY_DATE,'' Contact,'' revision_num,
+'' PO_Item,'' PO_item_Desc
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,
+--apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,apps.po_Line_locations_all pos,
+apps.PO_LINE_TYPES_tl PRTP,
+apps.PER_PEOPLE_V7 PE,apps.mtl_system_items msi,
+apps.mtl_item_categories_v cat1
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and prtp.LANGUAGE='US' 
+and prtp.LINE_TYPE_ID=b.LINE_TYPE_ID 
+and b.to_person_id=pe.person_id
+and b.DESTINATION_ORGANIZATION_ID=msi.organization_id
+and b.ITEM_ID=msi.INVENTORY_ITEM_ID
+and cat1.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and cat1.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and cat1.category_set_id=1
+--and c.REQUISITION_LINE_ID =148390
+and a.REQUISITION_HEADER_ID =83635
+and c.DISTRIBUTION_ID =POD.REQ_DISTRIBUTION_ID (+)
+and POD.REQ_DISTRIBUTION_ID is null
+order by b.line_num
+
+
+
+---------latest
+
+select cat1.segment1 Model,pe.FULL_NAME PR_Requestor,
+a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type,c.DISTRIBUTION_NUM PR_Dist,b.CREATION_DATE PR_Created_date,
+msi.segment1 PR_Item,b.ITEM_DESCRIPTION PR_Item_Desc,c.REQ_LINE_QUANTITY PR_Qty,b.cancel_date PR_Cancel_date,
+b.CANCEL_FLAG PR_Cancel_Flag,a.authorization_status PR_Status,c.REQ_LINE_QUANTITY *nvl(b.rate,1)*b.unit_price PR_Amt,
+poh.segment1 PO_Num,pol.line_num PO_Line,prtp.LINE_TYPE PO_Type,pod.DISTRIBUTION_NUM PO_Dist,
+pod.QUANTITY_ORDERED PO_Qty,pol.creation_date PO_Create_Date,usr.description PO_Created_By,poh.authorization_status PO_Status,
+pol.cancel_flag PO_Line_cancel_Flag,pod.QUANTITY_DELIVERED PO_Qty_delived,pol.CLOSED_DATE PO_Closed_date,
+pol.UNIT_PRICE PO_Price,POH.CURRENCY_CODE,pod.QUANTITY_ORDERED*nvl(poh.RATE,1)*pol.UNIT_PRICE PO_Amt,
+pol.TAX_NAME,msi.segment1 PO_Item,pol.ITEM_DESCRIPTION PO_item_Desc
+--decode(c.REQ_LINE_QUANTITY-pod.QUANTITY_ORDERED,0,'N','Y') Qty_Diff,
+--b.unit_price PR_price,pol.UNIT_PRICE PO_price,
+--decode(b.unit_price-pol.UNIT_PRICE ,0,'N','Y') Price_Diff,
+--decode(b.ITEM_ID -pol.ITEM_ID,0,'N','Y') Diff,
+--b.QUANTITY,b.rate,b.unit_price,b.currency_code,b.currency_unit_price,b.creation_date,
+--b.CURRENCY_CODE,b.CURRENCY_UNIT_PRICE,POH.CURRENCY_CODE
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,
+apps.PO_LINE_TYPES_tl PRTP,apps.PO_LINE_TYPES_tl POTP,apps.PER_PEOPLE_V7 PE,
+apps.mtl_system_items msi,apps.mtl_system_items msi2,
+apps.mtl_item_categories_v cat1,--apps.mtl_item_categories_v cat2,
+apps.fnd_user usr--,apps.PER_PEOPLE_V7 PE2
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+--and a.authorization_status<>'CANCELLED'
+--and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and poh.authorization_status<>'CANCELLED'
+--and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID(+) =POD.REQ_DISTRIBUTION_ID
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+--and poh.segment1='1030155'--1031687'--1030155'
+--and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd')
+and b.CREATION_DATE <=to_date('2006-8-10','yyyy-mm-dd')
+and prtp.LANGUAGE='US'
+and potp.LANGUAGE='US'
+and prtp.LINE_TYPE_ID=b.LINE_TYPE_ID 
+and potp.LINE_TYPE_ID=pol.LINE_TYPE_ID 
+and a.segment1='10262'
+and pol.created_By =usr.user_id
+--and a.PREPARER_ID=PE2.PERSON_ID
+and b.to_person_id=pe.person_id
+and b.DESTINATION_ORGANIZATION_ID=msi.organization_id
+and pod.DESTINATION_ORGANIZATION_ID =msi2.organization_id
+and b.ITEM_ID=msi.INVENTORY_ITEM_ID
+and pol.ITEM_ID=msi2.INVENTORY_ITEM_ID
+and cat1.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and cat1.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and cat1.category_set_id=1
+order by b.line_num
+
+
+
+select cat1.segment1 Model,pe.FULL_NAME PR_Requestor,
+a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type,c.DISTRIBUTION_NUM PR_Dist,b.CREATION_DATE PR_Created_date,
+msi.segment1 PR_Item,b.ITEM_DESCRIPTION PR_Item_Desc,c.REQ_LINE_QUANTITY PR_Qty,b.cancel_date PR_Cancel_date,
+b.CANCEL_FLAG PR_Cancel_Flag,a.authorization_status PR_Status,c.REQ_LINE_QUANTITY *b.rate*b.unit_price PR_Amt,
+poh.segment1 PO_Num,pol.line_num PO_Line,prtp.LINE_TYPE PO_Type,pod.DISTRIBUTION_NUM PO_Dist,
+pod.QUANTITY_ORDERED PO_Qty,pol.creation_date PO_Create_Date,usr.description PO_Created_By,poh.authorization_status PO_Status,
+pol.cancel_flag PO_Line_cancel_Flag,pod.QUANTITY_DELIVERED PO_Qty_delived,pol.CLOSED_DATE PO_Closed_date,
+pol.UNIT_PRICE PO_Price,POH.CURRENCY_CODE,pod.QUANTITY_ORDERED*poh.RATE*pol.UNIT_PRICE PO_Amt,
+pol.TAX_NAME ,pod.NONRECOVERABLE_TAX,pod.RECOVERABLE_TAX,
+msi.segment1 PO_Item,pol.ITEM_DESCRIPTION PO_item_Desc
+--decode(c.REQ_LINE_QUANTITY-pod.QUANTITY_ORDERED,0,'N','Y') Qty_Diff,
+--b.unit_price PR_price,pol.UNIT_PRICE PO_price,
+--decode(b.unit_price-pol.UNIT_PRICE ,0,'N','Y') Price_Diff,
+--decode(b.ITEM_ID -pol.ITEM_ID,0,'N','Y') Diff,
+--b.QUANTITY,b.rate,b.unit_price,b.currency_code,b.currency_unit_price,b.creation_date,
+--b.CURRENCY_CODE,b.CURRENCY_UNIT_PRICE,POH.CURRENCY_CODE
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,
+apps.PO_LINE_TYPES_tl PRTP,apps.PO_LINE_TYPES_tl POTP,apps.PER_PEOPLE_V7 PE,
+apps.mtl_system_items msi,apps.mtl_system_items msi2,
+apps.mtl_item_categories_v cat1,--apps.mtl_item_categories_v cat2,
+apps.fnd_user usr--,apps.PER_PEOPLE_V7 PE2
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+--and a.authorization_status<>'CANCELLED'
+--and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and poh.authorization_status<>'CANCELLED'
+--and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID(+) =POD.REQ_DISTRIBUTION_ID
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+--and poh.segment1='1030155'--1031687'--1030155'
+--and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd')
+and b.CREATION_DATE <=to_date('2006-8-10','yyyy-mm-dd')
+and prtp.LANGUAGE='US'
+and potp.LANGUAGE='US'
+and prtp.LINE_TYPE_ID=b.LINE_TYPE_ID 
+and potp.LINE_TYPE_ID=pol.LINE_TYPE_ID 
+--and a.segment1='11348'
+and pol.created_By =usr.user_id
+--and a.PREPARER_ID=PE2.PERSON_ID
+and b.to_person_id=pe.person_id
+and b.DESTINATION_ORGANIZATION_ID=msi.organization_id
+and pod.DESTINATION_ORGANIZATION_ID =msi2.organization_id
+and b.ITEM_ID=msi.INVENTORY_ITEM_ID
+and pol.ITEM_ID=msi.INVENTORY_ITEM_ID
+and cat1.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and cat1.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and cat1.category_set_id=1
+order by b.line_num
+
+
+
+---------PR-PO lineked but different (has changed PO)
+
+select a.segment1 PR_Num,b.line_num PR_Line,c.DISTRIBUTION_NUM PR_Dist,
+poh.segment1 PO_Num,pol.line_num PO_Line,pod.DISTRIBUTION_NUM PO_Dist,
+c.REQ_LINE_QUANTITY *b.rate*b.unit_price PR_Amt,pod.QUANTITY_ORDERED*poh.RATE*pol.UNIT_PRICE PO_Amt,
+c.REQ_LINE_QUANTITY PR_Qty,pod.QUANTITY_ORDERED PO_Qty,
+decode(c.REQ_LINE_QUANTITY-pod.QUANTITY_ORDERED,0,'N','Y') Qty_Diff,
+b.unit_price PR_price,pol.UNIT_PRICE PO_price,
+decode(b.unit_price-pol.UNIT_PRICE ,0,'N','Y') Price_Diff,
+decode(b.ITEM_ID -pol.ITEM_ID,0,'N','Y') Diff,
+--b.QUANTITY,b.rate,b.unit_price,b.currency_code,b.currency_unit_price,b.creation_date,
+b.ITEM_DESCRIPTION PR_Item_Desc,pol.ITEM_DESCRIPTION PO_item_Desc,
+a.authorization_status PR_Status,b.CURRENCY_CODE,b.CURRENCY_UNIT_PRICE,POH.CURRENCY_CODE
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and a.authorization_status<>'CANCELLED'
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and poh.authorization_status<>'CANCELLED'
+and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID(+) =POD.REQ_DISTRIBUTION_ID
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+--and poh.segment1='1030155'--1031687'--1030155'
+and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+and b.CREATION_DATE >=to_date('2006-9-1','yyyy-mm-dd')
+
+
+
+select a.segment1 PR_Num,b.line_num PR_Line,c.DISTRIBUTION_NUM PR_Dist,
+poh.segment1 PO_Num,pol.line_num PO_Line,pod.DISTRIBUTION_NUM PO_Dist,
+b.ITEM_DESCRIPTION,c.REQ_LINE_QUANTITY *b.rate*b.unit_price PR_Amt,c.REQ_LINE_QUANTITY,
+--b.QUANTITY,b.rate,b.unit_price,b.currency_code,b.currency_unit_price,b.creation_date,
+pod.QUANTITY_ORDERED*poh.RATE*pol.UNIT_PRICE PO_Amt,pol.ITEM_DESCRIPTION,pod.QUANTITY_ORDERED,
+pod.ENCUMBERED_AMOUNT ,
+a.authorization_status PR_Status
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and a.authorization_status<>'CANCELLED'
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and poh.authorization_status<>'CANCELLED'
+and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID(+) =POD.REQ_DISTRIBUTION_ID
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+and poh.segment1='1030155'
+
+
+
+------------PR-PO linked, PR preparer
+
+select pe.FULL_NAME PR_Requestor,pe2.FULL_NAME PR_Preparer,usr.description PR_Created_By, b.CANCEL_FLAG PR_Cancel, a.segment1 PR_Num,b.line_num PR_Line,prtp.LINE_TYPE PR_Type,c.DISTRIBUTION_NUM PR_Dist,
+a.authorization_status PR_Status,
+poh.segment1 PO_Num,pol.line_num PO_Line,prtp.LINE_TYPE PO_Type,pod.DISTRIBUTION_NUM PO_Dist,
+c.REQ_LINE_QUANTITY *b.rate*b.unit_price PR_Amt,pod.QUANTITY_ORDERED*poh.RATE*pol.UNIT_PRICE PO_Amt,
+c.REQ_LINE_QUANTITY PR_Qty,pod.QUANTITY_ORDERED PO_Qty,
+decode(c.REQ_LINE_QUANTITY-pod.QUANTITY_ORDERED,0,'N','Y') Qty_Diff,
+b.unit_price PR_price,pol.UNIT_PRICE PO_price,
+decode(b.unit_price-pol.UNIT_PRICE ,0,'N','Y') Price_Diff,
+decode(b.ITEM_ID -pol.ITEM_ID,0,'N','Y') Diff,
+--b.QUANTITY,b.rate,b.unit_price,b.currency_code,b.currency_unit_price,b.creation_date,
+b.ITEM_DESCRIPTION PR_Item_Desc,pol.ITEM_DESCRIPTION PO_item_Desc,
+b.CURRENCY_CODE,b.CURRENCY_UNIT_PRICE,POH.CURRENCY_CODE
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,
+apps.PO_LINE_TYPES_tl PRTP,apps.PO_LINE_TYPES_tl POTP,apps.PER_PEOPLE_V7 PE,
+apps.fnd_user usr,
+apps.PER_PEOPLE_V7 PE2
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+--and a.authorization_status<>'CANCELLED'
+--and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and poh.authorization_status<>'CANCELLED'
+--and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID(+) =POD.REQ_DISTRIBUTION_ID
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+--and poh.segment1='1030155'--1031687'--1030155'
+--and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+--and b.CREATION_DATE >=to_date('2006-8-1','yyyy-mm-dd')
+and prtp.LANGUAGE='US'
+and potp.LANGUAGE='US'
+and prtp.LINE_TYPE_ID=b.LINE_TYPE_ID 
+and potp.LINE_TYPE_ID=pol.LINE_TYPE_ID 
+and a.segment1='11348'
+and b.created_By =usr.user_id
+and a.PREPARER_ID=PE2.PERSON_ID
+and b.to_person_id=pe.person_id
+order by b.line_num
+
+

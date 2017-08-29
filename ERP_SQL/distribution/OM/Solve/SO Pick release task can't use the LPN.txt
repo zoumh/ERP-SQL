@@ -1,0 +1,15 @@
+
+
+-----------------Onhand has Qty but Avaliable is Zero (SO Pick release task can't use the LPN !)
+---Harris
+
+1. To check the LPN_CONTEXT of this LPN
+select LPN_CONTEXT,lpn_id from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='CNCB5+DVMXR0'
+
+LPN_CONTEXT=11 (picked)
+
+2. update APPS.WMS_LICENSE_PLATE_NUMBERS set LPN_CONTEXT=1 where LICENSE_PLATE_NUMBER='CNCB5+DVMXR0'
+Change the LPN_CONTEXT=1, then can finish the task!
+
+
+3.If this doesn't solve, try to delete task, recreate task

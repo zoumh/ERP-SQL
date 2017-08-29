@@ -1,0 +1,27 @@
+
+-----------Fix PO ship/Dist cancell Qty wrong
+
+select * from apps.po_headers_all where segment1='1027562' 
+
+select * from apps.po_lines_all where PO_header_id=123364 and LINE_NUM='29'
+
+select * from apps.po_line_locations_all where PO_header_id=123364  and po_line_id =223617
+
+select * from apps.PO_DISTRIBUTIONS_all where PO_header_id=123364  and po_line_id =223617
+
+
+
+select * from all_objects where object_name like 'BMC%BKUP%' AND OBJECT_TYPE='TABLE'
+
+insert into BMC_BKUP_POLINE_20070125 select * from apps.po_lines_all where PO_header_id=123364 and LINE_NUM='29'
+
+create table BMC_BKUP_PODst_20070313 as select * from apps.PO_DISTRIBUTIONS_all where PO_header_id=123364  and po_line_id =223617
+
+
+update apps.po_lines_all set quantity=38000  where PO_header_id=123364 and LINE_NUM='29'
+
+update apps.po_line_locations_all set quantity_cancelled=0 
+where PO_header_id=123364  and po_line_id =223617 and line_location_id=221880
+
+update apps.PO_DISTRIBUTIONS_all set quantity_cancelled=0 ,gl_cancelled_date=null
+where PO_header_id=123364  and po_line_id =223617 and  line_location_id=221880

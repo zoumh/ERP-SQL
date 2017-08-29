@@ -1,0 +1,27 @@
+
+select ACCOUNTED_DR,ACCOUNTED_CR,ENTERED_DR,ENTERED_CR,b.segment3,rcv_transaction_id,currency_code,(nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0))/(nvl(ENTERED_DR,0)-nvl(ENTERED_CR,0)) as Rate_Calcu,
+a.reference4 as PO,je_header_name,je_line_description,
+ currency_conversion_DATE,ACCOUNTING_DATE,currency_conversion_rate,creation_date,period_name 
+from APPS.RCV_RECEIVING_SUB_LEDGER  a,apps.GL_CODE_combinations b
+where period_name='JUN-04'--currency_conversion_DATE=to_date('2004-6-2','YYYY-MM-DD') 
+and a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and (ENTERED_DR<>0 or ENTERED_CR<>0)
+and currency_code='USD'
+and (nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0))/(nvl(ENTERED_DR,0)-nvl(ENTERED_CR,0))=1
+order by CURRENCY_CODE
+
+
+select * from apps.RCV_TRANSACTIONS where transaction_id=74087
+
+select * from APPS.RCV_RECEIVING_SUB_LEDGER where ACCOUNTING_DATE=to_date('2004-6-2','YYYY-MM-DD') order by CURRENCY_CODE
+
+select currency_code,(nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0))/(nvl(ENTERED_DR,0)-nvl(ENTERED_CR,0)) as Rate_Calcu,
+reference4 as PO,je_header_name,je_line_description
+ currency_conversion_DATE,ACCOUNTING_DATE,currency_conversion_rate,creation_date,period_name 
+from APPS.RCV_RECEIVING_SUB_LEDGER 
+where period_name='JUN-04'--currency_conversion_DATE=to_date('2004-6-2','YYYY-MM-DD') 
+and (ENTERED_DR<>0 or ENTERED_CR<>0)
+and currency_code='USD'
+and (nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0))/(nvl(ENTERED_DR,0)-nvl(ENTERED_CR,0))=1
+order by CURRENCY_CODE
+

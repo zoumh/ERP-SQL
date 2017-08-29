@@ -1,0 +1,130 @@
+
+
+------------Std steps from Menual
+Define a cycle count for the organization or subinventory level.page 12 每 8.
+Define cycle count classes.page 12 每 14.
+Define cycle count items.page 12 每 17.
+Automatically schedule item counts using ABC count frequencies. page 12 每 20
+Manually schedule counts for:
+	每 items, or specific revisions, lots
+	每 subinventories or specific locators
+	page 12 每 20.
+Generate daily, weekly, or period count requests and lists based on your schedule. Page 12 每 24.
+Enter counts. page 12 每 26.
+Approve, reject, or request recounts for cycle count adjustments page 12 每 36.
+Purge cycle count information page 12 每 41.
+
+
+---------------------BMC steps (use working calendar)
+
+Setup:
+1. ISIT create Cycle Counting Name
+2. ISIT setup Class upder the cycle counting
+3. ISIT input items under this cycle counting
+4. (ISIT onetime) Run schedule:
+Tools-> Perform full cycle count
+----Actual request set: Perform full cycle count (Report Set)
+
+
+Daily:
+1.Daily, user at Cycle Count Entries-Choose Name - (B)Find -Export all open count request to excel
+(after the scheduled request 'Perform full cycle count' is completed,the new cycle count entries status='Uncounted')
+(The export system_Qty is dynamic onhand-Qty,not snapshoot onhand_Qty !)
+
+2.User data load the count_Qty (always=0,make status=Pending Approval) 
+(on screen,Quantity & Count Quantity two fields always be same controlled by system)
+At entry screen, enter the count_Qty, otherwise it would be show in future export list!
+(if count Qty=Sys Qty,these cycle count entries status change to 'Completed')
+(if count Qty<>Sys Qty,these cycle count entries status change to 'Pending Approval')
+(At the entry time, make system_qty_current=system_qty_first=onhand_Qty !) 
+
+
+3.ISIT Need to reject the data before the Item was counted again ! 
+otherwise will in task screen
+--Approve counts -->Choose Name - (B)Find ,(Query all open)  Tools -->Select all to reject
+(After these were done,these cycle count entries status='Rejected')
+
+
+
+------------SQL
+
+
+----- All Cycle count names
+select * from apps.MTL_CYCLE_COUNT_HEADERS_V 
+
+
+
+----------Cycle count entry by name, date,sequence, Approve, user, Qty (onhand_Qty for exported sys_Qty)
+select a.count_list_sequence Count_Seq,a.SYSTEM_QUANTITY_FIRST,a.SYSTEM_QUANTITY_PRIOR,a.system_quantity_current,
+g.qty onhand_qty_current,
+a.APPROVAL_STATUS,a.APPROVAL_TYPE,a.COUNT_DATE_CURRENT,a.COUNT_DATE_FIRST,a.COUNT_DATE_PRIOR,
+a.CREATION_DATE,c.segment1 Item,
+COUNT_QUANTITY_CURRENT,a.COUNT_QUANTITY_FIRST,a.COUNT_QUANTITY_PRIOR,
+a.ADJUSTMENT_QUANTITY, 
+a.COUNT_TYPE_CODE,a.ENTRY_STATUS_CODE,  
+a.subinventory WH,f.segment2||'.'||f.segment3||'.'||f.segment4||'.'||f.segment5 Locator,
+a.count_status,d.description Created_By,e.description last_updated_By,
+count_date_current,a.COUNT_DUE_DATE,a.LAST_UPDATE_DATE,ABC_Class_name,b.cycle_count_header_name,b.DESCRIPTION,
+a.item_unit_cost, 
+d.user_name Created_By,e.user_name last_updated_By
+from apps.MTL_CYCLE_COUNT_ENTRIES_V a,apps.MTL_CYCLE_COUNT_HEADERS_V b,
+apps.mtl_system_items c,apps.fnd_user d,apps.fnd_user e,apps.MTL_ITEM_LOCATIONS f
+,(select organization_id,INVENTORY_ITEM_ID,LOCATOR_ID,sum(primary_transaction_quantity) Qty,subinventory_code 
+from apps.MTL_ONHAND_QUANTITIES_DETAIl group by organization_id,LOCATOR_ID,subinventory_code,INVENTORY_ITEM_ID ) g
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.INVENTORY_ITEM_ID =c.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.LOCATOR_ID=f.INVENTORY_LOCATION_ID
+and a.CREATED_BY =d.user_id
+and a.last_updated_BY =e.user_id
+and a.INVENTORY_ITEM_ID =g.INVENTORY_ITEM_ID(+)
+and a.organization_id=g.organization_id(+)
+and a.LOCATOR_ID=g.LOCATOR_ID (+)
+and a.subinventory=g.subinventory_code(+) 
+and b.cycle_count_header_name in ('BMC SA Cycle Counting')
+and trunc(a.CREATION_DATE)>=to_date('2008-10-9','yyyy-mm-dd')
+--and trunc(a.CREATION_DATE)<=to_date('2008-9-18','yyyy-mm-dd')
+and (g.qty  is null or g.qty =0)
+--and a.count_status in ('Rejected','Uncounted','Completed','Pending Approval')
+--and a.count_list_sequence=39641
+order by a.CREATION_DATE,b.cycle_count_header_name
+
+ 
+----old, no onhand_Qty
+select a.count_list_sequence Count_Seq,
+a.CREATION_DATE,c.segment1 Item,
+a.system_quantity_current system_qty,COUNT_QUANTITY_CURRENT COUNT_Qty,a.ADJUSTMENT_QUANTITY adj_Qty,a.subinventory WH,f.segment2||'.'||f.segment3||'.'||f.segment4||'.'||f.segment5 Locator,
+a.count_status,d.description Created_By,e.description last_updated_By,
+count_date_current,a.COUNT_DUE_DATE,a.LAST_UPDATE_DATE,ABC_Class_name,b.cycle_count_header_name,b.DESCRIPTION,
+a.item_unit_cost,a.approval_status
+,d.user_name Created_By,e.user_name last_updated_By
+from apps.MTL_CYCLE_COUNT_ENTRIES_V a,apps.MTL_CYCLE_COUNT_HEADERS_V b,
+apps.mtl_system_items c,apps.fnd_user d,apps.fnd_user e,apps.MTL_ITEM_LOCATIONS f
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.INVENTORY_ITEM_ID =c.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.LOCATOR_ID=f.INVENTORY_LOCATION_ID
+and a.CREATED_BY =d.user_id
+and a.last_updated_BY =e.user_id
+and b.cycle_count_header_name in ('BMC SA Cycle Counting','BMC SA Cycle Counting','BMC cycle counting')
+and trunc(a.CREATION_DATE)=to_date('2006-9-4','yyyy-mm-dd')
+and a.count_status in ('Rejected','Uncounted','Completed')
+order by a.CREATION_DATE,b.cycle_count_header_name
+
+
+
+-----------Cycle count Items maintenanced by name,date
+select ITEM_LAST_SCHEDULE_DATE, c.segment1 Item,CC_CLASS_NAME ABC,SCHEDULE_ORDER,a.CREATION_DATE,d.user_name Created_By,d.description Created_By,
+b.cycle_count_header_name,a.ITEM_DESCRIPTION     
+from apps.MTL_CYCLE_COUNT_ITEMS_V a,apps.MTL_CYCLE_COUNT_HEADERS_V b ,apps.mtl_system_items c,apps.fnd_user d
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.inventory_item_id=c.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.CREATED_BY =user_id
+and b.cycle_count_header_name='BMC cycle counting'
+order by ITEM_LAST_SCHEDULE_DATE desc,a.inventory_item_id

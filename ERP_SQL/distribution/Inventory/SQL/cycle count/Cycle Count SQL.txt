@@ -1,0 +1,83 @@
+
+
+----- All Cycle count names
+select * from apps.MTL_CYCLE_COUNT_HEADERS_V 
+
+
+----------cycle count Item list
+select c.segment1 Item, b.cycle_count_header_name,CC_CLASS_NAME,ABC_CLASS_ID,a.CREATION_DATE,a.LAST_UPDATE_DATE
+from apps.MTL_CYCLE_COUNT_ITEMS_V a, apps.MTL_CYCLE_COUNT_HEADERS_V b,apps.mtl_system_items c
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.INVENTORY_ITEM_ID =c.INVENTORY_ITEM_ID 
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and b.cycle_count_header_name in ('BMC SG/SGW Cycle Counting')
+order by a.CREATION_DATE
+
+-----------Cycle count Items by name,date
+select ITEM_LAST_SCHEDULE_DATE, c.segment1 Item,CC_CLASS_NAME ABC,SCHEDULE_ORDER,a.CREATION_DATE,d.user_name Created_By,d.description Created_By,
+b.cycle_count_header_name,a.ITEM_DESCRIPTIO6N     
+from apps.MTL_CYCLE_COUNT_ITEMS_V a,apps.MTL_CYCLE_COUNT_HEADERS_V b ,apps.mtl_system_items c,apps.fnd_user d
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.inventory_item_id=c.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.CREATED_BY =user_id
+and b.cycle_count_header_name='BMC cycle counting'
+order by ITEM_LAST_SCHEDULE_DATE desc,a.inventory_item_id
+
+
+----------Cycle count entry by name, date,sequence, Approve, user, Qty
+--one item's , with CT_Type
+select a.count_status,
+decode(ENTRY_STATUS_CODE,1,'Uncounted',2,'Pending Approval',3,'Recount',4,'Rejected',5,'Completed') status,
+decode(COUNT_TYPE_CODE,1,'Scheduled',2,'Unscheduled',3,'Control',4,'Zero Count') CT_Type,
+b.cycle_count_header_name,a.count_list_sequence Count_Seq, a.CYCLE_COUNT_ENTRY_ID,
+a.CREATION_DATE,c.segment1 Item,
+a.system_quantity_current system_qty,COUNT_QUANTITY_CURRENT COUNT_Qty,a.ADJUSTMENT_QUANTITY adj_Qty,
+a.subinventory WH,f.segment2||'.'||f.segment3||'.'||f.segment4||'.'||f.segment5 Locator,
+d.description Created_By,e.description last_updated_By,
+count_date_current,a.COUNT_DUE_DATE,a.LAST_UPDATE_DATE,ABC_Class_name,b.DESCRIPTION,a.item_unit_cost,a.approval_status
+,d.user_name Created_By,e.user_name last_updated_By,
+decode(APPROVAL_TYPE,1,'',2,'',3,'',APPROVAL_TYPE) Approv_Type,decode(APPROVAL_CONDITION ,1,'Foun Else',2,'Issued to Stores',3,'Req Approval',APPROVAL_TYPE) Approv_Condition
+from apps.MTL_CYCLE_COUNT_ENTRIES_V a,apps.MTL_CYCLE_COUNT_HEADERS_V b,
+apps.mtl_system_items c,apps.fnd_user d,apps.fnd_user e,apps.MTL_ITEM_LOCATIONS f
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.INVENTORY_ITEM_ID =c.INVENTORY_ITEM_ID 
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.LOCATOR_ID=f.INVENTORY_LOCATION_ID 
+and a.CREATED_BY =d.user_id
+and a.last_updated_BY =e.user_id
+--and b.cycle_count_header_name in ('BMC SA Cycle Counting','BMC SA Cycle Counting','BMC cycle counting')
+--and trunc(a.CREATION_DATE)=to_date('2006-9-4','yyyy-mm-dd')
+and c.segment1 ='KNC 201 24.R2A'
+and a.count_status='Pending Approval'
+--and a.CYCLE_COUNT_ENTRY_ID  in (64724,64762)
+order by a.CREATION_DATE,b.cycle_count_header_name
+
+
+
+select a.count_list_sequence Count_Seq,
+a.CREATION_DATE,c.segment1 Item,
+a.system_quantity_current system_qty,COUNT_QUANTITY_CURRENT COUNT_Qty,a.ADJUSTMENT_QUANTITY adj_Qty,a.subinventory WH,f.segment2||'.'||f.segment3||'.'||f.segment4||'.'||f.segment5 Locator,
+a.count_status,d.description Created_By,e.description last_updated_By,
+count_date_current,a.COUNT_DUE_DATE,a.LAST_UPDATE_DATE,ABC_Class_name,b.cycle_count_header_name,b.DESCRIPTION,a.item_unit_cost,a.approval_status
+,d.user_name Created_By,e.user_name last_updated_By
+from apps.MTL_CYCLE_COUNT_ENTRIES_V a,apps.MTL_CYCLE_COUNT_HEADERS_V b,
+apps.mtl_system_items c,apps.fnd_user d,apps.fnd_user e,apps.MTL_ITEM_LOCATIONS f
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.INVENTORY_ITEM_ID =c.INVENTORY_ITEM_ID 
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.LOCATOR_ID=f.INVENTORY_LOCATION_ID 
+and a.CREATED_BY =d.user_id
+and a.last_updated_BY =e.user_id
+and b.cycle_count_header_name in ('BMC SA Cycle Counting','BMC SA Cycle Counting','BMC cycle counting')
+and trunc(a.CREATION_DATE)=to_date('2006-9-4','yyyy-mm-dd')
+order by a.CREATION_DATE,b.cycle_count_header_name
+
+
+

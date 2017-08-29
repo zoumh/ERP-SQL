@@ -1,0 +1,37 @@
+
+----------- (with PO header/dist/rcv Rate,Receipt_num) PPV value (mta.BASE_TRANSACTION_VALUE) reconcile to GL
+select poh.RATE PO_Head_rate,poh.RATE_DATE PO_Head_rate_date,pod.RATE PO_Dist_Rate,pod.RATE_DATE PO_Dist_Rate_date, 
+rcv.CURRENCY_CONVERSION_RATE rcv_rate,mmt.CURRENCY_CONVERSION_RATE mmtrate,
+poll.MATCH_OPTION, 
+round(((nvl(mmt.CURRENCY_CONVERSION_RATE,1)*nvl(PO_UNIT_PRICE,0)-nvl(mmt.ACTUAL_COST,0))*mmt.TRANSACTION_QUANTITY),2)  Caculate_PPV,
+mta.BASE_TRANSACTION_VALUE Booked_ppv,
+round(((nvl(mmt.CURRENCY_CONVERSION_RATE,1)*nvl(PO_UNIT_PRICE,0)-nvl(mmt.ACTUAL_COST,0))*mmt.TRANSACTION_QUANTITY),2)-mta.BASE_TRANSACTION_VALUE diff,
+mmt.TRANSACTION_QUANTITY Qty,
+PO_UNIT_PRICE,mmt.ACTUAL_COST,
+rcv.CURRENCY_CODE Curr,poh.segment1 PO,sh.RECEIPT_NUM,
+rcv.TRANSACTION_TYPE,mmt.TRANSACTION_DATE,mmt.TRANSACTION_ID
+from apps.mtl_transaction_accounts mta,apps.GL_CODE_combinations b,
+apps.mtl_material_transactions  mmt,apps.rcv_transactions rcv
+,apps.PO_HEADERS_ALL poh,apps.rcv_shipment_headers sh,apps.PO_LINES_ALL pol,
+apps.PO_DISTRIBUTIONS_ALL pod,apps.PO_LINE_LOCATIONS_ALL poll
+where
+mta.reference_account=b.CODE_COMBINATION_ID
+and mmt.TRANSACTION_ID=mta.TRANSACTION_ID
+and mmt.ORGANIZATION_ID=mta.ORGANIZATION_ID
+and mmt.rcv_transaction_id=rcv.transaction_id
+and mmt.ORGANIZATION_ID=rcv.ORGANIZATION_ID
+--and rcv.TRANSACTION_TYPE in ('DELIVER','RETURN TO RECEIVING')
+and rcv.PO_HEADER_ID=poh.PO_HEADER_ID
+and rcv.SHIPMENT_HEADER_ID =sh.SHIPMENT_HEADER_ID
+and rcv.PO_HEADER_ID=pol.PO_HEADER_ID
+and rcv.PO_HEADER_ID=poll.PO_HEADER_ID
+and rcv.PO_line_ID=pol.PO_line_ID
+and rcv.PO_line_ID=poll.PO_line_ID
+and rcv.PO_DISTRIBUTION_ID=pod.PO_DISTRIBUTION_ID
+and rcv.PO_HEADER_ID=pod.PO_HEADER_ID
+and rcv.PO_line_ID=pod.PO_line_ID
+and rcv.PO_LINE_LOCATION_ID=poll.LINE_LOCATION_ID
+and (mta.accounting_line_type = 6) --OR b.segment3='12320201' )
+and mta.TRANSACTION_DATE>=to_date('2009-1-16','yyyy-mm-dd')
+and mta.TRANSACTION_DATE<to_date('2009-2-1','yyyy-mm-dd')
+--and b.segment3='12320201'

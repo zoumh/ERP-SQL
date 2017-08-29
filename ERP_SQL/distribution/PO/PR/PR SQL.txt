@@ -1,0 +1,50 @@
+
+select * from apps.po_requisition_headers_all where SEGMENT1 in ('38662','38663','38664')
+
+select * from apps.po_requisition_lines_all where REQUISITION_HEADER_ID in (160741,160742,160743)
+
+select * from apps.PO_REQ_DISTRIBUTIONS_ALL where REQUISITION_LINE_ID in (373335,373336,373337)
+
+
+---------External Non-BOM PR approved by During Period
+select DESTINATION_TYPE_CODE,SOURCE_TYPE_CODE, pr.AUTHORIZATION_STATUS,aa.amt,PR.SEGMENT1 PR_Num,c.FULL_NAME To_Whom,b.sequence_num Appro_Seq,b.status,d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,apps.PO_APPROVAL_LIST_LINES b,apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+(select sum(UNIT_PRICE*QUANTITY) Amt,requisition_header_id,DESTINATION_TYPE_CODE,SOURCE_TYPE_CODE 
+from apps.po_requisition_lines_all group by requisition_header_id,DESTINATION_TYPE_CODE,SOURCE_TYPE_CODE ) aa
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PR.REQUISITION_HEADER_ID=a.document_id
+--and PR.SEGMENT1='5523'
+and aa.requisition_header_id=pr.requisition_header_id
+and pr.CREATION_DATE >=to_date('2006-4-1','yyyy-mm-dd')
+and pr.CREATION_DATE<=to_date('2006-5-31','yyyy-mm-dd')
+--and PR.SEGMENT1='7586'
+and d.FULL_NAME='Gao, Max'
+and SOURCE_TYPE_CODE='VENDOR'
+and DESTINATION_TYPE_CODE='EXPENSE'
+order by PR.SEGMENT1,b.sequence_num desc
+
+
+
+----PR,amt,Item,approved History, approved in date
+
+select pr.AUTHORIZATION_STATUS,aa.amt,PR.SEGMENT1 PR_Num,c.FULL_NAME To_Whom,b.sequence_num Appro_Seq,b.status,d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,apps.PO_APPROVAL_LIST_LINES b,apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+(select sum(UNIT_PRICE*QUANTITY) Amt,requisition_header_id from apps.po_requisition_lines_all group by requisition_header_id) aa
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PR.REQUISITION_HEADER_ID=a.document_id
+--and PR.SEGMENT1='5523'
+and aa.requisition_header_id=pr.requisition_header_id
+and b.response_date>to_date('2006-3-8','yyyy-mm-dd')
+--and PR.SEGMENT1='7586'
+order by PR.SEGMENT1,b.sequence_num desc
+

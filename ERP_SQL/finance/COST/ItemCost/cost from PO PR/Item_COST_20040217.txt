@@ -1,0 +1,64 @@
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_CST_PRICE_CHK_PO
+AS
+select b.ITEM_NUMBER
+,b.ITEM_COST as STD_COST
+,a.UNIT_PRICE as PO_Price
+,a.PO_NUM
+,a.HEADER_FOB_LOOKUP_CODE as TOD
+,a.CURRENCY_CODE
+,b.ORGANIZATION_ID as ORG_ID /*--  83 -->Prod , 81-->Prj  */
+from 	  PO_LINES_INQ_V a
+	 ,CST_ITEM_COST_TYPE_V b
+where b.INVENTORY_ITEM_ID in (select distinct(ITEM_ID) from PO_LINES_INQ_V where UNIT_PRICE<>0) 
+and a.ITEM_ID=b.INVENTORY_ITEM_ID
+and a.UNIT_PRICE<>0 
+and b.COST_TYPE='Frozen'
+and b.ITEM_COST=0
+
+
+
+
+
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_CST_PRICE_CHK_QUOT
+AS
+select b.ITEM_NUMBER
+,b.ITEM_COST as STD_COST
+,a.UNIT_PRICE as PO_Price
+,c.CURRENCY_CODE
+,c.FOB_DSP as TOD
+,b.ORGANIZATION_ID as ORG_ID /*--  83 -->Prod , 81-->Prj  */
+from 	  PO_LINES_RFQQT_V a
+	 ,CST_ITEM_COST_TYPE_V b
+	 ,PO_HEADERS_RFQQT_V c
+where b.INVENTORY_ITEM_ID in (select distinct(ITEM_ID) from PO_LINES_RFQQT_V where UNIT_PRICE<>0) 
+and a.ITEM_ID=b.INVENTORY_ITEM_ID
+and a.UNIT_PRICE<>0 
+and b.COST_TYPE='Frozen'
+and b.ITEM_COST=0
+and a.PO_HEADER_ID=c.PO_HEADER_ID
+
+
+
+------------------------------
+select b.ITEM_NUMBER--,a.ITEM_ID,b.INVENTORY_ITEM_ID
+,b.ITEM_COST as STD_COST
+,a.UNIT_PRICE as PO_Price
+--,a.PO_NUM
+,a.HEADER_FOB_LOOKUP_CODE as TOD
+,a.CURRENCY_CODE
+,b.ORGANIZATION_ID as ORG_ID /*--  83 -->Prod , 81-->Prj  */
+from 	  PO_LINES_INQ_V a
+	 ,CST_ITEM_COST_TYPE_V b
+	 ,(select distinct ITEM_ID,UNIT_PRICE from PO_LINES_INQ_V where UNIT_PRICE<>0) c
+where a.ITEM_ID(+)=c.item_id and a.unit_price(+)=c.unit_price 
+and a.ITEM_ID=b.INVENTORY_ITEM_ID
+and a.UNIT_PRICE<>0 
+and b.COST_TYPE='Frozen'
+and b.ITEM_COST=0
+and b.ORGANIZATION_ID=81
+order by b.ITEM_NUMBER,a.UNIT_PRICE
+
+
+select distinct ITEM_ID,UNIT_PRICE,HEADER_FOB_LOOKUP_CODE,CURRENCY_CODE from PO_LINES_INQ_V where UNIT_PRICE<>0 and item_id=012428

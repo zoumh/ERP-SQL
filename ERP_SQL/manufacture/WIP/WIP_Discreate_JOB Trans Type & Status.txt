@@ -1,0 +1,133 @@
+
+apps.WIP_ENTITIES
+
+
+--------------------------------WIP_DISCRETE_JOBS
+
+WIP_DISCRETE_JOBS.JOB_TYPE
+1 Standard
+3 Non每standard
+
+
+(Entity_Type is same as Job_Type)
+
+
+
+
+WIP_DISCRETE_JOBS.STATUS_TYPE 
+
+decode(status_Type,1,'Unreleased',3,'Released',4,'Complete',
+5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',
+11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+
+
+WIP_DISCRETE_JOBS.STATUS_TYPE 
+1 Unreleased
+3 Released
+4 Complete
+5 Complete 每 No Charges
+6 On Hold
+7 Cancelled
+8 Pending Bill Load
+9 Failed Bill Load
+10 Pending Routing Load
+11 Failed Routing Load
+12 Closed
+13 Pending 每 Mass Loaded
+14 Pending Close
+15 Failed Close
+
+
+
+
+WIP_DISCRETE_JOBS.WIP_SUPPLY_TYPE 
+1 Push
+2 Assembly Pull
+3 Operation Pull
+4 Bulk
+5 Supplier
+6 Phantom
+7 Based on Bill
+
+
+
+
+--------------------------------WIP_TRANSACTION_ACCOUNTS
+WIP_TRANSACTION_ACCOUNTS.ACCOUNTING_LINE_TYPE 
+1 Inv valuation
+2 Account
+3 Overhead absorption
+4 Resource absorption
+5 Receiving Inspection
+6 Purchase price variance or rate variance
+7 WIP valuation
+8 WIP variance
+9 Inter每org payables
+10 Inter每org receivables
+11 Inter每org transfer credit
+12 Inter每org freight charge
+13 Average cost variance
+14 Intransit Inventory
+15 Encumbrance Reversal
+99 Unknown
+
+
+--------------------------------WIP_TRANSACTIONS
+
+WIP_TRANSACTIONS.TRANSACTION_TYPE 
+1 Resource transaction
+2 Overhead transaction
+3 Outside processing
+4 Cost update
+5 Period close variance
+6 Job close variance
+
+WIP_TRANSACTIONS.AUTOCHARGE_TYPE 
+1 WIP move
+2 Manual
+3 PO receipt
+4 PO move
+
+
+WIP_TRANSACTIONS.BASIS_TYPE 
+1 Item
+2 Lot
+3 Resource Units
+4 Resource Value
+5 Total Value
+6 Activity
+
+
+
+
+
+-------------MTL_TRANSACTION_ACCOUNTS.ACCOUNTING_LINE_TYPE (MFG_LOOKUPS)
+
+1 Inv valuation
+2 Account
+3 Overhead absorption
+4 Resource absorption
+5 Receiving Inspection
+6 Purchase price variance or
+rate variance
+7 WIP valuation
+8 WIP variance
+9 Inter每org payables
+10 Inter每org receivables
+11 Inter每org transfer credit
+12 Inter每org freight charge
+13 Average cost variance
+14 Intransit Inventory
+15 Encumbrance Reversal
+
+
+
+99 Unknown
+
+
+
+
+
+
+
+

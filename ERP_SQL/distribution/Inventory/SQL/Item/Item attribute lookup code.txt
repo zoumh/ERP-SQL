@@ -1,0 +1,474 @@
+
+
+
+decode(a.LOT_CONTROL_CODE,1,'No',2,'Full') LOT_CONTROL
+
+decode(a.RECEIVING_ROUTING_ID,1,'Std',2,'Inspect',3,'Direct','NA') RECEIVING_ROUTING
+
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+
+MRP_PLANNING_CODE,3,'',
+
+select RECEIVING_ROUTING_ID from apps.mtl_system_items where segment1='1205-6581.4' and organization_id=130
+
+--------List status control attributes
+select --BOM_ENABLED_FLAG,description,BOM_ITEM_TYPE,
+PURCHASING_ENABLED_FLAG,
+INTERNAL_ORDER_ENABLED_FLAG,
+MTL_TRANSACTIONS_ENABLED_FLAG,
+STOCK_ENABLED_FLAG,
+BUILD_IN_WIP_FLAG,
+INVOICE_ENABLED_FLAG
+from BMC_ITEM_TEST where segment1='IPM1' and ORGANIZATION_ID=127
+
+
+
+Column 		 
+ALLOWED_UNITS_LOOKUP_CODE 
+1  Item specific
+2  Standard
+3  Both standard and item specific
+
+ALLOW_EXPRESS_DELIVERY_FLAG  
+ N  No
+ Y Yes
+
+ALLOW_ITEM_DESC_UPDATE_FLAG  
+ N  No
+ Y  Yes
+
+ALLOW_SUBSTITUTE_RECEIPTS_FLAG 
+N No
+Y Yes
+
+ALLOW_UNORDERED_RECEIPTS_FLAG  
+N No
+Y Yes
+
+ATO_FORECAST_CONTROL  
+1 Consume
+2 Consume and derive
+3 None
+
+ATP_COMPONENTS_FLAG  
+N No
+Y Yes
+
+ATP_FLAG  
+N No
+Y Yes
+
+AUTO_CREATED_CONFIG_FLAG  
+N No
+Y Yes
+
+AUTO_REDUCE_MPS  
+1 None
+2 Past due
+3 Within demand time fence
+4 Within planning time fence
+
+BACK_ORDERABLE_FLAG  
+N No
+Y Yes
+
+BOM_ENABLED_FLAG  
+N No
+Y Yes
+
+BOM_ITEM_TYPE  
+1 Model
+2 Option class
+3 Planning
+4 Standard
+5 Product Family
+
+BUILD_IN_WIP_FLAG  
+N No
+Y Yes
+
+CATALOG_STATUS_FLAG  
+N No
+Y Yes
+
+CHECK_SHORTAGES_FLAG  
+N No
+Y Yes
+
+COLLATERAL_FLAG  
+N No
+Y Yes
+
+COMMS_ACTIVATION_REQD_FLAG  
+N No
+Y Yes
+
+COMMS_NL_TRACKABLE_FLAG  
+N No
+Y Yes
+
+CONTAINER_ITEM_FLAG  
+N No
+Y Yes
+
+CONTAINER_TYPE_CODE  
+
+COSTING_ENABLED_FLAG  
+N No
+Y Yes
+
+COUPON_EXEMPT_FLAG  
+N No
+Y Yes
+
+CUSTOMER_ORDER_ENABLED_FLAG  
+N No
+Y Yes
+
+CUSTOMER_ORDER_FLAG  
+N No
+Y Yes
+
+CYCLE_COUNT_ENABLED_FLAG  
+N No
+Y Yes
+
+DEFAULT_INCLUDE_IN_ROLLUP_FLAG  
+N No
+Y Yes
+
+DEFECT_TRACKING_ON_FLAG  
+N No
+Y Yes
+
+DEMAND_TIME_FENCE_CODE  
+1 Cumulative total lead time
+2 Cumulative manufacturing
+
+DOWNLOADABLE_FLAG  
+N No
+Y Yes
+
+ELECTRONIC_FLAG  
+N No
+Y Yes
+
+ENABLED_FLAG  
+N No
+Y Yes
+
+END_ASSEMBLY_PEGGING_FLAG  
+A Full Pegging
+B End Assembly/Full Pegging
+I Net by Project/Ignore Excess
+N None
+X Net by Project/Net Excess
+Y End Assembly Pegging
+
+ENG_ITEM_FLAG  
+N No
+Y Yes
+
+EQUIPMENT_TYPE  
+1 Yes
+2 No
+
+EVENT_FLAG  
+N No
+Y Yes
+
+EXPENSE_BILLABLE_FLAG  
+N No
+Y Yes
+
+INDIVISIBLE_FLAG  
+N No
+Y Yes
+
+INSPECTION_REQUIRED_FLAG  
+N No
+Y Yes
+
+INTERNAL_ORDER_ENABLED_FLAG  
+N No
+Y Yes
+
+INTERNAL_ORDER_FLAG  
+N No
+Y Yes
+
+INVENTORY_ASSET_FLAG  
+N No
+Y Yes
+
+INVENTORY_ITEM_FLAG  
+N No
+Y Yes
+
+INVENTORY_PLANNING_CODE  
+1 Reorder point planning
+2 Min每max planning
+6 Not planned
+
+INVOICEABLE_ITEM_FLAG  
+N No
+Y Yes
+
+INVOICE_ENABLED_FLAG  
+N No
+Y Yes
+
+ITEM_TYPE  
+AOC ATO Option Class
+ATO ATO Model
+BMW BMW Type
+FG Finished Good
+I Inventory Type
+K Kit
+M Model
+OC Option Class
+OO Outside Operation
+OP Outside Processing Item
+P Purchased item
+PF Product Family
+PH Phantom item
+PL Planning
+POC PTO Option Class
+PTO PTO model
+REF Reference item
+SA Subassembly
+SI Supply item
+
+LOCATION_CONTROL_CODE 
+1 No locator control
+2 Prespecified locator control
+3 Dynamic entry locator control
+4 Locator control determined at subinventory level
+5 Locator control determined at item level
+
+LOT_CONTROL_CODE  
+1 No lot control
+2 Full lot control
+
+MATERIAL_BILLABLE_FLAG  
+E Expense
+L Labor
+M Material
+
+MRP_CALCULATE_ATP_FLAG  
+N No
+Y Yes
+
+MRP_PLANNING_CODE  
+3 MRP planning
+4 MPS planning
+6 Not planned
+7 MRP and DRP planning
+8 MPS and DRP planning
+9 DRP planning
+
+MRP_SAFETY_STOCK_CODE  
+1 Non每MRP planned
+2 MRP planned percent
+
+MTL_TRANSACTIONS_ENABLED_FLAG  
+N No
+Y Yes
+
+MUST_USE_APPROVED_VENDOR_FLAG  
+N No
+Y Yes
+
+ORDERABLE_ON_WEB_FLAG  
+N No
+Y Yes
+
+OUTSIDE_OPERATION_FLAG  
+N No
+Y Yes
+
+PICK_COMPONENTS_FLAG  
+N No
+Y Yes
+
+PLANNING_MAKE_BUY_CODE  
+1 Make
+2 Buy
+
+PLANNING_TIME_FENCE_CODE  
+1 Cumulative total lead time
+2 Cumulative manufacturing
+
+PREVENTIVE_MAINTENANCE_FLAG  
+N No
+Y Yes
+
+PRORATE_SERVICE_FLAG  
+N No
+Y Yes
+
+PURCHASING_ENABLED_FLAG  
+N No
+Y Yes
+
+PURCHASING_ITEM_FLAG  
+N No
+Y Yes
+
+RECEIPT_REQUIRED_FLAG  
+N No
+Y Yes
+
+RELEASE_TIME_FENCE_CODE  
+1 Cumulative total lead time
+2 Cumulative manufacturing
+
+Lead time
+3 Item total lead time
+4 User每defined time fence
+5 No not autorelease
+6 Kanban Item (Do Not Release)
+
+REPETITIVE_PLANNING_FLAG  
+N No
+Y Yes
+
+REPLENISH_TO_ORDER_FLAG  
+N No
+Y Yes
+
+RESERVABLE_TYPE  
+1 Reservable
+2 Not reservable
+
+RESTRICT_LOCATORS_CODE  
+1 Locators restricted to pre每defined list
+2 Locators not restricted to pre每defined list
+
+RESTRICT_SUBINVENTORIES_CODE  
+1 Subinventories restricted to pre每defined list
+2 Subinventories not restricted to pre每defined list
+
+RETURNABLE_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+RETURN_INSPECTION_REQUIREMENT MTL_RETURN_INSPECTION MFG_LOOKUPS
+1 Inspection required
+2 Inspection not required
+
+REVISION_QTY_CONTROL_CODE MTL_ENG_QUANTITY MFG_LOOKUPS
+1 Not under revision quantity
+control
+2 Under revision quantity
+control
+
+RFQ_REQUIRED_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+ROUNDING_CONTROL_TYPE MTL_ROUNDING MFG_LOOKUPS
+1 Round order quantities
+2 Do not round order quantities
+
+SERIAL_NUMBER_CONTROL_CODE MTL_SERIAL_NUMBER MFG_LOOKUPS
+1 No serial number control
+2 Predefined serial numbers
+5 Dynamic entry at inventory receipt
+6 Dynamic entry at sales order issue
+
+SERVICEABLE_COMPONENT_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+SERVICEABLE_PRODUCT_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+SERVICE_ITEM_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+SHELF_LIFE_CODE MTL_SHELF_LIFE MFG_LOOKUPS
+1 No shelf life control
+2 Item shelf life days
+4 User每defined expiration date
+
+SHIPPABLE_ITEM_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+SHIP_MODEL_COMPLETE_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+SOURCE_TYPE MTL_SOURCE_TYPES MFG_LOOKUPS
+1 Inventory
+2 Supplier
+
+SO_TRANSACTIONS_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+STOCK_ENABLED_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+SUMMARY_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+TAXABLE_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+TIME_BILLABLE_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+USAGE_ITEM_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+VEHICLE_ITEM_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+VENDOR_WARRANTY_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+VOL_DISCOUNT_EXEMPT_FLAG YES_NO FND_LOOKUPS
+N No
+Y Yes
+
+WIP_SUPPLY_TYPE WIP_SUPPLY MFG_LOOKUPS
+1 Push
+2 Assembly Pull
+3 Operation Pull
+4 Bulk
+5 Supplier
+6 Phantom
+7 Based on Bill
+
+ENFORCE_SHIP_TO_LOCATION_CODE  
+NONE -- No Receiving Control Enforced
+REJECT -- Prevent Receipt of Goods or Services
+WARNING -- Display Warning Message
+
+OUTSIDE_OPERATION_UOM_TYPE  
+ASSEMBLY --  Assembly Unit of Measure
+RESOURCE --  Resource Unit of Measure
+
+QTY_RCV_EXCEPTION_CODE  
+NONE --  No Receiving Control Enforced
+REJECT --  Prevent Receipt of Goods or Services
+WARNING --  Display Warning Message
+
+RECEIPT_DAYS_EXCEPTION_CODE  
+NONE --  No Receiving Control Enforced
+REJECT --  Prevent Receipt of Goods or Services
+WARNING --  Display Warning Message
+
+
+

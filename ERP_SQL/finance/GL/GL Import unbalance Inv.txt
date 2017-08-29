@@ -1,0 +1,114 @@
+
+
+-----------------Find from mtl_TRANSACTION_ACCOUNTS which CCID<0 (no account assigned)
+
+SELECT M.currency_code CURRENCY,     
+M.REFERENCE_ACCOUNT ACCOUNT,b.SEGMENT3 Account  ,  
+DECODE(sign(SUM(NVL(M.TRANSACTION_VALUE,    
+M.BASE_TRANSACTION_VALUE))),1,    
+SUM(NVL(M.TRANSACTION_VALUE,M.BASE_TRANSACTION_VALUE)),0) d,    
+DECODE(sign(SUM(NVL(M.TRANSACTION_VALUE,    
+M.BASE_TRANSACTION_VALUE))),-1,    
+(-1*SUM(NVL(M.TRANSACTION_VALUE,M.BASE_TRANSACTION_VALUE))),0) c,    
+DECODE(sign(SUM(M.BASE_TRANSACTION_VALUE)),1,    
+SUM(M.BASE_TRANSACTION_VALUE),0) e,    
+DECODE(sign(SUM(M.BASE_TRANSACTION_VALUE)),    
+-1,
+(-1*SUM(M.BASE_TRANSACTION_VaLUE)),0)  f    
+FROM apps.mtl_TRANSACTION_ACCOUNTS M    ,apps.gl_code_combinations b 
+WHERE gl_batch_id = 4289--&reference21   
+and m.REFERENCE_ACCOUNT=b.CODE_COMBINATION_ID
+GROUP BY    	 
+M.CURRENCY_CODE,    	 
+M.REFERENCE_ACCOUNT ,b.SEGMENT3; 
+
+
+select * from apps.mtl_TRANSACTION_ACCOUNTS where REFERENCE_ACCOUNT=-2
+
+------->This will find the Transaction_ID
+
+
+
+select   mmt.transaction_date, mmt.CURRENCY_CODE,mta.CURRENCY_CODE,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION,
+		 MGD.SEGMENT1 Alias_SOURCE,
+		 MMT.TRANSACTION_REFERENCE Trans_Reference
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+--and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+--and    trunc(mmt.transaction_date) >= to_date('20040924','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20040924','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue'
+and mta.gl_batch_id like '%4289%'
+
+
+select * from apps.mtl_transaction_accounts where gl_batch_id like '%4289%'
+
+
+
+
+----------------Find from GL_Interface
+
+Select set_of_books_id SOB ,      
+user_je_category_name  CAT,      
+user_je_source_name SOURCE,      
+status,      
+reference21     
+from apps.gl_interface     
+where status= 'EU02,P'     
+order by reference21
+
+
+
+select to_char(JE_BATCH_ID) BATCH_ID,to_char(JE_HEADER_ID) Journal_Name,
+ACCOUNTED_DR,(ACCOUNTED_CR),(ENTERED_DR) ,(ENTERED_CR),CURRENCY_CODE Currency,STATUS,ACCOUNTING_DATE,USER_JE_CATEGORY_NAME Category,
+USER_JE_SOURCE_NAME Source,SEGMENT1,SEGMENT2,SEGMENT3,SEGMENT4,SEGMENT5,REFERENCE4,REFERENCE5,to_char(JE_LINE_NUM) Line_Num,to_char(CODE_COMBINATION_ID) CCID, 
+to_char(GROUP_ID) Group_ID,to_char(REQUEST_ID) Request_ID
+from apps.GL_interface --where status='PROCESSED'
+
+
+
+select * from apps.GL_interface where STATUS<>'NEW'
+
+select * from apps.GL_interface where REFERENCE1='4289 PRD'
+
+select distinct STATUS,USER_JE_CATEGORY_NAME,REFERENCE1 from apps.GL_interface where STATUS<>'NEW'
+

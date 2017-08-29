@@ -1,0 +1,18 @@
+
+
+
+When Add a new AP BOM Accountant, update the AP Report package as:
+
+
+1.BMC AP Received Current UnBilled BOM PO Report 	-----> In Oracle AP, No need change
+2.BMC AP Invoiced BOM Amount Report 			-----> In Oracle AP, add PAY_GROUP_LOOKUP_CODE
+3.BMC AP Paid BOM Amount Report				-----> In Oracle AP, add PAY_GROUP_LOOKUP_CODE
+4.BMC AP REPORT PACKAGE SUPPLIER LIST			-----> In Discoverer, no change need
+
+
+5.Current BOM Un-Billed received amount by currency	-----> In SQL, No need change
+6.Current BOM AP Balance By currency 			-----> In SQL, add PAY_GROUP_LOOKUP_CODE
+
+
+7.BMC_AP_Current_Balance_By_Supplier 			-----> In Discoverer, need change
+8.BMC_AP_Current_Balance_Details_By_Supplier		-----> In Discoverer, need change

@@ -1,0 +1,53 @@
+
+TAR Number  3997818.994 
+
+
+
+AP invoice No :
+NT-AP20040927-110
+
+
+Invoice_ID : 48743
+
+VENDOR_SITE_ID:503
+
+
+
+To implement the solution, please execute the following steps:
+
+1. Void the check number 191 (if not forwarded to supplier);
+2. Account and transfer to GL 
+3. Run APLISTH again and upload for review.
+
+
+
+
+Now execute the following
+
+update ap_payment_schedules_all
+set payment_status_flag='Y',amount_remaining=0
+where invoice_id=48743;
+
+1 row updated
+
+update ap_invoices_all
+set amount_paid=67406.46,payment_status_flag='Y'
+where invoice_id =48743;
+
+1 row updated
+
+commit;
+---------------
+
+
+Hi all,
+
+Because we solve the duplicate payment on the invoice, please take care the bank reconcile:
+
+AP invoice :
+NT-AP20040927-110
+
+Payment 191 was void ---------Please trace the Bank Reconcile.
+Payment 193 fully apply 
+
+Please see the Payment 191 & its Void accounting.

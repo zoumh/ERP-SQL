@@ -1,0 +1,63 @@
+
+
+
+----------------Zhang Miao, with Rev & Category
+select a.organization_id,h.organization_code Org_Name, b.segment1 Item, a.REVISION,sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,
+sum(a.transaction_quantity)*decode(g.asset_inventory,1,to_number(d.item_cost,999999.99999),0) as Amt
+, a.subinventory_code, c.cost_group,e.segment1 family_class, e.segment2 sub_class
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.MTL_SECONDARY_INVENTORIES_FK_V g,
+APPS.mtl_parameters h,apps.mtl_item_categories_v e
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=g.organization_id
+and a.organization_id=h.organization_id
+and a.organization_id=e.organization_id
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code
+--and a.organization_id=130
+and category_set_id = 1 
+and structure_id=101 
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+group by b.segment1, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999) 
+,e.segment1, e.segment2 ,a.organization_id,h.organization_code ,a.REVISION,
+decode(g.asset_inventory,1,to_number(d.item_cost,999999.99999),0)
+order by a.subinventory_code, b.segment1,e.segment1
+
+
+---no rev
+select b.segment1, sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code WH, c.cost_group
+,f.segment1 family_class, f.segment2 sub_class
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d, apps.mtl_item_categories_v f 
+where a.organization_id=83 and b.organization_id=83 and c.organization_id=83 and d.organization_id=83
+and f.organization_id=a.organization_id
+and a.inventory_item_id=f.inventory_item_id
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and f.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+--and category_set_id = 1100000001 
+--and structure_id=101 
+--and b.segment1='A/12000030010075'
+group by b.segment1, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999) 
+,f.segment1, f.segment2 
+order by a.subinventory_code, b.segment1,f.segment1
+
+
+
+
+-----------SB Total onhand Value
+select sum(a.transaction_quantity*to_number(d.item_cost,999999.99999)) as Amt
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b,apps.cst_item_costs d
+where a.organization_id=83 and b.organization_id=83 and d.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and d.cost_type_id=1
+--and category_set_id = 1100000001 
+--and structure_id=101 
+--and b.segment1='A/12000030010075'
+and a.subinventory_code='SB'

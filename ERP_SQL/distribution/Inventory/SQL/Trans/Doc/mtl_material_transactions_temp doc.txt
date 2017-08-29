@@ -1,0 +1,65 @@
+
+
+
+mtl_transaction_interface 和 mtl_material_transactions_temp 的關系是：
+當你寫數據到iterface，run concurrent program之後，數據會經過temp table 最後寫入到transaction table中。 
+
+
+interface表到temp表后再到transactions表,一般都是插入到interface表,但为了图方便也会直接插入到temp表,但是我觉得有问题,
+
+
+我知道的是：
+如果PROCESS_FLAG是Y，那么就是正在处理，一直没有过的话就不行了，有异常
+如果是inv transaction，比如subinventory transfer，material issue等等，如果pengding在mtl_material_transactions_temp表中，那么available的数量就会减少（onhand －mtl_material_transactions_temp表中的数量） ，可以删除表中的记录，然后重做记录。
+
+
+Records are processed from this table into Inventory through the
+transaction processor. All Inventory transaction forms write directly to
+this table. Outside applications must write transaction records to
+MTL_TRANSACTIONS_INTERFACE to be processed through
+MTL_MATERIAL_TRANSACTIONS_TEMP and the transaction
+processor by the Transaction Worker concurrent program.
+
+
+
+LookUps:
+
+TRANSACTION_STATUS 
+----------------Indicates if it has to be processed or just saved. 
+NULL or 1 is default behavior. 
+2 is save only. 
+3 is ready to process
+
+
+TRANSACTION_ACTION_ID:
+-------------------------
+1	Issue from stores
+2	Subinventory transfer
+3	Direct organization transfer
+4	Cycle count adjustment
+5	Planning Transfer
+6	Ownership Transfer
+8	Physical inventory adjustment
+12	Intransit receipt
+21	Intransit shipment
+24	Cost update
+27	Receipt into stores
+28	Staging transfer
+29	Delivery adjustments
+30	WIP scrap transaction
+31	Assembly completion
+32	Assembly return
+33	Negative component issue
+34	Negative component return
+35	Container transaction
+40	Lot Split
+41	Lot Merge
+42	Lot Translate
+43	Lot Update Quantity
+50	Container Pack
+51	Container Unpack
+52	Container Split
+55	Cost Group Transfer
+
+
+

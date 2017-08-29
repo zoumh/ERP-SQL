@@ -1,0 +1,86 @@
+
+
+----------Allocated MO with LPN,Locator,Cost Group
+select d.REQUEST_NUMBER,LINE_NUMBER ,c.ORGANIZATION_ID,c.segment1 Item,a.TRANSACTION_QUANTITY,b.QUANTITY_DETAILED,QUANTITY,
+LICENSE_PLATE_NUMBER,a.SUBINVENTORY_CODE from_WH,
+loc.segment2||'.'||loc.segment3||'.'||loc.segment4||'.'||loc.segment5 From_Locator,cg.COST_GROUP from_CG,
+a.TRANSFER_SUBINVENTORY To_WH,loc2.segment2||'.'||loc2.segment3||'.'||loc2.segment4||'.'||loc2.segment5 To_Locator,
+cg2.COST_GROUP To_CG,
+a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved','Un-Know') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved','Un-Know') line_status,e.transaction_type_name Trans_type
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e,apps.wms_license_plate_numbers f,
+apps.mtl_item_locations loc,apps.mtl_item_locations loc2,apps.CST_COST_GROUPS_V cg,apps.CST_COST_GROUPS_V cg2,
+apps.MTL_ONHAND_QUANTITIES_DETAIl moq1,apps.MTL_ONHAND_QUANTITIES_DETAIl moq2
+where 
+d.REQUEST_NUMBER='hz006' and 
+--c.segment1='KRH 101 516.R3A' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+a.TRANSACTION_SOURCE_ID =d.HEADER_ID and
+a.move_order_line_id=b.line_id and
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID and
+b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+and a.allocated_LPN_ID=f.LPN_ID(+)
+and a.ORGANIZATION_ID=f.ORGANIZATION_ID(+)
+and a.LOCATOR_ID=loc.INVENTORY_LOCATION_ID(+)
+and a.TRANSFER_TO_LOCATION=loc2.INVENTORY_LOCATION_ID(+)
+and a.ORGANIZATION_ID=loc.ORGANIZATION_ID(+)
+and a.ORGANIZATION_ID=loc2.ORGANIZATION_ID(+)
+and b.INVENTORY_ITEM_ID=moq1.INVENTORY_ITEM_ID 
+and b.INVENTORY_ITEM_ID=moq2.INVENTORY_ITEM_ID 
+and a.ORGANIZATION_ID=moq1.ORGANIZATION_ID 
+and a.ORGANIZATION_ID=moq2.ORGANIZATION_ID 
+and a.LOCATOR_ID=moq1.LOCATOR_ID 
+and a.TRANSFER_TO_LOCATION=moq2.LOCATOR_ID 
+and cg.COST_GROUP_ID =moq1.COST_GROUP_ID
+and cg.ORGANIZATION_ID=moq1.ORGANIZATION_ID 
+and cg2.COST_GROUP_ID=moq2.COST_GROUP_ID
+and cg2.ORGANIZATION_ID=moq2.ORGANIZATION_ID 
+and a.allocated_LPN_ID=moq1.LPN_ID(+)
+
+
+
+
+------------Allocated Move Order (Locator,LPN)
+
+select d.REQUEST_NUMBER,LINE_NUMBER ,c.ORGANIZATION_ID,c.segment1 Item,a.TRANSACTION_QUANTITY,b.QUANTITY_DETAILED,QUANTITY,
+LICENSE_PLATE_NUMBER,
+loc.segment2||'.'||loc.segment3||'.'||loc.segment4||'.'||loc.segment5 Locator,
+a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e,apps.wms_license_plate_numbers f,
+apps.mtl_item_locations loc
+where 
+d.REQUEST_NUMBER='1227-C-W850-ZX-516' and 
+c.segment1='KRH 101 516.R3A' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+a.TRANSACTION_SOURCE_ID =d.HEADER_ID and
+a.move_order_line_id=b.line_id and
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+and a.allocated_LPN_ID=f.LPN_ID(+)
+and a.ORGANIZATION_ID=f.ORGANIZATION_ID(+)
+and a.LOCATOR_ID=loc.INVENTORY_LOCATION_ID(+)
+and a.ORGANIZATION_ID=loc.ORGANIZATION_ID(+)
+order by TRANSACTION_DATE desc
+
+
+
+
+select * from apps.mtl_material_transactions_temp where TRX_SOURCE_LINE_ID=2956227
+
+delete from apps.mtl_material_transactions_temp where TRX_SOURCE_LINE_ID=2956227
+
+

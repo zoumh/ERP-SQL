@@ -1,0 +1,19 @@
+
+--------A Component in JO , Issued Qty<> total WIP Component Qty , Fix
+
+select wip_entity_id from apps.wip_entities where wip_entity_name = '0070998763/1'
+
+select INVENTORY_ITEM_ID, segment1,organization_id from apps.mtl_system_items where segment1='1206-7328.4' and organization_id=130
+
+select QUANTITY_ISSUED,QUANTITY_PER_ASSEMBLY,REQUIRED_QUANTITY,SEGMENT1,WIP_ENTITY_ID,INVENTORY_ITEM_ID, ORGANIZATION_ID
+from apps.wip_requirement_operations where organization_id=130 and wip_entity_id =1118453 and INVENTORY_ITEM_ID=189466
+
+
+create table BMC_WIP_REQMTOPRT_BAK as select * from apps.wip_requirement_operations where organization_id=130 and wip_entity_id =1118453 and INVENTORY_ITEM_ID=189466
+
+
+update apps.wip_requirement_operations set QUANTITY_ISSUED=0 where organization_id=130 and wip_entity_id =1118453 and INVENTORY_ITEM_ID=189466
+
+
+----FIND OUT BMC backup TABLE  :
+select * from all_objects where object_name like '%BMC%BAK%' AND OBJECT_TYPE='TABLE'

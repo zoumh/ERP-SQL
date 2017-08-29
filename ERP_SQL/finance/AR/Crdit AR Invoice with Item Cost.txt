@@ -1,0 +1,28 @@
+
+-------------------Credit AR Invoice with Item cost
+
+select --e.ACCOUNT_CLASS,line_type,a.LINE_NUMBER,
+h.NAME as Type,
+b.TRX_NUMBER Invoice_No, c.SEGMENT1 as Item,c.DESCRIPTION,a.QUANTITY_CREDITED Qty,g.ITEM_COST,a.QUANTITY_CREDITED*g.ITEM_COST Credit_Cost,
+a.UNIT_STANDARD_PRICE Price,a.EXTENDED_AMOUNT amount
+,b.INVOICE_CURRENCY_CODE as Currency,decode(b.INVOICE_CURRENCY_CODE,'CNY',1,EXCHANGE_RATE) as Exchange_Rate
+,a.EXTENDED_AMOUNT*decode(b.INVOICE_CURRENCY_CODE,'CNY',1,EXCHANGE_RATE) as CNY_Amount
+,INTERFACE_LINE_ATTRIBUTE2 Type
+from apps.ra_customer_trx_lines_all a,apps.mtl_system_items c ,
+apps.ra_customer_trx_all b,apps.RA_CUST_TRX_LINE_GL_DIST_all e,apps.CST_ITEM_COST_TYPE_V g,
+apps.ra_cust_trx_types_all h
+where 
+a.inventory_item_id=c.inventory_item_id
+and a.CUSTOMER_TRX_ID=b.CUSTOMER_TRX_ID
+and c.ORGANIZATION_ID=83 and c.ORGANIZATION_ID=g.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=g.INVENTORY_ITEM_ID
+--and a.line_type='LINE'
+and a.CUSTOMER_TRX_ID =e.CUSTOMER_TRX_ID
+and e.CUSTOMER_TRX_LINE_ID=a.CUSTOMER_TRX_LINE_ID
+and h.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and h.org_id=81
+--and e.ACCOUNT_CLASS='REV'
+and a.EXTENDED_AMOUNT<0
+and g.COST_TYPE='Frozen'
+and e.GL_DATE>=to_date('2005-1-1','yyyy-mm-dd') and e.GL_DATE<to_date('2005-09-1','yyyy-mm-dd')
+order by b.TRX_NUMBER,a.LINE_NUMBER

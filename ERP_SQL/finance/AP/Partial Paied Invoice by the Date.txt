@@ -1,0 +1,38 @@
+
+
+---------Partial Paied Invoice by the Date
+
+select (aa.Lib_Inv+bb.Lib_Pay) Bal,aa.REFERENCE5 Invoice,convert(aa.REFERENCE1,'ZHS16GBK')  as Supplier from 
+(
+select (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0)) ) Lib_Inv,a.REFERENCE5,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+--and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and REFERENCE6='AP Invoices'
+group by a.REFERENCE5,a.REFERENCE1
+) aa,
+(
+select (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  ) Lib_Pay,a.REFERENCE5,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+group by a.REFERENCE5,a.REFERENCE1
+) bb
+where 
+aa.REFERENCE1=bb.REFERENCE1
+and aa.REFERENCE5=bb.REFERENCE5
+and abs(aa.Lib_Inv+bb.Lib_Pay)>0.01 
+and bb.Lib_Pay<>0
+
+

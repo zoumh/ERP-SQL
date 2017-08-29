@@ -1,0 +1,20 @@
+
+
+------------AR Invoice List (include un-posted Invoice -- e.GL_POSTED_DATE)
+CREATE OR REPLACE FORCE VIEW APPS.AR_INVOICE_LIST_with_unPost
+AS
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Account,e.ACCOUNT_CLASS,e.GL_DATE
+,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,e.GL_POSTED_DATE
+,b.TRX_DATE as Inv_Date  
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.GL_CODE_combinations g
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and a.org_id=81
+--and e.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+--and e.ACCOUNT_CLASS<>'REC'
+--order by a.NAME,b.TRX_DATE,b.TRX_NUMBER

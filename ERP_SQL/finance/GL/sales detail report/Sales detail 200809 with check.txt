@@ -1,0 +1,355 @@
+------Orginal sql from hjw (not rdf)
+SET heading ON;
+SET linesize 4000
+COLUMN acc FORMAT A15;
+COLUMN prd FORMAT A8;
+COLUMN prj FORMAT A8;
+COLUMN item_no FORMAT A25;
+COLUMN  item_revision FORMAT A25;
+COLUMN order_type FORMAT A30;
+COLUMN sales_order FORMAT A20;
+COLUMN "Sales Value" FORMAT 999999999999.99;
+COLUMN "Sales Value(CNY)" FORMAT 999999999999.99;
+COLUMN curr FORMAT A4;
+COLUMN "Trans Number" FORMAT A10;
+COLUMN "Order Line" FORMAT A4;
+COLUMN curr FORMAT A4;
+COLUMN "Region" FORMAT A20;
+COLUMN "Bill To Custmer Name" FORMAT A50;
+COLUMN "Trans Type" FORMAT A25;
+COLUMN "Cust PO Number" FORMAT A15;
+COLUMN "PRJ Code Reference" FORMAT A20;
+COLUMN region FORMAT A10;
+COLUMN "Order Line" FORMAT A4;
+COLUMN country FORMAT A3;
+COLUMN "Prod_Model" FORMAT A20;
+COLUMN "Sold_To_Customer_Number"  FORMAT A100;
+COLUMN "Sold_To_Customer_Name"  FORMAT A300  
+col "Type 1" format a30
+col "Type 2" format a30
+SELECT DISTINCT gcc.segment3 acc, gcc.segment4 prd, gcc.segment5 prj,
+                mib.segment1 item_no,
+                ola.ITEM_REVISION item_revision,
+                --NVL (rtl.quantity_invoiced, rtl.quantity_credited) quantity,                 -- modified at 4/26/2007 by songjf
+NVL (rtl.quantity_invoiced, rtl.quantity_credited)*decode(rga.percent,100,1,-100,-1) quantity, -- modified at 4/26/2007 by songjf
+                rtl.unit_selling_price price, 
+                --rtl.sales_order,
+                rtl.sales_order||'/'||ola.line_number||'0' sales_order,
+                rga.amount "Sales Value", rga.acctd_amount "Sales Value(CNY)",
+                --rtl1.extended_amount tax,                  -- modified at 4/26/2007 by songjf
+rtl1.extended_amount*decode(rga.percent,100,1,-100,-1) tax,  -- modified at 4/26/2007 by songjf
+                ooh.transactional_curr_code curr,
+                rca.NAME "Trans Type", rta.trx_number "Trans Number",
+                rtl.sales_order_line "Order Line", rta.trx_date "Trans Date",
+                --ooh.cust_po_number "Cust PO Number", 
+                ooh.cust_po_number||'/'||ola.line_number||'0' "Cust PO Number",
+                ola.attribute4 region,
+                raa.city city, raa.country country,
+                rc.customer_name "Custmer Name", rga.gl_posted_date "Month",
+                ooh.attribute14 "PRJ Code Reference",
+                mc.segment1 "Prod_Model",
+                tl.name order_type,
+                BSC.CUSTOMER_INFO_REF "Sold_To_Customer_Number" , 
+                BSC.ORGANIZATION_NAME || ' ' || BSC.ATTRIBUTE4 || '  ' || BSC.ADDRESS1 || '  ' ||    BSC.POSTAL_CODE || '  ' ||    BSC.CITY || '  ' ||  BSC.COUNTRY  "Sold_To_Customer_Name" 
+,mc.SEGMENT2 "Type 1",mc.SEGMENT4 "Type 2"  -- added at 4/25/2007 by songjf
+FROM ra_customer_trx_lines_all rtl,
+                ra_cust_trx_line_gl_dist_all rga,
+                ra_cust_trx_types_all rca,
+                ra_customer_trx_all rta,
+                mtl_system_items_b mib,
+                oe_order_headers_all ooh,
+                oe_transaction_types_tl tl,
+                oe_order_lines_all ola,
+                ra_customers rc,
+                ra_customers rc_1,
+                ra_customer_trx_lines_all rtl1,
+                ra_site_uses_all rsu,
+                ra_addresses_all raa,
+                (SELECT code_combination_id, segment1, segment2, segment3,
+                        segment4, segment5, segment6
+                   FROM gl_code_combinations
+                  WHERE segment1 = '01'
+                    AND segment2 = '0000'
+                    AND segment3 BETWEEN '&&3' AND '&&4' 
+                    AND segment4 BETWEEN '&&5' AND '&&6'  
+                    AND segment5 BETWEEN '&&7' AND '&&8'
+                    AND segment6 = '000000') gcc,
+                mtl_item_categories mic,
+                mtl_categories_b mc,
+                mtl_category_sets_tl mcst,
+				BMC_SEMC_CUSTOMERS       BSC  
+          WHERE rtl.customer_trx_line_id = rga.customer_trx_line_id
+            AND rtl.customer_trx_id = rta.customer_trx_id
+            AND rtl1.link_to_cust_trx_line_id(+) = rtl.customer_trx_line_id
+            AND rta.cust_trx_type_id = rca.cust_trx_type_id
+           AND rga.gl_date BETWEEN (SELECT start_date
+                                       FROM gl_periods
+                                      WHERE period_set_name = 'CAL_BMC'
+                                         AND period_name = '&&1')
+							     AND (SELECT end_date
+                                       FROM gl_periods
+                                      WHERE period_set_name = 'CAL_BMC'
+                                         AND period_name = '&&2')
+            AND rga.code_combination_id = gcc.code_combination_id
+            AND rtl.inventory_item_id = mib.inventory_item_id(+)
+            AND rtl.inventory_item_id(+)=mic.inventory_item_id --28953023 20071218
+            and mib.inventory_item_id=ola.INVENTORY_ITEM_ID
+            AND ooh.order_number(+) = rtl.sales_order
+            AND ooh.sold_to_org_id = rc.customer_id(+)
+ 	AND  ooh.SHIP_TO_ORG_ID = rc_1.customer_id(+)
+            AND ooh.header_id = ola.header_id 
+			AND ola.FLOW_STATUS_CODE<>'CANCELLED'
+            AND ooh.ship_to_org_id = rsu.site_use_id
+            AND rsu.address_id = raa.address_id(+)
+            AND ola.ship_from_org_id(+)=mib.organization_id
+            AND mib.organization_id =mic.organization_id --28953023 20071218
+            AND ola.org_id ='&&9'
+            AND tl.transaction_type_id=ooh.order_type_id
+	    AND tl.LANGUAGE='US'
+	    AND rca.org_id = '&&9' 
+		AND mcst.category_set_name = 'Inventory' --28953023 20071218
+				and ooh.GLOBAL_ATTRIBUTE4=to_char(BSC.CURRENT_CUSTOMER_ID(+))
+		 AND mic.category_id = mc.category_id --28953023 20071218
+            AND mic.category_set_id = mcst.category_set_id  --28953023 20071218
+            AND mcst.LANGUAGE = USERENV ('LANG') --28953023 20071218
+            and rtl.SALES_ORDER_LINE=ola.LINE_NUMBER
+            and mic.ORGANIZATION_ID>100;
+            
+----could run in toda (not rdf)
+SELECT DISTINCT gcc.segment3 acc, gcc.segment4 prd, gcc.segment5 prj,
+                mib.segment1 item_no,
+                ola.ITEM_REVISION item_revision,
+                --NVL (rtl.quantity_invoiced, rtl.quantity_credited) quantity,                 -- modified at 4/26/2007 by songjf
+NVL (rtl.quantity_invoiced, rtl.quantity_credited)*decode(rga.percent,100,1,-100,-1) quantity, -- modified at 4/26/2007 by songjf
+                rtl.unit_selling_price price, 
+                --rtl.sales_order,
+                rtl.sales_order||'/'||ola.line_number||'0' sales_order,
+                rga.amount "Sales Value", rga.acctd_amount "Sales Value(CNY)",
+                --rtl1.extended_amount tax,                  -- modified at 4/26/2007 by songjf
+rtl1.extended_amount*decode(rga.percent,100,1,-100,-1) tax,  -- modified at 4/26/2007 by songjf
+                ooh.transactional_curr_code curr,
+                rca.NAME "Trans Type", rta.trx_number "Trans Number",
+                rtl.sales_order_line "Order Line", rta.trx_date "Trans Date",
+                --ooh.cust_po_number "Cust PO Number", 
+                ooh.cust_po_number||'/'||ola.line_number||'0' "Cust PO Number",
+                ola.attribute4 region,
+                raa.city city, raa.country country,
+                rc.customer_name "Custmer Name", rga.gl_posted_date "Month",
+                ooh.attribute14 "PRJ Code Reference",
+                mc.segment1 "Prod_Model",
+                tl.name order_type,
+                BSC.CUSTOMER_INFO_REF "Sold_To_Customer_Number" , 
+                BSC.ORGANIZATION_NAME || ' ' || BSC.ATTRIBUTE4 || '  ' || BSC.ADDRESS1 || '  ' ||    BSC.POSTAL_CODE || '  ' ||    BSC.CITY || '  ' ||  BSC.COUNTRY  "Sold_To_Customer_Name" 
+,mc.SEGMENT2 "Type 1",mc.SEGMENT4 "Type 2"  -- added at 4/25/2007 by songjf
+FROM apps.ra_customer_trx_lines_all rtl,
+                apps.ra_cust_trx_line_gl_dist_all rga,
+                apps.ra_cust_trx_types_all rca,
+                apps.ra_customer_trx_all rta,
+                apps.mtl_system_items_b mib,
+                apps.oe_order_headers_all ooh,
+                apps.oe_transaction_types_tl tl,
+                apps.oe_order_lines_all ola,
+                apps.ra_customers rc,
+                apps.ra_customers rc_1,
+                apps.ra_customer_trx_lines_all rtl1,
+                apps.ra_site_uses_all rsu,
+                apps.ra_addresses_all raa,
+                (SELECT code_combination_id, segment1, segment2, segment3,
+                        segment4, segment5, segment6
+                   FROM apps.gl_code_combinations
+                  WHERE segment1 = '01'
+                    AND segment2 = '0000'
+ --                   AND segment3 BETWEEN '&&3' AND '&&4' 
+ --                   AND segment4 BETWEEN '&&5' AND '&&6'  
+ --                   AND segment5 BETWEEN '&&7' AND '&&8'
+                    AND segment6 = '000000') gcc,
+                apps.mtl_item_categories mic,
+                apps.mtl_categories_b mc,
+                apps.mtl_category_sets_tl mcst,
+                apps.BMC_SEMC_CUSTOMERS       BSC  
+          WHERE rtl.customer_trx_line_id = rga.customer_trx_line_id
+            AND rtl.customer_trx_id = rta.customer_trx_id
+            AND rtl1.link_to_cust_trx_line_id(+) = rtl.customer_trx_line_id
+            AND rta.cust_trx_type_id = rca.cust_trx_type_id
+           AND rga.gl_date BETWEEN (SELECT start_date
+                                       FROM apps.gl_periods
+                                      WHERE period_set_name = 'CAL_BMC'
+                                         AND period_name = 'SEP-08')
+                                 AND (SELECT end_date
+                                       FROM apps.gl_periods
+                                      WHERE period_set_name = 'CAL_BMC'
+                                         AND period_name = 'SEP-08')
+            AND rga.code_combination_id = gcc.code_combination_id
+            AND rtl.inventory_item_id = mib.inventory_item_id(+)
+            AND rtl.inventory_item_id(+)=mic.inventory_item_id --28953023 20071218
+            and mib.inventory_item_id=ola.INVENTORY_ITEM_ID
+            AND ooh.order_number(+) = rtl.sales_order
+            AND ooh.sold_to_org_id = rc.customer_id(+)
+     AND  ooh.SHIP_TO_ORG_ID = rc_1.customer_id(+)
+            AND ooh.header_id = ola.header_id 
+            AND ola.FLOW_STATUS_CODE<>'CANCELLED'
+            AND ooh.ship_to_org_id = rsu.site_use_id
+            AND rsu.address_id = raa.address_id(+)
+            AND ola.ship_from_org_id(+)=mib.organization_id
+            AND mib.organization_id =mic.organization_id --28953023 20071218
+            AND ola.org_id =127--'&&9'
+            AND tl.transaction_type_id=ooh.order_type_id
+        AND tl.LANGUAGE='US'
+        AND rca.org_id = 127---'&&9' 
+        AND mcst.category_set_name = 'Inventory' --28953023 20071218
+                and ooh.GLOBAL_ATTRIBUTE4=to_char(BSC.CURRENT_CUSTOMER_ID(+))
+         AND mic.category_id = mc.category_id --28953023 20071218
+            AND mic.category_set_id = mcst.category_set_id  --28953023 20071218
+            AND mcst.LANGUAGE = USERENV ('LANG') --28953023 20071218
+            and rtl.SALES_ORDER_LINE=ola.LINE_NUMBER
+            and mic.ORGANIZATION_ID>100;
+
+
+-----orginal SQL from .rdf , (should be from SQL,not this one!)
+select mib.segment1 Item_no,
+gcc.segment3||' '||gcc.segment4||' '||gcc.segment5 Accounts,
+	   rga.GL_POSTED_DATE,tl.name order_type,rtl.description,rtl.quantity_invoiced,rca.NAME,nvl(rtl.quantity_invoiced,rtl.QUANTITY_CREDITED) quantity,rtl.unit_selling_price,rtl.sales_order,rga.AMOUNT,rga.ACCTD_AMOUNT,
+rtl1.EXTENDED_AMOUNT,ooh.TRANSACTIONAL_CURR_CODE,rta.TRX_NUMBER,rta.TRX_DATE,ooh.CUST_PO_NUMBER,rc.customer_name
+from ra_customer_trx_lines_all rtl,
+ra_cust_trx_line_gl_dist_all rga,
+RA_CUST_TRX_TYPES_ALL rca,
+	 ra_customer_trx_all rta,
+mtl_system_items_b mib
+	 ,oe_order_headers_all ooh,
+oe_transaction_types_tl tl,ra_customers rc,
+ra_customer_trx_lines_all rtl1,
+	 (select code_combination_id,segment1,segment2,segment3,segment4,segment5,segment6
+	 		 from gl_code_combinations
+			 where 	  segment1='01'and segment2='0000'
+			 		  and segment3 between :P_ACC_FRT and :P_ACC_END
+	  		 		  and segment4 between :P_PRD_FRT and :P_PRD_END 
+					  and segment5 between :P_PRJ_FRT and :P_PRJ_END
+					  and segment6='000000'
+	  )gcc
+where rtl.customer_trx_line_id=rga.customer_trx_line_id and rtl.customer_trx_id=rta.CUSTOMER_TRX_ID
+	  and rtl1.LINK_TO_CUST_TRX_LINE_ID=rtl.CUSTOMER_TRX_LINE_ID
+	  and rta.CUST_TRX_TYPE_ID=rca.CUST_TRX_TYPE_ID
+	  and rga.gl_posted_date between 
+	  	  (select start_date from gl_periods where period_set_name='CAL_BMC' and period_name=:P_START_DATE)
+	  and (select end_date from gl_periods where period_set_name='CAL_BMC' and period_name=:P_END_DATE)
+	  and rga.code_combination_id=gcc.CODE_COMBINATION_ID 	  
+	  and rtl.inventory_item_id=mib.inventory_item_id
+	  and ooh.order_number(+)=rtl.sales_order
+                  and ooh.sold_to_org_id=rc.customer_id(+)
+	  and mib.ORGANIZATION_ID=81
+	  and tl.transaction_type_id=ooh.order_type_id
+	  and tl.language='US';
+
+
+----------could run in toda (rdf version)
+select mib.segment1 Item_no,
+gcc.segment3||' '||gcc.segment4||' '||gcc.segment5 Accounts,
+	   rga.GL_POSTED_DATE,tl.name order_type,rtl.description,rtl.quantity_invoiced,rca.NAME,
+       nvl(rtl.quantity_invoiced,rtl.QUANTITY_CREDITED) quantity,
+	   rtl.unit_selling_price,rtl.sales_order,rga.AMOUNT,rga.ACCTD_AMOUNT,rtl1.EXTENDED_AMOUNT,ooh.TRANSACTIONAL_CURR_CODE,
+       rta.TRX_NUMBER,rta.TRX_DATE,ooh.CUST_PO_NUMBER,rc.customer_name
+from apps.ra_customer_trx_lines_all rtl,
+    apps.ra_cust_trx_line_gl_dist_all rga,
+    apps.RA_CUST_TRX_TYPES_ALL rca,
+	 apps.ra_customer_trx_all rta,
+     apps.mtl_system_items_b mib,
+	 apps.oe_order_headers_all ooh,
+     apps.oe_transaction_types_tl tl,
+     apps.ra_customers rc,
+     apps.ra_customer_trx_lines_all rtl1,
+	 (select code_combination_id,segment1,segment2,segment3,segment4,segment5,segment6
+	 		 from apps.gl_code_combinations
+			 where 	  segment1='01'and segment2='0000'
+/*			 		  and segment3 between :P_ACC_FRT and :P_ACC_END
+	  		 		  and segment4 between :P_PRD_FRT and :P_PRD_END 
+					  and segment5 between :P_PRJ_FRT and :P_PRJ_END
+*/					  and segment6='000000'
+and segment3 ='5101030101'
+	  )gcc
+where rtl.customer_trx_line_id=rga.customer_trx_line_id and rtl.customer_trx_id=rta.CUSTOMER_TRX_ID
+	  and rtl1.LINK_TO_CUST_TRX_LINE_ID=rtl.CUSTOMER_TRX_LINE_ID
+	  and rta.CUST_TRX_TYPE_ID=rca.CUST_TRX_TYPE_ID
+	  and rga.gl_posted_date >to_date('2008-9-1','yyyy-mm-dd')
+--	  and (select end_date from gl_periods where period_set_name='CAL_BMC' and period_name=:P_END_DATE)
+	  and rga.code_combination_id=gcc.CODE_COMBINATION_ID 	  
+	  and rtl.inventory_item_id=mib.inventory_item_id
+	  and ooh.order_number(+)=rtl.sales_order
+                  and ooh.sold_to_org_id=rc.customer_id(+)
+	  and mib.ORGANIZATION_ID=127
+	  and tl.transaction_type_id=ooh.order_type_id
+	  and tl.language='US'
+--and rtl.sales_order='500290'
+--and rta.TRX_NUMBER='245239'
+
+
+------AR Invoice Full Account Entry with line, SO
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Rev_Acc,e.ACCOUNT_CLASS,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,h.inventory_item_id,h.sales_order,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,e.GL_POSTED_DATE
+,f.STATUS as Post,b.TRX_DATE as Inv_Date  
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_POSTING_CONTROL f
+,apps.GL_CODE_combinations g
+,apps.ra_customer_trx_lines_all h
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.POSTING_CONTROL_ID=f.POSTING_CONTROL_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and h.customer_trx_line_id=e.customer_trx_line_id
+and h.customer_trx_id=b.CUSTOMER_TRX_ID
+and g.segment3 in ('5101020206','5101030101','5101030102','5101030104','5101030105','5101030201','5101030202')
+and e.GL_DATE>=to_date('2008-09-1','yyyy-mm-dd') --and e.GL_DATE<=to_date('2004-07-29','yyyy-mm-dd')  
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER--,d.LINE_NUMBER
+
+
+
+-------------Journal of these account for one period
+select 
+b.PERIOD_NAME,convert(b.BATCH_NAME,'ZHS16GBK') Batch,convert(b.HEADER_NAME,'ZHS16GBK') Journal,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,a.segment3 as Account--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+,b.HEADER_ROW_ID,BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and b.PERIOD_NAME='SEP-08'
+and ACTUAL_FLAG='A'
+and a.segment3  in ('5101020206','5101030101','5101030102','5101030104','5101030105','5101030201','5101030202')
+
+
+
+
+500290.KRH Prototype Order New.ORDER ENTRY
+
+
+-----------check inventory side
+select   mmt.creation_date, mmt.organization_id,
+         mtt.transaction_type_name, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+     mta.primary_quantity  as Qty, 
+         mmt.transaction_id, 
+         mst.transaction_source_type_name,  
+         gcc.segment3 as Account_Num, gcc.segment2 CC,
+         trunc(mmt.transaction_date) as Trans_Date, 
+         mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,
+  apps.mtl_transaction_types     mtt,
+  apps.mtl_txn_source_types      mst
+where  mta.transaction_id = mmt.transaction_id
+and    mta.reference_account = gcc.code_combination_id
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+--and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id
+and    mta.organization_id = mmt.organization_id
+and gcc.segment3='5401030101'-- in ('5101030101','5101030102','5101030104','5101030105','5101030201','5101030202')
+and mmt.transaction_date>=to_date('20080901 00:00:00','YYYYMMDD HH24:MI:SS')
+--and mmt.transaction_date<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')

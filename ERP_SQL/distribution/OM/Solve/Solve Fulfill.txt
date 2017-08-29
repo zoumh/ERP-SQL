@@ -1,0 +1,430 @@
+
+
+SR Number  6980028.992   
+Open Date 04-JUN-08 03:59:04 
+Support Identifier  3869015   
+Name jin zhong 
+ 
+SO LINE STUCK AT THE STATUS OF 'FULFILLED' AND CAN'T BE PROGRESSED 
+
+so line stuck at the status of fulfilled, when progress order line, 
+there's error message app-ont-251013: there're no eligible activities to be completed.
+
+ISSUE CLARIFICATION
+====================
+On 11.5.9 in Production:
+When attempting to close lines, 
+the following error occurs.
+
+ERROR
+-----------------------
+So line stuck at the status of 'fulfilled' and can't be progressed
+
+Line is stucking at fulfilled status, can not be closed and generate invoice. checked the output of the diagnostic script, fould two errors for line 3.1, that might be the reason for the stuck. 
+
+Please provide me the following information if the action plan does not resolve the issue.
+
+Regards
+Kiran
+
+
+ACTION PLAN
+===========
+I)1. Go into the responsibility: Order Management super user responsibility.
+
+2. Select order,return from the main menu.
+
+3. Query the problematic order.
+
+4. Navigate to lines.
+
+5. Place the cursor on the ordered item
+
+6. Right click the mouse.
+
+7. Select "retry activities in error" from the drop down menu.
+
+8. Once this is completed,select tools--->work flow and check whether the line
+is progressed and the issue is resolved.
+
+9. Please retest the issue.
+
+
+II) Please provide the HTMomse11i.sql output of the other Sales Order identified to have
+the same
+issue.
+[ Refer Note 133464.1 ]
+The script will ask for the Order Number, please key in the order number for the script
+The script will next ask for the HEADER_ID, please do not enter anything
+The script will next ask for the LINE_ID, please do not enter the LINE_ID.
+The script would then generate the output for the entire Order.
+
+For HTMomse11i, when prompted by 'Do you want validation performed on this order (Default=Y):
+select N. This should prevent the performance problem.
+
+04-JUN-08 07:01:05 GMT
+
+New info : jin.zhong@sonyericsson.com
+there's only one so line having this problem.
+
+i can't find any "retry activities in error" from the drop down menu. you can see it in attachment
+
+Resolution History 
+ 
+
+04-JUN-08 03:59:04 GMT
+
+
+
+### Detailed Problem Statement ###
+so line stuck at the status of fulfilled, when progress order line, there's error message app-ont-251013: there're no 
+eligible activities to be completed.
+
+### Steps to Reproduce ###
+n/a
+
+### Instance Name and Type of System ###
+production
+
+### Recent Changes ###
+n/a
+
+### Workaround ###
+n/a
+
+### Impact on Business ###
+this so line can't be closed and the invoice can't be generated
+
+### Frequency of issue and if ever worked ###
+seldom
+
+### Using a standard flow ###
+No
+
+### Custom Code ###
+Not Tested
+
+### Problem orders and lines identified ###
+so: 232622
+line: 3
+
+### Workflow manually adjusted ###
+Yes
+
+### List of Customizations or 3rd Party Products ###
+n/a
+
+### Hrs Available for OWC ###
+we can discuss
+
+### Files to be Loaded:313841.1,133464.1,276207.1,156860.1 ###
+Some Files
+
+Can you easily recover from, bypass or work around the problem? 
+No
+
+Does your system or application continue normally after the problem occurs? 
+Yes
+
+Are the standard features of the system or application still available; is the loss of 
+service minor?
+No
+
+Error : APP-ONT-251013
+Contact me via : MetaLink
+
+
+04-JUN-08 04:02:57 GMT
+
+TAR has been assigned to an analyst -- Sending email. 
+
+04-JUN-08 04:03:01 GMT
+
+The customer : jin.zhong@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Documents_and_Settings\28952561\Desktop\SR\fulfilled_so_not_be_progressed\HTMomse11i_232622.html
+
+
+04-JUN-08 04:04:01 GMT
+
+The customer : jin.zhong@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Documents_and_Settings\28952561\Desktop\SR\claim_order_correctin_error\Apps_Check_290107.txt
+
+
+04-JUN-08 05:45:51 GMT
+
+Hello Jin
+Thank you for logging a Service Request with Oracle Support. My name is Sofia and I will be helping the analyst to clarify this issue at this moment. 
+We are currently reviewing the issue and will update the SR as soon as we have c
+ompleted the initial investigations. 
+
+Best Regards
+Sofia
+Support Engineer, Global eHUB
+North Asian Support Center
+
+
+04-JUN-08 06:10:14 GMT
+
+.
+DATA COLLECTED
+===============
+LOG FILE
+---------------
+Filename =HTMomse11i_232622.html
+See ...
+ORA-06502: PL/SQL: numeric or value error: character string buffer too small in Package OE_Invoice_PUB Procedure Interface_Single_line
+ORA-00942: table or view does not exist
+
+.
+ISSUE CLARIFICATION
+====================
+On 11.5.9 in Production:
+When attempting to close lines, 
+the following error occurs.
+
+ERROR
+-----------------------
+So line stuck at the status of 'fulfilled' and can't be progressed
+
+STEPS
+-----------------------
+The issue can not be reproduced.
+
+BUSINESS IMPACT
+-----------------------
+The issue has the following business impact:
+Due to this issue, users cannot be closed and the invoice can't be generated.
+.
+ISSUE VERIFICATION
+===================
+Verified the issue in the log file as noted below:
+LOG FILE
+-----------------------
+Filename =HTMomse11i_232622.html
+See ...
+ORA-06502: PL/SQL: numeric or value error: character string buffer too small in Package OE_Invoice_PUB Procedure Interface_Single_line
+ORA-00942: table or view does not exist
+
+Line is stucking at fulfilled status, can not be closed and generate invoice. checked the output of the diagnostic script, fould
+two errors for line 3.1, that might be the reason for the stuck. 
+
+
+
+
+
+04-JUN-08 06:28:02 GMT
+
+
+.
+UPDATE
+=======
+Maybe data fix needed.
+Transfer this SR to India for data fix. 
+
+Regards
+Sofia
+
+
+
+04-JUN-08 06:46:28 GMT
+
+(Update for record id(s): 232098906)
+
+UPDATE
+======
+Hi Jin,
+
+Your issue was transferred to me. My name is Kiran and I will be helping you with your issue.
+
+Thank you for your patience,
+Kiran
+Global Customer Services
+
+STATUS
+======
+@WIP - Work In Progress
+
+
+
+
+04-JUN-08 06:46:29 GMT
+
+Email Update button has been pressed: Sending email to jin.zhong@sonyericsson.com. 
+
+
+04-JUN-08 06:50:20 GMT
+
+(Update for record id(s): 232098931)
+
+UPDATE
+======
+Hi,
+
+Please provide me the following information if the action plan does not resolve the issue.
+
+Regards
+Kiran
+
+
+ACTION PLAN
+===========
+I)1. Go into the responsibility: Order Management super user responsibility.
+
+2. Select order,return from the main menu.
+
+3. Query the problematic order.
+
+4. Navigate to lines.
+
+5. Place the cursor on the ordered item
+
+6. Right click the mouse.
+
+7. Select "retry activities in error" from the drop down menu.
+
+8. Once this is completed,select tools--->work flow and check whether the line
+is progressed and the issue is resolved.
+
+9. Please retest the issue.
+
+
+II) Please provide the HTMomse11i.sql output of the other Sales Order identified to have
+the same
+issue.
+[ Refer Note 133464.1 ]
+The script will ask for the Order Number, please key in the order number for the script
+The script will next ask for the HEADER_ID, please do not enter anything
+The script will next ask for the LINE_ID, please do not enter the LINE_ID.
+The script would then generate the output for the entire Order.
+
+For HTMomse11i, when prompted by 'Do you want validation performed on this order (Default=Y):
+select N. This should prevent the performance problem.
+
+STATUS
+======
+@CUS - Waiting for customer response
+
+
+
+
+04-JUN-08 06:50:21 GMT
+
+Email Update button has been pressed: Sending email to jin.zhong@sonyericsson.com. 
+
+
+04-JUN-08 07:00:07 GMT
+
+The customer : jin.zhong@sonyericsson.com : has uploaded the following file via MetaLink:
+C:\Documents_and_Settings\28952561\Desktop\SR\fulfilled_so_not_be_progressed\Doc1.doc
+
+
+
+04-JUN-08 07:01:05 GMT
+
+New info : jin.zhong@sonyericsson.com
+there's only one so line having this problem.
+
+i can't find any "retry activities in error" from the drop down menu. you can see it in attachment
+
+
+
+04-JUN-08 07:13:08 GMT
+
+(Update for record id(s): 232104125)
+
+UPDATE
+======
+Hi,
+
+Please apply the following exception management patch.3731146
+After the application of the patch you will have the retry workflow in error activity in actions.
+Which help you in the resolution of the issue.
+
+Regards
+kiran
+ 
+04-JUN-08 07:16:16 GMT
+
+New info : jin.zhong@sonyericsson.com
+we only want a datafix for this order line. apply patch is not a acceptable solution. we can't apply this patch on our pro
+duction instance without test. and we don't know whether it is suitable.
+
+
+
+
+CAUSE DETERMINATION
+===================
+The cause of the issue is invalid / incorrect data in OE_ORDER_LINES_ALL table
+
+CAUSE JUSTIFICATION
+===================
+Issue has been specified in the note:453772.1
+
+PROPOSED SOLUTION(S)
+====================
+Applied the retry invoice_line1.sql
+
+PROPOSED SOLUTION JUSTIFICATION(S)
+==================================
+The following Note for this specific customer to receive a datafix .
+Note:453772.1
+
+SOLUTION / ACTION PLAN
+======================
+-- To implement the solution, please execute the following steps::
+1. Ensure that you have taken a backup of your system before applying the recommended solution.
+
+2. Run the following scripts in a TEST environment first:
+Retry_invoice_line1.sql
+3. Once the scripts complete, confirm that the data is corrected.
+4. If you are satisfied with the results, issue a commit.
+
+
+5. Migrate the solution as appropriate to other environments.
+
+
+05-JUN-08 02:33:04 GMT
+
+New info : jin.zhong@sonyericsson.com
+the problem is solved, thank you for your help.
+
+
+
+
+
+
+------------note:453772.1
+ORA-06502: Pl/SQL: Numeric Or Value Error: Character String Buffer Too Small
+
+Cause
+The cause of the issue is invalid data in the order_lines_all table.
+The line Workflow (WF) status shows that the line stuck in Invoice_interface Exception
+ORA-06512: at "APPS.OE_MSG_PUB", line 333
+ORA-06512: at "APPS.OE_INVOICE_PUB", line 8637
+ORA-06510: PL/SQL: unhandled user-defined exception
+
+Solution
+1. Go into the responsibility: Order Management super user responsibility.
+
+2. Select order,return from the main menu.
+
+3. Query the problematic order.
+
+4. Navigate to lines.
+
+5. Place the cursor on the ordered item
+
+6. Right click the mouse.
+
+7. Select "retry activities in error" from the drop down menu.
+
+8. Once this is completed,select tools--->work flow and check whether the line
+is progressed and the issue is resolved.
+
+9. Please retest the issue.
+
+10. If the issue is resolved, please migrate the solution as appropriate to
+other environments.
+
+
+

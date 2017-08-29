@@ -1,0 +1,24 @@
+
+
+Hi Harris,
+
+Pls kindly follow the instruction by Kelly:
+
+0. In Control-Autoinvoice_interface line, in folder-Show fields, add :GL Date,QUANTITY,TAX_CODE,ORIG_SYSTEM_BILL_ADDRESS_ID
+(Or use kelly's folder)
+1. export autoinvoice interface line to excel;
+2. sort by 'sales order';
+3. copy and paste to G: \ Finance \  BMCF \ Yanyi \ AR \ Sales order list \ 2004 07- ;
+4. check SO '300xxx'  and add GL date in Oracle interface line and save;
+5. run autoinvoice
+
+
+1. Run ¡°Autoinvoice Master Program¡± from AR--Interface--AutoInvoice
+Invoice Source='BMC OM Importing'
+Invoice Date:
+
+Due Date on Trx Date=Yes
+
+2.
+From the View windows,Run: Autoinvoice Import Program 
+This will load the ¡°AutoInvoice Execution Report¡±

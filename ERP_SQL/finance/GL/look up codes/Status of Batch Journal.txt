@@ -1,0 +1,98 @@
+
+------GL Batch
+
+select *
+from apps.gl_je_batches
+where name like '%SD2005%'
+
+gl_je_batches.STATUS :
+每 	Bad rounding account
+每* 	Bad rounding account 每 past
+< 	Reserved for country 每 specific functionality
+<* 	Reserved for country 每 specific functionality
+> 	Reserved for country 每 specific functionality
+>* 	Reserved for country 每 specific functionality
+A 	Funds reservation fails
+A* 	Funds reservation fails 每past AU Unopened period
+B 	Batch total violation
+B* 	Batch total violation 每 past
+BF 	Frozen or inactive budget
+BU 	Unopened budget year
+C 	Unopened reporting period
+C* 	Unopened reporting period 每past
+D 	Post to not open period
+D* 	Post to not open period 每past
+E 	No journal entries
+E* 	No journal entries 每 past
+EU 	Unopened encumbrance year
+F 	Unopened reporting encumbrance year
+F* 	Unopened reporting encumbrance year 每 past
+G 	Bad suspense account
+G* 	Bad suspense account 每 past
+H 	Bad reserve account
+H* 	Bad reserve account 每 past
+I 	Underway
+J 	Journal total violation
+J* 	Journal total violation 每past
+K 	Unbalanced IC JE
+K* 	Unbalanced IC JE 每 past
+L 	Unbalanced JE by acct category
+L* 	Unbalanced JE by AC 每 past
+M 	Multiple problems
+M* 	Multiple problems 每 past
+N 	Bad intercompany account
+N* 	Bad intercompany account每past
+O 	No reporting conversion information
+O* 	No reporting conversion information 每 past
+P 	Posted
+Q 	Untaxed journal entry
+Q* 	Untaxed journal entry 每 past
+R 	Unbalanced enc JE
+R* 	Unbalanced enc JE 每 past
+S 	Selected
+T 	Invalid conversion information
+T* 	Invalid conversion info 每past
+U 	Unposted
+V 	Unapproved
+V* 	Unapproved 每 past
+
+
+---------------GL Journals Header
+apps.gl_je_headers.STATUS:
+每 Bad rounding account
+> Reserved for country 每 specific functionality
+< Reserved for country 每 specific functionality
+U Unposted
+P Posted
+1 Invalid currency code
+2 Invalid source
+3 Invalid category
+4 Invalid set of books
+5 Invalid set of books
+6 (Actual) Unopened period
+6 (Budget) Invalid budget version
+6 (Encumbrance) Invalid encumbrance type
+7 Invalid entry
+8 Invalid entry
+A Code combination does not exist
+B Multiple lines have code combination error
+C Code combination: detail posting not allowed
+D Multiple lines have code combination error
+E Multiple lines have code combination error
+F Code combination not enabled
+G Multiple lines have code combination error
+H Multiple lines have code combination error
+I Multiple lines have code combination error
+3 每 288 Oracle General Ledger Applications Technical Reference Manual
+Oracle Proprietary, Confidential Information每每Use Restricted by Contract
+J Code combination not yet effective (date)
+K Multiple lines have code combination error
+L Multiple lines have code combination error
+M Code combination past effective date
+N Multiple lines have code combination error
+O Multiple lines have code combination error
+Q Multiple lines have code combination error
+R Multiple lines have code combination error
+T Multiple lines have code combination error
+V Multiple lines have code combination error
+Z Multiple lines have code combination error

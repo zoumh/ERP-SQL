@@ -1,0 +1,64 @@
+
+-with cost group
+select   mmt.transaction_date,ccg1.COST_GROUP,ccg2.COST_GROUP Transfer_Cost_Group,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+         mmt.subinventory_code, a.segment2||'.'||a.segment3||'.'||a.segment4||'.'||a.segment5 Frm_Locator, 
+         mmt.TRANSFER_SUBINVENTORY,b.segment2||'.'||b.segment3||'.'||b.segment4||'.'||b.segment5 to_Locator,
+         mmt.TRANSACTION_QUANTITY as Qty,ou.ORGANIZATION_CODE Org,
+         --mmt.organization_id Organization ,
+         trunc(mmt.transaction_date) as Trans_Date,
+         mtt.DESCRIPTION as Type_Description,FU.USER_NAME requestor,
+         mmt.REVISION,mmt.transaction_id
+from apps.FND_USER FU,apps.org_organization_definitions OU,
+apps.mtl_item_locations a,apps.mtl_item_locations b,
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.cst_cost_groups ccg1,
+  apps.cst_cost_groups ccg2 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+--and msi.organization_id  in (128,130,133,132)
+AND FU.USER_ID=MMT.CREATED_BY
+and mmt.organization_id=ou.organization_id
+and mmt.LOCATOR_ID=a.INVENTORY_LOCATION_ID(+)
+and mmt.TRANSFER_LOCATOR_ID =b.INVENTORY_LOCATION_ID(+)
+and mmt.COST_GROUP_ID=ccg1.COST_GROUP_ID(+)
+and mmt.TRANSFER_COST_GROUP_ID=ccg2.COST_GROUP_ID(+)
+and msi.segment1='RTK 994 1400.R3A'
+and ou.ORGANIZATION_CODE='VP'--,'AC','IP','SE')
+and    (mmt.transaction_date) >= to_date('20090701 01:50:00','YYYYMMDD HH24:MI:SS')
+and mtt.transaction_type_name<>'WIP component issue'
+order by mmt.transaction_date desc,mmt.transaction_id
+
+
+----no cost group
+select   mmt.transaction_date, FU.USER_NAME requestor,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+         mmt.subinventory_code, a.segment2||'.'||a.segment3||'.'||a.segment4||'.'||a.segment5 Frm_Locator, 
+         mmt.TRANSFER_SUBINVENTORY,b.segment2||'.'||b.segment3||'.'||b.segment4||'.'||b.segment5 to_Locator,
+         mmt.TRANSACTION_QUANTITY as Qty,ou.ORGANIZATION_CODE Org,
+         --mmt.organization_id Organization ,
+         trunc(mmt.transaction_date) as Trans_Date,
+         mtt.DESCRIPTION as Type_Description,
+         mmt.REVISION,mmt.transaction_id
+from apps.FND_USER FU,apps.org_organization_definitions OU,
+apps.mtl_item_locations a,apps.mtl_item_locations b,
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+--and msi.organization_id  in (128,130,133,132)
+AND FU.USER_ID=MMT.CREATED_BY
+and mmt.organization_id=ou.organization_id
+and mmt.LOCATOR_ID=a.INVENTORY_LOCATION_ID(+)
+and mmt.TRANSFER_LOCATOR_ID =b.INVENTORY_LOCATION_ID(+)
+and msi.segment1='RTK 994 1400.R3A'
+and ou.ORGANIZATION_CODE='VP'--,'AC','IP','SE')
+and    (mmt.transaction_date) >= to_date('20090701 01:50:00','YYYYMMDD HH24:MI:SS')
+order by mmt.transaction_date desc,mmt.transaction_id

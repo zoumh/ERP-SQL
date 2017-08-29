@@ -1,0 +1,183 @@
+
+
+----------Check employee name list
+select FULL_NAME,EMPLOYEE_NUMBER from  apps.PER_PEOPLE_V7 where EMPLOYEE_NUMBER IN ('22966145', '22701003','249','28946107','952209','23032632','23000946','234','22860519')
+
+  
+------------Check un-approvaled PO PR
+
+SELECT PR.SEGMENT1 Req_or_PO_Number,
+HI.OBJECT_TYPE_CODE Doc_Type,PR.AUTHORIZATION_STATUS,
+--HI.ACTION_CODE,
+PE.FULL_NAME To_Whom,
+PR.NOTE_TO_AUTHORIZER,
+PR.DESCRIPTION DESC_OR_COMMENTS,
+PE.EMPLOYEE_NUMBER,pr.creation_date Date_Time,trunc(pr.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PR.REQUISITION_HEADER_ID Hearder_ID,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY          HI,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.PER_PEOPLE_V7              PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+AND PR.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+and HI.ACTION_CODE is null
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.PREPARER_ID=PE2.PERSON_ID
+AND PE.EMPLOYEE_NUMBER IN ('22966145', '22701003','249','28946107','952209','23032632','23000946','234','22860519')
+  ---and TRUNC(PR.CREATION_DATE )=trunc(SYSDATE)
+union
+SELECT PO.SEGMENT1 PO_Number,
+HI.OBJECT_TYPE_CODE Doc_Type,PO.AUTHORIZATION_STATUS,
+--HI.ACTION_CODE,
+PE.FULL_NAME To_Whom,
+PO.NOTE_TO_AUTHORIZER,
+PO.COMMENTS DESC_OR_COMMENTS,
+PE.EMPLOYEE_NUMBER,po.creation_date Date_Time,trunc(po.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PO.PO_header_id Header_ID,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY  HI,
+apps.PO_HEADERS_ALL     PO,
+apps.PER_PEOPLE_V7      PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PO.PO_HEADER_ID=HI.OBJECT_ID
+and PO.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+and HI.ACTION_CODE is null
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PO.AGENT_ID=PE2.PERSON_ID
+AND PE.EMPLOYEE_NUMBER IN ('22966145', '22701003','249','28946107','952209','23032632','23000946','234','22860519')
+---and TRUNC(PO.CREATION_DATE)=trunc(SYSDATE)
+
+
+----Old
+  SELECT PR.SEGMENT1 Req_or_PO_Number,
+	   HI.OBJECT_TYPE_CODE Doc_Type,PR.AUTHORIZATION_STATUS,
+	   --HI.ACTION_CODE,
+	   PE.FULL_NAME,
+	   PR.NOTE_TO_AUTHORIZER,
+	   PR.DESCRIPTION DESC_OR_COMMENTS,
+	   PE.EMPLOYEE_NUMBER,pr.creation_date Date_Time,trunc(pr.creation_date) Create_Date
+FROM apps.PO_ACTION_HISTORY          HI,
+	 apps.PO_REQUISITION_HEADERS_ALL PR,
+	 apps.PER_PEOPLE_V7              PE
+WHERE 
+	  PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+  AND PR.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+  and HI.ACTION_CODE is null
+  and HI.EMPLOYEE_ID=PE.PERSON_ID
+  AND PE.EMPLOYEE_NUMBER IN ('22966145', '22701003','249','28946107','952209','23032632','23000946','234','22860519')
+  ---and TRUNC(PR.CREATION_DATE )=trunc(SYSDATE)
+union
+SELECT PO.SEGMENT1 PO_Number,
+	   HI.OBJECT_TYPE_CODE Doc_Type,PO.AUTHORIZATION_STATUS,
+	   --HI.ACTION_CODE,
+	   PE.FULL_NAME,
+	   PO.NOTE_TO_AUTHORIZER,
+	   PO.COMMENTS DESC_OR_COMMENTS,
+	   PE.EMPLOYEE_NUMBER,po.creation_date Date_Time,trunc(po.creation_date) Create_Date
+FROM apps.PO_ACTION_HISTORY  HI,
+	 apps.PO_HEADERS_ALL     PO,
+	 apps.PER_PEOPLE_V7      PE
+WHERE 
+	  PO.PO_HEADER_ID=HI.OBJECT_ID
+  and PO.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+  and HI.ACTION_CODE is null
+  and HI.EMPLOYEE_ID=PE.PERSON_ID
+  AND PE.EMPLOYEE_NUMBER IN ('22966145', '22701003','249','28946107','952209','23032632','23000946','234','22860519')
+  ---and TRUNC(PO.CREATION_DATE)=trunc(SYSDATE)
+
+
+---------Rejected Items
+SELECT PR.SEGMENT1 Req_or_PO_Number,
+HI.OBJECT_TYPE_CODE Doc_Type,PR.AUTHORIZATION_STATUS,
+--HI.ACTION_CODE,
+PE.FULL_NAME To_Whom,
+PR.NOTE_TO_AUTHORIZER,
+PR.DESCRIPTION DESC_OR_COMMENTS,
+PE.EMPLOYEE_NUMBER,pr.creation_date Date_Time,trunc(pr.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PR.REQUISITION_HEADER_ID Hearder_ID,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY          HI,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.PER_PEOPLE_V7              PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+AND PR.AUTHORIZATION_STATUS like '%JEC%'
+and HI.ACTION_CODE is null
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.PREPARER_ID=PE2.PERSON_ID
+AND PE.EMPLOYEE_NUMBER IN ('22966145', '22701003','249','28946107','952209','23032632','23000946','234','22860519')
+  ---and TRUNC(PR.CREATION_DATE )=trunc(SYSDATE)
+union
+SELECT PO.SEGMENT1 PO_Number,
+HI.OBJECT_TYPE_CODE Doc_Type,PO.AUTHORIZATION_STATUS,
+--HI.ACTION_CODE,
+PE.FULL_NAME To_Whom,
+PO.NOTE_TO_AUTHORIZER,
+PO.COMMENTS DESC_OR_COMMENTS,
+PE.EMPLOYEE_NUMBER,po.creation_date Date_Time,trunc(po.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PO.PO_header_id Header_ID,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY  HI,
+apps.PO_HEADERS_ALL     PO,
+apps.PER_PEOPLE_V7      PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PO.PO_HEADER_ID=HI.OBJECT_ID
+and PO.AUTHORIZATION_STATUS like '%JEC%'
+and HI.ACTION_CODE is null
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PO.AGENT_ID=PE2.PERSON_ID
+AND PE.EMPLOYEE_NUMBER IN ('22966145', '22701003','249','28946107','952209','23032632','23000946','234','22860519')
+
+
+
+
+FULL_NAME		EMPLOYEE_NUMBER
+----------------------------------------
+Minemura, Mr. Shuji	22701003
+Tan, Mr. Kiyokazu	22860519
+Tanaka, Mr. Hiroyuki	22966145
+Eriksson, Mr. Roger	23000946
+Linderum, Mr. Mattias	23032632
+Chen, Qi, Jack		234
+Yu, Min			249
+Stalnert, Mr. Tomas	28946107
+Mizukami, Tadashi	952209
+
+
+
+
+
+
+
+-------------------------PO Full Approval status & Hierasrchy structure
+select PO.SEGMENT1 PO_Num,c.FULL_NAME To_Whom,b.sequence_num Appro_Seq,b.status,d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,apps.PO_APPROVAL_LIST_LINES b,apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_HEADERS_ALL PO
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PO.PO_HEADER_ID=a.document_id
+and PO.SEGMENT1='1012666'
+
+
+-------------------------PR Full Approval status & Hierasrchy structure
+
+select PR.SEGMENT1 PR_Num,c.FULL_NAME To_Whom,b.sequence_num Appro_Seq,b.status,d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,apps.PO_APPROVAL_LIST_LINES b,apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PR.REQUISITION_HEADER_ID=a.document_id
+and PR.SEGMENT1='5523'
+
+
+
+
+
+

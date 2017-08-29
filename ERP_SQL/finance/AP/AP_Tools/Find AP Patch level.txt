@@ -1,0 +1,13 @@
+
+
+select patch_level  from apps.fnd_product_installations  where application_id = 200;       
+This statement will return the patch level if at patchset 11i.AP.I or later.
+
+
+---------------------------
+
+navigate to Invoice -> Entry -> Invoices.     
+Select Help/About Oracle Applications. Scroll down and you will see the     
+shortname APXINWKB and below that will be the version number for the form. 
+
+

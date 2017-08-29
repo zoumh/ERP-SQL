@@ -1,0 +1,201 @@
+---------Un-Received Asset PO before 2006-12-31 ,status is Open, (YanYi need)
+
+select d.CREATION_DATE,a.ORG_ID ,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,
+a.segment1 PO_Num,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+d.quantity_ordered Dist_Order_Qty,d.quantity_cancelled Dist_Canced_Qty,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED) Dist_Open_Qty,
+d.QUANTITY_BILLED Dist_Billed_Qty,d.QUANTITY_DELIVERED Dist_Rec_Qty,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)*b.unit_price Open_Amount,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)*b.unit_price*nvl(d.rate,1) Open_Amount_CNY,
+b.unit_price,nvl(d.rate,1) Rate,
+a.currency_code Curr,b.Item_Description,g.segment1 Item,
+e.segment2 CC,e.segment3 Accounts,e.segment4 PRD,e.segment5 PRJ,
+b.cancel_flag Line_Cancel,d.creation_date,c.closed_code,a.AUTHORIZATION_STATUS
+from 	apps.PO_HEADERS_ALL a
+,		apps.PO_LINES_ALL b
+,		apps.po_Line_locations_all c
+,		apps.PO_DISTRIBUTIONS_ALL d
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+,		apps.gl_code_combinations e
+,		apps.PO_line_types f
+,		apps.mtl_system_items_b g
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+--and (b.line_type_id=1020)-- or b.item_id is null)----N-BOM PO Line
+--and VDR.VENDOR_NAME='FOXCONN PRECISION COMPONENT (BEIJING) CO., LTD'
+and VDR.VENDOR_ID=a.VENDOR_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and g.INVENTORY_ITEM_ID(+)=b.item_id 
+and f.line_type='Non-BOM Purchasing'
+and (d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)>0
+and c.closed_code ='OPEN'
+and e.segment3='15010000'
+and d.CREATION_DATE<=to_date('2006-12-31','yyyy-mm-dd') 
+and a.org_id>=127
+order by a.segment1 ,b.line_num,c.shipment_num ,d.DISTRIBUTION_NUM
+
+
+---------Un-Received Asset PO before 2006-12-31 ,status is Open, (YanYi need)
+
+select d.CREATION_DATE,a.ORG_ID ,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,
+a.segment1 PO_Num,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+d.quantity_ordered Dist_Order_Qty,d.quantity_cancelled Dist_Canced_Qty,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED) Dist_Open_Qty,
+d.QUANTITY_BILLED Dist_Billed_Qty,d.QUANTITY_DELIVERED Dist_Rec_Qty,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)*b.unit_price Open_Amount,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)*b.unit_price*nvl(d.rate,1) Open_Amount_CNY,
+b.unit_price,nvl(d.rate,1) Rate,
+a.currency_code Curr,b.Item_Description,g.segment1 Item,
+e.segment2 CC,e.segment3 Accounts,e.segment4 PRD,e.segment5 PRJ,
+b.cancel_flag Line_Cancel,d.creation_date,c.closed_code,a.AUTHORIZATION_STATUS
+from 	apps.PO_HEADERS_ALL a
+,		apps.PO_LINES_ALL b
+,		apps.po_Line_locations_all c
+,		apps.PO_DISTRIBUTIONS_ALL d
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+,		apps.gl_code_combinations e
+,		apps.PO_line_types f
+,		apps.mtl_system_items_b g
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+--and (b.line_type_id=1020)-- or b.item_id is null)----N-BOM PO Line
+--and VDR.VENDOR_NAME='FOXCONN PRECISION COMPONENT (BEIJING) CO., LTD'
+and VDR.VENDOR_ID=a.VENDOR_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and g.INVENTORY_ITEM_ID(+)=b.item_id 
+and f.line_type='Non-BOM Purchasing'
+and (d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)>0
+and c.closed_code ='OPEN'
+and e.segment3='15010000'
+and d.CREATION_DATE<=to_date('2006-12-31','yyyy-mm-dd') 
+and a.org_id>=127
+order by a.segment1 ,b.line_num,c.shipment_num ,d.DISTRIBUTION_NUM
+
+---------Un-Received Asset PO,status is Open, (Yan need)
+
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,
+a.segment1 PO_Num,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+d.quantity_ordered Dist_Order_Qty,d.quantity_cancelled Dist_Canced_Qty,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED) Dist_Open_Qty,
+d.QUANTITY_BILLED Dist_Billed_Qty,d.QUANTITY_DELIVERED Dist_Rec_Qty,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)*b.unit_price Open_Amount,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)*b.unit_price*nvl(d.rate,1) Open_Amount_CNY,
+b.unit_price,nvl(d.rate,1) Rate,
+a.currency_code Curr,b.Item_Description,g.segment1 Item,
+e.segment2 CC,e.segment3 Accounts,e.segment4 PRD,e.segment5 PRJ,
+b.cancel_flag Line_Cancel,d.creation_date
+from 	apps.PO_HEADERS_ALL a
+,		apps.PO_LINES_ALL b
+,		apps.po_Line_locations_all c
+,		apps.PO_DISTRIBUTIONS_ALL d
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+,		apps.gl_code_combinations e
+,		apps.PO_line_types f
+,		apps.mtl_system_items_b g
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+--and (b.line_type_id=1020)-- or b.item_id is null)----N-BOM PO Line
+--and VDR.VENDOR_NAME='FOXCONN PRECISION COMPONENT (BEIJING) CO., LTD'
+and VDR.VENDOR_ID=a.VENDOR_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and g.INVENTORY_ITEM_ID(+)=b.item_id 
+and f.line_type='Non-BOM Purchasing'
+and (d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)>0
+and c.closed_code ='OPEN'
+--and e.segment3='15010000'
+order by a.segment1 ,b.line_num,c.shipment_num ,d.DISTRIBUTION_NUM
+
+
+
+
+-------Jessica, FA PO, Opened at end of 2005 (they were transfer to new OU at 2006, so no receive at 2006for them)
+
+
+select VDR.VENDOR_NAME as Supplier,VDR.SEGMENT1 as Supplier_Num,
+a.segment1 PO,b.LINE_NUM,c.SHIPMENT_NUM,
+c.QUANTITY,c.QUANTITY_CANCELLED,c.QUANTITY_RECEIVED,
+(c.QUANTITY-c.QUANTITY_CANCELLED-c.QUANTITY_RECEIVED) Open_Qty,
+(c.QUANTITY-c.QUANTITY_CANCELLED-c.QUANTITY_RECEIVED)*b.UNIT_PRICE*nvl(a.RATE,1) Amt_CNY_Open
+,b.UNIT_PRICE,a.CURRENCY_CODE,a.RATE,ITEM_DESCRIPTION
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,(select distinct c.LINE_LOCATION_ID
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_DISTRIBUTIONS_ALL d
+,apps.gl_code_combinations e
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and a.ORG_ID=b.ORG_ID
+and a.ORG_ID=c.ORG_ID
+and a.ORG_ID<127
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and d.line_location_id=c.line_location_id
+and a.PO_HEADER_ID=d.PO_HEADER_ID
+and a.po_header_id=c.po_header_id
+and a.creation_date>=to_date('2005-01-01','yyyy-mm-dd')
+and a.creation_date<=to_date('2005-12-31','yyyy-mm-dd')
+and e.segment3='15010000') j
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and a.ORG_ID=b.ORG_ID
+and a.ORG_ID=c.ORG_ID
+and a.ORG_ID<127
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and j.LINE_LOCATION_ID=c.LINE_LOCATION_ID
+and a.po_header_id=c.po_header_id
+and c.LINE_LOCATION_ID=j.LINE_LOCATION_ID
+and (c.QUANTITY-c.QUANTITY_CANCELLED-c.QUANTITY_RECEIVED)>0
+and a.creation_date>=to_date('2005-01-01','yyyy-mm-dd')
+and a.creation_date<=to_date('2005-12-31','yyyy-mm-dd')
+order by VDR.SEGMENT1,a.segment1,b.LINE_NUM,c.SHIPMENT_NUM
+
+

@@ -1,0 +1,83 @@
+
+------MRP Plan Head Name (MRP,MPS etc...)
+
+select * from apps.MRP_PLAN_PARAMETERS_V 
+
+select compile_designator Plan_Name,curr_plan_type_text Plan_Type,schedule_designator Demand_Name,schedule_type_desc Demand_Type,organization_id 
+from apps.MRP_PLAN_PARAMETERS_V where compile_designator like 'test%'
+
+
+MRP_DESIGNATORS 
+stores MRP plan names,This table is populated by the Define MRP Names form.
+
+
+MRP_PLANS 
+stores the settings that determine the behavior of the planning process for a given plan name. 
+Each row stores information for a particular plan name.
+
+
+
+apps.mrp_orders_sc_v 
+This View includes : 
+	MRP_RECOMMENDATIONS (stores Oracle Master Scheduling/MRP’s suggestions for a given plan)
+	MRP_SUGG_REP_SCHEDULES SCHED (stores the allocation, by line, of suggested aggregate 
+				      repetitive schedules stored in MRP_RECOMMENDATIONS)
+	MRP_GROSS_REQUIREMENTS (stores the projected gross requirements for a given item in an 
+				MPS, MRP or DRP plan)
+		
+
+----analyse this view
+
+--1. MRP Order SOURCE_TABLE='MRP_GROSS_REQUIREMENTS'
+select distinct a.SOURCE_TABLE,count(*),decode(a.USING_ASSEMBLY_ITEM_ID,null,'NULL','HAVE') USING_ASSEMBLY_item,
+b.ITEM_TYPE Assembly_Item_Type ,c.item_type comp_item_type,a.COMPILE_DESIGNATOR
+from apps.bmc_mrp_orders_sc_t a,apps.mtl_system_items_b b,apps.mtl_system_items_b c where 
+a.USING_ASSEMBLY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+-- creation_date>to_date('2008-4-1','yyyy-mm-dd')
+and SOURCE_TABLE='MRP_GROSS_REQUIREMENTS'
+group by a.SOURCE_TABLE,decode(a.USING_ASSEMBLY_ITEM_ID,null,'NULL','HAVE'),b.ITEM_TYPE ,c.ITEM_TYPE,a.COMPILE_DESIGNATOR
+--could see 按BOM一层层打散在此!
+
+
+select b.segment1 Assembly,
+b.ITEM_TYPE Assembly_Item_Type ,c.segment1 Component,c.item_type comp_item_type,a.COMPILE_DESIGNATOR,
+decode(c.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,a.PLANNING_MAKE_BUY_CODE,a.PURCHASING_ENABLED_FLAG,
+ORDER_NUMBER,a.FIRM_QUANTITY,a.IMPLEMENT_QUANTITY_RATE,
+a.ORDER_TYPE_TEXT,a.MRP_PLANNING_CODE,a.BOM_ITEM_TYPE,a.STATUS_CODE,a.DESCRIPTION
+from apps.bmc_mrp_orders_sc_t a,apps.mtl_system_items_b b,apps.mtl_system_items_b c where 
+a.USING_ASSEMBLY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+-- creation_date>to_date('2008-4-1','yyyy-mm-dd')
+and SOURCE_TABLE='MRP_GROSS_REQUIREMENTS'
+and a.COMPILE_DESIGNATOR in ('W817KMRP')
+and b.ITEM_TYPE='DPY'
+
+
+for SOURCE_TABLE=MRP_RECOMMENDATIONS, USING_ASSEMBLY_ITEM_ID is null
+
+
+MRP_RECOMMENDATIONS 
+stores Oracle Master Scheduling/MRP’s suggestions for a given plan. 
+Each purchase order, purchase requisition,purchase order in receiving, 
+discrete job, nonstandard job, intransit shipment, intransit receipt, 
+planned order and suggested repetitive schedule will have a corresponding row in it.
+
+
+
+MRP_ITEM_PURCHASE_ORDERS 
+stores a copy of all active purchase orders, purchase requisitions, 
+purchase orders in receiving, intransit shipments, or intransit receipts.
+
+
+
+MRP_ITEM_WIP_ENTITIES 
+stores a copy of all active discrete jobs,is populated by the Snapshot
+
+
+
+

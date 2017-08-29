@@ -1,0 +1,48 @@
+
+
+
+---------Check FG/RM onhand Cost Group (if error), then to find the transaction cause 
+
+
+
+select b.segment1, sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d
+where a.organization_id=83 and b.organization_id=83 and c.organization_id=83 and d.organization_id=83
+--and e.organization_id=84  and a.inventory_item_id=e.inventory_item_id
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+--and b.segment1='A/12000030010075'
+group by b.segment1, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999) 
+order by a.subinventory_code, b.segment1
+
+
+
+
+
+----Use Trans_ID link Mtl_onhand & Mtl_Trans table
+
+select MTT.TRANSACTION_TYPE_NAME,MMT.organization_id,
+MMT.SUBINVENTORY_CODE, 
+transaction_date, 
+MSI.SEGMENT1 item_number, 
+mmt.transaction_id, 
+nvl(transaction_cost,actual_cost) cost, 
+MMT.transaction_quantity quantity, 
+MMT.TRANSACTION_REFERENCE, 
+transaction_quantity*nvl(transaction_cost,actual_cost) amount, 
+mtt.DESCRIPTION as Type_Description
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI 
+WHERE  --MMT.organization_id=83 
+MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.organization_id
+and mmt.TRANSACTION_ID in ('9124914','9124915')
+
+
+

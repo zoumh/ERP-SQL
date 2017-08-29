@@ -1,0 +1,28 @@
+
+select * from apps.wms_license_plate_numbers WHERE  LICENSE_PLATE_NUMBER=''--lpn_id=3367741
+
+
+------------Find All Transaction of this LPN
+select   mmt.transaction_date, mmt.LPN_ID,lpn.LICENSE_PLATE_NUMBER Transfer_lpn_num,mmt.CONTENT_LPN_ID,
+        'Transfer-LPN' LPN_Type,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.TRANSACTION_QUANTITY as Qty,  
+--         mtt.DESCRIPTION                     Type_Description, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse,
+         mmt.REVISION,
+         mmt.transaction_id         
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.wms_license_plate_numbers LPN
+where  
+        mtt.transaction_type_id = mmt.transaction_type_id 
+and     msi.inventory_item_id = mmt.inventory_item_id  
+and     mmt.organization_id = msi.organization_id 
+and     mmt.CREATION_DATE >to_date('20081125 00:00:00','YYYYMMDD HH24:MI:SS') 
+and     mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+and (mmt.LPN_ID=4686565 or mmt.TRANSFER_LPN_ID=4686565 or mmt.CONTENT_LPN_ID=4686565)
+

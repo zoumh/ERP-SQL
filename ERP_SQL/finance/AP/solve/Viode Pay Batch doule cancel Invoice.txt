@@ -1,0 +1,27 @@
+
+
+Bug 4505963
+DOUBLE PAYMENT CANCELLATION EVENTS FOR THE SAME CHECK
+
+A check gets two PAYMENT CANCELLATION events. The first event is orphan and the 2nd won't account because the first is out there.
+
+
+The following query should return rows.  . 	
+
+select source_id check_id, count(*) 	
+from ap_accounting_events_all e 	
+where event_type_code = 'PAYMENT CANCELLATION' 	
+group by source_id 	
+having count(*) > 1 	and min(creation_date) > ( 		select vs.last_update_date 		from po_vendor_sites_all vs 			, ap_checks_all c 		where c.check_id = e.source_id 		and c.vendor_site_id = vs.vendor_site_id); 
+
+
+
+
+---VP
+
+JN20060716CNY
+ 
+13188861/191573
+13188863/191576
+ 
+ALPS(CHINA)CO.,LTD

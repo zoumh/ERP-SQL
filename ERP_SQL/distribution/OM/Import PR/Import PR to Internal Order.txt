@@ -1,0 +1,84 @@
+
+
+Run ¡®Create Internal Orders¡¯ to transfer to OE Interface apps.oe_headers_iface_all
+
+-----Check PR info
+select a.segment1 PR_num,a.requisition_header_id,a.Type_lookup_Code PR_Type,a.authorization_status Appr_Status,a.TRANSFERRED_TO_OE_FLAG,
+b.line_num,b.DESTINATION_TYPE_CODE,b.item_description,b.unit_price,b.quantity,b.source_type_code,b.currency_code,b.rate,b.tax_code_id
+from apps.po_requisition_lines_all b,apps.po_requisition_headers_all a 
+where a.requisition_header_id=b.requisition_header_id and a.segment1 in ('4711','4744')
+
+
+select * from apps.po_requisition_headers_all where segment1 in ('4652','4664','4667')
+
+
+select * from apps.po_requisition_lines_all where requisition_header_id in (55805,55987,56045)
+
+
+----Check If PR has been transfer to OE
+select TRANSFERRED_TO_OE_FLAG from apps.po_requisition_headers_all 
+where segment1 in ('4652','4664','4667')
+
+
+
+select TRANSFERRED_TO_OE_FLAG from apps.po_requisition_headers_all where segment1 in ('4711')
+
+select * from apps.po_requisition_headers_all where segment1 in ('4711','4744')
+
+?
+update apps.po_requisition_headers_all set type_look_up_code='INTERNAL' where segment1 ='4711'
+
+
+
+
+----------Check SO import (correction table) (check the requisition_header_id with orig_sys_document_ref )
+select orig_sys_document_ref from apps.oe_headers_iface_all where order_source_id = 10
+
+
+select ROWID, a.* from apps.PO_REQUISITION_HEADERS_ALL A where REQUISITION_HEADER_ID in ('57385')
+
+apps.PO_REQUISITION_HEADERS_ALL.REQUISITION_HEADER_ID=apps.OE_HEADERS_INTERFACE.orig_sys_document_ref='57385'
+
+select  * from apps.OE_HEADERS_INTERFACE where orig_sys_document_ref='57385'
+
+
+---At SO import screen, find the status, un-check the error flag, save;also do it at line level,then push import button
+
+------------Check SO table for internal PR
+
+
+
+select * from apps.OE_ORDER_HEADERS_all  where orig_sys_document_ref='4814'
+
+
+select  b.orig_sys_document_ref PR_Num,a.ORIG_SYS_DOCUMENT_REF line_PR_Num,a.ORIG_SYS_LINE_REF PR_Line,
+d.Name Price_List_Name,b.HEADER_ID,b.ORDER_NUMBER,c.NAME Type_Name,c.description Type_Desc,
+a.LINE_NUMBER||'.'||SHIPMENT_NUMBER Line,
+a.ACTUAL_SHIPMENT_DATE
+,a.FLOW_STATUS_CODE
+,ORDERED_ITEM
+,SHIPPED_QUANTITY
+,ORDERED_QUANTITY
+,SHIPPING_QUANTITY
+,a.CREATION_DATE
+,a.LAST_UPDATE_DATE,
+a.tax_code,a.tax_value
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c,
+apps.qp_list_headers d--,apps.qp_list_lines_v e
+where a.HEADER_ID=b.HEADER_ID
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+and a.price_list_id=d.list_header_id 
+and c.LANGUAGE='US'
+--and b.ORDER_NUMBER='800589'
+and b.orig_sys_document_ref='4814'
+
+
+----------------If sure this PR has created Transfer & not exist in OE interface & not exist in SO
+
+update PO_REQUISITION_HEADERS_ALL set TRANSFERRED_TO_OE_FLAG='N' where segment1 in ('4363')
+
+commit
+
+Run ¡®Create Internal Orders¡¯ to transfer to OE Interface apps.oe_headers_iface_all
+
+

@@ -1,0 +1,55 @@
+
+
+----------------------LPN can't be used in Putaway (LPN_CONTEXT=5,Defined but not used)
+
+select * from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='L0027683'--'M0032721' 
+
+change LPN_CONTEXT=3,Resides in Receiving , to aolve
+
+update APPS.WMS_LICENSE_PLATE_NUMBERS set LPN_CONTEXT=3 where LICENSE_PLATE_NUMBER='''L0027683'
+
+
+
+----------PO Receive done, LPN was created, but can't do Putaway, PO Qty was not update
+ 
+1.
+select po_header_id from apps.PO_HEADERS_ALL where segment1='1020094'
+ 
+2.
+select * from apps.rcv_transactions_interface  where PO_header_id=104691
+ 
+3.
+select group_id,processing_mode_code,processing_status_code,transaction_status_code,quantity 
+from apps.rcv_transactions_interface where PO_header_id=104691
+ 
+4.
+update apps.rcv_transactions_interface set processing_mode_code='BATCH' where PO_header_id=104691
+ 
+5.
+Run <Receiving Transaction Processor> with group_id para , will auto create Delivery Transaction.
+
+
+
+
+-----------Get PO Info from LPN
+
+select  LINE_NUM,a.SHIPMENT_HEADER_ID,a.PO_HEADER_ID   
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+--and d.organization_id=83
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and a.PO_header_id=115778
+and LICENSE_PLATE_NUMBER ='S00051483-N'
+
+
+select segment1 from apps.PO_HEADERS_ALL where po_header_id=118746
+
+
+
+

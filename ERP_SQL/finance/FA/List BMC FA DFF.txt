@@ -1,0 +1,32 @@
+
+
+---------List the BMC DFFs on FA worknebch
+select asset_number,asset_id, 
+DESCRIPTION,
+ATTRIBUTE1 Remark,
+ATTRIBUTE2 IT_Asset_Name,
+ATTRIBUTE3 Property_Type,
+ATTRIBUTE4 Warranty,
+ATTRIBUTE5 CDF_Number,
+ATTRIBUTE6 Duty_Free_Form,
+ATTRIBUTE7 Purchase_type,
+ATTRIBUTE8 Production_Line_No
+from APPS.FA_ADDITIONS_V where asset_number='14000428'
+
+
+--------------List FA DFF & Invoice/ PO /CreateBy
+select asset_number,a.description,PO_NUMBER,INVOICE_NUMBER,a.CREATION_DATE,c.USER_NAME Create_ID,c.DESCRIPTION CREATED_BY,
+b.ATTRIBUTE1 Remark,
+b.ATTRIBUTE2 IT_Asset_Name,
+b.ATTRIBUTE3 Property_Type,
+b.ATTRIBUTE4 Warranty,
+b.ATTRIBUTE5 CDF_Number,
+b.ATTRIBUTE6 Duty_Free_Form,
+b.ATTRIBUTE7 Purchase_type,
+b.ATTRIBUTE8 Production_Line_No
+from apps.FA_INVOICE_DETAILS_V a,apps.FA_ADDITIONS_V b,apps.fnd_user c
+where a.asset_id=b.asset_id
+and a.asset_id=100033406
+and c.user_id =a.CREATED_BY
+
+

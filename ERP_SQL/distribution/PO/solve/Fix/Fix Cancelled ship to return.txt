@@ -1,0 +1,40 @@
+
+---------If PO cancelled at line level,only fix at ship level still could return!(then line/dist level still cancelled status,have Cancel Qty at Ship/Dist level)
+
+select PO_HEADER_ID From apps.po_headers_all where segment1='1074140'
+
+select PO_HEADER_ID,PO_LINE_ID,LINE_NUM,CANCEL_FLAG,CANCELLED_BY,CANCEL_DATE,CANCEL_REASON  
+from apps.po_lines_all where po_header_id=185939 and line_num=1
+
+select po_header_id,po_line_id,LINE_LOCATION_ID,CANCEL_FLAG,CANCEL_DATE,CANCELLED_BY,CANCEL_REASON  
+from apps.po_line_locations_all where po_header_id=185939 and po_line_id=480206
+
+select QUANTITY_CANCELLED  from apps.PO_DISTRIBUTIONS_ALL  where po_header_id=185939 and po_line_id=480206 and  LINE_LOCATION_ID=994248
+
+create table BMC_PO_SHIP_BAK as select * from apps.po_line_locations_all where po_header_id=185939 and po_line_id=480206
+
+update apps.po_line_locations_all set CANCEL_FLAG=null ,CANCEL_DATE=null, CANCELLED_BY=null,CANCEL_REASON=null  
+where po_header_id=185939 and po_line_id=480206
+
+commit
+
+
+----FIND OUT TABLE STRUCTURE:
+select * from all_objects where object_name like '%BMC%BAK%' AND OBJECT_TYPE='TABLE'
+
+
+---------For Cancelled Ship line, need below fix to make it could return to correct price
+
+
+select * From apps.po_headers_all where segment1='1027562'
+
+select * from apps.po_lines_all where po_header_id=123364 and line_num=29
+
+select CANCEL_FLAG,CANCEL_DATE,CANCELLED_BY,CANCEL_REASON  from apps.po_line_locations_all where po_header_id=123364 and po_line_id=223617
+
+create table BMC_BKUP_PO_SHIP20070124 as select * from apps.po_line_locations_all where po_header_id=123364 and po_line_id=223617
+
+update apps.po_line_locations_all set CANCEL_FLAG=null ,CANCEL_DATE=null, CANCELLED_BY=null,CANCEL_REASON=null  
+where po_header_id=123364 and po_line_id=223617
+
+commit

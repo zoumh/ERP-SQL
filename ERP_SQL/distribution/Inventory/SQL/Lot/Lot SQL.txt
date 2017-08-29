@@ -1,0 +1,82 @@
+
+
+--------LPN and Lot info
+select a.LICENSE_PLATE_NUMBER,b.lot_number,b.QUANTITY,c.segment1 Item,c.DESCRIPTION,  
+b.REVISION  from apps.wms_license_plate_numbers a,apps.wms_lpn_contents b,apps.mtl_system_items c
+where a.lpn_id=b.parent_lpn_id and a.ORGANIZATION_ID=b.ORGANIZATION_ID  and a.ORGANIZATION_ID=c.ORGANIZATION_ID  
+and b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and b.lot_number is not null
+
+
+--------onhand lot number info
+
+select INVENTORY_ITEM_ID ,INVENTORY_LOCATION_ID  
+from apps.mtl_item_locations c
+where c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 in ('ODM3...')
+and organization_id>127
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl where LOCATOR_ID =35497
+
+
+------apps.MTL_LOT_NUMBERS
+Since the primary key consists of LOT_NUMBER,
+ORGANIZATION_ID, and INVENTORY_ITEM_ID, a lot number could
+exist in more than one organization or for different items.
+
+select INVENTORY_ITEM_ID,ORGANIZATION_ID,LOT_NUMBER,CREATION_DATE,DISABLE_FLAG,EXPIRATION_DATE,
+SUPPLIER_LOT_NUMBER from apps.MTL_LOT_NUMBERS
+
+
+
+------MTL_TRANSACTION_LOTS_TEMP
+stores lot number information for
+transactions in the MTL_MATERIAL_TRANSACTIONS_TEMP table.
+TRANSACTION_TEMP_ID joins to TRANSACTION_TEMP_ID
+in MTL_MATERIAL_TRANSACTIONS_TEMP.
+
+select * from MTL_TRANSACTION_LOTS_TEMP where TRANSACTION_TEMP_ID
+
+select * from MTL_MATERIAL_TRANSACTIONS_TEMP where TRANSACTION_TEMP_ID
+
+select * from MTL_MATERIAL_TRANSACTIONS_TEMP a,MTL_TRANSACTION_LOTS_TEMP b
+where a.TRANSACTION_TEMP_ID=b.TRANSACTION_TEMP_ID
+
+
+
+--------MTL_TRANSACTION_LOT_NUMBERS
+stores lot number information
+for transactions in the MTL_MATERIAL_TRANSACTIONS table.
+
+TRANSACTION_ID joins to
+MTL_MATERIAL_TRANSACTIONS.TRANSACTION_ID.
+
+select * from MTL_MATERIAL_TRANSACTIONS a,MTL_TRANSACTION_LOT_NUMBERS b
+where a.TRANSACTION_ID=b.TRANSACTION_ID
+
+
+
+--------RCV_LOT_TRANSACTIONS 
+stores historical lot number information
+corresponding to receiving transactions or shipments.
+
+
+
+--------RCV_LOTS_INTERFACE 
+holds temporary lot number transaction
+records for a parent record in the RCV_TRANSACTIONS_INTERFACE
+table. Data in the RCV_TRANSACTIONS_INTERFACE table will
+eventually reside in RCV_LOT_TRANSACTIONS after being
+processed by the receiving transaction processor.
+
+
+--------RCV_LOTS_SUPPLY 
+stores information corresponding to the lot
+numbers and quantities that are available to be transacted for intransit
+shipments.
+
+Primary Key  		Primary Key Column 	Foreign Key Column
+RCV_SHIPMENT_LINES 	SHIPMENT_LINE_ID 	SHIPMENT_LINE_ID
+RCV_TRANSACTIONS 	TRANSACTION_ID 		TRANSACTION_ID
+
+
+

@@ -1,0 +1,42 @@
+
+------------BOM PO, CNY at 2004
+
+select a.segment1||'-'||b.line_num||'-'||c.shipment_num||'-'||d.DISTRIBUTION_NUM POID, a.segment1 PO_Num,d.creation_date,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+d.quantity_ordered Dist_Qty,d.quantity_cancelled Dist_Canced,
+(d.quantity_ordered-d.quantity_cancelled)*b.unit_price Amount_CNY,b.unit_price,nvl(d.rate,1) Rate,
+a.currency_code Curr,Item_Description,b.cancel_flag Line_Cancel,c.quantity ShipLine_Qty,
+c.quantity_received ShipLine_Received,a.po_header_id
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.po_Line_locations_all c,apps.PO_DISTRIBUTIONS_ALL d
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and a.currency_code='CNY'
+and (b.line_type_id in (1023,1024))----N-BOM PO Line
+--and a.segment1='0000057023'--0000056941'--'1010075'--'0000056941'
+and d.creation_date<to_date('2005-1-1','YYYY-MM-DD')
+and d.creation_date>to_date('2004-1-1','YYYY-MM-DD')
+and a.segment1 not like 'TP%' -------Golf migration PO
+and a.segment1 not like 'FP%'
+and a.segment1 not like 'tp%'
+
+
+
+select sum((d.quantity_ordered-d.quantity_cancelled)*b.unit_price) Amount_CNY
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.po_Line_locations_all c,apps.PO_DISTRIBUTIONS_ALL d
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and a.currency_code='CNY'
+and (b.line_type_id in (1023,1024))----N-BOM PO Line
+--and a.segment1='0000057023'--0000056941'--'1010075'--'0000056941'
+and d.creation_date<to_date('2005-1-1','YYYY-MM-DD')
+and d.creation_date>to_date('2004-1-1','YYYY-MM-DD')
+and a.segment1 not like 'TP%'
+and a.segment1 not like 'FP%'
+and a.segment1 not like 'tp%'

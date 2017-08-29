@@ -1,0 +1,15 @@
+
+
+------Find PR's Notification ID
+
+select  NOTIFICATION_ID,ITEM_TYPE ,ACTIVITY_TYPE ,ACTIVITY_ITEM_TYPE,ACTIVITY_NAME,ACTIVITY_DISPLAY_NAME , ACTIVITY_STATUS,
+NOTIFICATION_STATUS,ACTIVITY_STATUS_DISPLAY,RESULT from apps.WF_ITEM_ACTIVITIES_HISTORY_V a,apps.po_requisition_headers_all b
+where a.item_type=b.wf_item_type--'REQAPPRV' 
+and a.item_key=b.wf_item_key
+and b.SEGMENT1 ='11530'
+and NOTIFICATION_ID is not null
+
+
+
+
+

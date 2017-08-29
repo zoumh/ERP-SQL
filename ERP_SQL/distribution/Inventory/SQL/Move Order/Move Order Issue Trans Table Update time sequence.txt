@@ -1,0 +1,123 @@
+
+
+For a Move Order Issue Trans:
+
+The PickSlip Date/Time is the Mtl Trans Transaction Date, which Task done Time is the Mtl Trans record create time
+
+1.
+MO Req create
+2006-8-4 14:59:28
+head_ID
+630746
+line
+2679413
+
+
+2.
+Allocate
+2006.08.04 15:03:01
+
+
+Mtl Tmp
+Create Date
+2006.08.04 15:03:01
+
+Trans Date
+2006-8-4 15:03:01
+
+
+3.
+(Task Queued)
+Mtl Tmp Last update
+2006-8-4 15:26:36
+
+
+4.
+Task Finish at 2006.08.04 16:22:44 
+
+Mtl_Trans
+
+Create date=2006.08.04 16:22:44  (Task Done time)
+Trans Date=2006.08.04 15:03:01 (Allocate Date
+
+
+
+----SQL
+
+select a.HEADER_ID ,b.LINE_ID ,b.CREATION_DATE,b.PICK_SLIP_DATE,b.PROGRAM_UPDATE_DATE,b.STATUS_DATE,a.request_number Move_Order_num,b.line_number,d.transaction_type_name Trans_type,a.ORGANIZATION_ID Org,
+decode(a.move_order_type,1,'Requisition',2,'Replenishment',3,'Pick Wave') move_order_type,
+a.date_required Head_Req_Date,
+decode(a.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,
+b.FROM_SUBINVENTORY_CODE Fr_WH,b.TO_SUBINVENTORY_CODE To_WH,
+c.segment1 Item,b.REVISION,b.quantity,b.quantity_delivered,b.quantity_detailed,b.primary_quantity,b.date_required Line_Req_Date,b.transaction_header_id,
+b.txn_source_id,b.txn_source_line_id,e.user_name UserID,e.description User_Name
+from apps.mtl_txn_request_headers a,apps.mtl_txn_request_lines b,apps.mtl_system_items_b c,
+apps.mtl_transaction_types d,apps.FND_USER e
+where a.transaction_type_id=d.transaction_type_id
+and a.header_id=b.header_id and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and b.inventory_item_id=c.INVENTORY_ITEM_ID
+and e.USER_ID=a.CREATED_BY
+and a.request_number in ('HZ1')
+order by a.request_number,b.line_number
+
+select * from apps.mtl_material_transactions_temp where move_order_line_id=2679413--TRANSACTION_header_ID=28479355
+
+630746
+2679413
+
+select MOVE_ORDER_HEADER_ID,a.move_order_line_id,TRX_SOURCE_LINE_ID, SOURCE_LINE_ID,SOURCE_CODE,TRANSACTION_SOURCE_ID,   c.organization_id,c.segment1 Item,a.transaction_header_id,a.transaction_temp_id,a.creation_date,a.transaction_date,a.LAST_UPDATE_DATE,
+a.subinventory_code,a.transfer_subinventory,a.transaction_quantity,MTT.TRANSACTION_TYPE_NAME,a.ORGANIZATION_ID,a.LOCATOR_ID,
+a.POSTING_FLAG,a.PROCESS_FLAG,decode(a.transaction_status,2,'Save Only',3,'Ready to Process','default') Trans_Status
+from apps.mtl_material_transactions_temp a,apps.mtl_system_items c,
+apps.MTL_TRANSACTION_TYPES MTT
+where c.organization_id=a.organization_id and a.inventory_item_id=c.inventory_item_id
+and a.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+and a.transaction_header_id=28479355
+
+
+select d.REQUEST_NUMBER,c.ORGANIZATION_ID,c.segment1 Item,a.TRANSACTION_QUANTITY,a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where 
+d.REQUEST_NUMBER='HZ1' and 
+--c.segment1='KRH 101 316/3.R6A' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+a.TRX_SOURCE_LINE_ID=b.line_id and--TXN_SOURCE_LINE_ID and 
+a.move_order_line_id=b.line_id and 
+a.TRANSACTION_SOURCE_ID =d.HEADER_ID and
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+order by TRANSACTION_DATE desc
+
+
+select   mmt.transaction_date, mmt.CREATION_DATE,(mmt.CREATION_DATE- mmt.transaction_date) Diff,
+mmt.transaction_id,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.organization_id Organization --,
+--		 trunc(mmt.transaction_date) as Trans_Date,
+--		 mtt.DESCRIPTION as Type_Description,
+--		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+and transaction_id=28479742
+and    trunc(mmt.transaction_date) = to_date('20060804','yyyymmdd')-- 21:12:12','YYYYMMDD HH24:MI:SS') 
+

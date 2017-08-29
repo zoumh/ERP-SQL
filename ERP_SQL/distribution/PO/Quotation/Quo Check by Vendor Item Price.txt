@@ -1,0 +1,171 @@
+
+--------------------Quotation  Item/Vendor/line create Dat
+
+select  --poh.status_lookup_code,
+polc.displayed_field Quotation_Status, 
+msi.segment1 Item, POV.VENDOR_NAME
+,PVS.VENDOR_SITE_CODE as Site,
+to_char(poh.segment1) Quo_Num,to_char(pol.line_num) line,to_char(pos.SHIPMENT_NUM) Break_Num,
+pol.creation_date line_creation_date,
+poh.START_DATE Quo_Start_Date,poh.END_DATE Quo_End_Date,
+pos.START_DATE Break_Start_Date,pos.END_DATE Break_End_Date,pos.QUANTITY Break_Qty,pos.PRICE_OVERRIDE Break_price,
+pol.item_revision,pol.item_description,pol.unit_price line_Price,pol.quantity Line_Qty,
+PE.FULL_NAME Buyer,poh.currency_code,poh.Rate,poh.Rate_type,
+poh.creation_date Head_creation_date,pol.attribute1 Customs_Bonded,
+POV.SEGMENT1 as Supplier_Num
+from apps.PO_LINES_all POL,apps.MTL_SYSTEM_ITEMS MSI,apps.PO_HEADERS_all POH,
+apps.FINANCIALS_SYSTEM_PARAMS_ALL FSP,apps.PER_PEOPLE_V7 PE ,apps.PO_VENDORS POV,apps.PO_VENDOR_SITES_all PVS,
+apps.po_Line_locations_all POS,apps.po_lookup_codes polc
+where pol.po_header_id=poh.po_header_id 
+AND POL.ITEM_ID = MSI.INVENTORY_ITEM_ID (+) 
+AND NVL(MSI.ORGANIZATION_ID,FSP.INVENTORY_ORGANIZATION_ID) = FSP.INVENTORY_ORGANIZATION_ID
+and POH.TYPE_LOOKUP_CODE ='QUOTATION'
+--and poh.status_lookup_code='C'
+and POH.AGENT_ID=PE.PERSON_ID
+AND POV.VENDOR_ID(+) = POH.VENDOR_ID 
+AND PVS.VENDOR_SITE_ID(+) = POH.VENDOR_SITE_ID  
+and pos.po_line_id=pol.po_line_id
+and pos.po_header_id=poh.po_header_id
+and polc.lookup_code = poh.status_lookup_code 
+and polc.lookup_type = 'RFQ/QUOTE STATUS' 
+and poh.segment1='4775'
+--and poh.START_DATE>to_date('2009-06-1','yyyy-mm-dd')
+--and pol.CREATION_DATE>to_date('2009-06-1','yyyy-mm-dd')
+and msi.segment1='1200-0092.1'
+--and (pos.END_DATE>to_date('2005-08-18','yyyy-mm-dd') or pos.END_DATE is null)
+--order by pol.creation_date desc
+order by poh.segment1,pol.line_num,pos.SHIPMENT_NUM
+
+
+
+
+
+
+--------------------Price group by Item/Vendor
+
+select msi.segment1 Item,convert(POV.VENDOR_NAME,'ZHS16GBK') as Supplier
+,PVS.VENDOR_SITE_CODE as Site,
+to_char(poh.segment1) Quo_Num,to_char(pol.line_num) line,to_char(pos.SHIPMENT_NUM) Break_Num,
+pos.PRICE_OVERRIDE Break_price,
+pos.START_DATE Break_Start_Date,pos.END_DATE Break_End_Date,pos.QUANTITY Break_Qty,
+pol.item_revision,pol.item_description,pol.unit_price line_Price,pol.quantity Line_Qty,
+convert(PE.FULL_NAME,'ZHS16GBK')  Buyer,poh.status_lookup_code,poh.currency_code,poh.Rate,poh.Rate_type,
+poh.creation_date Head_creation_date,pol.creation_date line_creation_date,pol.attribute1 Customs_Bonded,
+POV.SEGMENT1 as Supplier_Num
+from apps.PO_LINES_all POL,apps.MTL_SYSTEM_ITEMS MSI,apps.PO_HEADERS_all POH,
+apps.FINANCIALS_SYSTEM_PARAMS_ALL FSP,apps.PER_PEOPLE_V7 PE ,apps.PO_VENDORS POV,apps.PO_VENDOR_SITES PVS,
+apps.po_Line_locations_all POS
+where pol.po_header_id=poh.po_header_id 
+AND POL.ITEM_ID = MSI.INVENTORY_ITEM_ID (+) 
+AND NVL(MSI.ORGANIZATION_ID,FSP.INVENTORY_ORGANIZATION_ID) = FSP.INVENTORY_ORGANIZATION_ID
+and POH.TYPE_LOOKUP_CODE ='QUOTATION'
+and poh.status_lookup_code='A'
+and POH.AGENT_ID=PE.PERSON_ID
+AND POV.VENDOR_ID(+) = POH.VENDOR_ID 
+AND PVS.VENDOR_SITE_ID(+) = POH.VENDOR_SITE_ID 
+and pos.po_line_id=pol.po_line_id
+and pos.po_header_id=poh.po_header_id
+--order by poh.segment1,pol.line_num,pos.SHIPMENT_NUM
+and pos.START_DATE<to_date('2005-08-18','yyyy-mm-dd')
+and (pos.END_DATE>to_date('2005-08-18','yyyy-mm-dd') or pos.END_DATE is null)
+order by msi.segment1,POV.VENDOR_NAME,PVS.VENDOR_SITE_CODE,poh.segment1,pol.line_num,pos.SHIPMENT_NUM
+
+
+
+select msi.segment1 Item,
+poh.segment1 Quo_Num,pol.line_num,pol.item_revision,pol.item_description,pol.unit_price,pol.quantity,
+convert(PE.FULL_NAME,'ZHS16GBK')  Buyer,poh.status_lookup_code,poh.currency_code,poh.Rate,poh.Rate_type,
+poh.creation_date Head_creation_date,pol.creation_date line_creation_date,pol.attribute1 Customs_Bonded,
+convert(POV.VENDOR_NAME,'ZHS16GBK') as Supplier,POV.SEGMENT1 as Supplier_Num
+,PVS.VENDOR_SITE_CODE as Site
+from apps.PO_LINES_all POL,apps.MTL_SYSTEM_ITEMS MSI,apps.PO_HEADERS_all POH,
+apps.FINANCIALS_SYSTEM_PARAMS_ALL FSP,apps.PER_PEOPLE_V7 PE ,apps.PO_VENDORS POV,apps.PO_VENDOR_SITES PVS
+where pol.po_header_id=poh.po_header_id --and poh.segment1='1001'
+AND POL.ITEM_ID = MSI.INVENTORY_ITEM_ID (+) 
+AND NVL(MSI.ORGANIZATION_ID,FSP.INVENTORY_ORGANIZATION_ID) = FSP.INVENTORY_ORGANIZATION_ID
+and POH.TYPE_LOOKUP_CODE ='QUOTATION'
+and poh.status_lookup_code='A'
+and POH.AGENT_ID=PE.PERSON_ID
+AND POV.VENDOR_ID(+) = POH.VENDOR_ID 
+AND PVS.VENDOR_SITE_ID(+) = POH.VENDOR_SITE_ID 
+order by msi.segment1,pol.attribute1 
+
+
+
+
+--------------------Count >1 , group by Vendor/Item
+
+select msi.segment1 Item,convert(POV.VENDOR_NAME,'ZHS16GBK') as Supplier,duplic.counts
+,PVS.VENDOR_SITE_CODE as Site,
+to_char(poh.segment1) Quo_Num,to_char(pol.line_num) line,to_char(pos.SHIPMENT_NUM) Break_Num,
+pos.PRICE_OVERRIDE Break_price,
+pos.START_DATE Break_Start_Date,pos.END_DATE Break_End_Date,pos.QUANTITY Break_Qty,
+pol.item_revision,pol.item_description,pol.unit_price line_Price,pol.quantity Line_Qty,
+convert(PE.FULL_NAME,'ZHS16GBK')  Buyer,poh.status_lookup_code,poh.currency_code,poh.Rate,poh.Rate_type,
+poh.creation_date Head_creation_date,pol.creation_date line_creation_date,pol.attribute1 Customs_Bonded,
+POV.SEGMENT1 as Supplier_Num
+from apps.PO_LINES_all POL,apps.MTL_SYSTEM_ITEMS MSI,apps.PO_HEADERS_all POH,
+apps.FINANCIALS_SYSTEM_PARAMS_ALL FSP,apps.PER_PEOPLE_V7 PE ,apps.PO_VENDORS POV,apps.PO_VENDOR_SITES PVS,
+apps.po_Line_locations_all POS,
+(select msi.segment1,POV.VENDOR_NAME,count(*) Counts
+from apps.PO_LINES_all POL,apps.MTL_SYSTEM_ITEMS MSI,apps.PO_HEADERS_all POH,
+apps.FINANCIALS_SYSTEM_PARAMS_ALL FSP,apps.PER_PEOPLE_V7 PE ,apps.PO_VENDORS POV,apps.PO_VENDOR_SITES PVS,
+apps.po_Line_locations_all POS
+where pol.po_header_id=poh.po_header_id 
+AND POL.ITEM_ID = MSI.INVENTORY_ITEM_ID (+) 
+AND NVL(MSI.ORGANIZATION_ID,FSP.INVENTORY_ORGANIZATION_ID) = FSP.INVENTORY_ORGANIZATION_ID
+and POH.TYPE_LOOKUP_CODE ='QUOTATION'
+and poh.status_lookup_code='A'
+and POH.AGENT_ID=PE.PERSON_ID
+AND POV.VENDOR_ID(+) = POH.VENDOR_ID 
+AND PVS.VENDOR_SITE_ID(+) = POH.VENDOR_SITE_ID 
+and pos.po_line_id=pol.po_line_id
+and pos.po_header_id=poh.po_header_id
+--order by poh.segment1,pol.line_num,pos.SHIPMENT_NUM
+and pos.START_DATE<to_date('2005-08-18','yyyy-mm-dd')
+and (pos.END_DATE>to_date('2005-08-18','yyyy-mm-dd') or pos.END_DATE is null)
+having Count(*) >1
+group by msi.segment1,POV.VENDOR_NAME
+) Duplic
+where pol.po_header_id=poh.po_header_id 
+AND POL.ITEM_ID = MSI.INVENTORY_ITEM_ID (+) 
+AND NVL(MSI.ORGANIZATION_ID,FSP.INVENTORY_ORGANIZATION_ID) = FSP.INVENTORY_ORGANIZATION_ID
+and POH.TYPE_LOOKUP_CODE ='QUOTATION'
+and poh.status_lookup_code='A'
+and POH.AGENT_ID=PE.PERSON_ID
+AND POV.VENDOR_ID(+) = POH.VENDOR_ID 
+AND PVS.VENDOR_SITE_ID(+) = POH.VENDOR_SITE_ID 
+and pos.po_line_id=pol.po_line_id
+and pos.po_header_id=poh.po_header_id
+--order by poh.segment1,pol.line_num,pos.SHIPMENT_NUM
+and pos.START_DATE<to_date('2005-08-18','yyyy-mm-dd')
+and (pos.END_DATE>to_date('2005-08-18','yyyy-mm-dd') or pos.END_DATE is null)
+and duplic.segment1=msi.segment1 
+and duplic.VENDOR_NAME=POV.VENDOR_NAME
+order by msi.segment1,POV.VENDOR_NAME,PVS.VENDOR_SITE_CODE,poh.segment1,pol.line_num,pos.SHIPMENT_NUM
+
+
+
+select msi.segment1,POV.VENDOR_NAME,count(*) counts
+from apps.PO_LINES_all POL,apps.MTL_SYSTEM_ITEMS MSI,apps.PO_HEADERS_all POH,
+apps.FINANCIALS_SYSTEM_PARAMS_ALL FSP,apps.PER_PEOPLE_V7 PE ,apps.PO_VENDORS POV,apps.PO_VENDOR_SITES PVS,
+apps.po_Line_locations_all POS
+where pol.po_header_id=poh.po_header_id 
+AND POL.ITEM_ID = MSI.INVENTORY_ITEM_ID (+) 
+AND NVL(MSI.ORGANIZATION_ID,FSP.INVENTORY_ORGANIZATION_ID) = FSP.INVENTORY_ORGANIZATION_ID
+and POH.TYPE_LOOKUP_CODE ='QUOTATION'
+and poh.status_lookup_code='A'
+and POH.AGENT_ID=PE.PERSON_ID
+AND POV.VENDOR_ID(+) = POH.VENDOR_ID 
+AND PVS.VENDOR_SITE_ID(+) = POH.VENDOR_SITE_ID 
+and pos.po_line_id=pol.po_line_id
+and pos.po_header_id=poh.po_header_id
+--order by poh.segment1,pol.line_num,pos.SHIPMENT_NUM
+and pos.START_DATE<to_date('2005-08-18','yyyy-mm-dd')
+and (pos.END_DATE>to_date('2005-08-18','yyyy-mm-dd') or pos.END_DATE is null)
+having Count(*) >1
+group by msi.segment1,POV.VENDOR_NAME
+
+
+
+

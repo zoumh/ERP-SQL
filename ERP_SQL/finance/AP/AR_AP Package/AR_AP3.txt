@@ -1,0 +1,180 @@
+
+
+AR - ONE BY ONE IN CNY
+CUSTOMER NAME
+CUSTOMER ADDRESS
+YTD Sales to CUSTOMER (--> Monthly Invoice amount -- Sales with Tax)
+AVERAGE MONTH-END AR ( Current Customer Balance ---Export from Oracle AR-Collection-Customer Account Detail -- Export , Function Balance) 
+
+
+
+Monthly Invoice amount-- Sales with Tax :Sum by Customer
+
+select convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER
+,sum(e.ACCTD_AMOUNT) as CNY_Sales_Amount
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_customers_v f
+where b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and e.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+and e.ACCOUNT_CLASS='REC'
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER
+
+
+
+Current Customer Balance :
+
+select 
+convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER ,sum(a.ACCTD_AMOUNT_DUE_REMAINING) as CNY_Balance
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,a.INVOICE_CURRENCY_CODE 
+
+
+
+
+AR Balance by Currency
+
+select 
+a.INVOICE_CURRENCY_CODE 
+,sum(a.ACCTD_AMOUNT_DUE_REMAINING) as CNY_Balance
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+group by a.INVOICE_CURRENCY_CODE 
+
+----------------------------
+AP - ONE BY ONE IN CNY
+SUPPLIER NAME
+SUPPLIER ADDRESS
+YTD BOM AP INVOICE INPUT at Invoice @
+YTD BOM GOODS VALUE RECEIVED BUT NOT MATCHED at RMB Std. Cost
+ - YTD Value Purchased
+AVERAGE MONTH-END AP
+
+
+
+
+outstanding AP (At current time):
+
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,aps.VENDOR_SITE_CODE
+,sum((api.INVOICE_AMOUNT-nvl(api.amount_paid,0))*decode(api.INVOICE_CURRENCY_CODE,'CNY',1,EXCHANGE_RATE)) as CNY_Balance
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,sum(api.INVOICE_AMOUNT-nvl(api.amount_paid,0)) balance
+,sum(api.INVOICE_AMOUNT) as Inv_Amount
+,sum(nvl(api.amount_paid,0)) as Paid
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and api.INVOICE_DATE>=to_date('2003-01-1','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-03-31','yyyy-mm-dd')
+group by VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE,api.INVOICE_CURRENCY_CODE
+
+
+
+
+YTD invoiced AP in CNY (for BOM AP):
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'CNY',1,api.EXCHANGE_RATE)) as CNY_INV_Amt
+--,api.INVOICE_CURRENCY_CODE as Inv_Curr,sum(api.INVOICE_AMOUNT) as Amount
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY'))
+and api.GL_DATE>=to_date('2004-01-1','yyyy-mm-dd')
+and api.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE--,api.INVOICE_CURRENCY_CODE
+order by to_number(VDR.SEGMENT1)
+
+
+YTD Paid Invoice CNY (for BOM AP)
+
+select to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,a.EXCHANGE_RATE)) as Paid_Amt
+--,a.INVOICE_CURRENCY_CODE,a.EXCHANGE_RATE
+from apps.ap_invoice_payments_all b
+,		apps.AP_INVOICES_ALL a
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (a.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2003-01-1','yyyy-mm-dd')
+and b.accounting_date<=to_date('2004-03-31','yyyy-mm-dd')
+group by to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE),VDR.VENDOR_NAME,VDR.SEGMENT1,aps.VENDOR_SITE_CODE 
+order by to_number(VDR.SEGMENT1)
+
+
+
+Sum with YTD BOM GOODS VALUE RECEIVED BUT NOT MATCHED at RMB Std. Cost:
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,VDR.VENDOR_NAME as Supplier,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,sum((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)*h.ITEM_COST) as CNY_Amount
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+and (c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)>0
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and c.LAST_UPDATE_DATE>=to_date('2000-01-1','yyyy-mm-dd')
+and c.LAST_UPDATE_DATE<=to_date('2004-03-31','yyyy-mm-dd')
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE
+
+
+
+
+BOM Supplier List: (Name,Site,number) 
+(Inclued PayGrp = null)
+select VENDOR_NAME,a.SEGMENT1 as Supplier_Num,b.VENDOR_SITE_CODE as Site,b.PAY_GROUP_LOOKUP_CODE as Pay_Grp,VENDOR_TYPE_LOOKUP_CODE as V_Type 
+from apps.PO_VENDORS a,apps.PO_VENDOR_sites_all b
+where a.VENDOR_ID=b.VENDOR_ID 
+and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+--and (b.PAY_GROUP_LOOKUP_CODE <>'RH')
+order by to_number(a.SEGMENT1) ,b.VENDOR_SITE_CODE
+
+
+select VENDOR_NAME,a.SEGMENT1 as Supplier_Num,b.VENDOR_SITE_CODE as Site,b.PAY_GROUP_LOOKUP_CODE as Pay_Grp,VENDOR_TYPE_LOOKUP_CODE as V_Type 
+from apps.PO_VENDORS a,apps.PO_VENDOR_sites_all b
+where a.VENDOR_ID=b.VENDOR_ID 
+and (b.PAY_GROUP_LOOKUP_CODE='KY' or b.PAY_GROUP_LOOKUP_CODE='JN')
+order by to_number(a.SEGMENT1) ,b.VENDOR_SITE_CODE

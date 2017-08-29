@@ -1,0 +1,150 @@
+
+AP - ONE BY ONE IN CNY
+SUPPLIER NAME
+SUPPLIER ADDRESS
+YTD BOM AP INVOICE INPUT at Invoice @
+YTD BOM GOODS VALUE RECEIVED BUT NOT MATCHED at RMB Std. Cost
+ - YTD Value Purchased
+AVERAGE MONTH-END AP ( YTD BOM AP paid amount by supplier)
+
+(Total 4 SQL scripts:
+1.YTD AP Invoiced amount sum by Supplier
+2.YTD AP Paid sum by supplier
+3.BOM Supplier List: (Name,Site,number) 
+4.Current PO Received but un-billed YTD amount 
+(this must be printed at 1st day of new period -- no new received PO, last month Invoice match completed)
+
+
+
+(AP BOM Invoice Amount from Oracle : GL Date in the range / Pay Group in BOM AP)
+AP BOM Invoiced amount sum by Supplier
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'CNY',1,api.EXCHANGE_RATE)) as CNY_INV_Amt
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW'))
+and api.GL_DATE>=to_date('2004-01-1','yyyy-mm-dd')
+and api.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')
+and api.WFAPPROVAL_STATUS='MANUALLY APPROVED'
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE--,api.INVOICE_CURRENCY_CODE
+order by to_number(VDR.SEGMENT1)
+
+
+
+
+
+(AP Paid amount in Oracle : Pay date in the range / Invoice Pay group in BOM AP)
+AP Paid sum by supplier:
+
+select to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (a.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','FW','CL'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2004-01-1','yyyy-mm-dd')
+and b.accounting_date<=to_date('2004-03-31','yyyy-mm-dd')
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+group by to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE),VDR.VENDOR_NAME,VDR.SEGMENT1,aps.VENDOR_SITE_CODE order by to_number(VDR.SEGMENT1)
+
+
+
+
+BOM Supplier List: (Name,Site,number) 
+(Inclued PayGrp = null)
+
+select VENDOR_NAME,a.SEGMENT1 as Supplier_Num,b.VENDOR_SITE_CODE as Site,b.PAY_GROUP_LOOKUP_CODE as Pay_Grp,VENDOR_TYPE_LOOKUP_CODE as V_Type 
+from apps.PO_VENDORS a,apps.PO_VENDOR_sites_all b
+where a.VENDOR_ID=b.VENDOR_ID 
+and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+order by to_number(a.SEGMENT1) ,b.VENDOR_SITE_CODE
+
+
+
+
+
+Current PO un-Billed  CNY_AMOUNT Summary by Supplier Site:
+(this must be printed at 1st day of new period -- no new received PO, last month Invoice match completed)
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,VDR.VENDOR_NAME as Supplier,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,sum((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED)*h.ITEM_COST) as UNBill_Amount_CNY
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+,(select  max(to_date(PROGRAM_UPDATE_DATE)) as Rec_Date ,PO_LINE_LOCATION_ID from apps.RCV_SHIPMENT_lines 
+where DESTINATION_TYPE_CODE='RECEIVING' and SOURCE_DOCUMENT_CODE='PO'
+group by PO_LINE_LOCATION_ID) j
+,apps.PO_LINE_types_tl k
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and j.PO_LINE_LOCATION_ID=c.LINE_LOCATION_ID
+--and to_number(VDR.SEGMENT1 )=12
+--and a.segment1='1001480'
+and k.LINE_TYPE_ID=b.LINE_TYPE_ID
+and k.description not like 'Non%'
+and k.LANGUAGE='US'
+and j.Rec_Date<to_date('2004-05-1','yyyy-mm-dd')
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE
+
+
+
+---------Current PO un-Billed,summary by currency
+
+select sum((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED)*h.ITEM_COST) as UNBill_Amount_CNY,a.CURRENCY_CODE
+,sum((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED)*UNIT_PRICE) as UnBilled_Amt
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+,(select  max(to_date(PROGRAM_UPDATE_DATE)) as Rec_Date ,PO_LINE_LOCATION_ID from apps.RCV_SHIPMENT_lines 
+where DESTINATION_TYPE_CODE='RECEIVING' and SOURCE_DOCUMENT_CODE='PO'
+group by PO_LINE_LOCATION_ID) j
+,apps.PO_LINE_types_tl k
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and j.PO_LINE_LOCATION_ID=c.LINE_LOCATION_ID
+--and to_number(VDR.SEGMENT1 )=12
+--and a.segment1='1001480'
+and k.LINE_TYPE_ID=b.LINE_TYPE_ID
+and k.description not like 'Non%'
+and k.LANGUAGE='US'
+and j.Rec_Date<to_date('2004-07-1','yyyy-mm-dd')
+group by a.CURRENCY_CODE

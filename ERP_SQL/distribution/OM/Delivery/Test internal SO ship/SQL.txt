@@ -1,0 +1,126 @@
+Two Internal Order shipping transaction pending at interface,SRS get yellow
+    Trip:427685   对应的 SO:803402（PR:38528 ），
+     Trip:427686   对应的 so:803403  （PR:38529 ）;
+这两张PR:38528 /38529的Deliver To是“Inventory”。
+我发现在正式环境Internal Order New 类型的SO 对应的PR的Deliver To都是“Expense“，
+另，我在8020环境测试：Deliver To是“Inventory”的PR,转成SO后，做Ship Confirm后出现
+类似的错误(测试数据：PR:36675  ,SO:803270).所以我认为，是PR造成的。
+
+SO:803402（PR:38528 ）
+DPY 901 547/4 8 pics
+Internal Order Price List
+AC
+
+so:803403  （PR:38529 ）
+1202-7454 4 pics
+
+
+
+select * from apps.MTL_TRANSACTIONS_INTERFACE where SOURCE_HEADER_ID in (806948,806945,806947)
+
+select * from apps.OE_ORDER_HEADERS_all where HEADER_ID =806935
+
+ORDER_NUMBER='803410'
+
+select * from apps.po_requisition_headers_all where SEGMENT1 in ('38662','38663','38664')
+
+select * from apps.po_requisition_lines_all where REQUISITION_HEADER_ID in (160741,160742,160743)
+
+select * from apps.PO_REQ_DISTRIBUTIONS_ALL where REQUISITION_LINE_ID in (373335,373336,373337)
+
+----Find SO
+select orig_sys_document_ref PR_Num,ORDER_NUMBER,HEADER_ID,FLOW_STATUS_CODE,
+order_type_id,ORDER_SOURCE_ID 
+from apps.OE_ORDER_HEADERS_all 
+where orig_sys_document_ref in ('38662','38663','38664')
+
+select * from apps.OE_ORDER_HEADERS_all where ORDER_NUMBER in ('803415','803412','803414')
+
+select * from apps.OE_ORDER_lineS_all where HEADER_ID in (806948,806945,806947)
+
+select * from apps.WSH_PICKING_BATCHES_V where ORDER_NUMBER in ('38662','38663','38664')
+
+select *--RELEASED_STATUS,PICKABLE_FLAG
+from apps.wsh_delivery_details where SOURCE_HEADER_ID in (806948,806945,806947)
+
+select * from apps.wsh_delivery_assignments where DELIVERY_DETAIL_ID in (2526232,2526233,2526231)
+
+select * from apps.wsh_new_deliveries where DELIVERY_ID in (800247150,800247151,800247152) --SOURCE_HEADER_ID=779698 
+
+select * from apps.wsh_delivery_legs where DELIVERY_ID in (800247150,800247151,800247152)
+
+
+
+---------------------------test to fix (wrong PR Delivery_To=Inventory's internal_SO stuck at MTL_TRANSACTIONS_INTERFACE)
+
+select * from apps.MTL_TRANSACTIONS_INTERFACE where SOURCE_HEADER_ID in (806947,806952)-- in (806948,806945,806947)
+
+create table BMC_MTL_TRANSACTIONS_INTERFACE as  select * from apps.MTL_TRANSACTIONS_INTERFACE where SOURCE_HEADER_ID=806952
+
+insert into BMC_MTL_TRANSACTIONS_INTERFACE  select * from apps.MTL_TRANSACTIONS_INTERFACE where SOURCE_HEADER_ID=806947
+
+select * from BMC_MTL_TRANSACTIONS_INTERFACE
+
+update apps.MTL_TRANSACTIONS_INTERFACE set 
+LAST_UPDATE_LOGIN=null,REQUEST_ID=null,PROGRAM_APPLICATION_ID=null,PROGRAM_ID=null,PROGRAM_UPDATE_DATE=null,
+TRANSACTION_ACTION_ID=1,TRANSACTION_TYPE_ID=34,DISTRIBUTION_ACCOUNT_ID=4535,
+ERROR_EXPLANATION=null,SHIPPABLE_FLAG=null,ERROR_CODE=null
+--TRANSFER_SUBINVENTORY='',TRANSFER_LOCATOR=
+--REQUISITION_DISTRIBUTION_ID= , 
+where SOURCE_HEADER_ID=806947
+
+select * from apps.OE_ORDER_HEADERS_all where HEADER_ID =806935
+
+ORDER_NUMBER='803410'
+
+select * from apps.po_requisition_headers_all where SEGMENT1 in ('38665','38666','38667')--'38662','38663','38664')
+
+select * from apps.po_requisition_lines_all where REQUISITION_HEADER_ID in (160741,160742,160743)
+
+select * from apps.PO_REQ_DISTRIBUTIONS_ALL where REQUISITION_LINE_ID in (373335,373336,373337)
+
+----Find SO
+select orig_sys_document_ref PR_Num,ORDER_NUMBER,HEADER_ID,FLOW_STATUS_CODE,
+order_type_id,ORDER_SOURCE_ID 
+from apps.OE_ORDER_HEADERS_all 
+where orig_sys_document_ref in ('38665','38666','38667')--'38662','38663','38664')
+
+select * from apps.OE_ORDER_HEADERS_all where ORDER_NUMBER in ('803414','803416')-- in ('803415','803412','803414')
+
+select * from apps.OE_ORDER_lineS_all where HEADER_ID in (806948,806945,806947)
+
+select * from apps.WSH_PICKING_BATCHES_V where ORDER_NUMBER in ('803416','803415','803412','803414')
+
+select *--RELEASED_STATUS,PICKABLE_FLAG
+from apps.wsh_delivery_details where SOURCE_HEADER_ID in (806948,806945,806947)
+
+select * from apps.wsh_delivery_assignments where DELIVERY_DETAIL_ID in (2526232,2526233,2526231)
+
+select * from apps.wsh_new_deliveries where DELIVERY_ID in (800247150,800247151,800247152) --SOURCE_HEADER_ID=779698 
+
+select * from apps.wsh_delivery_legs where DELIVERY_ID in (800247150,800247151,800247152)
+
+select * from apps.mtl_material_transactions_temp-- where CREATION_DATE<to_date('2008-11-27','yyyy-mm-dd')
+
+delete from apps.mtl_material_transactions_temp --where CREATION_DATE<to_date('2008-11-27','yyyy-mm-dd')
+
+rollback
+
+commit
+
+
+---Inventory Transaction Type & Source Type:
+select b.TRANSACTION_SOURCE_TYPE_ID,a.TRANSACTION_TYPE_ID,
+b.TRANSACTION_SOURCE_TYPE_NAME Source_Type,b.DESCRIPTION Source_Type_Desc,a.Transaction_type_name,a.description,a.user_defined_flag,a.disable_date,a.type_class  
+from apps.MTL_TRANSACTION_TYPES a,apps.mtl_txn_source_types b
+where a.transaction_source_type_id=b.transaction_source_type_id
+and a.TRANSACTION_TYPE_ID in (34,50)
+--and 
+order by user_defined_flag,b.TRANSACTION_SOURCE_TYPE_NAME,a.Transaction_type_name
+
+select * from apps.GL_CODE_combinations where segment3='41059904' 
+and segment2='0000' and segment4='000000' and segment5='0000'
+
+ccid=4535
+
+01.0000.41059904.000000.0000.000000

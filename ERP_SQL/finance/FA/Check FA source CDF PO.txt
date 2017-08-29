@@ -1,0 +1,13 @@
+
+
+select a.description,PO_NUMBER, INVOICE_NUMBER ,asset_number 
+from apps.FA_INVOICE_DETAILS_V a,apps.FA_ADDITIONS_V b
+where a.asset_id=b.asset_id
+and a.asset_id=100022941
+and a.description is not null
+
+
+----------FA Invoice source (desc not same with FA's Desc)
+select a.description,b.DESCRIPTION,PO_NUMBER, INVOICE_NUMBER ,asset_number 
+from apps.FA_INVOICE_DETAILS_V a,apps.FA_ADDITIONS_V b
+where a.asset_id=b.asset_id and asset_number='12000001'

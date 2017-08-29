@@ -1,0 +1,3 @@
+
+
+select * from apps.FA_METHODS where METHOD_CODE='STL'

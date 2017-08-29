@@ -1,0 +1,130 @@
+
+
+--------Find ID
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2006-12-6','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+
+
+--------------Tag for WH(VP,IP,AC,SE,new with Org,physic_ID)
+
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) tag,
+system_quantity sys_qty,count_quantity count_qty,
+ b.segment1 item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,e.cost_group cst_grp,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN,
+'' Audit_Qty,
+(case when a.actual_cost>=50 then 'A' else case when (a.actual_cost<50 and a.actual_cost>=20) then 'B' else case when (a.actual_cost<20 and a.actual_cost>=10) then 'C' else 'D' end end end ) ReMark
+,ORGANIZATION_CODE Org--,a.physical_inventory_id
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e ,
+apps.org_organization_definitions f
+where  a.physical_inventory_id in (852,853,854,855,856)--(855)
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=b.organization_id 
+       and a.locator_id =c.inventory_location_id (+)
+	   and c.organization_id(+)=a.organization_id 
+       and a.cost_group_id=e.cost_group_id 
+	   and f.ORGANIZATION_ID=a.ORGANIZATION_ID
+order by a.physical_inventory_id,a.subinventory_name,c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5
+
+
+
+Remark meaning:
+A , Cost>=50CNY
+B,  50> Cost>=20CNY
+C,  20> Cost>=10CNY
+D,   Cost<10CNY
+
+
+--------------Tag for Audit(new with Org,physic_ID,add a cost column)
+
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) tag,
+system_quantity sys_qty,count_quantity count_qty,
+ b.segment1 item, a.revision Rev, a.subinventory_name Stock,
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,e.cost_group cst_grp,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN,
+'' Audit_Qty,a.ACTUAL_COST Cost,
+(case when a.actual_cost>=50 then 'A' else case when (a.actual_cost<50 and a.actual_cost>=20) then 'B' else case when (a.actual_cost<20 and a.actual_cost>=10) then 'C' else 'D' end end end ) ReMark
+,ORGANIZATION_CODE Org--,a.physical_inventory_id
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e,
+apps.org_organization_definitions f
+where  a.physical_inventory_id in (852,853,854,855,856)
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=b.organization_id 
+       and a.locator_id =c.inventory_location_id (+)
+	   and c.organization_id(+)=a.organization_id 
+       and a.cost_group_id=e.cost_group_id 
+	   and f.ORGANIZATION_ID=a.ORGANIZATION_ID
+order by a.physical_inventory_id,a.subinventory_name,c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5
+
+
+
+-----------Tag SE (Summary by Item)
+
+select a.subinventory_name Stock,sum(system_quantity) sys_qty,sum(count_quantity) count_qty,'' Audit_Qty,
+ b.segment1 item, a.revision Rev, e.cost_group cst_grp
+ from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=b.organization_id 
+       and a.locator_id =c.inventory_location_id (+)
+	   and c.organization_id(+)=a.organization_id 
+       and a.cost_group_id=e.cost_group_id 
+group by a.subinventory_name,b.segment1,a.revision,e.cost_group 
+
+
+
+-------------Verify Tag is correct (total Qty & lines)
+
+
+1.
+-------run from single table total, compare with excel (Sum of Qty,Count(*))
+select sum(system_quantity) qty,count(*) Tag_Numbers
+from   apps.mtl_physical_adjustments a
+where  a.physical_inventory_id in (852,853,854,855,856)
+
+
+2.
+------If not same,then run from multi table single result to compare with (1) ,should be same with excel)
+
+select sum(system_quantity) qty,count(*) Tag_Numbers
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e
+where  a.physical_inventory_id =:d --and actual_cost > 50
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=b.organization_id
+       and a.locator_id =c.inventory_location_id (+)
+       and c.organization_id(+)=a.organization_id
+       and a.cost_group_id=e.cost_group_id
+
+
+3.
+----If (1) & (2) not same, then run Sum Qty group by Physic_ID for two parts (signal table & multi tables)
+    to find out which Physic_ID has diff
+
+----Signal Table, Group by each snapshoot_ID
+select sum(system_quantity) qty,count(*) Tag_Numbers,a.physical_inventory_id
+from   apps.mtl_physical_adjustments a
+where  a.physical_inventory_id in (852,853,854,855,856)
+group by a.physical_inventory_id
+
+----Signal Table, Group by each snapshoot name
+select sum(system_quantity) qty,count(*) Tag_Numbers,b.PHYSICAL_INVENTORY_NAME,b.PHYSICAL_INVENTORY_ID,b.ORGANIZATION_ID
+from   apps.mtl_physical_adjustments a,apps.MTL_PHYSICAL_INVENTORIES b
+where  a.physical_inventory_id in (852,853,854,855,856)
+and a.PHYSICAL_INVENTORY_ID =b.PHYSICAL_INVENTORY_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+group by b.ORGANIZATION_ID,b.PHYSICAL_INVENTORY_NAME,b.PHYSICAL_INVENTORY_ID
+
+
+----Multi Table, Group by physical_inventory_id
+select sum(system_quantity) qty,count(*) Tag_Numbers,a.physical_inventory_id,b.ORGANIZATION_ID
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e
+where  a.physical_inventory_id in (852,853,854,855,856)
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=b.organization_id
+       and a.locator_id =c.inventory_location_id (+)
+	   and c.organization_id(+)=a.organization_id
+       and a.cost_group_id=e.cost_group_id
+	   group by b.ORGANIZATION_ID,a.physical_inventory_id
+
+
+
+
+
+
+

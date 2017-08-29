@@ -1,0 +1,99 @@
+
+
+-------AP Invoice Dr / Cr Account
+
+select c.INVOICE_NUM,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.VENDOR_ID,c.INVOICE_AMOUNT
+,c.INVOICE_DATE,c.DESCRIPTION,b.segment3 as Dr_Account,d.segment3 Cr_Account,c.GL_DATE,a.DESCRIPTION Line_Desc,
+NVL(A.BASE_AMOUNT,a.AMOUNT) as Line_Amount_CNY,a.AMOUNT Line_Amt
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+--and (b.segment3='11330208')
+and (b.segment3='21710102' ) 
+--and c.INVOICE_AMOUNT=3200
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+--and a.ACCOUNTING_DATE >=to_date('2006-03-1','yyyy-mm-dd')
+--and a.ACCOUNTING_DATE <=to_date('2006-03-31','yyyy-mm-dd')
+
+
+
+-------------With Dr Expense account
+
+select c.INVOICE_NUM,
+NVL(A.BASE_AMOUNT,a.AMOUNT) as Line_Amount_CNY
+,c.INVOICE_DATE,c.DESCRIPTION,b.segment3 as Account,b.segment2 as Cost_Center,c.GL_DATE
+,c.ATTRIBUTE1 as Inv_Trans_Num,c.INVOICE_CURRENCY_CODE as Inv_Curr,a.DISTRIBUTION_LINE_NUMBER as Line,a.AMOUNT as Line_Amount
+,convert(a.description,'ZHS16GBK') line_Description,b.segment4 PRD,b.segment5 PRJ,c.INVOICE_AMOUNT,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.VENDOR_ID
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and b.segment3='41059903'
+and a.ACCOUNTING_DATE>=to_date('2006-03-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <=to_date('2006-03-31','yyyy-mm-dd')
+and a.PERIOD_NAME='MAR-06'
+
+
+
+select c.INVOICE_NUM,VDR.VENDOR_NAME as Supplier,vdr.VENDOR_ID,c.INVOICE_AMOUNT,c.INVOICE_DATE,c.DESCRIPTION,b.segment3 from apps.AP_INVOICE_DISTRIBUTIONS_ALL a,apps.GL_CODE_combinations b,apps.AP_INVOICES_ALL c,apps.PO_VENDORS VDR
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and (b.segment3='41059905' or b.segment3='55029902')
+and a.invoice_id=c.invoice_id
+
+
+
+
+
+
+
+-------------With Cr AP account
+
+select VDR.VENDOR_NAME as Supplier,GLC.SEGMENT3 as AP_account
+,api.INVOICE_NUM
+,api.GL_DATE
+,apb.BATCH_NAME as InvBatch
+,api.ATTRIBUTE1 as Inv_Trans_Num
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,api.PAYMENT_STATUS_FLAG as FullyPay
+,nvl(api.AMOUNT_PAID,0) as Pay_Amount
+,api.PAY_GROUP_LOOKUP_CODE as PayGroup 
+,api.PAYMENT_CURRENCY_CODE as PayCur
+,api.PAYMENT_CROSS_RATE_DATE as PayDate
+,api.VAT_CODE
+,api.VENDOR_SITE_ID
+,TRM.DUE_DAYS as TermsDate
+,TRM.DUE_DAYS+api.INVOICE_DATE as DueDate
+,api.VENDOR_ID
+,VDR.SEGMENT1 as SupplierCode
+,api.INVOICE_ID
+,api.INVOICE_TYPE_LOOKUP_CODE as InvType
+--,AP_INVOICES_PKG.GET_PO_NUMBER( api.INVOICE_ID) PO_NUMBER
+,api.ATTRIBUTE2 as Bank_Cash
+,api.SOURCE
+,api.SET_OF_BOOKS_ID SOB
+,api.TAX_AMOUNT
+,api.TERMS_ID
+,api.WFAPPROVAL_STATUS as ApprovStatus
+,api.GOODS_RECEIVED_DATE as GRN_Date
+,apb.BATCH_ID
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+,	    apps.AP_BATCHES_ALL apb
+,		apps.GL_CODE_COMBINATIONS GLC
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+and glc.CODE_COMBINATION_ID=api.ACCTS_PAY_CODE_COMBINATION_ID
+and api.INVOICE_TYPE_LOOKUP_CODE like 'EXP%'
+and api.PAYMENT_STATUS_FLAG='Y'

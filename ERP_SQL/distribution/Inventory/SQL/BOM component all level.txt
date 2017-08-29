@@ -1,0 +1,235 @@
+
+
+-----KRH's component
+
+select distinct CONCATENATED_SEGMENTS from apps.WIP_REQUIREMENT_OPERATIONS_V a
+where wip_entity_id in
+(select distinct wip_entity_id from apps.WIP_DISCRETE_JOBS_V b
+where 
+b.PRIMARY_ITEM_ID in
+(select inventory_item_id PRIMARY_ITEM_ID
+from apps.mtl_system_items
+where organization_id=83
+and segment1 in (
+'KRH 101 040R2B'	
+,'KRH 101 040R2E'	
+,'KRH 101 040R3A'	
+,'KRH 101 040/2R2B'	
+,'KRH 101 040/2R2E'	
+,'KRH 101 040/2R3A'	
+,'KRH 101 040/3R2A'	
+,'KRH 101 040/3R2B'	
+,'KRH 101 040/3R2E'	
+,'KRH 101 040/3R3A'	
+,'KRH 101 040/4R2E'	
+,'KRH 101 040/4R3A'	
+,'KRH 101 042R3A'	
+,'KRH 101 043R2E'	
+,'KRH 101 043R3A'	
+,'KRH 101 045R2C'	
+,'KRH 101 045R2E'	
+,'KRH 101 045R3A'	
+,'KRH 101 045/2R3A'	
+,'KRH 101 045/2R2B'	
+,'KRH 101 045/2R2C'	
+,'KRH 101 045/2R2E'	
+,'KRH 101 045/3R2E'	
+,'KRH 101 045/3R2A'	
+,'KRH 101 045/3R3A'	
+,'KRH 101 045/4R2E'	
+,'KRH 101 045/4R3A'	
+,'KRH 101 047R3A'	
+,'KRH 101 047R2E'	
+,'KRH 101 048R2E'	
+,'KRH 101 048R3A'	
+,'KRH 101 048/3R3A'	
+,'KRH 101 050R3A'	
+,'KRH 101 050/2R2B'	
+,'KRH 101 050/2R2E'	
+,'KRH 101 050/2R3A'	
+,'KRH 101 050/3R3A'	
+,'KRH 101 050/4R3A')
+
+
+
+select distinct CONCATENATED_SEGMENTS from apps.WIP_REQUIREMENT_OPERATIONS_V a,apps.WIP_DISCRETE_JOBS_V b
+where a.wip_entity_id=b.wip_entity_id
+and b.PRIMARY_ITEM_ID in
+(select inventory_item_id PRIMARY_ITEM_ID
+from apps.mtl_system_items
+where organization_id=83
+and segment1 in (
+'KRH 101 040R2B'	
+,'KRH 101 040R2E'	
+,'KRH 101 040R3A'	
+,'KRH 101 040/2R2B'	
+,'KRH 101 040/2R2E'	
+,'KRH 101 040/2R3A'	
+,'KRH 101 040/3R2A'	
+,'KRH 101 040/3R2B'	
+,'KRH 101 040/3R2E'	
+,'KRH 101 040/3R3A'	
+,'KRH 101 040/4R2E'	
+,'KRH 101 040/4R3A'	
+,'KRH 101 042R3A'	
+,'KRH 101 043R2E'	
+,'KRH 101 043R3A'	
+,'KRH 101 045R2C'	
+,'KRH 101 045R2E'	
+,'KRH 101 045R3A'	
+,'KRH 101 045/2R3A'	
+,'KRH 101 045/2R2B'	
+,'KRH 101 045/2R2C'	
+,'KRH 101 045/2R2E'	
+,'KRH 101 045/3R2E'	
+,'KRH 101 045/3R2A'	
+,'KRH 101 045/3R3A'	
+,'KRH 101 045/4R2E'	
+,'KRH 101 045/4R3A'	
+,'KRH 101 047R3A'	
+,'KRH 101 047R2E'	
+,'KRH 101 048R2E'	
+,'KRH 101 048R3A'	
+,'KRH 101 048/3R3A'	
+,'KRH 101 050R3A'	
+,'KRH 101 050/2R2B'	
+,'KRH 101 050/2R2E'	
+,'KRH 101 050/2R3A'	
+,'KRH 101 050/3R3A'	
+,'KRH 101 050/4R3A')
+)
+
+
+----------------------------
+
+select *
+from
+    (
+        select INVENTORY_ITEM_ID,
+               rpad(' ',level+1,'.')||com segment1,
+      	       DESCRIPTION,
+      	       ORGANIZATION_ID,
+      	       CATALOG_STATUS_FLAG ,
+      	       BUYER_ID,
+      	       FULL_LEAD_TIME,
+      	       POSTPROCESSING_LEAD_TIME,
+      	       FIXED_LOT_MULTIPLIER,
+      	       MINIMUM_ORDER_QUANTITY,
+      	       PLANNER_CODE,
+      	       COST_OF_SALES_ACCOUNT,	
+      	       SALES_ACCOUNT,
+      	       ITEM_TYPE,--need transalte
+      	       INVENTORY_ITEM_STATUS_CODE
+        from
+        (
+           select  msi.INVENTORY_ITEM_ID,
+                   msib.segment1 ass,
+              	   msi.SEGMENT1 com,
+              	   msi.DESCRIPTION,
+              	   msi.ORGANIZATION_ID,
+              	   msi.CATALOG_STATUS_FLAG ,
+              	   msi.BUYER_ID,
+              	   msi.FULL_LEAD_TIME,
+              	   msi.POSTPROCESSING_LEAD_TIME,
+              	   msi.FIXED_LOT_MULTIPLIER,
+              	   msi.MINIMUM_ORDER_QUANTITY,
+              	   msi.PLANNER_CODE,
+              	   msi.COST_OF_SALES_ACCOUNT,	
+              	   msi.SALES_ACCOUNT,
+              	   msi.ITEM_TYPE,--need transalte
+              	   msi.INVENTORY_ITEM_STATUS_CODE
+           from bom_bill_of_materials bbom, bom_inventory_components bic, mtl_system_items msib, mtl_system_items msi 
+           where bbom.bill_sequence_id=bic.bill_sequence_id and bic.component_item_id=msi.inventory_item_id 
+           and bbom.assembly_item_id=msib.inventory_item_id and msib.organization_id=:p_org_id and msi.organization_id=:p_org_id
+        )
+        where level<=:P_LEVEL
+        start with ass=:p_bom connect by prior com = ass 
+        ORDER SIBLINGS BY ass
+
+select *
+from
+    (
+        select INVENTORY_ITEM_ID,
+               rpad(' ',level+1,'.')||com segment1,
+      	       DESCRIPTION,
+      	       ORGANIZATION_ID,
+      	       CATALOG_STATUS_FLAG ,
+      	       BUYER_ID,
+      	       FULL_LEAD_TIME,
+      	       POSTPROCESSING_LEAD_TIME,
+      	       FIXED_LOT_MULTIPLIER,
+      	       MINIMUM_ORDER_QUANTITY,
+      	       PLANNER_CODE,
+      	       COST_OF_SALES_ACCOUNT,	
+      	       SALES_ACCOUNT,
+      	       ITEM_TYPE,--need transalte
+      	       INVENTORY_ITEM_STATUS_CODE
+        from
+        (
+           select  msi.INVENTORY_ITEM_ID,
+                   msib.segment1 ass,
+              	   msi.SEGMENT1 com,
+              	   msi.DESCRIPTION,
+              	   msi.ORGANIZATION_ID,
+              	   msi.CATALOG_STATUS_FLAG ,
+              	   msi.BUYER_ID,
+              	   msi.FULL_LEAD_TIME,
+              	   msi.POSTPROCESSING_LEAD_TIME,
+              	   msi.FIXED_LOT_MULTIPLIER,
+              	   msi.MINIMUM_ORDER_QUANTITY,
+              	   msi.PLANNER_CODE,
+              	   msi.COST_OF_SALES_ACCOUNT,	
+              	   msi.SALES_ACCOUNT,
+              	   msi.ITEM_TYPE,--need transalte
+              	   msi.INVENTORY_ITEM_STATUS_CODE
+           from bom_bill_of_materials bbom, bom_inventory_components bic, mtl_system_items msib, mtl_system_items msi 
+           where bbom.bill_sequence_id=bic.bill_sequence_id and bic.component_item_id=msi.inventory_item_id 
+           and bbom.assembly_item_id=msib.inventory_item_id and msib.organization_id=:p_org_id and msi.organization_id=:p_org_id
+        )
+        start with ass=:p_bom connect by prior com = ass 
+        ORDER SIBLINGS BY ass
+    )
+union all
+select distinct msi.INVENTORY_ITEM_ID,
+  	   '('||c.segment1||') '||msi.SEGMENT1,
+  	   msi.DESCRIPTION,
+  	   msi.ORGANIZATION_ID,
+  	   msi.CATALOG_STATUS_FLAG ,
+  	   msi.BUYER_ID,
+  	   msi.FULL_LEAD_TIME,
+  	   msi.POSTPROCESSING_LEAD_TIME,
+  	   msi.FIXED_LOT_MULTIPLIER,
+  	   msi.MINIMUM_ORDER_QUANTITY,
+  	   msi.PLANNER_CODE,
+  	   msi.COST_OF_SALES_ACCOUNT,	
+  	   msi.SALES_ACCOUNT,
+  	   msi.ITEM_TYPE,--need transalte
+  	   msi.INVENTORY_ITEM_STATUS_CODE
+from BOM_SUBSTITUTE_COMPONENTS a, bom_inventory_components b, mtl_system_items c, mtl_system_items msi 
+where a.component_sequence_id=b.component_sequence_id and b.component_item_id=msi.inventory_item_id 
+and a.substitute_component_id=c.inventory_item_id and c.organization_id=:p_org_id and msi.organization_id=:p_org_id and c.inventory_item_id in 
+(
+   select msi.INVENTORY_ITEM_ID
+   from  bom_bill_of_materials bbom,mtl_system_items msi
+   where bbom.assembly_item_id=msi.inventory_item_id and msi.organization_id=:p_org_id and msi.segment1=:p_bom
+   union all
+   select inventory_item_id
+   from
+       (
+           select INVENTORY_ITEM_ID
+           from
+           (
+              select  msi.INVENTORY_ITEM_ID,
+                      msib.segment1 ass,
+                 	   msi.SEGMENT1 com
+              from bom_bill_of_materials bbom, bom_inventory_components bic, mtl_system_items msib, mtl_system_items msi 
+              where bbom.bill_sequence_id=bic.bill_sequence_id and bic.component_item_id=msi.inventory_item_id 
+              and bbom.assembly_item_id=msib.inventory_item_id and msib.organization_id=:p_org_id and msi.organization_id=:p_org_id
+           )
+           start with ass =:p_bom connect by prior com = ass 
+           ORDER SIBLINGS BY ass
+       )
+)
+
+
+

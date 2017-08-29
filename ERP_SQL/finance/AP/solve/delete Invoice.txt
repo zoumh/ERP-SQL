@@ -1,0 +1,178 @@
+SR Number  7003884.994 
+
+
+ACTION PLAN
+============
+Please try the following fix in a TEST instance firts:
+
+
+1. I see that all of the problem invoices are matched to POs. So please ensure to Cancel them before using the following fix to delete these invoices, else 
+it will result in wrong Qty Billed in PO tables.
+
+2. After cancelling the invoices, Please check that the following returns 0 rows:
+
+SELECT invoice_id FROM ap_invoices_all WHERE invoice_id in (397316,397314,397318, 397320, 397321, 397323, 3
+97326, 397328)
+AND cancelled_date is null;
+
+SELECT source_id FROM ap_accounting_events_all WHERE source_id in (397316,397314,397318, 397320, 397321, 397323, 397
+326, 397328) AND source_table='AP_INVOICES'
+AND event_status_code = 'ACCOUNTED';
+
+If not, STOP and ensure that all the invoices show as Cancelled as seen in the Invoices window.
+
+3. Backup the affected tables:
+
+CREATE table TAR_7003884_994_ai as
+SELECT * FROM ap_invoices_all
+WHERE invoice_id in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328);
+
+CREATE table TAR_7003884_994_aid as
+SELECT * FROM ap_invoice_distributions_all
+WHERE invoice_id in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328);
+
+CREATE table TAR_7003884_994_aps as
+SELECT * FROM ap_payment_schedules_all
+WHERE invoice_id in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328);
+
+CREATE table TAR_7003884_994_aph as
+SELECT * FROM ap_holds_all
+WHERE invoice_id in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328);
+
+CREATE table TAR_7003884_994_aaedel as
+SELECT * FROM ap_accounting_events_all
+WHERE source_id in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328)
+AND source_table='AP_INVOICES';
+
+4. Delete the invoices:
+
+DELETE FROM ap_invoices_all
+WHERE invoice_id in
+(SELECT invoice_id FROM TAR_7003884_994_ai);
+
+This should delete the same number of rows as in backup table
+
+DELETE FROM ap_invoice_distributions_all
+WHERE invoice_distribution_id in
+(SELECT invoice_distribution_id FROM TAR_7003884_994_aid);
+
+This should delete the same number of rows as in backup table
+
+
+
+DELETE FROM ap_payment_schedules_all
+WHERE invoice_id in
+(SELECT invoice_id FROM TAR_7003884_994_aps);
+
+This should delete the same number of rows as in backup table
+
+DELETE FROM ap_holds_all
+WHERE invoice_id in
+(SELECT invoice_id FROM TAR_7003884_994_aps);
+
+This should delete the same number of rows as in backup table
+(This may delete 0 rows)
+
+DELETE FROM ap_accounting_events_all
+WHERE accounting_event_id in
+(SELECT accounting_event_id FROM TAR_7003884_994_aaedel);
+
+This should delete the same number of rows as in backup table
+
+COMMIT;
+
+5. Verify that the invoices no longer exist in the application.
+
+
+-----------??My finding way to delete validated (no accounting generated, no posting,no match PO, no cancelled) AP invoice,tested?
+
+1. Make sure no accounting generated, no posting,no cancelled,no match PO (how to find? Very difficult ! each time must be tested !)  
+
+
+
+---check Accounting Flag
+select DISTRIBUTION_LINE_NUMBER,ACCRUAL_POSTED_FLAG,POSTED_FLAG,CASH_POSTED_FLAG,
+MATCH_STATUS_FLAG,ACCOUNTING_EVENT_ID
+from APPS.AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_ID =388073
+
+
+2. Check info
+
+select INVOICE_ID from apps.AP_INVOICES_ALL where INVOICE_NUM ='test3'
+
+select MATCH_STATUS_FLAG,DISTRIBUTION_LINE_NUMBER 
+from APPS.AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_ID =388154
+
+SELECT * FROM ap_accounting_events_all WHERE SOURCE_ID=388154 and SOURCE_TABLE='AP_INVOICES'
+
+SELECT * FROM ap_accounting_events_all WHERE source_table='AP_CHECKS' 
+and source_id in (select CHECK_ID from apps.AP_INVOICE_PAYMENTS_ALL where INVOICE_ID =388073)
+
+SELECT * FROM ap_payment_schedules_all WHERE invoice_id=388154
+
+SELECT * FROM ap_holds_all WHERE invoice_id= 388154
+
+select * from apps.AP_INVOICE_PAYMENTS_ALL where invoice_id=388052
+
+
+---Check these invoices was cancelled
+SELECT invoice_id,cancelled_date FROM ap_invoices_all 
+WHERE invoice_id in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328) 
+AND cancelled_date is null
+
+
+---Check these invoice has account_event
+SELECT *--ACCOUNTING_EVENT_ID,source_id,event_status_code,EVENT_TYPE_CODE 
+FROM ap_accounting_events_all 
+WHERE source_id in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328) 
+AND source_table='AP_INVOICES'
+--AND event_status_code = 'ACCOUNTED'
+
+
+---Check these invoice has payment_account_event
+SELECT * FROM ap_accounting_events_all WHERE source_table='AP_CHECKS' 
+and source_id in (select CHECK_ID from apps.AP_INVOICE_PAYMENTS_ALL where INVOICE_ID in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328) )
+--AND event_status_code = 'ACCOUNTED'
+
+---Check these invoice has AP_AE_head
+select * from APPS.ap_ae_HEADeRs_all where ACCOUNTING_EVENT_ID in 
+(select ACCOUNTING_EVENT_ID from ap_accounting_events_all WHERE source_id in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328) 
+AND source_table='AP_INVOICES')
+
+---Check these invoice has AP_AE_Line
+select * from APPS.ap_ae_lines_all where AE_HEADER_ID in
+(select AE_HEADER_ID from APPS.ap_ae_HEADeRs_all where ACCOUNTING_EVENT_ID in 
+(select ACCOUNTING_EVENT_ID from ap_accounting_events_all WHERE source_id in (397316,397314,397318, 397320, 397321, 397323, 397326, 397328) 
+AND source_table='AP_INVOICES')
+)
+
+
+
+3. Make invoice status = 'never validated' , no Accounted,no match PO,no cancelled,not approved
+(cancel Invoice if has matched PO, then check all again)
+
+update apps.AP_INVOICE_DISTRIBUTIONS_ALL set MATCH_STATUS_FLAG=null where INVOICE_ID =388154 
+
+update apps.AP_INVOICES_ALL set WFAPPROVAL_STATUS='REQUIRED' where INVOICE_NUM ='444'
+
+update apps.AP_INVOICES_ALL set CANCELLED_DATE=null where INVOICE_NUM ='444'
+
+update APPS.AP_INVOICE_DISTRIBUTIONS_ALL set ACCRUAL_POSTED_FLAG='N',POSTED_FLAG='N' where INVOICE_ID =388073 and DISTRIBUTION_LINE_NUMBER=1
+
+一般做完上面的后就可以删Invoice header
+
+
+delete from ap_holds_all WHERE invoice_id= 388073
+
+delete from ap_payment_schedules_all WHERE invoice_id=388052
+
+delete from apps.AP_INVOICE_PAYMENTS_ALL where invoice_id=388052
+
+delete from ap_accounting_events_all WHERE SOURCE_ID=388154 and SOURCE_TABLE='AP_INVOICES'
+
+delete from ap_accounting_events_all WHERE source_table='AP_CHECKS' 
+and source_id in (select CHECK_ID from apps.AP_INVOICE_PAYMENTS_ALL where INVOICE_ID =388073)
+
+
+
+

@@ -1,0 +1,423 @@
+
+--------------with item,Type,Acc, Org (simple)
+select mta.base_transaction_value Amt,
+decode(mmt.organization_id,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+gcc.segment2 CC,gcc.segment3 ACC,
+mtt.transaction_type_name, 
+mta.primary_quantity  as Qty,
+MTA.TRANSACTION_DATE,MTA.creation_DATE,
+msi.segment1 item_code, mmt.transaction_id,
+mmt.subinventory_code,mmt.transfer_subinventory,mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi
+where
+  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mta.organization_id = mmt.organization_id    
+and    mmt.organization_id =msi.organization_id     
+AND MTA.TRANSACTION_DATE >= to_Date('2009-1-1','yyyy-mm-dd')
+and gcc.segment3='120111'
+
+
+
+--------All Org,With Type,item,Alias,CC,Acc
+select   msi.segment1 item_code, mmt.transaction_date,
+         mtt.transaction_type_name, 
+         --gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         mta.base_transaction_value,  
+         mta.primary_quantity  as Qty, 
+         decode(mmt.organization_id,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org, 
+         gcc.segment3 as Account_Num, gcc.segment2 Cost_Center,
+         mmt.REVISION, 
+         MGD.SEGMENT1 Alias_SOURCE
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_generic_dispositions  MGD
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mta.organization_id = mmt.organization_id    
+and    mmt.organization_id =msi.organization_id     
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and mmt.transaction_date>=to_date('20090101 00:00:00','YYYYMMDD HH24:MI:SS')
+and mmt.transaction_date< to_date('20090701 00:00:00','YYYYMMDD HH24:MI:SS')
+AND gcc.segment3='550111'
+
+
+--------All Org,With Type,item,Alias,CC,Acc,reason,reference,source_type,WH,Cost
+select   /*+ index(mta MTL_TRANSACTION_ACCOUNTS_N1) */mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+          mta.primary_quantity  as Qty,
+         mmt.transaction_id, 
+         mst.transaction_source_type_name, 
+         mta.gl_batch_id, 
+         mmt.organization_id Organization , 
+         gcc.segment3 as Account_Num, 
+         mmt.REVISION, 
+         MGD.SEGMENT1                       Alias_SOURCE, 
+         MMT.TRANSACTION_REFERENCE             Trans_Reference, 
+         mtr.reason_name,
+         mmt.subinventory_code                    Source_WareHouse,
+         mmt.transfer_subinventory             Destination_WareHouse,
+         gcc.segment2                    Cost_Center,
+         mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_generic_dispositions  MGD, 
+  apps.MTL_TRANSACTION_REASONS   mtr
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id  
+and    mta.organization_id = mmt.organization_id    
+and    mmt.organization_id =msi.organization_id     
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and    mtr.reason_id(+)=mmt.reason_id 
+--and    mta.gl_batch_id=6397
+--and    gcc.code_combination_id in (1267,16058)
+--and    mta.base_transaction_value in (34.88,-34.88)
+and msi.segment1 ='1212-0436.1'
+and mtt.transaction_type_name ='Sales order issue'
+and mmt.transaction_date>=to_date('20080926 00:00:00','YYYYMMDD HH24:MI:SS')
+and mmt.transaction_date< to_date('20080927 00:00:00','YYYYMMDD HH24:MI:SS')
+
+
+----No item
+select   mmt.creation_date, mmt.organization_id,
+         mtt.transaction_type_name, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+     mta.primary_quantity  as Qty, 
+         mmt.transaction_id, 
+         mst.transaction_source_type_name,  
+         gcc.segment3 as Account_Num, 
+         trunc(mmt.transaction_date) as Trans_Date, 
+         mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_txn_source_types      mst
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = mmt.organization_id  
+--and gcc.segment3='120100'
+and mmt.transaction_date>=to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and mmt.transaction_date<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+
+
+--------Mtl_account with (SO,SO_Type,Alias) Item,Type
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+          mta.primary_quantity  as Qty,
+         mmt.transaction_id, 
+         mst.transaction_source_type_name, 
+         mta.gl_batch_id, 
+         mmt.organization_id Organization , 
+         gcc.segment3 as Account_Num,mso.SEGMENT1 SO,mso.SEGMENT2 SO_Type, 
+         mmt.REVISION, 
+         MGD.SEGMENT1                       Alias_SOURCE, 
+         MMT.TRANSACTION_REFERENCE             Trans_Reference, 
+         mtr.reason_name,
+         mmt.subinventory_code                    Source_WareHouse,
+         mmt.transfer_subinventory             Destination_WareHouse,
+         gcc.segment2                    Cost_Center,
+         mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_generic_dispositions  MGD, 
+  apps.MTL_TRANSACTION_REASONS   mtr,
+  apps.MTL_SALES_ORDERS mso
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id  
+and    mta.organization_id = mmt.organization_id    
+and    mmt.organization_id =msi.organization_id     
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and    mtr.reason_id(+)=mmt.reason_id 
+and mmt.TRANSACTION_SOURCE_ID =mso.SALES_ORDER_ID(+)
+--and    mta.gl_batch_id=6397
+--and    gcc.code_combination_id in (1267,16058)
+--and    mta.base_transaction_value in (34.88,-34.88)
+--and msi.segment1 ='1212-0436.1'
+--and mtt.transaction_type_name ='Sales order issue'
+and mmt.transaction_date>=to_date('20080901 00:00:00','YYYYMMDD HH24:MI:SS')
+and mmt.transaction_date< to_date('20080927 00:00:00','YYYYMMDD HH24:MI:SS')
+and gcc.segment2 ='3050'
+
+
+--------Mtl_account with (Alias source) Item,Type,source_type, Category
+select   mmt.transaction_date, --f.SEGMENT1 Model,
+        (select f.SEGMENT1 Model 
+            from apps.mtl_item_categories_v f 
+            where f.ORGANIZATION_ID=mmt.organization_id 
+                and f.INVENTORY_ITEM_ID=mmt.INVENTORY_ITEM_ID
+                and f.category_set_id=1) model,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name transaction_type, 
+--         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+          (mta.base_transaction_value ) value, 
+          mta.primary_quantity  as Qty,
+         decode(mmt.organization_id,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org, 
+         gcc.segment3 as Account_Num, gcc.segment2 Cost_Center,
+         mst.transaction_source_type_name  source_type, 
+         mmt.REVISION, 
+         MGD.SEGMENT1                       Alias_SOURCE, 
+         MMT.TRANSACTION_REFERENCE             Trans_Reference, 
+         mmt.subinventory_code                    Source_WareHouse,
+         mmt.transfer_subinventory             Destination_WareHouse,        
+         mmt.actual_cost,
+         mmt.transaction_id, 
+         mta.gl_batch_id
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_generic_dispositions  MGD 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id  
+and    mta.organization_id = mmt.organization_id    
+and    mmt.organization_id =msi.organization_id     
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+AND MTA.TRANSACTION_DATE >= to_Date('2008-7-1','yyyy-mm-dd')
+AND MTA.TRANSACTION_DATE< to_Date('2009-1-1','yyyy-mm-dd')
+and gcc.segment3='5401010106'
+
+
+--------Mtl_account with (Alias) Item,Type,source_type, Category
+select   mmt.transaction_date,  
+        (select f.SEGMENT1 from apps.mtl_item_categories_v f
+            where f.category_set_id=1
+            and f.ORGANIZATION_ID=mmt.organization_id 
+            and f.INVENTORY_ITEM_ID=mmt.INVENTORY_ITEM_ID) model,            
+         msi.segment1 item_code, 
+         mtt.transaction_type_name transaction_type, 
+          (mta.base_transaction_value ) value, 
+          mta.primary_quantity  as Qty,
+         decode(mmt.organization_id,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org, 
+         --gcc.segment3 as Account_Num, gcc.segment2 Cost_Center,
+         mst.transaction_source_type_name  source_type, 
+         mmt.REVISION, 
+--         MGD.SEGMENT1   Alias_SOURCE, 
+    (select MGD.SEGMENT1 from apps.mtl_generic_dispositions MGD where MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID)  Alias_SOURCE,
+         MMT.TRANSACTION_REFERENCE  Trans_Reference, 
+         mmt.subinventory_code   Source_WareHouse,
+         mmt.transfer_subinventory   Destination_WareHouse/*,        
+         mmt.actual_cost,
+         mmt.transaction_id, 
+         mta.gl_batch_id */
+from 
+  apps.mtl_material_transactions mmt, 
+  (select CODE_COMBINATION_ID from apps.gl_code_combinations where segment3='5401010106') gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  (select  segment1, inventory_item_id ,organization_id from apps.mtl_system_items_b)  msi, 
+  apps.mtl_txn_source_types      mst--, apps.mtl_generic_dispositions  MGD--,  apps.mtl_item_categories_v    f
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id  
+and    mta.organization_id = mmt.organization_id    
+and    mmt.organization_id =msi.organization_id     
+AND MTA.TRANSACTION_DATE >= to_Date('2008-7-1','yyyy-mm-dd')
+AND MTA.TRANSACTION_DATE< to_Date('2009-1-1','yyyy-mm-dd')
+
+
+------------------Mtl Trans & Accounts with locator info
+
+select   mmt.locator_id,mmt.TRANSFER_LOCATOR_ID,
+mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+          mta.primary_quantity  as Qty,
+         mmt.transaction_id, 
+         mst.transaction_source_type_name, 
+         (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+          and mst.transaction_source_type_name like 'Job%') job, 
+         mta.gl_batch_id, 
+         mmt.organization_id Organization , 
+         gcc.segment3 as Account_Num, 
+         cst.item_cost, cst.material_cost, cst.resource_cost, 
+         trunc(mmt.transaction_date) as Trans_Date, 
+         to_char(oeh.ORDER_NUMBER) Order_number, 
+         mtt.DESCRIPTION                     Type_Description, 
+         mmt.REVISION, 
+         MGD.SEGMENT1                       Alias_SOURCE, 
+         MMT.TRANSACTION_REFERENCE             Trans_Reference, 
+         mtr.reason_name,
+         mmt.subinventory_code                    Source_WareHouse,
+         locator1.segment2||'.'||locator1.segment3||'.'||locator1.segment4||'.'||locator1.segment5 Source_Locator,
+         mmt.transfer_subinventory             Destination_WareHouse,
+         locator2.segment2||'.'||locator2.segment3||'.'||locator2.segment4||'.'||locator2.segment5 Destin_Locator,
+         poh.SEGMENT1                   PO,
+         gcc.segment2                    Cost_Center,
+         mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst, 
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL         oeh,
+  apps.MTL_TRANSACTION_REASONS   mtr,
+  apps.PO_HEADERS_ALL              poh,
+  apps.mtl_item_locations         locator1,  apps.mtl_item_locations         locator2 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=130 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and    mta.organization_id = mmt.organization_id  and cst.organization_id=msi.organization_id 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and    mtr.reason_id(+)=mmt.reason_id 
+and       mmt.TRANSACTION_SOURCE_ID=poh.PO_HEADER_ID(+)
+and    mmt.locator_id=locator1.inventory_location_id(+)
+and    mmt.TRANSFER_LOCATOR_ID=locator2.inventory_location_id(+)
+and    mmt.organization_id =locator1.organization_id (+)
+and    mmt.organization_id =locator2.organization_id (+)
+--and    mta.gl_batch_id=6397
+--and    gcc.code_combination_id in (1267,16058)
+--and    mta.base_transaction_value in (34.88,-34.88)
+and   (mmt.transaction_date)>=to_date('20070831 23:30:00','YYYYMMDD HH24:MI:SS')
+and   (mmt.transaction_date)<=to_date('20070901 00:35:00','YYYYMMDD HH24:MI:SS')
+
+
+
+select * from apps.mtl_transaction_accounts where TRANSACTION_ID in ('5945710','5945735','5945736','5945766','5945767')
+
+
+select * from apps.mtl_transaction_accounts a,apps.mtl_material_transactions b 
+where b.TRANSACTION_ID =a.TRANSACTION_ID(+) and a.TRANSACTION_ID is null
+
+
+
+select b.CREATION_DATE,b.TRANSACTION_DATE,b.INVENTORY_ITEM_ID,b.ORGANIZATION_ID,b.TRANSACTION_ACTION_ID
+,b.TRANSACTION_TYPE_ID,b.TRANSACTION_QUANTITY ,b.ACTUAL_COST
+from apps.mtl_transaction_accounts a,apps.mtl_material_transactions b 
+where b.TRANSACTION_ID =a.TRANSACTION_ID(+) and a.TRANSACTION_ID is null
+
+
+
+
+select * from apps.mtl_material_transactions
+where costed_flag in ('N', 'E')
+--and TRANSACTION_GROUP_ID=5945786
+and ORGANIZATION_ID=85
+
+
+
+select * from apps.mtl_material_transactions where costed_flag='E' 
+
+select request_id ,transaction_group_id,costed_flag,error_code,error_explanation from apps.mtl_material_transactions where costed_flag='E' 
+
+
+select * from apps.mtl_transaction_accounts where transaction_id =5798526--in (5945710,5945735,5945736)
+
+
+
+
+
+select * from apps.mtl_material_transactions where costed_flag in ('N', 'E') and ORGANIZATION_ID=85--='N' 
+
+select * from apps.mtl_material_transactions where costed_flag in ( 'E')
+
+select * from apps.mtl_transaction_accounts where TRANSACTION_ID in ('5945710','5945735','5945736','5945766','5945767')
+
+
+
+select request_id ,transaction_group_id,costed_flag,error_code,error_explanation from apps.mtl_material_transactions --where costed_flag='E' 
+where TRANSACTION_ID in ('5945710','5945735','5945736','5945766','5945767')
+
+select * from apps.mtl_material_transactions where TRANSACTION_ID in ('5945710','5945735','5945736','5945766','5945767')
+
+
+select request_id ,transaction_group_id,costed_flag,error_code,error_explanation from apps.mtl_material_transactions --where costed_flag='E' 
+where TRANSACTION_ID in ('5798526')
+
+update mtl_material_transactions
+set costed_flag = 'N',
+request_id = NULL,
+transaction_group_id = NULL,
+error_code = NULL,
+error_explanation = NULL
+where costed_flag in ('N', 'E');
+
+
+------------Cost update Trans accounting
+select   mmt.transaction_date, mmt.CREATION_DATE Trans_Create_Date,mta.CREATION_DATE Acc_Create_Date,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+        gcc.segment3 as Account_Num,
+        mta.base_transaction_value value, 
+        mta.primary_quantity Qty,
+         mmt.transaction_id, 
+         mta.gl_batch_id, 
+         decode(mmt.organization_id,130,'VP','Unknown') Organization
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    transaction_type_name ='Standard cost update'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mta.organization_id = 130 and mmt.organization_id = 130 and msi.organization_id = 130
+and     (mmt.transaction_date) >=  to_date('20090901 00:00:00','YYYYMMDD HH24:MI:SS')
+--and    (mmt.transaction_date) <= to_date('20090903 13:59:59','YYYYMMDD HH24:MI:SS')
+--and    gcc.segment3='123201'
+order by mmt.CREATION_DATE
+

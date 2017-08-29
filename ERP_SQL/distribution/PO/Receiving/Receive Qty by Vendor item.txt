@@ -1,0 +1,53 @@
+
+----receive Qty ,vendor,item,PO,Org
+
+select a.TRANSACTION_ID,d.segment1 Item,b.segment1 PO,c.LINE_NUM,a.CREATION_DATE,
+a.transaction_type,
+(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) Rec_Qty,
+a.transaction_date,VDR.VENDOR_NAME as Supplier,f.organization_code
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b,apps.PO_VENDORS VDR,
+apps.mtl_system_items d,APPS.mtl_parameters f
+where c.po_header_id=b.po_header_id  
+and VDR.VENDOR_ID=b.VENDOR_ID
+and c.org_id=b.org_id
+and a.po_line_id=c.po_line_id
+and d.organization_id=a.organization_id
+and d.inventory_item_id=c.item_id
+and a.organization_id=f.organization_id
+and a.organization_id>127
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.source_document_code='PO'
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id>=127
+and DESTINATION_TYPE_CODE='RECEIVING'
+and a.CREATION_DATE>=to_date('20090511 8:00:00','YYYYMMDD HH24:MI:SS')
+and a.CREATION_DATE<to_date('20090623 8:00:00','YYYYMMDD HH24:MI:SS')
+--and VDR.VENDOR_NAME in ('NOLATO MOBILE COMMUNICATION POLYMERS (BEIJING) CO., LTD.')
+order by b.segment1 ,c.LINE_NUM
+
+
+---------sum by Vendor,Item,Org
+
+select d.segment1 Item,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) Rec_Qty,
+VDR.VENDOR_NAME as Supplier,f.organization_code
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b,apps.PO_VENDORS VDR,
+apps.mtl_system_items d,APPS.mtl_parameters f
+where c.po_header_id=b.po_header_id  
+and VDR.VENDOR_ID=b.VENDOR_ID
+and c.org_id=b.org_id
+and a.po_line_id=c.po_line_id
+and d.organization_id=a.organization_id
+and d.inventory_item_id=c.item_id
+and a.organization_id=f.organization_id
+and a.organization_id>127
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.source_document_code='PO'
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id>=127
+and DESTINATION_TYPE_CODE='RECEIVING'
+and a.CREATION_DATE>=to_date('20090511 8:00:00','YYYYMMDD HH24:MI:SS')
+and a.CREATION_DATE<to_date('20090623 8:00:00','YYYYMMDD HH24:MI:SS')
+--and VDR.VENDOR_NAME in ('NOLATO MOBILE COMMUNICATION POLYMERS (BEIJING) CO., LTD.')
+group by VDR.VENDOR_NAME,d.segment1,f.organization_code
+order by f.organization_code,VDR.VENDOR_NAME,d.segment1

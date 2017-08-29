@@ -1,0 +1,89 @@
+
+(No Pay BatchNo  List_V1 )
+CREATE VIEW APPS.BMC_AP_List_V1
+AS
+select VDR.VENDOR_NAME as Supplier
+,api.INVOICE_NUM
+,api.GL_DATE
+,apb.BATCH_NAME as InvBatch
+,api.ATTRIBUTE1 as Inv_Trans_Num
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,api.PAYMENT_STATUS_FLAG as FullyPay
+,nvl(api.AMOUNT_PAID,0) as Pay_Amount
+,api.PAY_GROUP_LOOKUP_CODE as PayGroup 
+,api.PAYMENT_CURRENCY_CODE as PayCur
+,api.PAYMENT_CROSS_RATE_DATE as PayDate
+,api.VAT_CODE
+,api.VENDOR_SITE_ID
+,TRM.DUE_DAYS as TermsDate
+,TRM.DUE_DAYS+api.INVOICE_DATE as DueDate
+,api.VENDOR_ID
+,api.INVOICE_ID
+,api.INVOICE_TYPE_LOOKUP_CODE as InvType
+,AP_INVOICES_PKG.GET_PO_NUMBER( api.INVOICE_ID) PO_NUMBER
+,api.ATTRIBUTE2 as Bank_Cash
+,api.SOURCE
+,api.SET_OF_BOOKS_ID SOB
+,api.TAX_AMOUNT
+,api.TERMS_ID
+,api.WFAPPROVAL_STATUS as ApprovStatus
+,api.GOODS_RECEIVED_DATE as GRN_Date
+from 	AP_INVOICES_ALL api
+,		PO_VENDORS VDR
+,	  	AP_TERMS_LINES TRM
+,	    AP_BATCHES_ALL apb
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+--order by api.INVOICE_DATE desc
+
+==========================
+(Multi pay detail, need solve  _List_V2 )
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_AP_List_V2
+AS
+select VDR.VENDOR_NAME as Supplier
+,	   apb.BATCH_NAME as InvBatch
+,	   apa.INVOICE_NUM
+,	   apa.ATTRIBUTE1 as Inv_Trans_Num
+,	   apa.INVOICE_AMOUNT as Invoice_Amt
+,	   apa.GL_DATE
+,	   apa.INVOICE_DATE
+,	   apa.INVOICE_TYPE_LOOKUP_CODE as InvType
+,	   AP_INVOICES_PKG.GET_PO_NUMBER( apa.INVOICE_ID) PO_NUMBER
+,	   apc.ATTRIBUTE1 as Pay_Trans_Num
+,	   apc.CHECKRUN_NAME as PayBatch
+,	   apa.AMOUNT_PAID as Paid_Amount
+,	   apa.WFAPPROVAL_STATUS as InvApproval
+,	   apa.DESCRIPTION
+,	   apa.PAY_GROUP_LOOKUP_CODE as PayGroup
+,	   TRM.DUE_DAYS as TermsDate
+,	   TRM.DUE_DAYS+apa.INVOICE_DATE as DueDate
+,	   apa.INVOICE_CURRENCY_CODE as Inv
+,	   apa.PAYMENT_CURRENCY_CODE as Pay
+,	   apa.PAYMENT_STATUS_FLAG as PayStatus
+,	   apa.SET_OF_BOOKS_ID as SOB
+,	   apa.TERMS_ID
+,	   apa.VENDOR_ID
+,	   apa.VENDOR_SITE_ID
+,	   app.CREATION_DATE as PayDate
+from  	  AP_INVOICES_ALL apa 
+,	  AP_INVOICE_PAYMENTS_ALL app
+,	  PO_VENDORS VDR
+,	  AP_TERMS_LINES TRM
+,	  AP_checks_all apc
+,	  AP_BATCHES_ALL apb
+where apa.INVOICE_ID=app.INVOICE_ID(+)
+and   apa.SET_OF_BOOKS_ID='1'
+and   app.SET_OF_BOOKS_ID(+)='1'
+and   VDR.VENDOR_ID=apa.VENDOR_ID
+and   TRM.TERM_ID=apa.TERMS_ID 
+and   apa.BATCH_ID=apb.BATCH_ID
+and   app.CHECK_ID=apc.CHECK_ID(+)
+order by   apa.INVOICE_DATE desc
+
+
+
+

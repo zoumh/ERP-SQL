@@ -1,0 +1,47 @@
+
+
+----------Account is diff betweem Inv_Dist & AE_Line (GL) ,If has updated AP Invoice Acconting, 
+
+select b.ae_line_type_code,a.LINE_TYPE_LOOKUP_CODE,nvl(a.BASE_AMOUNT,a.AMOUNT) Dist_CNY_Amt,nvl(b.ACCOUNTED_DR,0)-nvl(b.ACCOUNTED_CR,0) AE_Amt,
+f.invoice_num,a.distribution_line_number Dist_line,b.AE_LINE_NUMBER ,c.segment2 Dist_CC,c.segment3 Dist_Acc,
+d.segment2 AE_CC,d.segment3 AE_Acc,b.CREATION_DATE AE_Create_Date,b.LAST_UPDATE_DATE AE_last_Update_Date,g.DESCRIPTION Last_Update_By,g.USER_NAME Last_Update_By_Login,a.LAST_UPDATE_DATE ,
+a.ACCOUNTING_DATE Dist_Acc_Date,PERIOD_NAME   
+from APPS.AP_INVOICE_DISTRIBUTIONS_ALL a,APPS.ap_ae_lines_all b,
+apps.gl_code_combinations c,apps.gl_code_combinations d,apps.AP_INVOICES_ALL f,apps.fnd_user g
+where a.INVOICE_DISTRIBUTION_ID  =b.SOURCE_ID 
+and b.SOURCE_TABLE='AP_INVOICE_DISTRIBUTIONS'
+and a.DIST_CODE_COMBINATION_ID <>b.CODE_COMBINATION_ID 
+and a.DIST_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID 
+and b.CODE_COMBINATION_ID =d.CODE_COMBINATION_ID
+and a.INVOICE_ID=f.INVOICE_ID
+and g.USER_ID=b.LAST_UPDATED_BY
+and a.org_id=b.org_id
+and a.org_id=f.org_id 
+and a.org_id=127
+--and f.invoice_num=' 9290014905'
+--and b.ae_line_type_code='AP ACCRUAL'
+and nvl(b.ACCOUNTED_DR,0)-nvl(b.ACCOUNTED_CR,0)=nvl(a.BASE_AMOUNT,a.AMOUNT)
+order by f.invoice_num,a.distribution_line_number 
+
+
+select nvl(a.BASE_AMOUNT,a.AMOUNT) Dist_CNY_Amt,nvl(b.ACCOUNTED_DR,0)-nvl(b.ACCOUNTED_CR,0) AE_Amt,
+f.invoice_num,a.distribution_line_number Dist_line,c.segment2 Dist_CC,c.segment3 Dist_Acc,
+d.segment2 AE_CC,d.segment3 AE_Acc,b.CREATION_DATE AE_Create_Date,b.LAST_UPDATE_DATE AE_last_Update_Date,g.DESCRIPTION Last_Update_By,g.USER_NAME Last_Update_By_Login,a.LAST_UPDATE_DATE ,
+a.ACCOUNTING_DATE Dist_Acc_Date,PERIOD_NAME   
+from APPS.AP_INVOICE_DISTRIBUTIONS_ALL a,APPS.ap_ae_lines_all b,
+apps.gl_code_combinations c,apps.gl_code_combinations d,apps.AP_INVOICES_ALL f,apps.fnd_user g
+where a.INVOICE_DISTRIBUTION_ID  =b.SOURCE_ID 
+and b.SOURCE_TABLE='AP_INVOICE_DISTRIBUTIONS'
+and a.DIST_CODE_COMBINATION_ID <>b.CODE_COMBINATION_ID 
+and a.DIST_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID 
+and b.CODE_COMBINATION_ID =d.CODE_COMBINATION_ID
+and a.INVOICE_ID=f.INVOICE_ID
+and g.USER_ID=b.LAST_UPDATED_BY
+and a.org_id=b.org_id
+and a.org_id=f.org_id 
+and a.org_id=127
+--and f.invoice_num=' 9290014905'
+and PERIOD_NAME ='JUN-06'
+order by f.invoice_num,a.distribution_line_number 
+
+

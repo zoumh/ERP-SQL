@@ -1,0 +1,4 @@
+
+should run a request in FA first, it would update this view
+
+select * from apps.BSE_FA_DETAILS_V

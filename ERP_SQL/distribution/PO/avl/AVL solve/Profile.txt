@@ -1,0 +1,6 @@
+
+
+MRP:Purchasing By Revision =No (no care Item Revision, PR--PR price need to read Quo Item with Rev)
+
+
+

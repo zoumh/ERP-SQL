@@ -1,0 +1,21 @@
+
+
+Prepare :<PE DEPT REQUESTOR>
+
+
+
+-------------Prj Equipment PR
+select a.segment1,a.AUTHORIZATION_STATUS,
+PR_Num,b.line_num,c.DISTRIBUTION_NUM,b.ITEM_DESCRIPTION,
+b.QUANTITY,b.rate,b.unit_price,b.currency_code,
+b.currency_unit_price,b.creation_date,
+d.segment2 CC,d.segment3 Acc,d.segment4 PRD,d.segment5 PRJ
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.gl_code_combinations d 
+where a.preparer_id=1137 ----------ZGH
+and a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and d.segment2 in ('5205','5207','4201')
+order by a.segment1,b.line_num,c.DISTRIBUTION_NUM
+

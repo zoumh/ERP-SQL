@@ -1,0 +1,170 @@
+
+------------Bill Open PO in PO Dist level with Buyer & Creator
+
+Select f.LINE_TYPE ,h.CREATED_BY,
+h.segment1 po_number,l.LINE_NUM,pl.SHIPMENT_NUM,
+v.segment1 vendor_code,v.vendor_name,h.creation_date,g.user_name Created_By,
+m.FULL_NAME Buyer,h.currency_code ,
+sum(pl.quantity) order_quantity,
+sum(pl.quantity_received) quantity_received ,
+sum(pl.quantity_accepted) quantity_accepted,
+sum(pl.quantity_rejected) quantity_rejected,
+sum(pl.quantity_billed)   quantity_billed,
+sum(pl.quantity_cancelled) quantity_cancelled  
+From apps.po_headers_all h, apps.po_lines_all l, apps.po_line_locations_all pl, 
+apps.po_vendors v, apps.po_agents_name_v m,
+apps.PO_line_types f,apps.FND_USER g
+Where h.po_header_id = l.po_header_id 
+And l.po_line_id =  pl.po_line_id 
+And h.vendor_id = v.vendor_id
+and h.agent_id=m.BUYER_ID
+And h.org_id=&org_id 
+and f.LINE_TYPE_ID=l.LINE_TYPE_ID
+and pl.closed_code ='OPEN'
+and (h.AUTHORIZATION_STATUS ='APPROVED')  
+and (h.CANCEL_FLAG ='N' or h.CANCEL_FLAG  is null)
+and (l.CANCEL_FLAG<>'Y' or l.CANCEL_FLAG is null)
+and (pl.CANCEL_FLAG<>'Y' or pl.CANCEL_FLAG is null)
+and (pl.quantity_received<(pl.quantity-pl.QUANTITY_CANCELLED)
+or pl.QUANTITY_BILLED<(pl.quantity_received-pl.QUANTITY_CANCELLED))
+and g.USER_ID=h.CREATED_BY
+Group By  h.segment1,l.LINE_NUM,pl.SHIPMENT_NUM,v.segment1,g.user_name,v.vendor_name,h.creation_date,m.FULL_NAME,h.currency_code,f.LINE_TYPE ,h.CREATED_BY
+
+
+------------Bill Open PO in ship level with Buyer
+
+Select f.LINE_TYPE ,
+h.segment1 po_number,v.segment1 vendor_code,v.vendor_name,h.creation_date,m.FULL_NAME Buyer,h.currency_code ,
+sum(pl.quantity) order_quantity,
+sum(pl.quantity_received) quantity_received ,
+sum(pl.quantity_accepted) quantity_accepted,
+sum(pl.quantity_rejected) quantity_rejected,
+sum(pl.quantity_billed)   quantity_billed,
+sum(pl.quantity_cancelled) quantity_cancelled  
+From apps.po_headers_all h, apps.po_lines_all l, apps.po_line_locations_all pl, 
+apps.po_vendors v, apps.po_agents_name_v m,
+apps.PO_line_types f
+Where h.po_header_id = l.po_header_id 
+And l.po_line_id =  pl.po_line_id 
+And h.vendor_id = v.vendor_id
+and h.agent_id=m.BUYER_ID
+And h.org_id=&org_id 
+and f.LINE_TYPE_ID=l.LINE_TYPE_ID
+and pl.closed_code ='OPEN'
+and (h.AUTHORIZATION_STATUS ='APPROVED')  
+and (h.CANCEL_FLAG ='N' or h.CANCEL_FLAG  is null)
+and (l.CANCEL_FLAG<>'Y' or l.CANCEL_FLAG is null)
+and (pl.CANCEL_FLAG<>'Y' or pl.CANCEL_FLAG is null)
+and (pl.quantity_received<(pl.quantity-pl.QUANTITY_CANCELLED)
+or pl.QUANTITY_BILLED<(pl.quantity_received-pl.QUANTITY_CANCELLED))
+Group By  h.segment1  ,v.segment1  ,v.vendor_name,h.creation_date,m.FULL_NAME,h.currency_code,f.LINE_TYPE 
+
+
+
+------------Bill Open PO in ship PO line level
+
+Select f.LINE_TYPE ,
+h.segment1 po_number,l.line_num,v.segment1 vendor_code,v.vendor_name,h.creation_date,m.FULL_NAME,h.currency_code ,
+sum(pl.quantity) order_quantity,
+sum(pl.quantity_received) quantity_received ,
+sum(pl.quantity_accepted) quantity_accepted,
+sum(pl.quantity_rejected) quantity_rejected,
+sum(pl.quantity_billed)   quantity_billed,
+sum(pl.quantity_cancelled) quantity_cancelled,  
+sum(pl.quantity-pl.quantity_cancelled-pl.quantity_received) Un_Received_Qty,
+sum(pl.quantity_received-pl.quantity_billed) Un_Billed_Qty
+From apps.po_headers_all h, apps.po_lines_all l, apps.po_line_locations_all pl, 
+apps.po_vendors v, apps.po_agents_name_v m,
+apps.PO_line_types f
+Where h.po_header_id = l.po_header_id 
+And l.po_line_id =  pl.po_line_id 
+And h.vendor_id = v.vendor_id
+and h.agent_id=m.BUYER_ID
+And h.org_id=&org_id 
+and f.LINE_TYPE_ID=l.LINE_TYPE_ID
+and pl.closed_code ='OPEN'
+and (h.AUTHORIZATION_STATUS ='APPROVED')  
+and (h.CANCEL_FLAG ='N' or h.CANCEL_FLAG  is null)
+and (l.CANCEL_FLAG<>'Y' or l.CANCEL_FLAG is null)
+and (pl.CANCEL_FLAG<>'Y' or pl.CANCEL_FLAG is null)
+and (pl.quantity_received<(pl.quantity-pl.QUANTITY_CANCELLED)
+or pl.QUANTITY_BILLED<(pl.quantity_received-pl.QUANTITY_CANCELLED))
+group by h.segment1,l.line_num,f.LINE_TYPE,v.segment1 ,v.vendor_name,h.creation_date,m.FULL_NAME,h.currency_code 
+order by  h.segment1,l.line_num,v.segment1  ,v.vendor_name,h.creation_date,f.LINE_TYPE 
+
+
+---------Open PO at ship level, with buyer,vendor,term,item,caetgory
+Select f.LINE_TYPE ,h.AUTHORIZATION_STATUS,
+h.FOB_LOOKUP_CODE FOB,h.FREIGHT_TERMS_LOOKUP_CODE FREIGHT_TERMS,
+h.ORG_ID,h.RATE,h.RATE_TYPE,trm.DUE_DAYS as TermsDate,h.TYPE_LOOKUP_CODE PO_Type,
+h.USER_HOLD_FLAG,
+h.segment1 po_number,l.LINE_NUM,pl.SHIPMENT_NUM,pl.SHIP_TO_ORGANIZATION_ID ,
+pl.NEED_BY_DATE,pl.PROMISED_DATE,l.UNIT_PRICE,l.TAX_NAME,pl.CREATION_DATE,
+v.segment1 vendor_code,v.vendor_name,g.user_name Created_By,
+m.FULL_NAME Buyer,h.currency_code ,
+(pl.quantity) order_quantity,
+(pl.quantity_received) quantity_received ,
+(pl.quantity_accepted) quantity_accepted,
+(pl.quantity_rejected) quantity_rejected,
+(pl.quantity_billed)   quantity_billed,
+(pl.quantity_cancelled) quantity_cancelled,
+cat.segment1,cat.segment2,cat.segment3,cat.segment4,  
+l.ITEM_DESCRIPTION,i.segment1 Item
+From apps.po_headers_all h, apps.po_lines_all l, apps.po_line_locations_all pl, 
+apps.po_vendors v, apps.po_agents_name_v m,
+apps.PO_line_types f,apps.FND_USER g,
+apps.MTL_CATEGORIES_V cat,
+apps.AP_TERMS_LINES trm,
+(select segment1,INVENTORY_ITEM_ID from apps.mtl_system_items_b where organization_id=127) i
+Where h.po_header_id = l.po_header_id 
+And l.po_line_id =  pl.po_line_id 
+And h.vendor_id = v.vendor_id
+and h.agent_id=m.BUYER_ID
+And h.org_id=&org_id 
+and f.LINE_TYPE_ID=l.LINE_TYPE_ID
+and pl.closed_code ='OPEN'
+and l.CATEGORY_ID=cat.CATEGORY_ID
+and cat.STRUCTURE_ID=101
+and i.INVENTORY_ITEM_ID(+)=l.item_id 
+and (h.AUTHORIZATION_STATUS ='APPROVED')  
+and (h.CANCEL_FLAG ='N' or h.CANCEL_FLAG  is null)
+and (l.CANCEL_FLAG<>'Y' or l.CANCEL_FLAG is null)
+and (pl.CANCEL_FLAG<>'Y' or pl.CANCEL_FLAG is null)
+and (pl.quantity_received<(pl.quantity-pl.QUANTITY_CANCELLED))
+and g.USER_ID=h.CREATED_BY
+and TRM.TERM_ID=h.TERMS_ID
+--and h.segment1='1000070'
+order By  h.segment1,l.LINE_NUM,pl.SHIPMENT_NUM
+
+
+
+------------from LJ (Open receiving)
+
+select  distinct d.CREATION_DATE,d.segment1 po_no,c.segment1 item_no,a.quantity qty_ordered,
+ a.quantity_received, a.QUANTITY_BILLED,A.QUANTITY_CANCELLED, b.ATTRIBUTE1,A.NEED_BY_DATE,
+ e.name,f.AGENT_name,a.SHIP_TO_ORGANIZATION_ID,a.CLOSED_CODE
+from apps.po_line_locations_all a,apps.po_lines_all b, apps.mtl_system_items c ,apps.po_headers_all d,
+APPS.HR_ALL_ORGANIZATION_UNITS e,apps.PO_AGENTS_V f
+where 
+a.quantity_received<(a.quantity-A.QUANTITY_CANCELLED)
+--or a.QUANTITY_BILLED<(a.quantity_received-A.QUANTITY_CANCELLED))
+and c.inventory_item_id=b.item_id 
+and c.organization_id=b.org_id 
+and a.PO_LINE_ID=b.PO_LINE_ID
+and b.po_header_id=d.po_header_id 
+AND TYPE_LOOKUP_CODE ='STANDARD'
+and To_char(d.CREATION_DATE,'YYYY-MM-DD')<='2005-03-31'
+and e.ORGANIZATION_ID=a.SHIP_TO_ORGANIZATION_ID
+and d.AGENT_ID=f.AGENT_ID
+and a.SHIP_TO_ORGANIZATION_ID=83
+
+
+
+closed status : Close for invoice : billed qty =order qty 
+
+finally close and close : if received qty < (ordered qty-cancelled qty ) then we can manually to close it . Then we can not receive , billed .
+
+
+
+LI JING     IS/IT 
+Logistics system analyst,   Beijing SE PUTIAN Mobile Communications Co. Ltd.

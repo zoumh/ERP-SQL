@@ -1,0 +1,46 @@
+
+
+-----------Blanket PO release match to invoice info (anyone could run)
+select api.INVOICE_NUM,apd.DISTRIBUTION_LINE_NUMBER Inv_Dist,apd.QUANTITY_INVOICED,apd.DIST_MATCH_TYPE Inv_Match_Type,
+poh.segment1 po_num,a.release_num,pol.LINE_NUM,b.SHIPMENT_NUM,c.DISTRIBUTION_NUM,b.MATCH_OPTION PO_Match_Option,
+pol.item_id,c.QUANTITY_BILLED dist_Bill_Qty,c.QUANTITY_ORDERED Dist_Qty,c.QUANTITY_DELIVERED Dist_Deliv_Qty,c.QUANTITY_CANCELLED Dist_Cancel_Qty 
+from  apps.PO_HEADERS_ALL poh,apps.PO_RELEASES_all a,apps.PO_LINE_LOCATIONS_ALL b,apps.PO_DISTRIBUTIONS_ALL c,
+apps.PO_LINES_ALL pol,apps.ap_invoices_all api,apps.AP_INVOICE_DISTRIBUTIONS_all apd
+where a.po_release_id=b.po_release_id
+and a.po_header_id=b.po_header_id
+and a.po_header_id=c.po_header_id
+and b.LINE_LOCATION_ID=c.LINE_LOCATION_ID
+and a.po_header_id=pol.po_header_id
+and a.po_header_id=poh.po_header_id
+and a.po_release_id=c.po_release_id
+and a.po_release_id=b.po_release_id
+and pol.PO_LINE_ID=b.PO_LINE_ID
+and pol.PO_LINE_ID=c.PO_LINE_ID
+and api.INVOICE_ID(+)=apd.INVOICE_ID
+and apd.po_distribution_id(+)=c.po_distribution_id
+and poh.segment1='1075992'  and a.release_num='852'
+and pol.LINE_NUM='1422'
+--and c.QUANTITY_BILLED<>0
+and poh.TYPE_LOOKUP_CODE='BLANKET'
+
+
+---------needs Apps to run set_org_context('127') 
+select api.INVOICE_NUM,apd.DISTRIBUTION_LINE_NUMBER Inv_Dist,apd.QUANTITY_INVOICED,apd.DIST_MATCH_TYPE Inv_Match_Type,
+a.po_num,a.release_num,pol.LINE_NUM,b.SHIPMENT_NUM,c.DISTRIBUTION_NUM,b.MATCH_OPTION PO_Match_Option,
+b.item_id,c.QUANTITY_BILLED dist_Bill_Qty,c.QUANTITY_ORDERED Dist_Qty,c.QUANTITY_DELIVERED Dist_Deliv_Qty,c.QUANTITY_CANCELLED Dist_Cancel_Qty,c.SEGMENT1
+from  apps.PO_RELEASES_V a,apps.PO_LINE_LOCATIONS_RELEASE_V b,apps.PO_DISTRIBUTIONS_V c,
+apps.PO_LINES_ALL pol,apps.ap_invoices_all api,apps.AP_INVOICE_DISTRIBUTIONS_all apd
+where a.po_release_id=b.po_release_id
+and a.po_header_id=b.po_header_id
+and a.po_header_id=c.po_header_id
+and b.LINE_LOCATION_ID=c.LINE_LOCATION_ID
+and a.po_header_id=pol.po_header_id
+and a.po_release_id=c.po_release_id
+and a.po_num='1038925'  and a.release_num=183
+and pol.PO_LINE_ID=b.PO_LINE_ID
+and pol.PO_LINE_ID=c.PO_LINE_ID
+and api.INVOICE_ID(+)=apd.INVOICE_ID
+and apd.po_distribution_id(+)=c.po_distribution_id
+--and c.QUANTITY_BILLED<>0
+--and pol.LINE_NUM=64
+and a.TYPE_LOOKUP_CODE='BLANKET'

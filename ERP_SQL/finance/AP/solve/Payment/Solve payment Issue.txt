@@ -1,0 +1,91 @@
+
+-----------Case 1
+
+1) Take a backup:
+.
+create table bak_aia as select * from AP_INVOICES_ALL where INVOICE_ID = 48744 and ORG_ID = 81;
+.
+2) select * from bak_aia;
+.
+(one record retrieved.)
+.
+3)
+
+UPDATE ap_invoices_all
+SET amount_paid = invoice_amount, payment_status_flag = 'Y'
+WHERE invoice_id = 88616;
+
+.
+(This should update one record. If yes please COMMIT or else ROLLBACK.)
+
+
+--------------------Case 2
+
+To implement the solution, please execute the following steps:
+
+1. Void the check number 191 (if not forwarded to supplier);
+2. Account and transfer to GL 
+3. Run APLISTH again and upload for review.
+
+
+Now execute the following
+
+update ap_payment_schedules_all
+set payment_status_flag='Y',amount_remaining=0
+where invoice_id=48743;
+
+1 row updated
+
+update ap_invoices_all
+set amount_paid=67406.46,payment_status_flag='Y'
+where invoice_id =48743;
+
+1 row updated
+
+commit;
+
+
+-----------Case 3 , paybatch status is null, not see this batch, but invoice can't be paid from other batch --invoice status is 'selected for payment'
+
+--Can't see this paymentbatch
+select * from apps.AP_INV_SELECTION_CRITERIA_all where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+----This batch status & selected invoice
+select * from apps.AP_SELECTED_INVOICES_ALL where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+select CHECKRUN_NAME,INVOICE_ID,INVOICE_NUM,INVOICE_AMOUNT,AMOUNT_REMAINING,PAYMENT_AMOUNT,PROPOSED_PAYMENT_AMOUNT,OK_TO_PAY_FLAG,PAY_SELECTED_CHECK_ID,VENDOR_NAME,VENDOR_NUM,VENDOR_SITE_CODE
+from apps.AP_SELECTED_INVOICES_ALL where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+--check 
+select * from apps.AP_SELECTED_INVOICE_CHECKS_ALL where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+select CHECKRUN_NAME,CHECK_NUMBER,CHECK_AMOUNT,VENDOR_NUM,VENDOR_NAME,VENDOR_SITE_CODE,OK_TO_PAY_FLAG,SELECTED_CHECK_ID
+from apps.AP_SELECTED_INVOICE_CHECKS_ALL where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

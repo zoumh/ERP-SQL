@@ -1,0 +1,32 @@
+ 
+------Find out onhand qty which was not snapshoot
+
+Select Organization_Id, Lpn_Id, Inventory_Item_Id Item_Id, Cost_Group_Id, Sum(Transaction_Quantity) Onhand_Qty
+From   Apps.Mtl_Onhand_Quantities_Detail a
+Where  Lpn_Id Is Not Null
+Group  By Organization_Id, Lpn_Id, Inventory_Item_Id, Cost_Group_Id
+Minus
+Select b.Organization_Id, b.Parent_Lpn_Id Lpn_Id, b.Inventory_Item_Id Item_Id, b.Cost_Group_Id, Sum(Quantity) Lpn_Qty
+From   Apps.Wms_Lpn_Contents b, Apps.Wms_License_Plate_Numbers a
+Where  b.Parent_Lpn_Id = a.Lpn_Id
+-- And LPN_CONTEXT=1
+Group  By b.Organization_Id, b.Parent_Lpn_Id, b.Inventory_Item_Id, b.Cost_Group_Id
+
+
+--------------------
+
+Select a.Organization_Id,a.Subinventory_Name, Sum(a.System_Quantity) SumQTY
+From Apps.Mtl_Physical_Adjustments a
+Where a.Physical_Inventory_Id = &phy
+And a.Organization_Id = &org
+--And Subinventory_Name = 'RWK'
+Group By a.Organization_Id,     a.Subinventory_Name
+Minus
+     Select Organization_Id, Subinventory_Code,Sum(a.Primary_Transaction_Quantity) sumQty
+     From Apps.Mtl_Onhand_Quantities_Detail a
+     Where a.Organization_Id = &Org
+--   And Subinventory_Code = 'RWK'
+     Group By Organization_Id, Subinventory_Code
+
+ 
+

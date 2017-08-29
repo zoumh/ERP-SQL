@@ -1,0 +1,59 @@
+
+--------link AP invoice with PO-PR , AP invoice Dr Account, with match PO,line type,item,category, linked PR ,preparer
+
+SELECT --a.po_distribution_id,po.REQ_DISTRIBUTION_ID,
+po.po_date,po.PR_num,po.pr_line,po.PREPARER PR_Prepare,po.po_num ,po.po_line,po.item,po.LINE_TYPE,po.Category2,
+c.invoice_num, 
+          vdr.vendor_name supplier, vdr.vendor_id, 
+          c.invoice_amount, c.invoice_date, c.description, 
+          b.segment3 AS ACCOUNT, b.segment2 AS cost_center, 
+          a.accounting_date gl_date, --c.attribute1 AS inv_trans_num, 
+          c.invoice_currency_code AS inv_curr, 
+          a.distribution_line_number AS line, a.amount AS line_amount, 
+          NVL (a.base_amount, a.amount) AS line_amount_cny, 
+          a.QUANTITY_INVOICED line_match_qty, 
+          a.description line_description, b.segment4 prd, b.segment5 prj
+     FROM apps.ap_invoice_distributions_all a, 
+          apps.gl_code_combinations b, 
+          apps.ap_invoices_all c, 
+          apps.po_vendors vdr ,
+            (select d.REQ_DISTRIBUTION_ID,d.po_distribution_id,e.segment1 PO_Num,f.LINE_NUM PO_line,d.creation_date PO_Date,
+                pr.PREPARER,pr.PR_num,pr.pr_line,msi.item,g.LINE_TYPE,h.segment2 Category2
+                from
+                    apps.PO_DISTRIBUTIONS_ALL d,
+                    apps.PO_HEADERS_ALL e,
+                    apps.PO_LINES_ALL f,
+                    apps.PO_line_types g,
+                    apps.MTL_CATEGORIES_V h,
+                    (select segment1 Item,INVENTORY_ITEM_ID from apps.mtl_system_items_b where organization_id=127) msi,
+                    (select pe.FULL_NAME Preparer,prd.DISTRIBUTION_ID,prh.segment1 PR_num,prl.LINE_NUM PR_line
+                     from apps.po_requisition_headers_all prh,
+                          apps.po_requisition_lines_all prl,
+                          apps.PO_REQ_DISTRIBUTIONS_all prd,
+                          apps.PER_PEOPLE_V7 PE
+                     where prh.requisition_header_id=prl.requisition_header_id
+                        and prl.REQUISITION_LINE_ID=prd.REQUISITION_LINE_ID
+                        and prh.PREPARER_ID=pe.person_id
+                      ) pr                     
+                where 
+                    e.PO_HEADER_ID =d.PO_HEADER_ID 
+                    and e.PO_HEADER_ID =f.PO_HEADER_ID 
+                    and f.PO_LINE_ID =d.PO_LINE_ID
+                    and D.REQ_DISTRIBUTION_ID=pr.DISTRIBUTION_ID(+)
+                    and f.ITEM_ID= msi.INVENTORY_ITEM_ID(+)
+                    and f.LINE_TYPE_ID=g.LINE_TYPE_ID
+                    and h.CATEGORY_ID=f.CATEGORY_ID
+                    and h.structure_id=101
+                    ) PO
+    WHERE a.dist_code_combination_id = b.code_combination_id 
+      AND a.invoice_id = c.invoice_id 
+      AND vdr.vendor_id = c.vendor_id 
+and b.segment3 in ('41059903','41059909','41050706','41059908')
+and a.ACCOUNTING_DATE>=to_date('2008-01-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <to_date('2008-02-1','yyyy-mm-dd')
+and a.po_distribution_id=po.po_distribution_id(+)
+--and po.po_distribution_id is not null
+--and po.REQ_DISTRIBUTION_ID is null
+--and c.invoice_num in ('NT-AP20080131-6','816686','19917394')
+
+

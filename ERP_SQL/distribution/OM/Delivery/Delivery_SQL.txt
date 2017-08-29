@@ -1,0 +1,93 @@
+
+
+---------Find SO Deliver_ID,Delivery_Detail_ID(not include type='C'),deliver_Status,line Status from SO number
+
+select d.FLOW_STATUS_CODE,b.RELEASED_STATUS_NAME , 
+ c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type del_type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and c.ORDER_NUMBER='5003212'
+
+
+---------Find SO Number from Deliver_ID (delivery number)
+
+select d.FLOW_STATUS_CODE,b.RELEASED_STATUS_NAME , 
+ c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type del_type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+--and c.ORDER_NUMBER='5003212'
+and b.delivery_id=800143942
+
+
+
+----------WSH_NEW_DELIVERIES_V , find Delivery_id = Delivery number 
+select name Delivery_number,status_name,number_of_lpn,delivery_id,DELIVERY_DETAIL_ID,TRIP_ID,STOP_ID,   
+creation_date,INITIAL_PICKUP_DATE,ACCEPTED_DATE,CONFIRM_DATE,LAST_UPDATE_DATE,PROGRAM_UPDATE_DATE      
+from apps.WSH_NEW_DELIVERIES_V  where name='800013294'
+
+
+
+
+----------WSH_DLVY_DELIVERABLES_V , find all Delivery Details (include type='C') (LPN) from Delivery_id (= Delivery number )
+
+select * from apps.WSH_DLVY_DELIVERABLES_V where DELIVERY_ID =800013294
+
+select type,source_code,source_name,container_flag,seal_code,delivery_id,DELIVERY_DETAIL_ID,delivery_line_id,container_name LPN,
+source_header_number SO_Number,source_header_type_name SO_Type,source_line_number,requested_quantity,shipped_quantity,picked_quantity2,
+unit_price,currency_code Curr,pickable_flag,
+source_header_id,source_line_id,inventory_item_id,revision,Item_description,subinventory,cust_PO_Number,move_order_line_id,
+org_id,organization_id,released_status_name,oe_interfaced_flag,split_from_delivery_detail_id,PARENT_CONTAINER_INSTANCE_ID,lpn_id,
+creation_date,LAST_UPDATE_DATE 
+from apps.WSH_DLVY_DELIVERABLES_V where DELIVERY_ID =800013294
+
+
+
+------link LPN with Delivery_Details (Delivery_id = Delivery number )
+select a.delivery_id,a.source_header_number SO_Number,a.source_header_type_name SO_Type,a.source_line_number,
+a.unit_price,a.currency_code Curr,a.requested_quantity,a.shipped_quantity,
+a.inventory_item_id,a.revision,a.Item_description,a.subinventory,
+b.Item_description LPN_Size,a.seal_code,b.container_name LPN,b.lpn_id,
+a.cust_PO_Number,a.move_order_line_id,a.released_status_name OE_Rel_Status,b.released_status_name LPN_Rel_Status,
+a.oe_interfaced_flag
+from apps.WSH_DLVY_DELIVERABLES_V a,apps.WSH_DLVY_DELIVERABLES_V b
+where a.type='L' and b.type='C'
+and a.DELIVERY_ID=b.DELIVERY_ID
+and a.DELIVERY_ID=800013294
+and a.PARENT_CONTAINER_INSTANCE_ID=b.DELIVERY_detail_ID
+
+
+-------------
+
+---- use Delivery number to find the info from table
+select INVENTORY_ITEM_ID,ITEM_DESCRIPTION,SOURCE_HEADER_ID,SOURCE_LINE_ID,DELIVERY_DETAIL_ID
+requestd_quantity,shipped_quantity,container_name LPN,move_order_line_id,subinventory,revision,
+CUST_PO_NUMBER,net_weight,volume,gross_weight from apps.wsh_delivery_details b where
+delivery_detail_id in 
+(select delivery_detail_id from apps.wsh_delivery_assignments  where delivery_ID=800066921) 
+order by SOURCE_LINE_ID,delivery_detail_id
+  
+--One SO 168660 , 12 LPNs , one LPN can't output the label (BMC Standard Ship Label)
+
+Check apps.wsh_delivery_details.INVENTORY_ITEM_ID , if it is empty then can't print the label !
+(for those container lines with LPN)
+

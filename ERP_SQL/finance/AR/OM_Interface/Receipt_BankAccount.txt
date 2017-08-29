@@ -1,0 +1,43 @@
+
+
+select g.name Receipt_Method,f.Amount,f.currency_code,f.receipt_number,f.receipt_date,f.receipt_method_id,f.remittance_bank_account_id,
+e.BANK_NAME,to_char(a.BANK_ACCOUNT_ID) Bank_Account_ID,a.BANK_ACCOUNT_NAME,a.BANK_ACCOUNT_NUM
+from apps.ar_cash_receipts_all f,
+apps.AP_BANK_ACCOUNTS_all a
+,apps.AP_BANK_BRANCHES e,apps.AR_RECEIPT_METHODS  g
+where a.BANK_BRANCH_ID=e.BANK_BRANCH_ID
+and f.remittance_bank_account_id=a.BANK_ACCOUNT_ID
+--and f.receipt_number like '%FW%'
+--and e.BANK_NAME='Bank of China'
+--and a.BANK_ACCOUNT_NAME='AR Temporary-CNY(11319999)'
+and g.name='Virtual Receipts'
+and f.RECEIPT_METHOD_ID =g.RECEIPT_METHOD_ID
+
+
+
+
+
+select f.Amount,f.currency_code,f.receipt_number,f.receipt_date,f.receipt_method_id,f.remittance_bank_account_id,
+e.BANK_NAME,to_char(a.BANK_ACCOUNT_ID) Bank_Account_ID,a.BANK_ACCOUNT_NAME,a.BANK_ACCOUNT_NUM
+from apps.ar_cash_receipts_all f,
+apps.AP_BANK_ACCOUNTS_all a
+,apps.AP_BANK_BRANCHES e
+where a.BANK_BRANCH_ID=e.BANK_BRANCH_ID
+and f.remittance_bank_account_id=a.BANK_ACCOUNT_ID
+and f.receipt_number like '%FW%'
+order by f.receipt_number
+
+
+
+
+select f.Amount,f.currency_code,f.receipt_number,f.receipt_date,f.receipt_method_id,f.remittance_bank_account_id,
+e.BANK_NAME,to_char(a.BANK_ACCOUNT_ID) Bank_Account_ID,a.BANK_ACCOUNT_NAME,a.BANK_ACCOUNT_NUM
+from apps.ar_cash_receipts_all f,
+apps.AP_BANK_ACCOUNTS_all a
+,apps.AP_BANK_BRANCHES e
+where a.BANK_BRANCH_ID=e.BANK_BRANCH_ID
+and f.remittance_bank_account_id=a.BANK_ACCOUNT_ID
+--and f.receipt_number like '%FW%'
+and e.BANK_NAME='Bank of China'
+--and a.BANK_ACCOUNT_NAME='BOC HQ-RMB(10020107)'
+order by f.receipt_number

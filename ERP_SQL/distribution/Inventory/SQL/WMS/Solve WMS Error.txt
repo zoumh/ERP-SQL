@@ -1,0 +1,37 @@
+
+------Solve Ship Pick task error with LPN ,lpn_context=11,should be 1
+
+update apps.wms_license_plate_numbers set lpn_context=1 where license_plate_number='CNCB5+ZZY04E' --and lpn_context=11
+
+
+----Check LPN Status
+Select lpn_context, lpn_id from apps.wms_license_plate_numbers
+where license_plate_number ='CNCB5+ZZY04E'
+
+
+
+
+
+
+----------apps.wms_license_plate_numbers.lpn_context 
+
+= 11 (picked) 
+(are not allowed to unpack an LPN in a status of picked (11))
+
+=8 (Packing)
+
+
+lpn_context 
+
+Code 	Meaning 			Description 
+1 	Resides in Inventory 		Resides in Inventory 
+2 	Resides in WIP 			Resides in WIP 
+3 	Resides in Receiving 		Resides in Receiving 
+4 	Issued out of Stores 		Issued out of Stores 
+5 	Defined but not used 		Defined but not used 
+6 	Resides in Intransit 		Resides in Intransit 
+7 	Resides in Vendor 		Resides in Vendor 
+8 	Packing context 		Packing context 
+9 	Loaded to Dock 			Loaded to Dock 
+10 	Prepack for WIP 		Prepack for WIP 
+11 	Picked 				Picked 

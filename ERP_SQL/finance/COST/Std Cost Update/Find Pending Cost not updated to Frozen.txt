@@ -1,0 +1,30 @@
+
+
+select Pending_CST_LAST_UPDATED_BY,
+a.ITEM_NUMBER,b.ITEM_COST Pending_Cost,a.ITEM_COST Frozen_Cost,
+b.LAST_UPDATE_DATE Pending_LAST_UPDATE ,
+a.LAST_UPDATE_DATE Frozen_LAST_UPDATE ,
+cc.Item_Type,cc.status,
+decode(organization_id,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+--a.COST_TYPE,
+a.CREATION_DATE Frozen_Create_Date
+from apps.CST_ITEM_COST_TYPE_V a,
+  (select
+    aa.ITEM_NUMBER,c.description Pending_CST_LAST_UPDATED_BY,
+    aa.COST_TYPE,
+    aa.CREATION_DATE,aa.LAST_UPDATE_DATE,aa.ITEM_COST
+         from apps.CST_ITEM_COST_TYPE_V aa,apps.fnd_user c
+    where aa.LAST_UPDATED_BY=c.user_id 
+    and trunc(aa.LAST_UPDATE_DATE)=to_date('2009-9-1','yyyy-mm-dd')
+    and aa.COST_TYPE='Pending'
+    and aa.organization_id=130) b,
+    (select INVENTORY_ITEM_ID,inventory_item_status_code status,Item_Type 
+          from apps.mtl_system_items where organization_id=130 ) cc
+where a.ITEM_NUMBER=b.ITEM_NUMBER
+and cc.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+--and trunc(a.LAST_UPDATE_DATE)=to_date('2009-9-1','yyyy-mm-dd')
+and a.COST_TYPE in ('Frozen')
+and a.organization_id=130
+and a.ITEM_COST<>b.ITEM_COST
+order by a.ITEM_NUMBER,a.COST_TYPE,a.CREATION_DATE
+

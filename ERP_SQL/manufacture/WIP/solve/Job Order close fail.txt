@@ -1,0 +1,31 @@
+
+
+Reason 1 , there are Pending WIP Cost
+
+select * from apps.WIP_DISCRETE_JOBS_V where wip_entity_name='0070526135/1'
+
+select * from apps.WIP_COST_TXN_INTERFACE where WIP_ENTITY_ID=593729
+
+need to clear them, then :
+1. Change JO status to Complete
+2. Close JO
+
+
+Reason 2, there are some other pending JO Transacton in system,need to detete
+
+
+To update the Job Order statut from "failed close" to "complete -no charge"
+
+STEPS
+Work Order -> Work Order -> Open 
+-> Click on the Status check box 
+-> Click on the check box down to Status check box 
+-> Choose Failed Close 
+-> Find ->Open
+-> Click on the field Status -> Choose ¡®Complete - No Charges¡¯ 
+-> Save
+And re query the same work order.
+
+Close Discrete Jobs(Form) -> Tools -> Check Requests 1 
+
+

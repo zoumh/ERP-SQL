@@ -1,0 +1,131 @@
+
+--------FA List from temp table, CC=4999 ,Category1='01', not include fully retired FA
+select count(*),ASSET_CATEGORY_SEGMENT1 from apps.BMC_FA_BATCH_MASS_CHANGE_T bfa
+where ASSET_CATEGORY_SEGMENT1='01' and COST_CENTER='4999'
+and not exists
+   (
+      select fa1.asset_id
+      from apps.fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from apps.fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+   and fa1.asset_id=bfa.asset_id
+      and transaction_type_code='FULL RETIREMENT' 
+      )
+group by ASSET_CATEGORY_SEGMENT1
+
+
+----------List Currently Fully etired FA's all Transaction History
+select a.ASSET_NUMBER, 
+a.SEGMENT1||'.'||a.SEGMENT2||'.'||a.SEGMENT3 as Category,
+--,a.COMMENTS,b.ATTRIBUTE1 as FlexField_Remark,
+PERIOD_ENTERED,TRANSACTION_DATE_ENTERED,TRANSACTION_TYPE
+from apps.FA_TRANSACTION_HISTORY_TRX_V a ,apps.FA_ADDITIONS_V b
+where  b.ASSET_ID=a.ASSET_ID
+--and PERIOD_ENTERED='FEB-04' 
+and BOOK_TYPE_CODE='BMC_FA_BOOK' 
+--and a.ASSET_NUMBER='10992786'
+and b.ASSET_ID in 
+(
+      select fa1.asset_id
+      from fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+      and transaction_type_code='FULL RETIREMENT' 
+      )
+order by a.ASSET_NUMBER,TRANSACTION_HEADER_ID,TRANSACTION_DATE_ENTERED
+
+
+----------List Currently Fully Retired FA
+select fa1.asset_id,fa.ASSET_NUMBER,fa1.transaction_type_code,fa1.TRANSACTION_DATE_ENTERED,fa1.DATE_EFFECTIVE
+      from fa_transaction_headers fa1,fa_additions_b fa,
+      (select  asset_id,max(transaction_header_id)  thi
+      from fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.asset_id=fa.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+      and transaction_type_code='FULL RETIREMENT' 
+order by fa.ASSET_NUMBER
+
+
+
+
+------------ (not include fully retired FA) , list FA cycle counting list from temp table
+select fat.ASSET_NO,fat.COST_CENTER from apps.BMC_FA_BATCH_MASS_CHANGE_T fat where fat.COST_CENTER='5992'
+and not exists-- fat.ASSET_ID not in
+(
+      select fa1.asset_id
+      from fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+   and fa1.asset_id=fat.asset_id
+      and transaction_type_code='FULL RETIREMENT' 
+      )
+and (fat.ASSET_CATEGORY_SEGMENT1 ='01' and fat.ASSET_CATEGORY_SEGMENT2 IN ('02', '03', '04', '06', '07')  )
+
+
+-----------------FA cycle counting snapshoot logic (not include fully retired FA)
+SELECT    fa.asset_id 
+         ,fa.asset_number asset_no 
+         ,fa.tag_number 
+         ,adt.description 
+         ,fa.current_units 
+         ,gc.segment4  product_code 
+         ,bmc_fa_physical_pub_pkg.return_value_desc ('BMC_COA_PRD', gc.segment4) product 
+         ,gc.segment5  project_code 
+         ,bmc_fa_physical_pub_pkg.return_value_desc ('BMC_COA_PRJ', gc.segment5) project_name 
+         ,fc.segment1 fix_asset 
+         ,fc.segment2 count_type 
+         ,    fc.segment1 
+           || '.' 
+           || fc.segment2 
+           || '.' 
+           || fc.segment3 category_type 
+         ,fc.segment3 status 
+         ,bmc_fa_physical_pub_pkg.return_value_desc ('BMC_FA_CATEGORY3', fc.segment3) status_name 
+         ,gc.segment2 cost_center 
+         ,r11i_account.get_segmentn_description ('SEGMENT2' 
+                                                ,gc.segment2 
+                                                ,gc.chart_of_accounts_id 
+                                                ) cost_center_desc 
+         ,fa.serial_number 
+         ,    fl.segment1 
+           || '.' 
+           || fl.segment2 
+           || '.' 
+           || fl.segment3 location_code 
+         ,    bmc_fa_physical_pub_pkg.return_value_desc ('BMC_FA_LOCATION1', fl.segment1) 
+           || '.' 
+           || bmc_fa_physical_pub_pkg.return_value_desc ('BMC_FA_LOCATION2', fl.segment2) 
+           || '.' 
+           || bmc_fa_physical_pub_pkg.return_value_desc ('BMC_FA_LOCATION3', fl.segment3) 
+                                                                                      location_name 
+         ,fa.attribute8 line_no 
+         ,bmc_fa_physical_pub_pkg.return_employee_name (bft.EMPLOYER_ID) keeper 
+         ,bft.EMPLOYER_ID person_id 
+         ,bmc_fa_physical_pub_pkg.return_employee_number (bft.EMPLOYER_ID) employee_number, 
+    bft.CODE_COMBINATION_ID 
+     FROM fa_additions_b fa 
+         ,fa_categories fc 
+         ,gl_code_combinations gc 
+         ,fa_locations fl 
+         ,fa_additions_tl adt 
+   ,bmc_fa_batch_mass_change_t bft 
+    WHERE 1 = 1 
+      AND bft.asset_category_id = fc.category_id 
+      AND bft.code_combination_id = gc.code_combination_id(+) 
+      AND bft.location_id = fl.location_id(+) 
+      AND bft.asset_id = adt.asset_id 
+      AND adt.LANGUAGE = USERENV ('LANG') 
+      AND fc.segment2 IN ('02', '03', '04', '06', '07') 
+    AND fc.segment1='01'
+   and fa.ASSET_ID=bft.ASSET_ID

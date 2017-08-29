@@ -1,0 +1,45 @@
+
+
+------------------only have Qty for verify other SQL
+select sum(a.transaction_quantity)  onhand,h.organization_code
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b,
+apps.MTL_SECONDARY_INVENTORIES_FK_V g, 
+APPS.mtl_parameters h 
+where a.organization_id=b.organization_id 
+and a.organization_id=g.organization_id 
+and a.organization_id=h.organization_id 
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code 
+and h.organization_code in ('AC','CS','RC','SE')
+and a.inventory_item_id=b.inventory_item_id 
+group by h.organization_code
+
+
+------------------Has Qty for verify
+select sum(a.transaction_quantity)  onhand,h.organization_code
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.MTL_SECONDARY_INVENTORIES_FK_V g, 
+APPS.mtl_parameters h,apps.mtl_item_categories_v e --,apps.wms_license_plate_numbers f
+where a.organization_id=b.organization_id 
+and c.organization_id=d.organization_id 
+and a.organization_id=c.organization_id 
+and a.organization_id=g.organization_id 
+and a.organization_id=h.organization_id 
+and a.organization_id=e.organization_id 
+--and f.organization_id(+)=a.organization_id
+--AND a.LPN_ID=f.LPN_id(+)
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID 
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code 
+--and a.organization_id=130 
+and category_set_id = 1 
+and structure_id=101 
+and h.organization_code in ('AC','CS','RC','SE')
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id 
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1 
+--and a.subinventory_code not in ('Vendor Hub','W05')
+group by h.organization_code
+
+
+
+
+
+

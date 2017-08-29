@@ -1,0 +1,15 @@
+
+Note:337733.1
+Ship Confirm Errors With Msg 'This Action Cannot Be Performed On All Selected Records' 
+
+
+
+1. Query the Order in Shipping Transaction form 
+2. Navigate to Delivery tab. From the Actions button, choose Reopen Delivery>Go. Re-query order to confirm Delivery status is now "Open". 
+3. From the Actions button again, choose Unassign Trip>Go 
+4. Re-query order to confirm the Trip has been removed, then from the Actions button again, choose Confirm Order>Go
+--5. Enter required information (such as Ship Method, quantity, Inventory Control) 
+--6. Confirm the Order as usual. 
+7. Do ship Confirm
+
+

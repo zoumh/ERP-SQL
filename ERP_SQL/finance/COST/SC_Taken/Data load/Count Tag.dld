@@ -1,0 +1,254 @@
+begindelays
+DataDelay=0
+CellDelay=0.2
+FormDelay=0.25
+KeyHold=50
+SystemHold=50
+MenuCall=250
+HourGlass=1000
+TAB=0
+ENT=0
+*UP=0
+*DN=0
+*LT=0
+*RT=0
+*SP=0
+*SAVE=0
+*NB=0
+*PB=0
+*NF=0
+*PF=0
+*NR=0
+*PR=0
+*FR=0
+*LR=0
+*ER=0
+*DR=0
+*SB=0
+*ST=0
+*BM=0
+*QE=0
+*QR=0
+*FI=0
+*FA=0
+*IR=0
+*CL=0
+*FE=0
+*AA=0
+*AB=0
+*AC=0
+*AD=0
+*AE=0
+*AF=0
+*AG=0
+*AH=0
+*AI=0
+*AJ=0
+*AK=0
+*AL=0
+*AM=0
+*AN=0
+*AO=0
+*AP=0
+*AQ=0
+*AR=0
+*AS=0
+*AT=0
+*AU=0
+*AV=0
+*AW=0
+*AX=0
+*AY=0
+*AZ=0
+enddelays
+beginheader
+Key Strokes	Data	Key Strokes	TAB	TAB	TAB	TAB	TAB	Data	*SAVE	*SL0.5
+endheader
+beginother
+Window=Oracle Applications - DVP
+Description=
+CommandGroup=11i
+endother
+begindata
+\{F11}	001	\^{F11}	TAB	TAB	TAB	TAB	TAB	20000 	*SAVE	*SL0.5
+\{F11}	002	\^{F11}	TAB	TAB	TAB	TAB	TAB	2112 	*SAVE	*SL0.5
+\{F11}	003	\^{F11}	TAB	TAB	TAB	TAB	TAB	888 	*SAVE	*SL0.5
+\{F11}	004	\^{F11}	TAB	TAB	TAB	TAB	TAB	70 	*SAVE	*SL0.5
+\{F11}	005	\^{F11}	TAB	TAB	TAB	TAB	TAB	270 	*SAVE	*SL0.5
+\{F11}	006	\^{F11}	TAB	TAB	TAB	TAB	TAB	270 	*SAVE	*SL0.5
+\{F11}	007	\^{F11}	TAB	TAB	TAB	TAB	TAB	270 	*SAVE	*SL0.5
+\{F11}	008	\^{F11}	TAB	TAB	TAB	TAB	TAB	270 	*SAVE	*SL0.5
+\{F11}	009	\^{F11}	TAB	TAB	TAB	TAB	TAB	270 	*SAVE	*SL0.5
+\{F11}	010	\^{F11}	TAB	TAB	TAB	TAB	TAB	110 	*SAVE	*SL0.5
+\{F11}	011	\^{F11}	TAB	TAB	TAB	TAB	TAB	270 	*SAVE	*SL0.5
+\{F11}	012	\^{F11}	TAB	TAB	TAB	TAB	TAB	270 	*SAVE	*SL0.5
+\{F11}	013	\^{F11}	TAB	TAB	TAB	TAB	TAB	1 	*SAVE	*SL0.5
+\{F11}	014	\^{F11}	TAB	TAB	TAB	TAB	TAB	770 	*SAVE	*SL0.5
+\{F11}	015	\^{F11}	TAB	TAB	TAB	TAB	TAB	195 	*SAVE	*SL0.5
+\{F11}	016	\^{F11}	TAB	TAB	TAB	TAB	TAB	10 	*SAVE	*SL0.5
+\{F11}	017	\^{F11}	TAB	TAB	TAB	TAB	TAB	60 	*SAVE	*SL0.5
+\{F11}	018	\^{F11}	TAB	TAB	TAB	TAB	TAB	44 	*SAVE	*SL0.5
+\{F11}	019	\^{F11}	TAB	TAB	TAB	TAB	TAB	56 	*SAVE	*SL0.5
+\{F11}	020	\^{F11}	TAB	TAB	TAB	TAB	TAB	15 	*SAVE	*SL0.5
+\{F11}	021	\^{F11}	TAB	TAB	TAB	TAB	TAB	992 	*SAVE	*SL0.5
+\{F11}	022	\^{F11}	TAB	TAB	TAB	TAB	TAB	544 	*SAVE	*SL0.5
+\{F11}	023	\^{F11}	TAB	TAB	TAB	TAB	TAB	456 	*SAVE	*SL0.5
+\{F11}	024	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	025	\^{F11}	TAB	TAB	TAB	TAB	TAB	803 	*SAVE	*SL0.5
+\{F11}	026	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	027	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	028	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	029	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	030	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	031	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	032	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	033	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	034	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	035	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	036	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	037	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	038	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	039	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	040	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	041	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	042	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	043	\^{F11}	TAB	TAB	TAB	TAB	TAB	1900 	*SAVE	*SL0.5
+\{F11}	044	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	045	\^{F11}	TAB	TAB	TAB	TAB	TAB	1878 	*SAVE	*SL0.5
+\{F11}	046	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	047	\^{F11}	TAB	TAB	TAB	TAB	TAB	358 	*SAVE	*SL0.5
+\{F11}	048	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	049	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	050	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	051	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	052	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	053	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	054	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	055	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	056	\^{F11}	TAB	TAB	TAB	TAB	TAB	579 	*SAVE	*SL0.5
+\{F11}	057	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	058	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	059	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	060	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	061	\^{F11}	TAB	TAB	TAB	TAB	TAB	121 	*SAVE	*SL0.5
+\{F11}	062	\^{F11}	TAB	TAB	TAB	TAB	TAB	22 	*SAVE	*SL0.5
+\{F11}	063	\^{F11}	TAB	TAB	TAB	TAB	TAB	2 	*SAVE	*SL0.5
+\{F11}	064	\^{F11}	TAB	TAB	TAB	TAB	TAB	246 	*SAVE	*SL0.5
+\{F11}	065	\^{F11}	TAB	TAB	TAB	TAB	TAB	3 	*SAVE	*SL0.5
+\{F11}	066	\^{F11}	TAB	TAB	TAB	TAB	TAB	4 	*SAVE	*SL0.5
+\{F11}	067	\^{F11}	TAB	TAB	TAB	TAB	TAB	4 	*SAVE	*SL0.5
+\{F11}	068	\^{F11}	TAB	TAB	TAB	TAB	TAB	5 	*SAVE	*SL0.5
+\{F11}	069	\^{F11}	TAB	TAB	TAB	TAB	TAB	9 	*SAVE	*SL0.5
+\{F11}	070	\^{F11}	TAB	TAB	TAB	TAB	TAB	33 	*SAVE	*SL0.5
+\{F11}	071	\^{F11}	TAB	TAB	TAB	TAB	TAB	10 	*SAVE	*SL0.5
+\{F11}	072	\^{F11}	TAB	TAB	TAB	TAB	TAB	32 	*SAVE	*SL0.5
+\{F11}	073	\^{F11}	TAB	TAB	TAB	TAB	TAB	6 	*SAVE	*SL0.5
+\{F11}	074	\^{F11}	TAB	TAB	TAB	TAB	TAB	1 	*SAVE	*SL0.5
+\{F11}	075	\^{F11}	TAB	TAB	TAB	TAB	TAB	2 	*SAVE	*SL0.5
+\{F11}	076	\^{F11}	TAB	TAB	TAB	TAB	TAB	16 	*SAVE	*SL0.5
+\{F11}	077	\^{F11}	TAB	TAB	TAB	TAB	TAB	32 	*SAVE	*SL0.5
+\{F11}	078	\^{F11}	TAB	TAB	TAB	TAB	TAB	2 	*SAVE	*SL0.5
+\{F11}	079	\^{F11}	TAB	TAB	TAB	TAB	TAB	10 	*SAVE	*SL0.5
+\{F11}	080	\^{F11}	TAB	TAB	TAB	TAB	TAB	75 	*SAVE	*SL0.5
+\{F11}	081	\^{F11}	TAB	TAB	TAB	TAB	TAB	40 	*SAVE	*SL0.5
+\{F11}	082	\^{F11}	TAB	TAB	TAB	TAB	TAB	41 	*SAVE	*SL0.5
+\{F11}	083	\^{F11}	TAB	TAB	TAB	TAB	TAB	3 	*SAVE	*SL0.5
+\{F11}	084	\^{F11}	TAB	TAB	TAB	TAB	TAB	6 	*SAVE	*SL0.5
+\{F11}	085	\^{F11}	TAB	TAB	TAB	TAB	TAB	100 	*SAVE	*SL0.5
+\{F11}	086	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	087	\^{F11}	TAB	TAB	TAB	TAB	TAB	510 	*SAVE	*SL0.5
+\{F11}	088	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	089	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	090	\^{F11}	TAB	TAB	TAB	TAB	TAB	510 	*SAVE	*SL0.5
+\{F11}	091	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	092	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	093	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	094	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	095	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	096	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	097	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	098	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	099	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	100	\^{F11}	TAB	TAB	TAB	TAB	TAB	510 	*SAVE	*SL0.5
+\{F11}	101	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	102	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	103	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	104	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	105	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	106	\^{F11}	TAB	TAB	TAB	TAB	TAB	510 	*SAVE	*SL0.5
+\{F11}	107	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	108	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	109	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+\{F11}	110	\^{F11}	TAB	TAB	TAB	TAB	TAB	2000 	*SAVE	*SL0.5
+enddata
+beginoptions
+AutoTab=false
+HourGlass=false
+AutoInsert=true
+ProgressBar=true
+TitleSize=false
+DataColour=16777215
+CommandColour=16777215
+KeystrokeColour=16777215
+DataSource=0
+ImportLoad=0
+endoptions
+beginformat
+endformat
+begincommands
+Command	Feedback	11i	NCA	10SC	Other	Description
+TAB	Key Next_item	\{TAB}	\{TAB}	\{TAB}	\{TAB}	TAB Key
+ENT	[various]	\{ENTER}	\{ENTER}	\{ENTER}	\{ENTER}	Enter
+*UP	Key Up	\{UP}	\{UP}	\{UP}	\{UP}	Up arrow key
+*DN	Key Down	\{DOWN}	\{DOWN}	\{DOWN}	\{DOWN}	Down arrow key
+*LT	[various]	\{LEFT}	\{LEFT}	\{LEFT}	\{LEFT}	Left arrow key
+*RT	[various]	\{RIGHT}	\{RIGHT}	\{RIGHT}	\{RIGHT}	Right arrow key
+*SP	MENU CUSTOM FILE ACCEPT	\%F%V	\%A%{DOWN 4}{ENTER}	\%A%A		Save & Proceed
+*SAVE	Key Commit_form	\^S	\^S	\{F10}		Save
+*NB	Key Next_block	\+{PGDN}	\+{PGDN}	\^{PGDN}		Next Block
+*PB	Key Previous_block	\+{PGUP}	\+{PGUP}	\^{PGUP}		Previous Block
+*NF	Key Next_item	\{TAB}	\%G%{DOWN}{ENTER}	\{TAB}		Next Field
+*PF	Key Previous_item	\+{TAB}	\%G%{DOWN 2}{ENTER}	\+{TAB}		Previous Field
+*NR	Key Down	\{DOWN}	\%G%{DOWN 3}{ENTER}	\+{DOWN}		Next record
+*PR	Key Up	\{UP}	\%G%{DOWN 4}{ENTER}	\+{UP}		Previous record
+*FR	MENU CUSTOM RECORD FIRST	\%V%DF	\%G%{DOWN 5}{ENTER}	\%G%F		First record
+*LR	MENU CUSTOM RECORD LAST	\%V%DL	\%G%{DOWN 6}{ENTER}	\%G%L		Last record
+*ER	Key Clear_record	\{F6}	\{F6}	\+{F4}		Erase record
+*DR	Key Delete_record	\^{UP}	\^{UP}	\+{F6}		Delete record
+*SB	[various]	\ 	\ 	\ 	\ 	Space bar
+*ST	[none]	\{HOME}+{END}	\{HOME}+{END}	\{HOME}+{END}		Select field text
+*BM	Key Block_menu	\^B	\^B	\{F5}		Block menu
+*QE	Key Enter_query	\{F11}	\{F11}	\{F7}		Query enter
+*QR	Key Execute_query	\^{F11}	\^{F11}	\{F8}		Query run
+*FI	MENU CUSTOM VIEW FIND	\%V%F	\%Q%{DOWN}{ENTER}			Find
+*FA	MENU CUSTOM VIEW FIND_ALL	\%V%I	\%Q%{DOWN 2}{ENTER}			Find all
+*IR	Key Create_record	\^{DOWN}	\^{DOWN}	\{F6}		Insert record
+*CL	Key Clear_item	\{F5}	\{F5}	\^U		Clear field
+*FE	Key Edit	\^E	\^E	\^E		Field edit
+*AA	[various]	\%A	\%A	\%A	\%A	Alt A
+*AB	[various]	\%B	\%B	\%B	\%B	Alt B
+*AC	[various]	\%C	\%C	\%C	\%C	Alt C
+*AD	[various]	\%D	\%D	\%D	\%D	Alt D
+*AE	[various]	\%E	\%E	\%E	\%E	Alt E
+*AF	[various]	\%F	\%F	\%F	\%F	Alt F
+*AG	[various]	\%G	\%G	\%G	\%G	Alt G
+*AH	[various]	\%H	\%H	\%H	\%H	Alt H
+*AI	[various]	\%I	\%I	\%I	\%I	Alt I
+*AJ	[various]	\%J	\%J	\%J	\%J	Alt J
+*AK	[various]	\%K	\%K	\%K	\%K	Alt K
+*AL	[various]	\%L	\%L	\%L	\%L	Alt L
+*AM	[various]	\%M	\%M	\%M	\%M	Alt M
+*AN	[various]	\%N	\%N	\%N	\%N	Alt N
+*AO	[various]	\%O	\%O	\%O	\%O	Alt O
+*AP	[various]	\%P	\%P	\%P	\%P	Alt P
+*AQ	[various]	\%Q	\%Q	\%Q	\%Q	Alt Q
+*AR	[various]	\%R	\%R	\%R	\%R	Alt R
+*AS	[various]	\%S	\%S	\%S	\%S	Alt S
+*AT	[various]	\%T	\%T	\%T	\%T	Alt T
+*AU	[various]	\%U	\%U	\%U	\%U	Alt U
+*AV	[various]	\%V	\%V	\%V	\%V	Alt V
+*AW	[various]	\%W	\%W	\%W	\%W	Alt W
+*AX	[various]	\%X	\%X	\%X	\%X	Alt X
+*AY	[various]	\%Y	\%Y	\%Y	\%Y	Alt Y
+*AZ	[various]	\%Z	\%Z	\%Z	\%Z	Alt Z
+endcommands

@@ -1,0 +1,90 @@
+
+----------AP invoice Amt for Account in Period, with matched PO Price,Buyer,Creator (not include AP TAX line!)
+
+SELECT convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer,d.user_name Created_By,
+d.description Created_By,g.UNIT_PRICE,nvl(f.RATE,1)*g.UNIT_PRICE CNY_Price, a.QUANTITY_INVOICED,
+--a.UNIT_PRICE-nvl(INVOICE_PRICE_VARIANCE,0) Invoice_match_trace_PO_Orice  
+a.AMOUNT Inv_line_Amt,c.INVOICE_CURRENCY_CODE AS Curr,
+NVL(A.BASE_AMOUNT,a.AMOUNT) AS Inv_Line_Amount_CNY , 
+--c.DESCRIPTION PO,
+f.segment1 PO,
+g.LINE_NUM, b.segment3 AS ACCOUNT,b.segment2 AS Cost_Center,a.ACCOUNTING_DATE GL_DATE 
+,a.DISTRIBUTION_LINE_NUMBER AS Inv_Line,a .AMOUNT AS Line_Amount 
+,a.description  line_Description, c.INVOICE_NUM
+,b.segment4 PRD,b.segment5 PRJ,VDR.VENDOR_NAME  Supplier, 
+c.INVOICE_DATE,c.ATTRIBUTE1 AS Inv_Trans_Num
+FROM apps.AP_INVOICE_DISTRIBUTIONS_ALL a 
+,apps.GL_CODE_combinations b 
+,apps.AP_INVOICES_ALL c 
+,apps.PO_VENDORS VDR 
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+,apps.PER_PEOPLE_V7 PE2
+,apps.fnd_user d
+,apps.po_lines_all g
+WHERE a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+AND a.invoice_id=c.invoice_id 
+AND VDR.VENDOR_ID=c.VENDOR_ID 
+and b.segment3='41059903' 
+and a.ACCOUNTING_DATE>=to_date('2006-06-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <=to_date('2006-08-31','yyyy-mm-dd')
+--and c.INVOICE_NUM='56199'
+and f.po_header_id=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and f.AGENT_ID=PE2.PERSON_ID(+)
+and d.user_id=f.CREATED_BY(+)
+and f.po_header_id=g.po_header_id
+and e.po_line_id=g.po_line_id
+
+
+---------Include AP Invoice Tax line (AP invoice Amt for Account in Period, with matched PO Price,Buyer,Creator)
+SELECT  c.INVOICE_NUM,a.DISTRIBUTION_LINE_NUMBER AS Inv_Line,a.ACCOUNTING_DATE GL_DATE, 
+a.LINE_TYPE_LOOKUP_CODE Line_Type,
+--a.UNIT_PRICE-nvl(INVOICE_PRICE_VARIANCE,0) Invoice_match_trace_PO_Orice  
+a.AMOUNT Inv_line_Amt,c.INVOICE_CURRENCY_CODE AS Curr,
+NVL(A.BASE_AMOUNT,a.AMOUNT) AS Inv_Line_Amount_CNY ,
+--c.DESCRIPTION PO,
+ee.PO_num,
+ee.LINE_NUM, ee.Buyer,ee.PO_Created_By_ID,
+ee.PO_Created_By,ee.UNIT_PRICE, nvl(ee.RATE,1)*ee.UNIT_PRICE CNY_Price, 
+a.QUANTITY_INVOICED,
+b.segment3 AS ACCOUNT,b.segment2 AS Cost_Center
+,a.description  line_Description
+,b.segment4 PRD,b.segment5 PRJ,VDR.VENDOR_NAME  Supplier, 
+c.INVOICE_DATE,c.ATTRIBUTE1 AS Inv_Trans_Num
+FROM apps.AP_INVOICE_DISTRIBUTIONS_ALL a 
+,apps.GL_CODE_combinations b 
+,apps.AP_INVOICES_ALL c 
+,apps.PO_VENDORS VDR ,
+(select PE2.FULL_NAME Buyer,d.user_name PO_Created_By_ID,d.description PO_Created_By,
+g.UNIT_PRICE,f.RATE,f.segment1 PO_num,g.LINE_NUM,e.ORG_ID,e.po_distribution_id
+from 
+apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+,apps.PER_PEOPLE_V7 PE2
+,apps.fnd_user d
+,apps.po_lines_all g
+where e.ORG_ID=f.ORG_ID
+and e.ORG_ID=g.ORG_ID
+and f.po_header_id=e.po_header_id
+and f.AGENT_ID=PE2.PERSON_ID(+)
+and d.user_id=f.CREATED_BY(+)
+and f.po_header_id=g.po_header_id
+and e.po_line_id=g.po_line_id
+) ee
+WHERE a.ORG_ID=ee.ORG_ID(+) and 
+a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+AND a.invoice_id=c.invoice_id 
+AND VDR.VENDOR_ID=c.VENDOR_ID 
+and a.po_distribution_id=ee.po_distribution_id(+)
+and b.segment3='15010000' 
+and b.segment2='1530'
+and a.ACCOUNTING_DATE>=to_date('2008-01-1','yyyy-mm-dd')
+--and a.ACCOUNTING_DATE <=to_date('2006-08-31','yyyy-mm-dd')
+--and c.INVOICE_NUM='00248088/89'
+
+
+
+select * from apps.AP_INVOICES_ALL where INVOICE_NUM='56199'
+
+select * from apps.AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_id=209413

@@ -1,0 +1,32 @@
+
+select d.WIP_ENTITY_NAME Job_Order,sum(a.base_transaction_value) Variance_amount,
+abs(sum(a.base_transaction_value)) ABS_Var_amt,
+--decode(a.accounting_line_type,1,'Inv valuation',2,'Account',4,'Resource absorption',7,'WIP valuation',8,'WIP variance',a.accounting_line_type) accounting_line_type,
+--b.segment3 Acc,b.segment2 CC,b.segment4 PRD, b.segment5 PRJ,
+--a.transaction_date, 
+--a.rate_or_amount Rate_Amt,c.TRANSACTION_TYPE,
+e.MEANING,f.class_code Job_Class,
+decode(f.status_Type,1,'Unreleased',3,'Released',4,'Complete',
+5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',
+11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') JB_Status
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_ENTITIES d, -- ( or use apps.WIP_DISCRETE_JOBS_V)
+apps.MFG_LOOKUPS e,
+apps.WIP_DISCRETE_JOBS_V f
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and a.transaction_date>=to_date('2007-1-10','yyyy-mm-dd')
+and a.transaction_date<=to_date('2007-1-15','yyyy-mm-dd')
+and d.wip_entity_id=f.wip_entity_id
+--and f.class_code not like 'Var%'
+and f.JOB_TYPE =1 --std JO
+and a.accounting_line_type=8
+and b.segment3 in ('41010201','41010202','41010203')
+group by d.WIP_ENTITY_NAME,c.TRANSACTION_TYPE,e.MEANING,f.class_code ,f.status_Type
+having abs(sum(a.base_transaction_value)) >=10000

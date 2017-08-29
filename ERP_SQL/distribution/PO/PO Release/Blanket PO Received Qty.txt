@@ -1,0 +1,144 @@
+
+--------------Blanket_PO Release's ship line Qty/Amt ,item
+select poh.TYPE_LOOKUP_CODE PO_Type,poh.SEGMENT1 PO,
+--poh.REVISION_NUM PO_Rev,por.REVISION_NUM Release_rev,
+por.RELEASE_NUM,pol.LINE_NUM,pll.SHIPMENT_NUM,msi.segment1 item,
+nvl(pll.QUANTITY_RECEIVED,0)*pol.UNIT_PRICE receive_amt,
+por.AUTHORIZATION_STATUS Release_approv,
+por.CANCEL_FLAG Release_cancel, pll.CANCEL_FLAG Ship_Cancel,
+poh.CURRENCY_CODE,
+pol.ITEM_DESCRIPTION,pol.UNIT_PRICE,pll.QUANTITY,pll.QUANTITY_RECEIVED,
+pll.SHIP_TO_ORGANIZATION_ID Ship_to_Org
+from
+apps.PO_HEADERS_ALL POH, 
+apps.PO_RELEASES_all POR, 
+apps.PO_LINES_all POL, 
+apps.PO_LINE_LOCATIONS_all PLL,
+apps.mtl_system_items msi
+where
+por.PO_HEADER_ID=poh.PO_HEADER_ID
+and pol.PO_HEADER_ID=poh.PO_HEADER_ID
+and pll.PO_HEADER_ID=poh.PO_HEADER_ID
+and por.PO_RELEASE_ID=pll.PO_RELEASE_ID
+and por.ORG_ID=poh.org_id
+and pol.ORG_ID=poh.org_id
+and pll.ORG_ID=poh.org_id
+and pol.PO_LINE_ID=pll.PO_LINE_ID
+and pol.item_id=msi.INVENTORY_ITEM_ID
+and msi.ORGANIZATION_ID=pll.SHIP_TO_ORGANIZATION_ID
+--and por.APPROVED_FLAG<>'Y'
+and poh.SEGMENT1='1091182'
+and por.RELEASE_NUM='88'
+--and por.CANCEL_FLAG is null
+--and pll.CANCEL_FLAG ='Y'--is not null
+--and nvl(pll.QUANTITY_RECEIVED,0)*pol.UNIT_PRICE <>0
+order by poh.SEGMENT1,por.RELEASE_NUM,pol.LINE_NUM,pll.SHIPMENT_NUM
+
+
+-----------Blanket_PO Release's receiving transaction
+select a.creation_date ,a.quantity,
+a.transaction_type,c.SEGMENT1 PO,por.RELEASE_NUM,d.LINE_NUM,
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.PO_RELEASES_all por
+where 1=1
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.po_header_id=por.po_header_id
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and por.PO_RELEASE_ID=a.PO_RELEASE_ID
+and a.source_document_code='PO'
+and c.segment1 ='1075992'  and por.release_num='852'
+and d.LINE_NUM='1422'
+--and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+--and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+order by c.segment1,d.LINE_NUM,a.creation_date
+
+
+--------------Blanket_PO Release's ship line Qty/Amt (no item)
+select poh.TYPE_LOOKUP_CODE PO_Type,poh.SEGMENT1 PO,
+--poh.REVISION_NUM PO_Rev,por.REVISION_NUM Release_rev,
+por.RELEASE_NUM,pol.LINE_NUM,pll.SHIPMENT_NUM,
+nvl(pll.QUANTITY_RECEIVED,0)*pol.UNIT_PRICE receive_amt,
+por.AUTHORIZATION_STATUS Release_approv,
+por.CANCEL_FLAG Release_cancel, pll.CANCEL_FLAG Ship_Cancel,
+poh.CURRENCY_CODE,
+pol.ITEM_DESCRIPTION,pol.UNIT_PRICE,pll.QUANTITY,pll.QUANTITY_RECEIVED,
+pll.SHIP_TO_ORGANIZATION_ID Ship_to_Org
+from
+apps.PO_HEADERS_ALL POH, 
+apps.PO_RELEASES_all POR, 
+apps.PO_LINES_all POL, 
+apps.PO_LINE_LOCATIONS_all PLL
+where
+por.PO_HEADER_ID=poh.PO_HEADER_ID
+and pol.PO_HEADER_ID=poh.PO_HEADER_ID
+and pll.PO_HEADER_ID=poh.PO_HEADER_ID
+and por.PO_RELEASE_ID=pll.PO_RELEASE_ID
+and por.ORG_ID=poh.org_id
+and pol.ORG_ID=poh.org_id
+and pll.ORG_ID=poh.org_id
+and pol.PO_LINE_ID=pll.PO_LINE_ID
+--and por.APPROVED_FLAG<>'Y'
+and poh.SEGMENT1='1057833'
+--and por.RELEASE_NUM='246'
+--and por.CANCEL_FLAG is null
+--and pll.CANCEL_FLAG ='Y'--is not null
+--and nvl(pll.QUANTITY_RECEIVED,0)*pol.UNIT_PRICE <>0
+order by poh.SEGMENT1,por.RELEASE_NUM,pol.LINE_NUM,pll.SHIPMENT_NUM
+
+
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('127');
+END;
+
+-------------Find Received Qty for Blanket PO release
+select 
+a.po_num,pol.LINE_NUM,sum(b.quantity) Order_Qty,sum(b.QUANTITY_CANCELLED) Cancel_Qty,
+sum(b.quantity_received) Receive_Qty,sum(b.quantity_billed) Billed_qty,sum(b.quantity-nvl(b.QUANTITY_CANCELLED,0)-nvl(b.quantity_received,0)) Open_Qty,
+msi.segment1 Item,b.SHIP_TO_ORGANIZATION_CODE To_Org
+from  apps.PO_RELEASES_V a,apps.PO_LINE_LOCATIONS_RELEASE_V b,
+apps.PO_LINES_ALL pol,apps.mtl_system_items msi
+where a.po_release_id=b.po_release_id
+and a.po_header_id=b.po_header_id
+and a.po_header_id=pol.po_header_id
+and a.po_num='1038880'   and pol.LINE_NUM in ('181')
+and pol.PO_LINE_ID=b.PO_LINE_ID
+and pol.ITEM_ID=msi.inventory_item_id
+and msi.organization_id=b.SHIP_TO_ORGANIZATION_ID
+and a.TYPE_LOOKUP_CODE='BLANKET'
+group by a.po_num,pol.LINE_NUM,b.ENFORCE_SHIP_TO_LOCATION_CODE,b.SHIP_TO_ORGANIZATION_CODE,b.SHIP_TO_ORGANIZATION_ID
+,msi.segment1
+
+338076  314876
+
+---------PO release ship line Qty (Received Qty OK)
+select a.TYPE_LOOKUP_CODE,a.po_num,a.release_num,pol.LINE_NUM,b.SHIPMENT_NUM,b.quantity,b.quantity_billed,
+b.quantity_received,b.item_id
+from  apps.PO_RELEASES_V a,apps.PO_LINE_LOCATIONS_RELEASE_V b,
+apps.PO_LINES_ALL pol
+where a.po_release_id=b.po_release_id
+and a.po_header_id=b.po_header_id
+and a.po_header_id=pol.po_header_id
+and a.po_num='1038880'  and pol.LINE_NUM in ('181')
+and pol.PO_LINE_ID=b.PO_LINE_ID
+and a.TYPE_LOOKUP_CODE='BLANKET'
+order by a.po_num,pol.LINE_NUM,a.release_num
+
+
+select a.po_num,pol.LINE_NUM,sum(b.quantity) Qty,sum(b.quantity_billed) Billed_qty,
+sum(b.quantity_received) Rec_Qty
+from  apps.PO_RELEASES_V a,apps.PO_LINE_LOCATIONS_RELEASE_V b,
+apps.PO_LINES_ALL pol
+where a.po_release_id=b.po_release_id
+and a.po_header_id=b.po_header_id
+and a.po_header_id=pol.po_header_id
+and a.po_num='1038880'  and pol.LINE_NUM in ('181')
+and pol.PO_LINE_ID=b.PO_LINE_ID
+and a.TYPE_LOOKUP_CODE='BLANKET'
+group by a.po_num,pol.LINE_NUM
+having sum(b.quantity)<>sum(b.quantity_received)
+

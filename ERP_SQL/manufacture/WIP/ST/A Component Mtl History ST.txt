@@ -1,0 +1,107 @@
+
+---------A component's all Summarized Trans Type, Qty & Date Range
+select   sum(mmt.TRANSACTION_QUANTITY) as Qty,mtt.transaction_type_name,
+		 mmt.organization_id Organization
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+--and    trunc(mmt.transaction_date) >= to_date('20060110','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20060531','YYYYMMDD')
+--and mtt.transaction_type_name in ('PO Receipt','Return to Vendor')
+--and mmt.TRANSACTION_QUANTITY>0
+and msi.segment1  in ('LZT 108 8661.R1A','LZT 108 8661.R2A')
+group by mtt.transaction_type_name,mmt.organization_id
+
+
+---------------Component consumed Qty used by Model (Std JO,not include non-std JO)
+select  sum(mmt.TRANSACTION_QUANTITY) as Qty,a.segment1 Model
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.WIP_DISCRETE_JOBS_V wet,apps.mtl_item_categories_v a
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+and msi.segment1 in ('LZT 108 8661.R1A','LZT 108 8661.R2A')
+and wet.PRIMARY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.category_set_id=1
+and a.ORGANIZATION_ID=mmt.ORGANIZATION_ID 
+group by a.segment1--,wet.PRIMARY_ITEM_ID
+
+
+-------------Component consumed Qty (no Assembly & Category, so could include non-std JO)
+select  sum(mmt.TRANSACTION_QUANTITY) as Qty,wet.CLASS_CODE
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.WIP_DISCRETE_JOBS_V wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+and msi.segment1 in ('LZT 108 8661.R1A','LZT 108 8661.R2A')
+group by wet.CLASS_CODE
+
+
+-------------Component consumed Qty (non-std JO)
+select  sum(mmt.TRANSACTION_QUANTITY) as Qty,wet.CLASS_CODE
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.WIP_DISCRETE_JOBS_V wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+and msi.segment1 in ('LZT 108 8661.R1A','LZT 108 8661.R2A')
+--and wet.CLASS_CODE like '%Var%'
+and wet.JOB_TYPE=3 --non-std JO
+group by wet.CLASS_CODE
+
+
+
+
+
+---------A component's all Summarized Trans Type, Qty & Date Range
+select   max(mmt.transaction_date) From_Date,min(mmt.transaction_date) End_Date,
+sum(mmt.TRANSACTION_QUANTITY) as Qty,mtt.transaction_type_name,mmt.organization_id Organization
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+--and    trunc(mmt.transaction_date) >= to_date('20060110','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20060531','YYYYMMDD')
+--and mtt.transaction_type_name in ('PO Receipt','Return to Vendor')
+--and mmt.TRANSACTION_QUANTITY>0
+and msi.segment1  in ('LZT 108 8661.R1A','LZT 108 8661.R2A')
+group by mtt.transaction_type_name,mmt.organization_id
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

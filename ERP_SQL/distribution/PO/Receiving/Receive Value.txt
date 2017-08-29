@@ -1,0 +1,276 @@
+
+
+
+----------------- PO  Receiving Value logic
+SELECT sum(NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO VENDOR',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO VENDOR',-1,0) * rt.quantity,0)) on_hand  
+FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is not null  ----PO receive
+
+
+---Detail
+
+SELECT rt.organization_id,
+       'Receiving' subinventory_code,
+       rl.item_id inventory_item_id,
+       msi.segment1 item,
+       msi.primary_uom_code uom,
+       rt.transaction_id,
+       rt.transaction_type,
+       NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO VENDOR',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO VENDOR',-1,0) * rt.quantity,0) on_hand,
+       0 reserved
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is not null
+
+
+----------------- RMA Receiving Value logic
+
+SELECT sum(NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO VENDOR',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO VENDOR',-1,0) * rt.quantity,0)) on_hand  
+FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is null  ---RMA Receive
+
+
+----Detail
+SELECT rt.organization_id,
+       'Receiving' subinventory_code,
+       rl.item_id inventory_item_id,
+       msi.segment1 item,
+       msi.primary_uom_code uom,
+       rt.transaction_id,
+       rt.transaction_type,
+       NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO VENDOR',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO VENDOR',-1,0) * rt.quantity,0) on_hand,
+       0 reserved
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is null
+
+
+
+select PARENT_TRANSACTION_ID,TRANSACTION_ID,QUANTITY,TRANSACTION_TYPE,
+DESTINATION_TYPE_CODE   
+from apps.rcv_transactions where PO_HEADER_ID=116081
+
+
+
+select ORGANIZATION_ID,
+sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) Value 
+from apps.rcv_transactions a
+where a.source_document_code='PO'
+and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and DESTINATION_TYPE_CODE='RECEIVING'
+group by ORGANIZATION_ID --,a.transaction_type
+minus--------Put away Value Summary
+select ORGANIZATION_ID,
+sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO RECEIVING',-1*a.quantity,a.quantity)) Value 
+from apps.rcv_transactions a
+where a.source_document_code='PO'
+and a.transaction_type in ('RETURN TO RECEIVING','DELIVER')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and DESTINATION_TYPE_CODE='INVENTORY'
+group by ORGANIZATION_ID --,a.transaction_type
+
+
+
+---------Receive Trans Qtyselect b.segment1 Item,a.TRANSACTION_TYPE,a.DESTINATION_TYPE_CODE, 
+a.Quantity,a.transaction_date,a.creation_date,c.SEGMENT1 PO,d.LINE_NUM,d.ITEM_REVISION ,b.organization_id,b.description
+from apps.rcv_transactions a,apps.mtl_system_items b,apps.PO_HEADERS_ALL c,apps.PO_LINES_ALL d
+where --a.TRANSACTION_TYPE ='RECEIVE' and 
+a.po_header_id=c.po_header_id
+and b.organization_id=a.organization_id
+and c.org_id=d.org_id
+and b.inventory_item_id=d.item_id
+and a.po_line_id=d.po_line_id
+and a.po_header_id=d.po_header_id
+and b.segment1='ROA 128 1153.R8B'
+and b.organization_id=130
+and a.transaction_date>= to_date('20060401','YYYYMMDD') 
+and a.transaction_date<= to_date('20060424','YYYYMMDD')
+
+
+
+select a.creation_date ,decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) Qty,
+a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,
+(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) Value, 
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h
+where 
+a.source_document_code='PO'
+--and c.segment1='1015700'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and a.DESTINATION_TYPE_CODE='RECEIVING'
+
+
+--------Receive Value Summary
+select a.transaction_type,ORGANIZATION_ID,
+sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) Value 
+from apps.rcv_transactions a
+where a.source_document_code='PO'
+and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and DESTINATION_TYPE_CODE='RECEIVING'
+group by ORGANIZATION_ID ,a.transaction_type
+
+
+
+--------Put away Value Summary
+select a.transaction_type,ORGANIZATION_ID,
+sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO RECEIVING',-1*a.quantity,a.quantity)) Value 
+from apps.rcv_transactions a
+where a.source_document_code='PO'
+and a.transaction_type in ('RETURN TO RECEIVING','DELIVER')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and DESTINATION_TYPE_CODE='INVENTORY'
+group by ORGANIZATION_ID ,a.transaction_type
+
+
+--------Put away detail Value
+select a.creation_date ,decode(a.transaction_type,'RETURN TO RECEIVING',-1*a.quantity,a.quantity) Qty
+,a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,
+(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO RECEIVING',-1*a.quantity,a.quantity)) Value, 
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h
+where 
+a.source_document_code='PO'
+--and c.segment1='1015700'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and a.transaction_type in ('RETURN TO RECEIVING','DELIVER')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and a.DESTINATION_TYPE_CODE='INVENTORY'
+
+
+
+
+
+---------PO receipt Mtl Trans Type/Qty/Cost (verify std cost & PO Price)
+select   mmt.transaction_date, mmt.organization_id,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, mst.transaction_source_type_name,
+	 mmt.subinventory_code,--mta.ACCOUNTING_LINE_TYPE,
+ 	 mmt.TRANSACTION_QUANTITY as Qty, nvl(mmt.CURRENCY_CONVERSION_RATE,1)*mmt.TRANSACTION_QUANTITY*mmt.actual_cost Value,  
+		 mmt.actual_cost,mmt.new_cost,cst.item_cost Std_Cost,
+mmt.CURRENCY_CODE,mmt.CURRENCY_CONVERSION_RATE RAte,
+		 mst.transaction_source_type_name, 
+		 decode(mmt.organization_id,130,'VP','Unknown') Organization
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst  
+where  transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+and    transaction_type_name not like '%Container%' 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    msi.organization_id = mmt.organization_id 
+and    cst.organization_id = mmt.organization_id
+and    cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and    trunc(mmt.transaction_date) >= to_date('20060101','YYYYMMDD') 
+and    msi.organization_id =130
+and mst.transaction_source_type_name='Purchase order'

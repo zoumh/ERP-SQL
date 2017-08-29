@@ -1,0 +1,2152 @@
+  
+    
+Bookmark Go to End 
+
+Doc ID:  Note:69226.1 
+Subject:  Assets Trace Script - HTML Output in Release 11 and 11.5 
+Type:  PROBLEM 
+Status:  PUBLISHED 
+ Content Type:  TEXT/X-HTML 
+Creation Date:  23-MAR-1999 
+Last Revision Date:  17-APR-2005 
+ 
+
+
+*** ***  
+Help us improve our service.  If you have any comments or questions regarding the solution
+as documented in this Note (or ANY other questions related to Oracle Assets), please post
+on the Oracle Assets Technical Forum at the following URL:
+
+http://metalink.oracle.com/metalink/plsql/for_main.fetchForum?p_forum_id=73&p_after_post=N&p_forum_scope=a&p_forum_time=7
+
+The FA Forum is monitored on a daily basis by Oracle Support Services (OSS), and response
+time is generally within 24 hours.
+
+Thank you for using MetaLink!
+
+
+REM
+REM     ETrace5.sql
+REM     
+REM     This SQL script is designed to provide detailed information
+REM     on a single asset for support purposes.  It will produce
+REM     an output file called fa_<asset_id>.html
+REM     This trace script works with release 11 and 11i of Oracle Assets.
+REM             
+REM     Note:  This script will work with release 10.7 but errors
+REM            may be seen in the output.
+REM
+REM     To run this file, you must first put ETrace5.sql in the 
+REM     admin/sql directory under $FA_TOP.  Then, simply navigate to
+REM     this directory and type: sqlplus [username]/[pswd] @ETrace5.sql
+REM     You must supply the ASSET_ID and BOOK_TYPE_CODE [uppercase].
+REM     
+REM     To get the asset_id
+REM       select asset_id
+REM       from fa_additions
+REM       where asset_number = &number;
+REM     
+REM     The output file will be copied to the same directory.  You
+REM     can view the ouput with IE Explorer 4.0+ or Netscape 4.0+
+REM
+REM     Please make sure you are logging in as the APPS user as
+REM     this trace will not work correctly if you do not have
+REM     access to DBA tables.
+REM
+REM     Created: 22 Feb 1999
+REM     Last Updated: 7 March 2003
+REM
+REM     ETRACE4 - added gl code combinations for categories and adjustments
+REM             - added locations and key ff values
+REM             - added dynamic naming (fa_<asset_id>.html)
+REM     ETRACE5 - added FA_TRANSFER_DETAILS table
+REM             - added FA_DISTRIBUTION_ACCOUNTS
+REM             - added GL code comb for FA_DISTRIBUTION_ACCOUNTS
+REM             - added prorate convention (life of asset +2 and -2 periods)
+REM             - moved update info next to the data for each table
+REM             - reformat colors 
+REM                  red   - key table info
+REM                  grey  - secondary table info
+REM                  black - auxilliary info such as key flexfields, triggers
+REM		- added to FA_BOOK_CONTROLS
+REM 
+
+set arraysize 1
+set heading off
+set feedback off  
+set verify off
+SET CONCAT ON
+SET CONCAT .
+
+-- spool fa_trc.html
+
+set lines 80
+set pages 9999
+def asset = "&&asset"
+def book = "&&book"
+
+def outputfile = "fa_&&asset._rda.html"
+spool &&outputfile
+
+prompt <FONT SIZE=3 FACE=ARIAL>
+
+prompt asset_id : &&asset
+prompt book_type_code : &&book
+
+alter session set NLS_DATE_FORMAT = 'DD-MON-YYYY HH24:MI:SS';
+
+prompt </FONT>
+
+prompt <HTML>
+prompt <HEAD>
+prompt <TITLE>Oracle Asset Trace</TITLE>
+prompt <STYLE TYPE="text/css">
+prompt <!-- TD {font-size: 8pt; font-family: arial; font-style: normal} -->
+prompt </STYLE>
+prompt </HEAD>
+prompt <BODY>
+
+
+prompt <P><P>
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=5 BGCOLOR=RED><FONT COLOR=WHITE FACE=ARIAL>
+prompt <B>ORACLE FA ASSET TRACE - Last Updated 6/8/1999
+prompt <BR>Quick Links to Tables</B></TD></TR>
+prompt <TR>
+prompt <TD><A HREF="#add">FA_ADDITIONS</A></TD>
+prompt <TD><A HREF="#trx">FA_TRANSACTION_HEADERS</A></TD>
+prompt <TD><A HREF="#dis">FA_DISTRIBUTION HISTORY</A></TD>
+prompt <TD><A HREF="#ass">FA_ASSET_HISTORY</A></TD>
+prompt <TD><A HREF="#adj">FA_ADJUSTMENTS</A></TD>
+prompt </TR>
+prompt <TR>
+prompt <TD><A HREF="#adjgl">FA_ADJUSTMENTS - CCIDs</A></TD>
+prompt <TD><A HREF="#bok">FA_BOOKS</A></TD>
+prompt <TD><A HREF="#des">FA_DEPRN_SUMMARY</A></TD>
+prompt <TD><A HREF="#ded">FA_DEPRN_DETAIL</A></TD>
+prompt <TD><A HREF="#dep">FA_DEPRN_PERIODS</A></TD>
+prompt </TR>
+prompt <TR>
+prompt <TD><A HREF="#ret">FA_RETIREMENTS</A></TD>
+prompt <TD><A HREF="#boc">FA_BOOK_CONTROLS</A></TD>
+prompt <TD><A HREF="#cat">FA_CATEGORY_BOOKS</A></TD>
+prompt <TD><A HREF="#catgl">FA_CATEGORY_BOOKS - CCIDs</A></TD>
+prompt <TD><A HREF="#cbd">FA_CATEGORY_BOOK_DEFAULTS</A></TD>
+prompt </TR>
+prompt <TR>
+prompt <TD><A HREF="#inv">FA_ASSET_INVOICES</A></TD>
+prompt <TD><A HREF="#int">FA_INVOICE_TRANSACTIONS</A></TD>
+prompt <TD COLSPAN=3><A HREF="#info">TABLE UPDATE INFORMATION</A></TD>
+prompt </TR>
+prompt </TABLE><P><P>
+
+
+REM
+REM ========================= MAIN =========================
+REM
+REM Main body of output file starts here 
+REM
+
+
+REM
+REM ====================== FA_ADDITIONS ====================
+REM
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=13 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="add">FA_ADDITIONS - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD>ASSET<BR>NUMBER</TD>                  
+prompt <TD>ASSET<BR>KEY_CCID</TD>                           
+prompt <TD>CURRENT<BR>UNITS</TD>                   
+prompt <TD>ASSET_TYPE</TD>                      
+prompt <TD>DESCRIPTION</TD>                     
+prompt <TD>ASSET<BR>CATEGORY_ID</TD>               
+prompt <TD>IN_USE<BR>FLAG</TD>                     
+prompt <TD>OWNED<BR>LEASED</TD>                    
+prompt <TD>NEW<BR>USED</TD>                        
+prompt <TD>UNIT<BR>ADJ_FLAG</TD>            
+prompt <TD>ADD_COST<BR>JE_FLAG</TD>                
+prompt <TD>PARENT<BR>ASSET_ID</TD>                          
+prompt <TD>LEASE_ID</TD>                                 
+prompt </TR>
+select  
+'<TD>'||ASSET_NUMBER||'</TD>'||chr(10)||                  
+'<TD>'||ASSET_KEY_CCID||'</TD>'||chr(10)||                           
+'<TD>'||CURRENT_UNITS||'</TD>'||chr(10)||                   
+'<TD>'||ASSET_TYPE||'</TD>'||chr(10)||                      
+'<TD>'||DESCRIPTION||'</TD>'||chr(10)||                     
+'<TD>'||ASSET_CATEGORY_ID||'</TD>'||chr(10)||               
+'<TD>'||IN_USE_FLAG||'</TD>'||chr(10)||                     
+'<TD>'||OWNED_LEASED||'</TD>'||chr(10)||                    
+'<TD>'||NEW_USED||'</TD>'||chr(10)||                        
+'<TD>'||UNIT_ADJUSTMENT_FLAG||'</TD>'||chr(10)||            
+'<TD>'||ADD_COST_JE_FLAG||'</TD>'||chr(10)||                
+'<TD>'||PARENT_ASSET_ID||'</TD>'||chr(10)||                          
+'<TD>'||LEASE_ID||'</TD></TR>'                                  
+from fa_additions
+where asset_id = &&asset;
+prompt </TABLE><P><P>
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=11 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B><A NAME="info">FA_ADDITIONS - Update Information</A></B></TD></TR>
+prompt <TR>
+prompt <TD>TAG_NUMBER</TD>                               
+prompt <TD>MANUFACTURER<BR>NAME</TD>                        
+prompt <TD>SERIAL<BR>NUMBER</TD>                            
+prompt <TD>MODEL<BR>NUMBER</TD>                             
+prompt <TD>PROPERTY<BR>TYPE_CODE</TD>                       
+prompt <TD>PROPERTY<BR>1245_1250_CODE</TD>                  
+prompt <TD>LAST_UPDATE_DATE</TD>                
+prompt <TD>LAST<BR>UPDATED_BY</TD>                 
+prompt <TD>CREATED<BR>BY</TD>                               
+prompt <TD>CREATION_DATE</TD>                            
+prompt <TD>LAST_UPDATE<BR>LOGIN</TD>
+prompt </TR>
+select  
+'<TR><TD>'||TAG_NUMBER||'</TD>'||chr(10)||                               
+'<TD>'||MANUFACTURER_NAME||'</TD>'||chr(10)||                        
+'<TD>'||SERIAL_NUMBER||'</TD>'||chr(10)||                            
+'<TD>'||MODEL_NUMBER||'</TD>'||chr(10)||                             
+'<TD>'||PROPERTY_TYPE_CODE||'</TD>'||chr(10)||                       
+'<TD>'||PROPERTY_1245_1250_CODE||'</TD>'||chr(10)||                  
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||                
+'<TD>'||LAST_UPDATED_BY||'</TD>'||chr(10)||                 
+'<TD>'||CREATED_BY||'</TD>'||chr(10)||                               
+'<TD>'||CREATION_DATE||'</TD>'||chr(10)||                            
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>' 
+from fa_additions
+where asset_id = &&asset;
+prompt </TABLE><P><P>
+
+REM
+REM ====================== FA_TRANSACTION_HEADERS ====================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=9 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="trx">FA_TRANSACTION_HEADERS - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD>BOOK</TD>
+prompt <TD>TRX_HEADER_ID</TD>
+prompt <TD>TRX_TYPE_CODE</TD>
+prompt <TD>TRX_DATE_ENTERED</TD>
+prompt <TD>DATE<BR>EFFECTIVE</TD>
+prompt <TD>TRX_NAME</TD>
+prompt <TD>TRX_SUBTYPE</TD>
+prompt <TD>TRX_KEY</TD>
+prompt <TD>MASS<BR>REFERENCE_ID</TD></TR> 
+select  
+'<TR><TD>'||BOOK_TYPE_CODE||'</TD>'||chr(10)||
+'<TD>'||TRANSACTION_HEADER_ID||'</TD>'||chr(10)||
+'<TD>'||TRANSACTION_TYPE_CODE||'</TD>'||chr(10)||
+'<TD>'||TRANSACTION_DATE_ENTERED||'</TD>'||chr(10)||
+'<TD>'||DATE_EFFECTIVE||'</TD>'||chr(10)||
+'<TD>'||TRANSACTION_NAME||'</TD>'||chr(10)||
+'<TD>'||TRANSACTION_SUBTYPE||'</TD>'||chr(10)||
+'<TD>'||TRANSACTION_KEY||'</TD>'||chr(10)||
+'<TD>'||MASS_REFERENCE_ID||chr(10)||'</TD></TR>' 
+from fa_transaction_headers
+where asset_id = &&asset 
+and (book_type_code = '&&book'
+     or
+     book_type_code = 
+      (select distribution_source_book
+       from fa_book_controls
+       where book_type_code = '&&book'))
+order by transaction_header_id;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=6 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_TRANSACTION_HEADERS - Update Information</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX<BR>HEADER_ID</TD>
+prompt <TD>LAST_UPDATE_DATE</TD>
+prompt <TD>LAST_UPDATED_BY</TD>
+prompt <TD>INVOICE_TRANSACTION_ID</TD>
+prompt <TD>SOURCE_TRANSACTION_HEADER_ID</TD>
+prompt <TD>LAST_UPDATE_LOGIN</TD>
+prompt </TR>
+select  
+'<TR><TD>'||TRANSACTION_HEADER_ID||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATED_BY||'</TD>'||chr(10)||
+'<TD>'||INVOICE_TRANSACTION_ID||'</TD>'||chr(10)||
+'<TD>'||SOURCE_TRANSACTION_HEADER_ID||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>'
+from fa_transaction_headers
+where asset_id = &&asset 
+and book_type_code = '&&book'
+order by transaction_header_id;
+prompt </TABLE><P><P>
+
+
+REM
+REM ====================== FA_DISTRIBUTION_HISTORY ====================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=11 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="dis">FA_DISTRIBUTION_HISTORY - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD>DISTRIBUTION<BR>ID</TD>
+prompt <TD>UNITS<BR>ASSIGNED</TD>
+prompt <TD>CCID</TD>
+prompt <TD>LOCATION<BR>ID</TD>
+prompt <TD>DATE<BR>EFFECTIVE</TD>
+prompt <TD>DATE<BR>INEFFECTIVE</TD>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>TRX_HEADER<BR>ID_OUT</TD>
+prompt <TD>ASSIGNED_TO</TD>
+prompt <TD>TRX_UNITS</TD>
+prompt <TD>RETIREMENT<BR>ID</TD></TR>
+select 
+'<TR><TD>'||distribution_id||'</TD>'||chr(10)||
+'<TD>'||units_assigned||'</TD>'||chr(10)||
+'<TD>'||code_combination_id||'</TD>'||chr(10)||
+'<TD>'||location_id||'</TD>'||chr(10)||
+'<TD>'||date_effective||'</TD>'||chr(10)||
+'<TD>'||date_ineffective||'</TD>'||chr(10)||
+'<TD>'||transaction_header_id_in||'</TD>'||chr(10)||
+'<TD>'||transaction_header_id_out||'</TD>'||chr(10)||
+'<TD>'||assigned_to||'</TD>'||chr(10)||
+'<TD>'||transaction_units||'</TD>'||chr(10)||
+'<TD>'||retirement_id||'</TD></TR>'
+from fa_distribution_history
+where asset_id = &&asset
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=4 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_DISTRIBUTION_HISTORY - Update Information</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>LAST_UPDATE_DATE</TD>
+prompt <TD>LAST_UPDATED_BY</TD>
+prompt <TD>LAST_UPDATE_LOGIN</TD></TR>
+select 
+'<TR><TD>'||transaction_header_id_in||'</TD>'||chr(10)||
+'<TD>'||last_update_date||'</TD>'||chr(10)||
+'<TD>'||last_updated_by||'</TD>'||chr(10)||
+'<TD>'||last_update_login||'</TD></TR>'
+from fa_distribution_history
+where asset_id = &&asset
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+
+REM
+REM =========== Check CCIDs in GL_CODE_COMBINATIONS ==========
+REM
+
+
+prompt <TABLE BORDER=1>                         
+prompt <TR><TD COLSPAN=17 BGCOLOR=BLACK><font color=white face=arial>           
+prompt <B><A NAME="adjgl">GL_CODE_COMBINATIONS  
+prompt <TR>                             
+prompt <TD>CCID</TD>                            
+prompt <TD>COA<BR>ID</TD>                               
+prompt <TD>DET<BR>PST<BR>ALL<BR>FLG</TD>                                
+prompt <TD>DET<BR>BUD<BR>ALL<BR>FLG</TD>                                
+prompt <TD>ACCT<BR>TYPE</TD>                            
+prompt <TD>ENAB<BR>FLAG</TD>                            
+prompt <TD>START<BR>DATE<BR>ACTIVE</TD>                         
+prompt <TD>END<BR>DATE<BR>ACTIVE</TD>   
+prompt <TD>SEGMENT1</TD>                                
+prompt <TD>SEGMENT2</TD>                                
+prompt <TD>SEGMENT3</TD>                                
+prompt <TD>SEGMENT4</TD>                                
+prompt <TD>SEGMENT5</TD>                                
+prompt <TD>SEGMENT6</TD>                                
+prompt <TD>SEGMENT7</TD>                                
+prompt <TD>SEGMENT8</TD>                                
+prompt <TD>SEGMENT9</TD>                                
+prompt </TR>                            
+select                          
+'<TD>'||CODE_COMBINATION_ID||'</TD>'||chr(10)||                         
+'<TD>'||CHART_OF_ACCOUNTS_ID||'</TD>'||chr(10)||                                
+'<TD>'||DETAIL_POSTING_ALLOWED_FLAG||'</TD>'||chr(10)||                         
+'<TD>'||DETAIL_BUDGETING_ALLOWED_FLAG||'</TD>'||chr(10)||                               
+'<TD>'||ACCOUNT_TYPE||'</TD>'||chr(10)||                                
+'<TD>'||ENABLED_FLAG||'</TD>'||chr(10)||                                
+'<TD>'||START_DATE_ACTIVE||'</TD>'||chr(10)||                           
+'<TD>'||END_DATE_ACTIVE||'</TD>'||chr(10)||     
+'<TD>'||SEGMENT1||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT2||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT3||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT4||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT5||'</TD>'||chr(10)||
+'<TD>'||SEGMENT6||'</TD>'||chr(10)||
+'<TD>'||SEGMENT7||'</TD>'||chr(10)||
+'<TD>'||SEGMENT8||'</TD>'||chr(10)||
+'<TD>'||SEGMENT9||'</TD></TR>'                               
+from GL_CODE_COMBINATIONS                               
+where code_combination_id in
+        (select distinct code_combination_id
+        from fa_distribution_history
+        where asset_id = &&asset);
+prompt </TABLE><P><P>                           
+
+REM
+REM ====================== FA_TRANSFER_DETAILS ====================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=3 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="trx">FA_TRANSFER_DETAILS - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD>TRANSFER_HEADER_ID</TD>
+prompt <TD>DISTRIBUTION_ID</TD>
+prompt <TD>BOOK_HEADER_ID</TD></TR> 
+select  
+'<TR><TD>'||td.TRANSFER_HEADER_ID||'</TD>'||chr(10)||
+'<TD>'||td.DISTRIBUTION_ID||'</TD>'||chr(10)||
+'<TD>'||td.BOOK_HEADER_ID||'</TD>'||chr(10)||'</TD></TR>' 
+from fa_transfer_details td,
+     fa_transaction_headers th
+where th.asset_id = &&asset 
+and   th.transaction_type_code in ('TRANSFER','RECLASS','REINSTATEMENT','PARTIAL RETIREMENT')
+and (th.book_type_code = '&&book'
+     or
+     th.book_type_code = 
+      (select bc.distribution_source_book
+       from fa_book_controls bc
+       where bc.book_type_code = '&&book'))
+and   td.transfer_header_id = th.transaction_header_id
+order by td.transfer_header_id, td.distribution_id;
+prompt </TABLE><P><P>
+
+
+
+REM
+REM ====================== FA_ASSET_HISTORY ====================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="ass">FA_ASSET_HISTORY</A></B></TD></TR>
+prompt <TR>
+prompt <TD>CATEGORY_ID</TD>                     
+prompt <TD>ASSET_TYPE</TD>                      
+prompt <TD>UNITS</TD>                           
+prompt <TD>DATE<BR>EFFECTIVE</TD>                  
+prompt <TD>DATE<BR>INEFFECTIVE</TD>                         
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>        
+prompt <TD>TRX_HEADER<BR>ID_OUT</TD>
+prompt <TD>LAST_<BR>UPDATE<BR>_DATE</TD>                
+prompt <TD>LAST_<BR>UPDATED<BR>_BY</TD>                 
+prompt <TD>LAST_<BR>UPDATE<BR>_LOGIN</TD></TR>
+select
+'<TR><TD>'||CATEGORY_ID||'</TD>'||chr(10)||                     
+'<TD>'||ASSET_TYPE||'</TD>'||chr(10)||                      
+'<TD>'||UNITS||'</TD>'||chr(10)||                           
+'<TD>'||DATE_EFFECTIVE||'</TD>'||chr(10)||                  
+'<TD>'||DATE_INEFFECTIVE||'</TD>'||chr(10)||                         
+'<TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||        
+'<TD>'||TRANSACTION_HEADER_ID_OUT||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||                
+'<TD>'||LAST_UPDATED_BY||'</TD>'||chr(10)||                 
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>'                       
+from fa_asset_history
+where   asset_id = &&asset
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+
+REM
+REM ====================== FA_ADJUSTMENTS ====================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=14 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="adj">FA_ADJUSTMENTS - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD>TRX<BR>HEADER_ID</TD>
+prompt <TD>SOURCE<BR>TYPE_CODE</TD>
+prompt <TD>ADJUSTMENT<BR>TYPE</TD>
+prompt <TD>DR/CR</TD>
+prompt <TD>CCID</TD>
+prompt <TD>ADJUSTMENT<BR>AMOUNT</TD>
+prompt <TD>DISTRIBUTION<BR>ID</TD>
+prompt <TD>ANNUALIZED<BR>ADJUSTMENT</TD>
+prompt <TD>PERIOD<BR>COUNTER<BR>ADJUSTED</TD>
+prompt <TD>PERIOD<BR>COUNTER<BR>CREATED</TD>
+prompt <TD>JE<BR>HEADER_ID</TD>
+prompt <TD>JE<BR>LINE_NUM</TD>
+prompt <TD>ASSET<BR>INVOICE_ID</TD>
+prompt </TR>   
+select  
+'<TR><TD>'||TRANSACTION_HEADER_ID||'</TD>'||chr(10)||
+'<TD>'||SOURCE_TYPE_CODE||'</TD>'||chr(10)||
+'<TD>'||ADJUSTMENT_TYPE||'</TD>'||chr(10)||
+'<TD>'||DEBIT_CREDIT_FLAG||'</TD>'||chr(10)||
+'<TD>'||CODE_COMBINATION_ID||'</TD>'||chr(10)||
+'<TD>'||ADJUSTMENT_AMOUNT||'</TD>'||chr(10)||
+'<TD>'||DISTRIBUTION_ID||'</TD>'||chr(10)||
+'<TD>'||ANNUALIZED_ADJUSTMENT||'</TD>'||chr(10)||
+'<TD>'||PERIOD_COUNTER_ADJUSTED||'</TD>'||chr(10)||
+'<TD>'||PERIOD_COUNTER_CREATED||'</TD>'||chr(10)||
+'<TD>'||JE_HEADER_ID||'</TD>'||chr(10)||
+'<TD>'||JE_LINE_NUM||'</TD>'||chr(10)||
+'<TD>'||ASSET_INVOICE_ID||'</TD></TR>'   
+from    fa_adjustments
+where   asset_id = &&asset
+and     book_type_code = '&&book'
+order by transaction_header_id,distribution_id;
+prompt </TABLE><P><P>
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=4 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_ADJUSTMENTS - Update Information</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX<BR>HEADER_ID</TD>
+prompt <TD>LAST_UPDATE_DATE</TD>
+prompt <TD>LAST_UPDATED_BY</TD>   
+prompt <TD>LAST_UPDATE_LOGIN</TD>
+prompt </TR>   
+select  
+'<TR><TD>'||TRANSACTION_HEADER_ID||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATED_BY||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>'   
+from    fa_adjustments
+where   asset_id = &&asset
+and     book_type_code = '&&book'
+order by transaction_header_id, distribution_id;
+prompt </TABLE><P><P>
+
+
+REM
+REM =========== Check CCIDs in GL_CODE_COMBINATIONS ==========
+REM
+
+
+prompt <TABLE BORDER=1>                         
+prompt <TR><TD COLSPAN=17 BGCOLOR=BLACK><font color=white face=arial>           
+prompt <B><A NAME="adjgl">GL_CODE_COMBINATIONS  
+prompt <TR>                             
+prompt <TD>CCID</TD>                            
+prompt <TD>COA<BR>ID</TD>                               
+prompt <TD>DET<BR>PST<BR>ALL<BR>FLG</TD>                                
+prompt <TD>DET<BR>BUD<BR>ALL<BR>FLG</TD>                                
+prompt <TD>ACCT<BR>TYPE</TD>                            
+prompt <TD>ENAB<BR>FLAG</TD>                            
+prompt <TD>START<BR>DATE<BR>ACTIVE</TD>                         
+prompt <TD>END<BR>DATE<BR>ACTIVE</TD>   
+prompt <TD>SEGMENT1</TD>                                
+prompt <TD>SEGMENT2</TD>                                
+prompt <TD>SEGMENT3</TD>                                
+prompt <TD>SEGMENT4</TD>                                
+prompt <TD>SEGMENT5</TD>                                
+prompt <TD>SEGMENT6</TD>                                
+prompt <TD>SEGMENT7</TD>                                
+prompt <TD>SEGMENT8</TD>                                
+prompt <TD>SEGMENT9</TD>                                
+prompt </TR>                            
+select                          
+'<TD>'||CODE_COMBINATION_ID||'</TD>'||chr(10)||                         
+'<TD>'||CHART_OF_ACCOUNTS_ID||'</TD>'||chr(10)||                                
+'<TD>'||DETAIL_POSTING_ALLOWED_FLAG||'</TD>'||chr(10)||                         
+'<TD>'||DETAIL_BUDGETING_ALLOWED_FLAG||'</TD>'||chr(10)||                               
+'<TD>'||ACCOUNT_TYPE||'</TD>'||chr(10)||                                
+'<TD>'||ENABLED_FLAG||'</TD>'||chr(10)||                                
+'<TD>'||START_DATE_ACTIVE||'</TD>'||chr(10)||                           
+'<TD>'||END_DATE_ACTIVE||'</TD>'||chr(10)||     
+'<TD>'||SEGMENT1||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT2||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT3||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT4||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT5||'</TD>'||chr(10)||
+'<TD>'||SEGMENT6||'</TD>'||chr(10)||
+'<TD>'||SEGMENT7||'</TD>'||chr(10)||
+'<TD>'||SEGMENT8||'</TD>'||chr(10)||
+'<TD>'||SEGMENT9||'</TD></TR>'                               
+from GL_CODE_COMBINATIONS                               
+where code_combination_id in
+        (select distinct code_combination_id
+        from fa_adjustments
+        where asset_id = &&asset
+        and book_type_code = '&&book');
+prompt </TABLE><P><P>                           
+
+
+
+
+REM
+REM ====================== FA_BOOKS ==========================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="bok">FA_BOOKS - Key Values I</A></B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>TRX_HEADER<BR>ID_OUT</TD>
+prompt <TD>DATE<BR>INEFFECTIVE</TD>
+prompt <TD>DATE<BR>PLACED_IN<BR>SERVICE</TD>
+prompt <TD>DATE<BR>EFFECTIVE</TD>
+prompt <TD>DEPRN<BR>START_DATE</TD>
+prompt <TD>DEPRN<BR>METHOD<BR>CODE</TD>
+prompt <TD>LIFE<BR>IN<BR>MONTHS</TD>
+prompt <TD>PRORATE<BR>CONVENTION<BR>CODE</TD>
+prompt <TD>PRORATE_DATE</TD>
+prompt </TR>   
+select
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||
+'<TD>'||TRANSACTION_HEADER_ID_OUT||'</TD>'||chr(10)||
+'<TD>'||DATE_INEFFECTIVE||'</TD>'||chr(10)||
+'<TD>'||DATE_PLACED_IN_SERVICE||'</TD>'||chr(10)||
+'<TD>'||DATE_EFFECTIVE||'</TD>'||chr(10)||
+'<TD>'||DEPRN_START_DATE||'</TD>'||chr(10)||
+'<TD>'||DEPRN_METHOD_CODE||'</TD>'||chr(10)||
+'<TD>'||LIFE_IN_MONTHS||'</TD>'||chr(10)||
+'<TD>'||PRORATE_CONVENTION_CODE||'</TD>'||
+'<TD>'||PRORATE_DATE||'</TD></TR>'
+from fa_books
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=12 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_BOOKS - Key Values II</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>ADJUSTED<BR>COST</TD>
+prompt <TD>COST</TD>
+prompt <TD>ORIGINAL<BR>COST</TD>
+prompt <TD>SALVAGE<BR>VALUE</TD>
+prompt <TD>RATE<BR>ADJ<BR>FACTOR</TD>
+prompt <TD>COST<BR>CHANGE<BR>FLAG</TD>
+prompt <TD>ADJ<BR>REQ<BR>STATUS</TD>
+prompt <TD>CAP<BR>FLAG</TD>
+prompt <TD>RET<BR>PEND<BR>FLAG</TD>
+prompt <TD>DEP<BR>FLAG</TD>
+prompt <TD>RETIREMENT<BR>ID</TD>
+prompt </TR>   
+select  
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||
+'<TD>'||ADJUSTED_COST||'</TD>'||chr(10)||
+'<TD>'||COST||'</TD>'||chr(10)||
+'<TD>'||ORIGINAL_COST||'</TD>'||chr(10)||
+'<TD>'||SALVAGE_VALUE||'</TD>'||chr(10)||
+'<TD>'||RATE_ADJUSTMENT_FACTOR||'</TD>'||chr(10)||
+'<TD>'||COST_CHANGE_FLAG||'</TD>'||chr(10)||
+'<TD>'||ADJUSTMENT_REQUIRED_STATUS||'</TD>'||chr(10)||
+'<TD>'||CAPITALIZE_FLAG||'</TD>'||chr(10)||
+'<TD>'||RETIREMENT_PENDING_FLAG||'</TD>'||chr(10)||
+'<TD>'||DEPRECIATE_FLAG||'</TD>'||chr(10)||
+'<TD>'||RETIREMENT_ID||'</TD></TR>'
+from fa_books
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_BOOKS - Key Values III</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>ITC<BR>AMOUNT<BR>ID</TD>
+prompt <TD>ITC<BR>AMOUNT</TD>
+prompt <TD>ITC<BR>BASIS</TD>
+prompt <TD>TAX<BR>REQUEST<BR>ID</TD>
+prompt <TD>BASIC<BR>RATE</TD>
+prompt <TD>ADJUSTED<BR>RATE</TD>
+prompt <TD>BONUS_RULE</TD>
+prompt <TD>CEILING_NAME</TD>
+prompt <TD>RECOVERABLE<BR>COST</TD>
+prompt </TR>   
+select  
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||
+'<TD>'||ITC_AMOUNT_ID||'</TD>'||chr(10)||
+'<TD>'||ITC_AMOUNT||'</TD>'||chr(10)||
+'<TD>'||ITC_BASIS||'</TD>'||chr(10)||
+'<TD>'||TAX_REQUEST_ID||'</TD>'||chr(10)||
+'<TD>'||BASIC_RATE||'</TD>'||chr(10)||
+'<TD>'||ADJUSTED_RATE||'</TD>'||chr(10)||
+'<TD>'||BONUS_RULE||'</TD>'||chr(10)||
+'<TD>'||CEILING_NAME||'</TD>'||chr(10)||
+'<TD>'||RECOVERABLE_COST||'</TD></TR>'
+from fa_books
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=9 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_BOOKS - Key Values IV</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>FULLY<BR>RSVD_REVALS<BR>COUNTER</TD>
+prompt <TD>P.C.<BR>CAPITALIZED</TD>
+prompt <TD>P.C.<BR>FULLY<BR>RESERVED</TD>
+prompt <TD>P.C.<BR>FULLY<BR>RETIRED</TD>
+prompt <TD>REVAL<BR>AMORTIZATION<BR>BASIS</TD>
+prompt <TD>REVAL<BR>CEILING</TD>
+prompt <TD>UNREVALUED<BR>COST</TD>
+prompt <TD>ANNUAL_DEPRN<BR>ROUNDING_FLAG</TD>
+prompt </TR>
+select  
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||
+'<TD>'||FULLY_RSVD_REVALS_COUNTER||'</TD>'||chr(10)||
+'<TD>'||PERIOD_COUNTER_CAPITALIZED||'</TD>'||chr(10)||
+'<TD>'||PERIOD_COUNTER_FULLY_RESERVED||'</TD>'||chr(10)||
+'<TD>'||PERIOD_COUNTER_FULLY_RETIRED||'</TD>'||chr(10)||
+'<TD>'||REVAL_AMORTIZATION_BASIS||'</TD>'||chr(10)||
+'<TD>'||REVAL_CEILING||'</TD>'||chr(10)||
+'<TD>'||UNREVALUED_COST||'</TD>'||chr(10)||
+'<TD>'||ANNUAL_DEPRN_ROUNDING_FLAG||'</TD></TR>'
+from fa_books
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=9 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_BOOKS - Key Values V</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>PERCENT<BR>SALVAGE<BR>VALUE</TD>
+prompt <TD>ALLOWED<BR>DEPRN<BR>LIMIT</TD>
+prompt <TD>ALLOWED_DEPRN<BR>LIMIT_AMOUNT</TD>
+prompt <TD>PERIOD_COUNTER<BR>LIFE_COMPLETE</TD>
+prompt <TD>ADJUSTED<BR>RECOVERABLE<BR>COST</TD>
+prompt <TD>UNIT_OF<BR>MEASURE</TD>
+prompt <TD>PRODUCTION<BR>CAPACITY</TD>
+prompt <TD>ADJUSTED<BR>CAPACITY</TD>
+prompt </TR>
+select  
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||
+'<TD>'||PERCENT_SALVAGE_VALUE||'</TD>'||chr(10)||
+'<TD>'||ALLOWED_DEPRN_LIMIT||'</TD>'||chr(10)||
+'<TD>'||ALLOWED_DEPRN_LIMIT_AMOUNT||'</TD>'||chr(10)||
+'<TD>'||PERIOD_COUNTER_LIFE_COMPLETE||'</TD>'||chr(10)||
+'<TD>'||ADJUSTED_RECOVERABLE_COST||'</TD>'||chr(10)||
+'<TD>'||UNIT_OF_MEASURE||'</TD>'||chr(10)||
+'<TD>'||PRODUCTION_CAPACITY||'</TD>'||chr(10)||
+'<TD>'||ADJUSTED_CAPACITY||'</TD></TR>'
+from fa_books
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=4 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_BOOKS - Update Information</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>LAST_UPDATE_DATE</TD>
+prompt <TD>LAST_UPDATED_BY</TD>
+prompt <TD>LAST_UPDATE_LOGIN</TD>
+prompt </TR>
+select  
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATED_BY||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>' 
+from fa_books
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+REM
+REM =================== FA_DEPRN_SUMMARY =======================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=8 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="des">FA_DEPRN_SUMMARY - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD>PERIOD<BR>COUNTER</TD>
+prompt <TD>DEPRN<BR>RUN_DATE</TD>
+prompt <TD>DEPRN_AMOUNT</TD>
+prompt <TD>YTD_DEPRN</TD>
+prompt <TD>DEPRN_RESERVE</TD>
+prompt <TD>DEPRN<BR>SOURCE_CODE</TD>
+prompt <TD>ADJUSTED_COST</TD>
+prompt <TD>BONUS_RATE</TD></TR>
+select
+'<TR><TD>'||period_counter||'</TD>'||chr(10)||
+'<TD>'||deprn_run_date||'</TD>'||chr(10)||
+'<TD>'||deprn_amount||'</TD>'||chr(10)||
+'<TD>'||ytd_deprn||'</TD>'||chr(10)||
+'<TD>'||deprn_reserve||'</TD>'||chr(10)||
+'<TD>'||deprn_source_code||'</TD>'||chr(10)||
+'<TD>'||adjusted_cost||'</TD>'||chr(10)||
+'<TD>'||bonus_rate||'</TD></TR>'
+from    fa_deprn_summary
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by period_counter;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=6 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_DEPRN_SUMMARY - Revaluations</B></TD></TR>
+prompt <TR>
+prompt <TD>PERIOD<BR>COUNTER</TD>
+prompt <TD>REVAL_AMORT</TD>
+prompt <TD>REVAL_AMORT_BASIS</TD>
+prompt <TD>REVAL_DEPRN_EXPENSE</TD>
+prompt <TD>REVAL_RESERVE</TD>   
+prompt <TD>YTD_REVAL_DEPRN_EXP</TD></TR>
+select
+'<TR><TD>'||period_counter||'</TD>'||chr(10)||
+'<TD>'||reval_amortization||'</TD>'||chr(10)||
+'<TD>'||reval_amortization_basis||'</TD>'||chr(10)||
+'<TD>'||reval_deprn_expense||'</TD>'||chr(10)||
+'<TD>'||reval_reserve||'</TD>'||chr(10)||
+'<TD>'||ytd_reval_deprn_expense||'</TD></TR>'
+from    fa_deprn_summary
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by period_counter;
+prompt </TABLE><P><P>
+
+
+REM
+REM =================== FA_DEPRN_DETAIL =======================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="ded">FA_DEPRN_DETAIL - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD>PERIOD<BR>COUNTER</TD>
+prompt <TD>DISTRIBUTION<BR>ID</TD>
+prompt <TD>B/D</TD>
+prompt <TD>DEPRN<BR>RUN_DATE</TD>
+prompt <TD>DEPRN_AMOUNT</TD>
+prompt <TD>YTD_DEPRN</TD>
+prompt <TD>DEPRN_RESERVE</TD>
+prompt <TD>ADDITION<BR>COST_TO<BR>CLEAR</TD>
+prompt <TD>COST</TD>
+prompt <TD>DEPRN<BR>ADJ_AMT</TD></TR>
+select 
+'<TR><TD>'||period_counter||'</TD>'||chr(10)||
+'<TD>'||distribution_id||'</TD>'||chr(10)||
+'<TD>'||deprn_source_code||'</TD>'||chr(10)||
+'<TD>'||deprn_run_date||'</TD>'||chr(10)||
+'<TD>'||deprn_amount||'</TD>'||chr(10)||
+'<TD>'||ytd_deprn||'</TD>'||chr(10)||
+'<TD>'||deprn_reserve||'</TD>'||chr(10)||
+'<TD>'||addition_cost_to_clear||'</TD>'||chr(10)||
+'<TD>'||cost||'</TD>'||chr(10)||
+'<TD>'||deprn_adjustment_amount||'</TD></TR>'
+from fa_deprn_detail
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by period_counter, distribution_id;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_DEPRN_DETAIL - GL Lines - Revaluations</B></TD></TR>
+prompt <TR>
+prompt <TD>PERIOD<BR>COUNTER</TD>
+prompt <TD>DEPRN_EXP<BR>JE_LINE_NUM</TD>
+prompt <TD>DEPRN_RESV<BR>JE_LINE_NUM</TD>
+prompt <TD>REVAL_AMORT<BR>JE_LINE_NUM</TD>
+prompt <TD>REVAL_RSV<BR>JE_LINE_NUM</TD>
+prompt <TD>JE<BR>HEADER_ID</TD>
+prompt <TD>REVAL<BR>AMORT</TD>
+prompt <TD>REVAL<BR>DEPRN_EXP</TD>
+prompt <TD>REVAL<BR>RESERVE</TD>
+prompt <TD>YTD_REVAL<BR>DEPRN_EXP</TD></TR>
+select 
+'<TR><TD>'||period_counter||'</TD>'||chr(10)||
+'<TD>'||deprn_expense_je_line_num||'</TD>'||chr(10)||
+'<TD>'||deprn_reserve_je_line_num||'</TD>'||chr(10)||
+'<TD>'||reval_amort_je_line_num||'</TD>'||chr(10)||
+'<TD>'||reval_reserve_je_line_num||'</TD>'||chr(10)||
+'<TD>'||je_header_id||'</TD>'||chr(10)||
+'<TD>'||reval_amortization||'</TD>'||chr(10)||
+'<TD>'||reval_deprn_expense||'</TD>'||chr(10)||
+'<TD>'||reval_reserve||'</TD>'||chr(10)||
+'<TD>'||ytd_reval_deprn_expense||'</TD></TR>'
+from fa_deprn_detail
+where asset_id = &&asset
+and book_type_code = '&&book'
+order by period_counter, distribution_id;
+prompt </TABLE><P><P>
+
+
+REM
+REM =================== FA_DEPRN_PERIODS =======================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="dep">FA_DEPRN_PERIODS - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD>PERIOD<BR>COUNTER</TD>
+prompt <TD>PERIOD<BR>NAME</TD>
+prompt <TD>FISCAL<BR>YEAR</TD>
+prompt <TD>PERIOD<BR>NUM</TD>
+prompt <TD>PERIOD<BR>OPEN_DATE</TD>
+prompt <TD>PERIOD<BR>CLOSE_DATE</TD>
+prompt <TD>CALENDAR<BR>OPEN_DATE</TD>
+prompt <TD>CALENDAR<BR>CLOSE_DATE</TD>
+prompt <TD>DEPRN<BR>BATCH_ID</TD>
+prompt <TD>RET<BR>BATCH_ID</TD></TR>
+select
+'<TR><TD>'||PERIOD_COUNTER||'</TD>'||chr(10)||
+'<TD>'||PERIOD_NAME||'</TD>'||chr(10)||
+'<TD>'||FISCAL_YEAR||'</TD>'||chr(10)||
+'<TD>'||PERIOD_NUM||'</TD>'||chr(10)||
+'<TD>'||PERIOD_OPEN_DATE||'</TD>'||chr(10)||
+'<TD>'||PERIOD_CLOSE_DATE||'</TD>'||chr(10)||
+'<TD>'||CALENDAR_PERIOD_OPEN_DATE||'</TD>'||chr(10)||
+'<TD>'||CALENDAR_PERIOD_CLOSE_DATE||'</TD>'||chr(10)||
+'<TD>'||DEPRECIATION_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||RETIREMENT_BATCH_ID||'</TD>'||chr(10)||
+'</TD></TR>'
+from fa_deprn_periods
+where book_type_code = '&&book'
+order by period_counter;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=14 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_DEPRN_PERIODS - Batch IDs</B></TD></TR>
+prompt <TR>
+prompt <TD>PERIOD<BR>COUNTER</TD>
+prompt <TD>RCLS<BR>BATCH_ID</TD>
+prompt <TD>TRSFR<BR>BATCH_ID</TD>
+prompt <TD>ADD<BR>BATCH_ID</TD>
+prompt <TD>ADJ<BR>BATCH_ID</TD>
+prompt <TD>DEF_DEPRN<BR>BATCH_ID</TD>
+prompt <TD>CIP_ADD<BR>BATCH_ID</TD>
+prompt <TD>CIP_ADJ<BR>BATCH_ID</TD>
+prompt <TD>CIP_RCLS<BR>BATCH_ID</TD>
+prompt <TD>CIP_RET<BR>BATCH_ID</TD>
+prompt <TD>CIP_REVAL<BR>BATCH_ID</TD>
+prompt <TD>CIP_TRSFR<BR>BATCH_ID</TD>
+prompt <TD>REVAL<BR>BATCH_ID</TD>
+prompt <TD>DEP_ADJ<BR>BATCH_ID</TD></TR>
+select
+'<TR><TD>'||PERIOD_COUNTER||'</TD>'||chr(10)||
+'<TD>'||RECLASS_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||TRANSFER_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||ADDITION_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||ADJUSTMENT_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||DEFERRED_DEPRN_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||CIP_ADDITION_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||CIP_ADJUSTMENT_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||CIP_RECLASS_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||CIP_RETIREMENT_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||CIP_REVAL_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||CIP_TRANSFER_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||REVAL_BATCH_ID||'</TD>'||chr(10)||
+'<TD>'||DEPRN_ADJUSTMENT_BATCH_ID||'</TD></TR>'
+from fa_deprn_periods
+where book_type_code = '&&book'
+order by period_counter;
+prompt </TABLE><P><P>
+
+
+REM
+REM =================== FA_RETIREMENTS =======================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=11 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="ret">FA_RETIREMENTS - Key Values I</A></B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>RETIREMENT<BR>ID</TD>                   
+prompt <TD>DATE<BR>RETIRED</TD>                    
+prompt <TD>DATE<BR>EFFECTIVE</TD>                  
+prompt <TD>COST<BR>RETIRED</TD>                    
+prompt <TD>STATUS</TD>                          
+prompt <TD>RETIREMENT<BR>PRORATE<BR>CONVENTION</TD>   
+prompt <TD>TRX_HEADER<BR>ID_OUT</TD>                
+prompt <TD>UNITS</TD>                                    
+prompt <TD>COST_OF<BR>REMOVAL</TD>                          
+prompt <TD>NBV_RETIRED</TD></TR>                  
+select
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||        
+'<TD>'||RETIREMENT_ID||'</TD>'||chr(10)||                   
+'<TD>'||DATE_RETIRED||'</TD>'||chr(10)||                    
+'<TD>'||DATE_EFFECTIVE||'</TD>'||chr(10)||                  
+'<TD>'||COST_RETIRED||'</TD>'||chr(10)||                    
+'<TD>'||STATUS||'</TD>'||chr(10)||                          
+'<TD>'||RETIREMENT_PRORATE_CONVENTION||'</TD>'||chr(10)||   
+'<TD>'||TRANSACTION_HEADER_ID_OUT||'</TD>'||chr(10)||                
+'<TD>'||UNITS||'</TD>'||chr(10)||                                    
+'<TD>'||COST_OF_REMOVAL||'</TD>'||chr(10)||                          
+'<TD>'||NBV_RETIRED||'</TD></TR>'                  
+from    fa_retirements
+where   asset_id = &&asset
+and     book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_RETIREMENTS - Key Values II</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>GAIN_LOSS<BR>AMOUNT</TD>                         
+prompt <TD>PROCEEDS<BR>OF_SALE</TD>                         
+prompt <TD>GAIN_LOSS<BR>TYPE_CODE</TD>                      
+prompt <TD>RETIREMENT<BR>TYPE_CODE</TD>                     
+prompt <TD>ITC<BR>RECAPTURED</TD>                           
+prompt <TD>ITC<BR>RECAPTURE_ID</TD>                         
+prompt <TD>REFERENCE<BR>NUM</TD>                            
+prompt <TD>SOLD_TO</TD>                                  
+prompt <TD>TRADE_IN<BR>ASSET_ID</TD></TR>
+select
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||        
+'<TD>'||GAIN_LOSS_AMOUNT||'</TD>'||chr(10)||                      
+'<TD>'||PROCEEDS_OF_SALE||'</TD>'||chr(10)||  
+'<TD>'||GAIN_LOSS_TYPE_CODE||'</TD>'||chr(10)||      
+'<TD>'||RETIREMENT_TYPE_CODE||'</TD>'||chr(10)||                     
+'<TD>'||ITC_RECAPTURED||'</TD>'||chr(10)||                           
+'<TD>'||ITC_RECAPTURE_ID||'</TD>'||chr(10)||                         
+'<TD>'||REFERENCE_NUM||'</TD>'||chr(10)||                            
+'<TD>'||SOLD_TO||'</TD>'||chr(10)||                                  
+'<TD>'||TRADE_IN_ASSET_ID||'</TD></TR>'                  
+from    fa_retirements
+where   asset_id = &&asset
+and     book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=6 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_RETIREMENTS - Key Values III</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>STL_METHOD<BR>CODE</TD>                          
+prompt <TD>STL_LIFE<BR>IN_MONTHS</TD>                       
+prompt <TD>STL_DEPRN<BR>AMOUNT </TD>                        
+prompt <TD>REVAL_RESERVE<BR>RETIRED</TD>                    
+prompt <TD>UNREVALUED_COST<BR>RETIRED</TD></TR>
+select
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||        
+'<TD>'||STL_METHOD_CODE||'</TD>'||chr(10)||                          
+'<TD>'||STL_LIFE_IN_MONTHS||'</TD>'||chr(10)||                       
+'<TD>'||STL_DEPRN_AMOUNT||'</TD>'||chr(10)||                         
+'<TD>'||REVAL_RESERVE_RETIRED||'</TD>'||chr(10)||                    
+'<TD>'||UNREVALUED_COST_RETIRED||'</TD></TR>'                  
+from    fa_retirements
+where   asset_id = &&asset
+and     book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=6 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_RETIREMENTS - Update Information</B></TD></TR>
+prompt <TR>
+prompt <TD>TRX_HEADER<BR>ID_IN</TD>
+prompt <TD>LAST_UPDATE_DATE</TD>                
+prompt <TD>LAST_UPDATED_BY</TD>                 
+prompt <TD>CREATED_BY</TD>                               
+prompt <TD>CREATION_DATE</TD>                           
+prompt <TD>LAST_UPDATE_LOGIN</TD></TR>
+select
+'<TR><TD>'||TRANSACTION_HEADER_ID_IN||'</TD>'||chr(10)||        
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||                
+'<TD>'||LAST_UPDATED_BY||'</TD>'||chr(10)||                 
+'<TD>'||CREATED_BY||'</TD>'||chr(10)||                               
+'<TD>'||CREATION_DATE||'</TD>'||chr(10)||                            
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>'                  
+from    fa_retirements
+where   asset_id = &&asset
+and     book_type_code = '&&book'
+order by transaction_header_id_in;
+prompt </TABLE><P><P>
+
+REM
+REM =================== FA_BOOK_CONTROLS =======================
+REM
+
+
+prompt <TABLE BORDER=0 CELLPADDING=10><TR><TD>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=2 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="boc">FA_BOOK_CONTROLS</A></B></TD></TR>
+select
+'<TR><TD>BOOK_TYPE_CODE</TD>
+<TD>'||BOOK_TYPE_CODE||'</TD></TR>'||chr(10),                  
+'<TR><TD>BOOK_TYPE_NAME</TD>
+<TD>'||BOOK_TYPE_NAME||'</TD></TR>'||chr(10),                  
+'<TR><TD>SET_OF_BOOKS_ID</TD>
+<TD>'||SET_OF_BOOKS_ID||'</TD></TR>'||chr(10),                 
+'<TR><TD>INITIAL_DATE</TD>
+<TD>'||INITIAL_DATE||'</TD></TR>'||chr(10),                   
+'<TR><TD>LAST_DEPRN_RUN_DATE</TD>
+<TD>'||LAST_DEPRN_RUN_DATE||'</TD></TR>'||chr(10),             
+'<TR><TD>AMORTIZE_FLAG</TD>
+<TD>'||AMORTIZE_FLAG||'</TD></TR>'||chr(10),                   
+'<TR><TD>FULLY_RESERVED_FLAG</TD>
+<TD>'||FULLY_RESERVED_FLAG||'</TD></TR>'||chr(10),             
+'<TR><TD>DEPRN_CALENDAR</TD>
+<TD>'||DEPRN_CALENDAR||'</TD></TR>'||chr(10),                  
+'<TR><TD>BOOK_CLASS</TD>
+<TD>'||BOOK_CLASS||'</TD></TR>'||chr(10),                      
+'<TR><TD>GL_POSTING_ALLOWED_FLAG</TD>
+<TD>'||GL_POSTING_ALLOWED_FLAG||'</TD></TR>'||chr(10),         
+'<TR><TD>CURRENT_FISCAL_YEAR</TD>
+<TD>'||CURRENT_FISCAL_YEAR||'</TD></TR>'||chr(10),             
+'<TR><TD>ALLOW_MASS_CHANGES</TD>
+<TD>'||ALLOW_MASS_CHANGES||'</TD></TR>'||chr(10),              
+'<TR><TD>ALLOW_DEPRN_ADJUSTMENTS</TD>
+<TD>'||ALLOW_DEPRN_ADJUSTMENTS||'</TD></TR>'||chr(10),         
+'<TR><TD>ACCOUNTING_FLEX_STRUCTURE</TD>
+<TD>'||ACCOUNTING_FLEX_STRUCTURE||'</TD></TR>'||chr(10),       
+'<TR><TD>LAST_UPDATE_DATE</TD>
+<TD>'||LAST_UPDATE_DATE||'</TD></TR>'||chr(10),                
+'<TR><TD>LAST_UPDATED_BY</TD>
+<TD>'||LAST_UPDATED_BY||'</TD></TR>'||chr(10),                 
+'<TR><TD>PRORATE_CALENDAR</TD>
+<TD>'||PRORATE_CALENDAR||'</TD></TR>'||chr(10),               
+'<TR><TD>DATE_INEFFECTIVE</TD>
+<TD>'||DATE_INEFFECTIVE||'</TD></TR>'||chr(10),                         
+'<TR><TD>JE_RETIREMENT_CATEGORY</TD>
+<TD>'||JE_RETIREMENT_CATEGORY||'</TD></TR>'||chr(10),                  
+'<TR><TD>JE_DEPRECIATION_CATEGORY</TD>
+<TD>'||JE_DEPRECIATION_CATEGORY||'</TD></TR>'||chr(10),                 
+'<TR><TD>JE_RECLASS_CATEGORY</TD>
+<TD>'||JE_RECLASS_CATEGORY||'</TD></TR>'||chr(10),                     
+'<TR><TD>GL_JE_SOURCE</TD>
+<TD>'||GL_JE_SOURCE||'</TD></TR>'||chr(10),                             
+'<TR><TD>JE_ADDITION_CATEGORY</TD>
+<TD>'||JE_ADDITION_CATEGORY||'</TD></TR>'||chr(10),                     
+'<TR><TD>JE_ADJUSTMENT_CATEGORY</TD>
+<TD>'||JE_ADJUSTMENT_CATEGORY||'</TD></TR>'||chr(10),                   
+'<TR><TD>DISTRIBUTION_SOURCE_BOOK</TD>
+<TD>'||DISTRIBUTION_SOURCE_BOOK||'</TD></TR>'||chr(10),                 
+'<TR><TD>JE_TRANSFER_CATEGORY</TD>
+<TD>'||JE_TRANSFER_CATEGORY||'</TD></TR>'||chr(10),                               
+'<TR><TD>DEPRN_REQUEST_ID</TD>
+<TD>'||DEPRN_REQUEST_ID||'</TD></TR>'||chr(10),                         
+'<TR><TD>ALLOW_COST_CEILING</TD>
+<TD>'||ALLOW_COST_CEILING||'</TD></TR>'||chr(10),              
+'<TR><TD>ALLOW_DEPRN_EXP_CEILING</TD>
+<TD>'||ALLOW_DEPRN_EXP_CEILING||'</TD></TR>'||chr(10),         
+'<TR><TD>CALCULATE_NBV</TD>
+<TD>'||CALCULATE_NBV||'</TD></TR>'||chr(10),                   
+'<TR><TD>RUN_YEAR_END_PROGRAM</TD>
+<TD>'||RUN_YEAR_END_PROGRAM||'</TD></TR>'||chr(10),           
+'<TR><TD>JE_DEFERRED_DEPRN_CATEGORY</TD>
+<TD>'||JE_DEFERRED_DEPRN_CATEGORY||'</TD></TR>'||chr(10),               
+'<TR><TD>ITC_ALLOWED_FLAG</TD>
+<TD>'||ITC_ALLOWED_FLAG||'</TD></TR>'||chr(10),                
+'<TR><TD>CREATED_BY</TD>
+<TD>'||CREATED_BY||'</TD></TR>'||chr(10),                               
+'<TR><TD>CREATION_DATE</TD>
+<TD>'||CREATION_DATE||'</TD></TR>'||chr(10),                            
+'<TR><TD>LAST_UPDATE_LOGIN</TD>
+<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>'||chr(10),                        
+'<TR><TD>ALLOW_MASS_COPY</TD>
+<TD>'||ALLOW_MASS_COPY||'</TD></TR>'||chr(10),                 
+'<TR><TD>ALLOW_PURGE_FLAG</TD>
+<TD>'||ALLOW_PURGE_FLAG||'</TD></TR>'||chr(10),                         
+'<TR><TD>ALLOW_REVAL_FLAG</TD>
+<TD>'||ALLOW_REVAL_FLAG||'</TD></TR>'||chr(10),             
+'<TR><TD>REVAL_DEPRN_RESERVE_FLAG</TD>
+<TD>'||REVAL_DEPRN_RESERVE_FLAG||'</TD></TR>'||chr(10),                 
+'<TR><TD>AMORTIZE_REVAL_RESERVE_FLAG</TD>
+<TD>'||AMORTIZE_REVAL_RESERVE_FLAG||'</TD></TR>'||chr(10),
+'<TR><TD>REVALUE_ON_RETIREMENT_FLAG</TD>
+<TD>'||REVALUE_ON_RETIREMENT_FLAG||'</TD></TR>'||chr(10),
+'<TR><TD>RETIRE_REVAL_RESERVE_FLAG</TD>
+<TD>'||RETIRE_REVAL_RESERVE_FLAG||'</TD></TR>'||chr(10),                
+'<TR><TD>AP_INTERCOMPANY_ACCT</TD>
+<TD>'||AP_INTERCOMPANY_ACCT||'</TD></TR>'||chr(10),            
+'<TR><TD>AR_INTERCOMPANY_ACCT</TD>
+<TD>'||AR_INTERCOMPANY_ACCT||'</TD></TR>'||chr(10),            
+'<TR><TD>ATTRIBUTE_CATEGORY_CODE</TD>
+<TD>'||ATTRIBUTE_CATEGORY_CODE||'</TD></TR>'||chr(10),                  
+'<TR><TD>CAPITAL_GAIN_THRESHOLD</TD>
+<TD>'||CAPITAL_GAIN_THRESHOLD||'</TD></TR>
+</TABLE><P><P>'
+from fa_book_controls
+where book_type_code = '&&book';
+
+prompt </TD><TD>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=2 BGCOLOR=RED><font color=white face=arial>
+prompt <B>FA_BOOK_CONTROLS</B></TD></TR>
+select
+'<TR><TD>COPY_SALVAGE_VALUE_FLAG</TD>
+<TD>'||COPY_SALVAGE_VALUE_FLAG||'</TD></TR>'||chr(10),         
+'<TR><TD>COST_OF_REMOVAL_CLEARING_ACCT</TD>
+<TD>'||COST_OF_REMOVAL_CLEARING_ACCT||'</TD></TR>'||chr(10),  
+'<TR><TD>COST_OF_REMOVAL_GAIN_ACCT</TD>
+<TD>'||COST_OF_REMOVAL_GAIN_ACCT||'</TD></TR>'||chr(10),       
+'<TR><TD>COST_OF_REMOVAL_LOSS_ACCT</TD>
+<TD>'||COST_OF_REMOVAL_LOSS_ACCT||'</TD></TR>'||chr(10),       
+'<TR><TD>DEFAULT_LIFE_EXTENSION_CEILING</TD>
+<TD>'||DEFAULT_LIFE_EXTENSION_CEILING||'</TD></TR>'||chr(10),           
+'<TR><TD>DEFAULT_LIFE_EXTENSION_FACTOR</TD>
+<TD>'||DEFAULT_LIFE_EXTENSION_FACTOR||'</TD></TR>'||chr(10),            
+'<TR><TD>DEFAULT_MAX_FULLY_RSVD_REVALS</TD>
+<TD>'||DEFAULT_MAX_FULLY_RSVD_REVALS||'</TD></TR>'||chr(10),            
+'<TR><TD>DEFAULT_REVAL_FULLY_RSVD_FLAG</TD>
+<TD>'||DEFAULT_REVAL_FULLY_RSVD_FLAG||'</TD></TR>'||chr(10),            
+'<TR><TD>DEFERRED_DEPRN_EXPENSE_ACCT</TD>
+<TD>'||DEFERRED_DEPRN_EXPENSE_ACCT||'</TD></TR>'||chr(10),    
+'<TR><TD>DEFERRED_DEPRN_RESERVE_ACCT</TD>
+<TD>'||DEFERRED_DEPRN_RESERVE_ACCT||'</TD></TR>'||chr(10),           
+'<TR><TD>DEPRN_ALLOCATION_CODE</TD>
+<TD>'||DEPRN_ALLOCATION_CODE||'</TD></TR>'||chr(10),           
+'<TR><TD BGCOLOR=GRAY><font color=white face=arial>DEPRN_STATUS</TD>
+<TD>'||DEPRN_STATUS||'</TD></TR>'||chr(10),                             
+'<TR><TD>FISCAL_YEAR_NAME</TD>
+<TD>'||FISCAL_YEAR_NAME||'</TD></TR>'||chr(10),                         
+'<TR><TD>INITIAL_PERIOD_COUNTER</TD>
+<TD>'||INITIAL_PERIOD_COUNTER||'</TD></TR>'||chr(10),          
+'<TR><TD>JE_CIP_ADJUSTMENT_CATEGORY</TD>
+<TD>'||JE_CIP_ADJUSTMENT_CATEGORY||'</TD></TR>'||chr(10),               
+'<TR><TD>JE_CIP_ADDITION_CATEGORY</TD>
+<TD>'||JE_CIP_ADDITION_CATEGORY||'</TD></TR>'||chr(10),                 
+'<TR><TD>JE_CIP_RECLASS_CATEGORY</TD>
+<TD>'||JE_CIP_RECLASS_CATEGORY||'</TD></TR>'||chr(10),                  
+'<TR><TD>JE_CIP_RETIREMENT_CATEGORY</TD>
+<TD>'||JE_CIP_RETIREMENT_CATEGORY||'</TD></TR>'||chr(10),               
+'<TR><TD>JE_CIP_REVAL_CATEGORY</TD>
+<TD>'||JE_CIP_REVAL_CATEGORY||'</TD></TR>'||chr(10),                    
+'<TR><TD>JE_CIP_TRANSFER_CATEGORY</TD>
+<TD>'||JE_CIP_TRANSFER_CATEGORY||'</TD></TR>'||chr(10),                 
+'<TR><TD>JE_REVAL_CATEGORY</TD>
+<TD>'||JE_REVAL_CATEGORY||'</TD></TR>'||chr(10),                        
+'<TR><TD>LAST_MASS_COPY_PERIOD_COUNTER</TD>
+<TD>'||LAST_MASS_COPY_PERIOD_COUNTER||'</TD></TR>'||chr(10),            
+'<TR><TD>LAST_PERIOD_COUNTER</TD>
+<TD>'||LAST_PERIOD_COUNTER||'</TD></TR>'||chr(10),             
+'<TR><TD>LAST_PURGE_PERIOD_COUNTER</TD>
+<TD>'||LAST_PURGE_PERIOD_COUNTER||'</TD></TR>'||chr(10),                
+'<TR><TD>MASS_COPY_SOURCE_BOOK</TD>
+<TD>'||MASS_COPY_SOURCE_BOOK||'</TD></TR>'||chr(10),                    
+'<TR><TD>MASS_REQUEST_ID</TD>
+<TD>'||MASS_REQUEST_ID||'</TD></TR>'||chr(10),                          
+'<TR><TD>NBV_AMOUNT_THRESHOLD</TD>
+<TD>'||NBV_AMOUNT_THRESHOLD||'</TD></TR>'||chr(10),                     
+'<TR><TD>NBV_FRACTION_THRESHOLD</TD>
+<TD>'||NBV_FRACTION_THRESHOLD||'</TD></TR>'||chr(10),                   
+'<TR><TD>NBV_RETIRED_GAIN_ACCT</TD>
+<TD>'||NBV_RETIRED_GAIN_ACCT||'</TD></TR>'||chr(10),           
+'<TR><TD>NBV_RETIRED_LOSS_ACCT</TD>
+<TD>'||NBV_RETIRED_LOSS_ACCT||'</TD></TR>'||chr(10),           
+'<TR><TD>PROCEEDS_OF_SALE_CLEARING_ACCT</TD>
+<TD>'||PROCEEDS_OF_SALE_CLEARING_ACCT||'</TD></TR>'||chr(10),  
+'<TR><TD>PROCEEDS_OF_SALE_GAIN_ACCT</TD>
+<TD>'||PROCEEDS_OF_SALE_GAIN_ACCT||'</TD></TR>'||chr(10),      
+'<TR><TD>PROCEEDS_OF_SALE_LOSS_ACCT</TD>
+<TD>'||PROCEEDS_OF_SALE_LOSS_ACCT||'</TD></TR>'||chr(10),                  
+'<TR><TD>REVAL_RSV_RETIRED_GAIN_ACCT</TD>
+<TD>'||REVAL_RSV_RETIRED_GAIN_ACCT||'</TD></TR>'||chr(10),     
+'<TR><TD>REVAL_RSV_RETIRED_LOSS_ACCT</TD>
+<TD>'||REVAL_RSV_RETIRED_LOSS_ACCT||'</TD></TR>'||chr(10),     
+'<TR><TD>DEPRN_ADJUSTMENT_ACCT</TD>
+<TD>'||DEPRN_ADJUSTMENT_ACCT||'</TD></TR>'||chr(10),          
+'<TR><TD>IMMEDIATE_COPY_FLAG</TD>
+<TD>'||IMMEDIATE_COPY_FLAG||'</TD></TR>'||chr(10),                      
+'<TR><TD>JE_DEPRN_ADJUSTMENT_CATEGORY</TD>
+<TD>'||JE_DEPRN_ADJUSTMENT_CATEGORY||'</TD></TR>'||chr(10),             
+'<TR><TD>DEPR_FIRST_YEAR_RET_FLAG</TD>
+<TD>'||DEPR_FIRST_YEAR_RET_FLAG||'</TD></TR>'||chr(10),        
+'<TR><TD>FLEXBUILDER_DEFAULTS_CCID</TD>
+<TD>'||FLEXBUILDER_DEFAULTS_CCID||'</TD></TR>'||chr(10),       
+'<TR><TD>USE_CURRENT_NBV_FOR_DEPRN</TD>
+<TD>'||USE_CURRENT_NBV_FOR_DEPRN||'</TD></TR>'||chr(10),       
+'<TR><TD>COPY_ADDITIONS_FLAG</TD>
+<TD>'||COPY_ADDITIONS_FLAG||'</TD></TR>'||chr(10),
+'<TR><TD>COPY_ADJUSTMENTS_FLAG</TD>
+<TD>'||COPY_ADJUSTMENTS_FLAG||'</TD></TR>'||chr(10), 
+'<TR><TD>COPY_RETIREMENTS_FLAG</TD>
+<TD>'||COPY_RETIREMENTS_FLAG||'</TD></TR>'||chr(10),
+'<TR><TD>ALLOW_CIP_ASSETS_FLAG</TD>
+<TD>'||ALLOW_CIP_ASSETS_FLAG||'</TD></TR>'||chr(10),
+'<TR><TD>USE_PERCENT_SALVAGE_VALUE_FLAG</TD>
+<TD>'||USE_PERCENT_SALVAGE_VALUE_FLAG||'</TD></TR>'||chr(10),
+'<TR><TD>MC_SOURCE_FLAG</TD>
+<TD>'||MC_SOURCE_FLAG||'</TD></TR>
+</TABLE><P><P>'
+from fa_book_controls
+where book_type_code = '&&book';
+prompt </TD></TR></TABLE>
+
+REM
+REM =========== Check CCIDs in GL_CODE_COMBINATIONS ==========
+REM
+
+prompt <TABLE BORDER=1>                         
+prompt <TR><TD COLSPAN=19 BGCOLOR=BLACK><font color=white face=arial>           
+prompt <B><A NAME="catgl">GL_CODE_COMBINATIONS  
+prompt <TR>                             
+prompt <TD>CCID</TD>                            
+prompt <TD>COA<BR>ID</TD>                               
+prompt <TD>DET<BR>PST<BR>ALL<BR>FLG</TD>                                
+prompt <TD>DET<BR>BUD<BR>ALL<BR>FLG</TD>                                
+prompt <TD>ACCT<BR>TYPE</TD>                            
+prompt <TD>ENAB<BR>FLAG</TD>                            
+prompt <TD>START<BR>DATE<BR>ACTIVE</TD>                         
+prompt <TD>END<BR>DATE<BR>ACTIVE</TD>   
+prompt <TD>SEGMENT1</TD>                                
+prompt <TD>SEGMENT2</TD>                                
+prompt <TD>SEGMENT3</TD>                                
+prompt <TD>SEGMENT4</TD>                                
+prompt <TD>SEGMENT5</TD>                                
+prompt <TD>SEGMENT6</TD>                                
+prompt <TD>SEGMENT7</TD>                                
+prompt <TD>SEGMENT8</TD>                                
+prompt <TD>SEGMENT9</TD>                                
+prompt </TR>                            
+select                          
+'<TD>'||CODE_COMBINATION_ID||'</TD>'||chr(10)||                         
+'<TD>'||CHART_OF_ACCOUNTS_ID||'</TD>'||chr(10)||                                
+'<TD>'||DETAIL_POSTING_ALLOWED_FLAG||'</TD>'||chr(10)||                         
+'<TD>'||DETAIL_BUDGETING_ALLOWED_FLAG||'</TD>'||chr(10)||                               
+'<TD>'||ACCOUNT_TYPE||'</TD>'||chr(10)||                                
+'<TD>'||ENABLED_FLAG||'</TD>'||chr(10)||                                
+'<TD>'||START_DATE_ACTIVE||'</TD>'||chr(10)||                           
+'<TD>'||END_DATE_ACTIVE||'</TD>'||chr(10)||     
+'<TD>'||SEGMENT1||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT2||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT3||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT4||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT5||'</TD>'||chr(10)||
+'<TD>'||SEGMENT6||'</TD>'||chr(10)||
+'<TD>'||SEGMENT7||'</TD>'||chr(10)||
+'<TD>'||SEGMENT8||'</TD>'||chr(10)||
+'<TD>'||SEGMENT9||'</TD></TR>'                               
+from GL_CODE_COMBINATIONS                               
+where code_combination_id in
+        (select flexbuilder_defaults_ccid
+        from fa_book_controls
+        where book_type_code = '&&book');
+prompt </TABLE><P><P>                           
+
+REM
+REM =================== FA_CATEGORY_BOOKS =======================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=12 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="cat">FA_CATEGORY_BOOKS - Key Values - Accounts</A></B></TD></TR>
+prompt <TR>
+prompt <TD> CATEGORY<BR>ID</TD>
+prompt <TD> ASSET<BR>CLEARING<BR>ACCT</TD>
+prompt <TD> ASSET<BR>COST<BR>ACCT</TD>
+prompt <TD> CIP<BR>CLEARING<BR>ACCT</TD>
+prompt <TD> CIP_COST<BR>ACCT</TD>
+prompt <TD> DEPRN<BR>EXPENSE<BR>ACCT</TD>
+prompt <TD> DEPRN<BR>RESERVE<BR>ACCT</TD>
+prompt <TD> REVAL<BR>AMORT<BR>ACCT</TD>
+prompt <TD> REVAL<BR>RESERVE<BR>ACCT</TD>
+prompt <TD> PERCENT<BR>SALVAGE<BR>VALUE</TD>
+prompt <TD> LIFE<BR>EXT<BR>CEILING</TD>
+prompt <TD> LIFE<BR>EXT<BR>FACTOR</TD></TR> 
+select  
+'<TR><TD>'||CATEGORY_ID||'</TD>'||chr(10)||
+'<TD>'||ASSET_CLEARING_ACCT||'</TD>'||chr(10)||
+'<TD>'||ASSET_COST_ACCT||'</TD>'||chr(10)||
+'<TD>'||CIP_CLEARING_ACCT||'</TD>'||chr(10)||
+'<TD>'||CIP_COST_ACCT||'</TD>'||chr(10)||
+'<TD>'||DEPRN_EXPENSE_ACCT||'</TD>'||chr(10)||
+'<TD>'||DEPRN_RESERVE_ACCT||'</TD>'||chr(10)||
+'<TD>'||REVAL_AMORTIZATION_ACCT||'</TD>'||chr(10)||
+'<TD>'||REVAL_RESERVE_ACCT||'</TD>'||chr(10)||
+'<TD>'||PERCENT_SALVAGE_VALUE||'</TD>'||chr(10)||
+'<TD>'||LIFE_EXTENSION_CEILING||'</TD>'||chr(10)||
+'<TD>'||LIFE_EXTENSION_FACTOR||'</TD></TR>'
+from fa_category_books
+where category_id in
+(select distinct ah.category_id
+from fa_asset_history ah
+where ah.asset_id = &&asset)
+and book_type_code = '&&book'
+order by category_id;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=8 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_CATEGORY_BOOKS - CCIDs</B></TD></TR>
+prompt <TR>
+prompt <TD> CATEGORY<BR>ID</TD>
+prompt <TD> COST<BR>ACCOUNT<BR>CCID</TD>
+prompt <TD> CLEARING<BR>ACCOUNT<BR>CCID</TD>
+prompt <TD> WIP_COST<BR>ACCOUNT<BR>CCID</TD>
+prompt <TD> WIP_CLR<BR>ACCOUNT<BR>CCID</TD>
+prompt <TD> RESERVE<BR>ACCOUNT<BR>CCID</TD>
+prompt <TD> REV/AMOR<BR>ACCOUNT<BR>CCID</TD>
+prompt <TD> REV/RSRV<BR>ACCOUNT<BR>CCID</TD></TR>
+select  
+'<TR><TD>'||CATEGORY_ID||'</TD>'||chr(10)||
+'<TD>'||ASSET_COST_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||ASSET_CLEARING_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||WIP_COST_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||WIP_CLEARING_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||RESERVE_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||REVAL_AMORT_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||REVAL_RESERVE_ACCOUNT_CCID||'</TD></TR>'
+from fa_category_books
+where category_id in
+(select distinct ah.category_id
+from fa_asset_history ah
+where ah.asset_id = &&asset)
+and book_type_code = '&&book'
+order by category_id;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=6 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_CATEGORY_BOOKS - Update Information</B></TD></TR>
+prompt <TR>
+prompt <TD> CATEGORY_ID</TD>
+prompt <TD> LAST_UPDATE_DATE</TD>
+prompt <TD> LAST_UPDATED_BY</TD>
+prompt <TD> CREATED_BY</TD>
+prompt <TD> CREATION_DATE</TD>
+prompt <TD> LAST_UPDATE_LOGIN</TD></TR>
+select  
+'<TR><TD>'||CATEGORY_ID||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATED_BY||'</TD>'||chr(10)||
+'<TD>'||CREATED_BY||'</TD>'||chr(10)||
+'<TD>'||CREATION_DATE||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>'
+from fa_category_books
+where category_id in
+(select distinct ah.category_id
+from fa_asset_history ah
+where ah.asset_id = &&asset)
+and book_type_code = '&&book'
+order by category_id;
+prompt </TABLE><P><P>
+
+REM
+REM =========== Check CCIDs in GL_CODE_COMBINATIONS ==========
+REM
+
+
+prompt <TABLE BORDER=1>                         
+prompt <TR><TD COLSPAN=19 BGCOLOR=BLACK><font color=white face=arial>           
+prompt <B><A NAME="catgl">GL_CODE_COMBINATIONS  
+prompt <TR>                             
+prompt <TD>CCID</TD>                            
+prompt <TD>COA<BR>ID</TD>                               
+prompt <TD>DET<BR>PST<BR>ALL<BR>FLG</TD>                                
+prompt <TD>DET<BR>BUD<BR>ALL<BR>FLG</TD>                                
+prompt <TD>ACCT<BR>TYPE</TD>                            
+prompt <TD>ENAB<BR>FLAG</TD>                            
+prompt <TD>START<BR>DATE<BR>ACTIVE</TD>                         
+prompt <TD>END<BR>DATE<BR>ACTIVE</TD>   
+prompt <TD>SEGMENT1</TD>                                
+prompt <TD>SEGMENT2</TD>                                
+prompt <TD>SEGMENT3</TD>                                
+prompt <TD>SEGMENT4</TD>                                
+prompt <TD>SEGMENT5</TD>                                
+prompt <TD>SEGMENT6</TD>                                
+prompt <TD>SEGMENT7</TD>                                
+prompt <TD>SEGMENT8</TD>                                
+prompt <TD>SEGMENT9</TD>                                
+prompt </TR>                            
+select                          
+'<TD>'||gl.CODE_COMBINATION_ID||'</TD>'||chr(10)||                         
+'<TD>'||gl.CHART_OF_ACCOUNTS_ID||'</TD>'||chr(10)||                                
+'<TD>'||gl.DETAIL_POSTING_ALLOWED_FLAG||'</TD>'||chr(10)||                         
+'<TD>'||gl.DETAIL_BUDGETING_ALLOWED_FLAG||'</TD>'||chr(10)||                               
+'<TD>'||gl.ACCOUNT_TYPE||'</TD>'||chr(10)||                                
+'<TD>'||gl.ENABLED_FLAG||'</TD>'||chr(10)||                                
+'<TD>'||gl.START_DATE_ACTIVE||'</TD>'||chr(10)||                           
+'<TD>'||gl.END_DATE_ACTIVE||'</TD>'||chr(10)||     
+'<TD>'||gl.SEGMENT1||'</TD>'||chr(10)||                            
+'<TD>'||gl.SEGMENT2||'</TD>'||chr(10)||                            
+'<TD>'||gl.SEGMENT3||'</TD>'||chr(10)||                            
+'<TD>'||gl.SEGMENT4||'</TD>'||chr(10)||                            
+'<TD>'||gl.SEGMENT5||'</TD>'||chr(10)||
+'<TD>'||gl.SEGMENT6||'</TD>'||chr(10)||
+'<TD>'||gl.SEGMENT7||'</TD>'||chr(10)||
+'<TD>'||gl.SEGMENT8||'</TD>'||chr(10)||
+'<TD>'||gl.SEGMENT9||'</TD></TR>'                               
+from GL_CODE_COMBINATIONS gl,
+     fa_category_books cb,
+     fa_asset_history ah
+where ah.asset_id = &&asset
+  and cb.category_id = ah.category_id
+  and cb.book_type_code = '&&book'
+  and gl.code_combination_id in
+        (cb.asset_cost_account_ccid,
+         cb.asset_clearing_account_ccid,
+         cb.wip_cost_account_ccid,
+         cb.wip_clearing_account_ccid,
+         cb.reserve_account_ccid,
+         cb.reval_reserve_account_ccid,
+         cb.reval_amort_account_ccid)
+order by gl.code_combination_id;
+prompt </TABLE><P><P>                           
+
+REM
+REM =================== FA_CATEGORY_BOOK_DEFAULTS =======================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="cbd">FA_CATEGORY_BOOK_DEFAULTS - Key Values I</A></B></TD></TR>
+prompt <TR>
+prompt <TD>CATEGORY<BR>ID</TD>
+prompt <TD>START_DPIS</TD>
+prompt <TD>LIFE_IN<BR>MONTHS</TD>
+prompt <TD>DEPRN<BR>METHOD</TD>
+prompt <TD>PRORATE<BR>CONVENTION<BR>CODE</TD>
+prompt <TD>DEP<BR>FLAG</TD>
+prompt <TD>RETIREMENT<BR>PRORATE<BR>CONVENTION</TD>
+prompt <TD>SUBCOMPONENT<BR>LIFE_RULE</TD>
+prompt <TD>MINIMUM<BR>LIFE_IN<BR>MONTHS</TD>
+prompt <TD>CAPITAL<BR>GAIN<BR>THRESHOLD</TD></TR>
+select  
+'<TR><TD>'||CATEGORY_ID||'</TD>'||chr(10)||
+'<TD>'||START_DPIS||'</TD>'||chr(10)||
+'<TD>'||LIFE_IN_MONTHS||'</TD>'||chr(10)||
+'<TD>'||DEPRN_METHOD||'</TD>'||chr(10)||
+'<TD>'||PRORATE_CONVENTION_CODE||'</TD>'||chr(10)||
+'<TD>'||DEPRECIATE_FLAG||'</TD>'||chr(10)||
+'<TD>'||RETIREMENT_PRORATE_CONVENTION||'</TD>'||chr(10)||
+'<TD>'||SUBCOMPONENT_LIFE_RULE||'</TD>'||chr(10)||
+'<TD>'||MINIMUM_LIFE_IN_MONTHS||'</TD>'||chr(10)||
+'<TD>'||CAPITAL_GAIN_THRESHOLD||'</TD></TR>'
+from fa_category_book_defaults 
+where category_id in
+(select distinct ah.category_id
+from fa_asset_history ah
+where ah.asset_id = &&asset)
+and book_type_code = '&&book'
+order by category_id, start_dpis;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=12 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_CATEGORY_BOOK_DEFAULTS - Key Values II</B></TD></TR>
+prompt <TR>
+prompt <TD>CATEGORY<BR>ID</TD>
+prompt <TD>USE_STL<BR>RETIREMENTS<BR>FLAG</TD>
+prompt <TD>STL<BR>METHOD<BR>CODE</TD>
+prompt <TD>STL<BR>LIFE_IN<BR>MONTHS</TD>
+prompt <TD>USE<BR>DEPRN<BR>LIMIT</TD>
+prompt <TD>ALLOWED<BR>DEPRN<BR>LIMIT</TD>
+prompt <TD>SPECIAL<BR>DEPRN<BR>LIMIT</TD>
+prompt <TD>PERCENT<BR>SALVAGE<BR>VALUE</TD>
+prompt <TD>END_DPIS</TD>
+prompt <TD>BASIC<BR>RATE</TD>
+prompt <TD>ADJUSTED<BR>RATE</TD>
+prompt <TD>BONUS_RULE</TD></TR>
+select  
+'<TR><TD>'||CATEGORY_ID||'</TD>'||chr(10)||
+'<TD>'||USE_STL_RETIREMENTS_FLAG||'</TD>'||chr(10)||
+'<TD>'||STL_METHOD_CODE||'</TD>'||chr(10)||
+'<TD>'||STL_LIFE_IN_MONTHS||'</TD>'||chr(10)||
+'<TD>'||USE_DEPRN_LIMITS_FLAG||'</TD>'||chr(10)||
+'<TD>'||ALLOWED_DEPRN_LIMIT||'</TD>'||chr(10)||
+'<TD>'||SPECIAL_DEPRN_LIMIT_AMOUNT||'</TD>'||chr(10)||
+'<TD>'||PERCENT_SALVAGE_VALUE||'</TD>'||chr(10)||
+'<TD>'||END_DPIS||'</TD>'||chr(10)||
+'<TD>'||BASIC_RATE||'</TD>'||chr(10)||
+'<TD>'||ADJUSTED_RATE||'</TD>'||chr(10)||
+'<TD>'||BONUS_RULE||'</TD></TR>'
+from fa_category_book_defaults 
+where category_id in
+(select distinct ah.category_id
+from fa_asset_history ah
+where ah.asset_id = &&asset)
+and book_type_code = '&&book'
+order by category_id, start_dpis;
+prompt </TABLE><P><P>
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=7 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_CATEGORY_BOOK_DEFAULTS - Key Values III</B></TD></TR>
+prompt <TR>
+prompt <TD>CATEGORY<BR>ID</TD>
+prompt <TD>ITC<BR>ELIGIBLE<BR>FLAG</TD>
+prompt <TD>USE_ITC<BR>CEILINGS<BR>FLAG</TD>
+prompt <TD>CEILING_NAME</TD>
+prompt <TD>PRODUCTION<BR>CAPACITY</TD>
+prompt <TD>UNIT_OF<BR>MEASURE</TD>
+prompt <TD>PRICE_INDEX_NAME</TD></TR>
+select  
+'<TR><TD>'||CATEGORY_ID||'</TD>'||chr(10)||
+'<TD>'||ITC_ELIGIBLE_FLAG||'</TD>'||chr(10)||
+'<TD>'||USE_ITC_CEILINGS_FLAG||'</TD>'||chr(10)||
+'<TD>'||CEILING_NAME||'</TD>'||chr(10)||
+'<TD>'||PRODUCTION_CAPACITY||'</TD>'||chr(10)||
+'<TD>'||UNIT_OF_MEASURE||'</TD>'||chr(10)||
+'<TD>'||PRICE_INDEX_NAME||'</TD></TR>'
+from fa_category_book_defaults 
+where category_id in
+(select distinct ah.category_id
+from fa_asset_history ah
+where ah.asset_id = &&asset)
+and book_type_code = '&&book'
+order by category_id, start_dpis;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=6 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_CATEGORY_BOOK_DEFAULTS - Update Information</B></TD></TR>
+prompt <TR>
+prompt <TD>CATEGORY<BR>ID</TD>
+prompt <TD>LAST_UPDATE_DATE</TD>
+prompt <TD>LAST_UPDATED_BY</TD>
+prompt <TD>CREATED_BY</TD>
+prompt <TD>CREATION_DATE</TD>
+prompt <TD>LAST_UPDATE_LOGIN</TD></TR>
+select  
+'<TR><TD>'||CATEGORY_ID||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATED_BY||'</TD>'||chr(10)||
+'<TD>'||CREATED_BY||'</TD>'||chr(10)||
+'<TD>'||CREATION_DATE||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>'
+from fa_category_book_defaults 
+where category_id in
+(select distinct ah.category_id
+from fa_asset_history ah
+where ah.asset_id = &&asset)
+and book_type_code = '&&book'
+order by category_id, start_dpis;
+prompt </TABLE><P><P>
+
+
+REM
+REM =================== FA_ASSET_INVOICES =======================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="inv">FA_ASSET_INVOICES - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD>PO<BR>VENDOR_ID</TD>                             
+prompt <TD>ASSET<BR>INVOICE_ID</TD>                         
+prompt <TD>FIXED<BR>ASSETS_COST</TD>                        
+prompt <TD>DATE<BR>EFFECTIVE</TD>                  
+prompt <TD>DATE<BR>INEFFECTIVE</TD>                         
+prompt <TD>INVOICE<BR>TRX_ID_IN</TD>                
+prompt <TD>INVOICE<BR>TRX_ID_OUT</TD>               
+prompt <TD>DEL<BR>FLAG</TD>                    
+prompt <TD>PO<BR>NUMBER</TD>                                
+prompt <TD>INVOICE<BR>NUMBER</TD></TR>
+select
+'<TR><TD>'||PO_VENDOR_ID||'</TD>'||chr(10)||                             
+'<TD>'||ASSET_INVOICE_ID||'</TD>'||chr(10)||                         
+'<TD>'||FIXED_ASSETS_COST||'</TD>'||chr(10)||                        
+'<TD>'||DATE_EFFECTIVE||'</TD>'||chr(10)||                  
+'<TD>'||DATE_INEFFECTIVE||'</TD>'||chr(10)||                         
+'<TD>'||INVOICE_TRANSACTION_ID_IN||'</TD>'||chr(10)||                
+'<TD>'||INVOICE_TRANSACTION_ID_OUT||'</TD>'||chr(10)||               
+'<TD>'||DELETED_FLAG||'</TD>'||chr(10)||                    
+'<TD>'||PO_NUMBER||'</TD>'||chr(10)||                                
+'<TD>'||INVOICE_NUMBER||'</TD></TR>'                                  
+from fa_asset_invoices
+where   asset_id = &&asset
+order by invoice_transaction_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=9 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_ASSET_INVOICES - Key Values - Mass Additions</B></TD></TR>
+prompt <TR>
+prompt <TD>CREATE<BR>BATCH_DATE</TD>                        
+prompt <TD>CREATE<BR>BATCH_ID</TD>                 
+prompt <TD>FEEDER<BR>SYSTEM_NAME</TD>                   
+prompt <TD>PARENT_MASS<BR>ADDITION_ID</TD>
+prompt <TD>MERGED<BR>CODE</TD>                              
+prompt <TD>SPLIT<BR>CODE</TD>                               
+prompt <TD>MERGE_PARENT<BR>MASS_ADDITIONS_ID</TD>           
+prompt <TD>SPLIT_PARENT<BR>MASS_ADDITIONS_ID</TD>
+prompt <TD>POST<BR>BATCH_ID</TD></TR>
+select
+'<TR><TD>'||CREATE_BATCH_DATE ||'</TD>'||chr(10)||                       
+'<TD>'||CREATE_BATCH_ID||'</TD>'||chr(10)||                                     
+'<TD>'||FEEDER_SYSTEM_NAME||'</TD>'||chr(10)||                       
+'<TD>'||PARENT_MASS_ADDITION_ID||'</TD>'||chr(10)||                  
+'<TD>'||MERGED_CODE||'</TD>'||chr(10)||                              
+'<TD>'||SPLIT_CODE||'</TD>'||chr(10)||                               
+'<TD>'||MERGE_PARENT_MASS_ADDITIONS_ID||'</TD>'||chr(10)||           
+'<TD>'||SPLIT_PARENT_MASS_ADDITIONS_ID||'</TD>'||chr(10)||       
+'<TD>'||POST_BATCH_ID||'</TD></TR>'                                  
+from fa_asset_invoices
+where   asset_id = &&asset
+order by invoice_transaction_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=10 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_ASSET_INVOICES - Key Values - Accounts Payable</B></TD></TR>
+prompt <TR>
+prompt <TD>AP_BATCH<BR>NAME</TD>                      
+prompt <TD>PAYABLES<BR>CCID</TD>            
+prompt <TD>INVOICE_DATE</TD>                             
+prompt <TD>PAYABLES_COST</TD>                            
+prompt <TD>INVOICE<BR>ID</TD>                               
+prompt <TD>AP_DIST<BR>LINE_NUM</TD>              
+prompt <TD>AP<BR>UNITS</TD>                           
+prompt <TD>SPL/MRG<BR>CODE</TD>                        
+prompt <TD>DESCRIPTION</TD>                              
+prompt <TD>UNREVAL<BR>COST</TD></TR>
+select
+'<TR><TD>'||PAYABLES_BATCH_NAME||'</TD>'||chr(10)||                      
+'<TD>'||PAYABLES_CODE_COMBINATION_ID||'</TD>'||chr(10)||            
+'<TD>'||INVOICE_DATE||'</TD>'||chr(10)||                             
+'<TD>'||PAYABLES_COST||'</TD>'||chr(10)||                            
+'<TD>'||INVOICE_ID||'</TD>'||chr(10)||                               
+'<TD>'||AP_DISTRIBUTION_LINE_NUMBER||'</TD>'||chr(10)||              
+'<TD>'||PAYABLES_UNITS||'</TD>'||chr(10)||                           
+'<TD>'||SPLIT_MERGED_CODE||'</TD>'||chr(10)||                        
+'<TD>'||DESCRIPTION||'</TD>'||chr(10)||                              
+'<TD>'||UNREVALUED_COST||'</TD></TR>'                                  
+from fa_asset_invoices
+where   asset_id = &&asset
+order by invoice_transaction_id_in;
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=8 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B>FA_ASSET_INVOICES - Key Values - Project Accounting and Update Info</B></TD></TR>
+prompt <TR>
+prompt <TD>PROJECT<BR>ASSET_LINE_ID</TD>                    
+prompt <TD>PROJECT_ID</TD>                               
+prompt <TD>TASK_ID</TD>
+prompt <TD>LAST_UPDATE_DATE</TD>                
+prompt <TD>LAST_UPDATED_BY</TD>                
+prompt <TD>CREATED_BY</TD>                               
+prompt <TD>CREATION_DATE</TD>                            
+prompt <TD>LAST_UPDATE_LOGIN</TD></TR>
+select
+'<TR><TD>'||PROJECT_ASSET_LINE_ID||'</TD>'||chr(10)||                    
+'<TD>'||PROJECT_ID||'</TD>'||chr(10)||                               
+'<TD>'||TASK_ID||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||                
+'<TD>'||LAST_UPDATED_BY ||'</TD>'||chr(10)||                
+'<TD>'||CREATED_BY||'</TD>'||chr(10)||                               
+'<TD>'||CREATION_DATE||'</TD>'||chr(10)||                            
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>'                                  
+from fa_asset_invoices
+where   asset_id = &&asset
+order by invoice_transaction_id_in;
+prompt </TABLE><P><P>
+
+
+REM
+REM =================== FA_INVOICE_TRANSACTIONS =======================
+REM
+
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=3 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="int">FA_INVOICE_TRANSACTIONS</A></B></TD></TR>
+prompt <TR>
+prompt <TD>INVOICE<BR>TRX_ID</TD>          
+prompt <TD>TRANSACTION_TYPE</TD>                
+prompt <TD>DATE_EFFECTIVE</TD></TR>                 
+select
+'<TR><TD>'||INVOICE_TRANSACTION_ID||'</TD>'||chr(10)||          
+'<TD>'||TRANSACTION_TYPE||'</TD>'||chr(10)||                
+'<TD>'||DATE_EFFECTIVE||'</TD></TR>'   
+from fa_invoice_transactions
+where invoice_transaction_id in
+(select distinct ai.invoice_transaction_id_in
+from fa_asset_invoices ai
+where ai.asset_id = &&asset)
+order by invoice_transaction_id;
+prompt </TABLE><P><P>
+
+
+REM
+REM =================== FA_DISTRIBUTION_ACCOUNTS =======================
+REM
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=12 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="cat">FA_DISTRIBUTION_ACCOUNTS - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD> BOOK_TYPE<BR>_CODE</TD>
+prompt <TD> DISTRIBUTION<BR>_ID</TD>
+prompt <TD> ASSET_<BR>COST_<BR>ACCOUNT_<BR>CCID</TD>
+prompt <TD> ASSET_<BR>CLEARING_<BR>ACCOUNT_<BR>CCID</TD>
+prompt <TD> DEPRN_<BR>EXPENSE_<BR>ACCOUNT_<BR>CCID</TD>
+prompt <TD> DEPRN_<BR>RESERVE_<BR>ACCOUNT_<BR>CCID</TD>
+prompt <TD> CIP_<BR>COST_<BR>ACCOUNT_<BR>CCID</TD>
+prompt <TD> CIP_<BR>CLEARING_<BR>ACCOUNT_<BR>CCID</TD>
+prompt <TD> NBV_<BR>RETIRED_<BR>GAIN_<BR>CCID</TD>
+prompt <TD> NBV_<BR>RETIRED_<BR>LOSS_<BR>CCID</TD>
+prompt <TD> PROCEEDS_<BR>SALE_<BR>GAIN_<BR>CCID</TD>
+prompt <TD> PROCEEDS_<BR>SALE_<BR>LOSS_<BR>CCID</TD></TR> 
+select  
+'<TR><TD>'||da.BOOK_TYPE_CODE||'</TD>'||chr(10)||
+'<TD>'||da.DISTRIBUTION_ID||'</TD>'||chr(10)||
+'<TD>'||da.ASSET_COST_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||da.ASSET_CLEARING_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||da.DEPRN_EXPENSE_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||da.DEPRN_RESERVE_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||da.CIP_COST_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||da.CIP_CLEARING_ACCOUNT_CCID||'</TD>'||chr(10)||
+'<TD>'||da.NBV_RETIRED_GAIN_CCID||'</TD>'||chr(10)||
+'<TD>'||da.NBV_RETIRED_LOSS_CCID||'</TD>'||chr(10)||
+'<TD>'||da.PROCEEDS_SALE_GAIN_CCID||'</TD>'||chr(10)||
+'<TD>'||da.PROCEEDS_SALE_LOSS_CCID||'</TD></TR>'
+from fa_distribution_accounts da,
+     fa_distribution_history dh
+where da.distribution_id = dh.distribution_id
+  and dh.asset_id = &&asset
+  and da.book_type_code = '&&book';
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=11 BGCOLOR=GRAY><font color=white face=arial>
+prompt <B><A NAME="cat">FA_DISTRIBUTION_ACCOUNTS - Key Values - II</A></B></TD></TR>
+prompt <TR>
+prompt <TD> BOOK_TYPE<BR>_CODE</TD>
+prompt <TD> DISTRIBUTION<BR>_ID</TD>
+prompt <TD> COST_<BR>REMOVAL_<BR>GAIN_<BR>CCID</TD>
+prompt <TD> COST_<BR>REMOVAL_<BR>LOSS_<BR>CCID</TD>
+prompt <TD> PROCEEDS_<BR>SALE_<BR>CLEARING_<BR>CCID</TD>
+prompt <TD> COST_<BR>REMOVAL_<BR>CLEARING_<BR>CCID</TD>
+prompt <TD> LAST_<BR>UPDATE_<BR>DATE</TD>
+prompt <TD> LAST_<BR>UPDATED_<BR>BY</TD>
+prompt <TD> CREATED<BR>_BY</TD>
+prompt <TD> CREATION_<BR>DATE</TD>
+prompt <TD> LAST_<BR>UPDATE_<BR>LOGIN</TD></TR> 
+select  
+'<TR><TD>'||da.BOOK_TYPE_CODE||'</TD>'||chr(10)||
+'<TD>'||da.DISTRIBUTION_ID||'</TD>'||chr(10)||
+'<TD>'||da.COST_REMOVAL_GAIN_CCID||'</TD>'||chr(10)||
+'<TD>'||da.COST_REMOVAL_LOSS_CCID||'</TD>'||chr(10)||
+'<TD>'||da.PROCEEDS_SALE_CLEARING_CCID||'</TD>'||chr(10)||
+'<TD>'||da.COST_REMOVAL_CLEARING_CCID||'</TD>'||chr(10)||
+'<TD>'||da.LAST_UPDATE_DATE||'</TD>'||chr(10)||
+'<TD>'||da.LAST_UPDATED_BY||'</TD>'||chr(10)||
+'<TD>'||da.CREATED_BY||'</TD>'||chr(10)||
+'<TD>'||da.CREATION_DATE||'</TD>'||chr(10)||
+'<TD>'||da.LAST_UPDATE_LOGIN||'</TD></TR>'
+from fa_distribution_accounts da,
+     fa_distribution_history dh
+where da.distribution_id = dh.distribution_id
+  and dh.asset_id = &&asset
+  and da.book_type_code = '&&book';
+prompt </TABLE><P><P>
+
+REM
+REM =========== Check CCIDs in GL_CODE_COMBINATIONS ==========
+REM
+
+prompt <TABLE BORDER=1>                         
+prompt <TR><TD COLSPAN=17 BGCOLOR=BLACK><font color=white face=arial>           
+prompt <B><A NAME="catgl">GL_CODE_COMBINATIONS  
+prompt <TR>                             
+prompt <TD>CCID</TD>                            
+prompt <TD>COA<BR>ID</TD>                               
+prompt <TD>DET<BR>PST<BR>ALL<BR>FLG</TD>                                
+prompt <TD>DET<BR>BUD<BR>ALL<BR>FLG</TD>                                
+prompt <TD>ACCT<BR>TYPE</TD>                            
+prompt <TD>ENAB<BR>FLAG</TD>                            
+prompt <TD>START<BR>DATE<BR>ACTIVE</TD>                         
+prompt <TD>END<BR>DATE<BR>ACTIVE</TD>   
+prompt <TD>SEGMENT1</TD>                                
+prompt <TD>SEGMENT2</TD>                                
+prompt <TD>SEGMENT3</TD>                                
+prompt <TD>SEGMENT4</TD>                                
+prompt <TD>SEGMENT5</TD>                                
+prompt <TD>SEGMENT6</TD>                                
+prompt <TD>SEGMENT7</TD>                                
+prompt <TD>SEGMENT8</TD>                                
+prompt <TD>SEGMENT9</TD>                                
+prompt </TR>                            
+select                          
+'<TD>'||gl.CODE_COMBINATION_ID||'</TD>'||chr(10)||                         
+'<TD>'||gl.CHART_OF_ACCOUNTS_ID||'</TD>'||chr(10)||                                
+'<TD>'||gl.DETAIL_POSTING_ALLOWED_FLAG||'</TD>'||chr(10)||                         
+'<TD>'||gl.DETAIL_BUDGETING_ALLOWED_FLAG||'</TD>'||chr(10)||                               
+'<TD>'||gl.ACCOUNT_TYPE||'</TD>'||chr(10)||                                
+'<TD>'||gl.ENABLED_FLAG||'</TD>'||chr(10)||                                
+'<TD>'||gl.START_DATE_ACTIVE||'</TD>'||chr(10)||                           
+'<TD>'||gl.END_DATE_ACTIVE||'</TD>'||chr(10)||     
+'<TD>'||gl.SEGMENT1||'</TD>'||chr(10)||                            
+'<TD>'||gl.SEGMENT2||'</TD>'||chr(10)||                            
+'<TD>'||gl.SEGMENT3||'</TD>'||chr(10)||                            
+'<TD>'||gl.SEGMENT4||'</TD>'||chr(10)||                            
+'<TD>'||gl.SEGMENT5||'</TD>'||chr(10)||
+'<TD>'||gl.SEGMENT6||'</TD>'||chr(10)||
+'<TD>'||gl.SEGMENT7||'</TD>'||chr(10)||
+'<TD>'||gl.SEGMENT8||'</TD>'||chr(10)||
+'<TD>'||gl.SEGMENT9||'</TD></TR>'                               
+from GL_CODE_COMBINATIONS gl,
+     fa_distribution_accounts da,
+     fa_distribution_history dh
+where dh.asset_id = &&asset
+and dh.distribution_id = da.distribution_id
+and da.book_type_code = '&&book'
+and gl.code_combination_id in
+     (da.ASSET_COST_ACCOUNT_CCID,
+      da.ASSET_CLEARING_ACCOUNT_CCID,
+      da.DEPRN_EXPENSE_ACCOUNT_CCID,
+      da.DEPRN_RESERVE_ACCOUNT_CCID,
+      da.CIP_COST_ACCOUNT_CCID,
+      da.CIP_CLEARING_ACCOUNT_CCID,
+      da.NBV_RETIRED_GAIN_CCID,
+      da.NBV_RETIRED_LOSS_CCID,
+      da.PROCEEDS_SALE_GAIN_CCID,
+      da.PROCEEDS_SALE_LOSS_CCID,
+      da.COST_REMOVAL_GAIN_CCID,
+      da.COST_REMOVAL_LOSS_CCID,
+      da.PROCEEDS_SALE_CLEARING_CCID,
+      da.COST_REMOVAL_CLEARING_CCID)
+order by gl.code_combination_id;
+prompt </TABLE><P><P>                           
+
+REM
+REM =================== PRORATE_CONVENTION =======================
+REM
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=9 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="cat">FA_CONVENTION_TYPES - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD> METHOD_ID</TD>
+prompt <TD> METHOD_CODE</TD>
+prompt <TD> LIFE<BR>_IN_<BR>MONTHS</TD>
+prompt <TD> DEPR<BR>_WHEN_<BR>ACQUIRED<BR>_FLAG</TD>
+prompt <TD> CREATED<BR>_BY</TD>
+prompt <TD> CREATION<BR>_DATE</TD>
+prompt <TD> LAST_<BR>UPDATE<BR>_DATE</TD>
+prompt <TD> LAST_<BR>UPDATED<BR>_BY</TD>
+prompt <TD> LAST_<BR>UPDATE<BR>_LOGIN</TD></TR> 
+select  
+'<TR><TD>'||PRORATE_CONVENTION_CODE||'</TD>'||chr(10)||
+'<TD>'||DESCRIPTION||'</TD>'||chr(10)||
+'<TD>'||FISCAL_YEAR_NAME||'</TD>'||chr(10)||
+'<TD>'||DEPR_WHEN_ACQUIRED_FLAG||'</TD>'||chr(10)||
+'<TD>'||CREATED_BY||'</TD>'||chr(10)||
+'<TD>'||CREATION_DATE||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_DATE||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATED_BY||'</TD>'||chr(10)||
+'<TD>'||LAST_UPDATE_LOGIN||'</TD></TR>'
+from fa_convention_types
+where prorate_convention_code =
+(select bk.prorate_convention_code 
+from fa_books bk
+where bk.asset_id = &&asset
+and bk.book_type_code = '&&book'
+and bk.transaction_header_id_out is null)
+or
+prorate_convention_code =
+(select rt.retirement_prorate_convention 
+from fa_retirements rt
+where rt.asset_id = &&asset
+and rt.book_type_code = '&&book');
+prompt </TABLE><P><P>
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=9 BGCOLOR=RED><font color=white face=arial>
+prompt <B><A NAME="cat">FA_CONVENTIONS - Key Values</A></B></TD></TR>
+prompt <TR>
+prompt <TD> PRORATE_<BR>CONVENTION<BR>_TYPE</TD>
+prompt <TD> START_DATE  </TD>
+prompt <TD> END_DATE    </TD>
+prompt <TD> PRORATE_DATE</TD>
+prompt <TD> CREATED<BR>_BY</TD>
+prompt <TD> CREATION_DATE</TD>
+prompt <TD> LAST_UPDATE <BR>_DATE</TD>
+prompt <TD> LAST_<BR>UPDATED<BR>_BY</TD>
+prompt <TD> LAST_<BR>UPDATE<BR>_LOGIN</TD></TR> 
+select  
+'<TR><TD>'||cv.PRORATE_CONVENTION_CODE||'</TD>'||chr(10)||
+'<TD>'||cv.START_DATE||'</TD>'||chr(10)||
+'<TD>'||cv.END_DATE||'</TD>'||chr(10)||
+'<TD>'||cv.PRORATE_DATE||'</TD>'||chr(10)||
+'<TD>'||cv.CREATED_BY||'</TD>'||chr(10)||
+'<TD>'||cv.CREATION_DATE||'</TD>'||chr(10)||
+'<TD>'||cv.LAST_UPDATE_DATE||'</TD>'||chr(10)||
+'<TD>'||cv.LAST_UPDATED_BY||'</TD>'||chr(10)||
+'<TD>'||cv.LAST_UPDATE_LOGIN||'</TD></TR>'
+from fa_conventions cv,
+     fa_books bk
+where bk.asset_id = &&asset
+and bk.book_type_code = '&&book'
+and bk.transaction_header_id_out is null
+and (cv.prorate_convention_code = bk.prorate_convention_code 
+     or
+     cv.prorate_convention_code in
+      ( select rt.retirement_prorate_convention
+        from fa_retirements rt
+        where rt.asset_id = &&asset
+          and rt.book_type_code = '&&book')
+    )
+and ( bk.date_placed_in_service between cv.start_date and cv.end_date
+      OR
+      ADD_MONTHS(bk.date_placed_in_service, (bk.life_in_months + 2)) 
+        between cv.start_date and cv.end_date
+    )
+order by cv.PRORATE_CONVENTION_CODE,cv.start_date;
+prompt </TABLE><P><P>
+
+
+
+REM
+REM =========== Check FA_LOCATIONS ==========
+REM
+
+prompt <TABLE BORDER=1>                         
+prompt <TR><TD COLSPAN=12 BGCOLOR=BLACK><font color=white face=arial>           
+prompt <B><A NAME="catgl">FA_LOCATIONS  
+prompt <TR>                             
+prompt <TD>LOCATION_ID</TD>                            
+prompt <TD>SUMM<BR>FLAG</TD>                            
+prompt <TD>ENAB<BR>FLAG</TD>                            
+prompt <TD>START<BR>DATE<BR>ACTIVE</TD>                         
+prompt <TD>END<BR>DATE<BR>ACTIVE</TD>   
+prompt <TD>SEGMENT1</TD>                                
+prompt <TD>SEGMENT2</TD>                                
+prompt <TD>SEGMENT3</TD>                                
+prompt <TD>SEGMENT4</TD>                                
+prompt <TD>SEGMENT5</TD>                                
+prompt <TD>SEGMENT6</TD>                                
+prompt <TD>SEGMENT7</TD>                                
+prompt </TR>                            
+select                          
+'<TD>'||LOCATION_ID||'</TD>'||chr(10)||                         
+'<TD>'||SUMMARY_FLAG||'</TD>'||chr(10)||                                
+'<TD>'||ENABLED_FLAG||'</TD>'||chr(10)||                                
+'<TD>'||START_DATE_ACTIVE||'</TD>'||chr(10)||                           
+'<TD>'||END_DATE_ACTIVE||'</TD>'||chr(10)||     
+'<TD>'||SEGMENT1||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT2||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT3||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT4||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT5||'</TD>'||chr(10)||
+'<TD>'||SEGMENT6||'</TD>'||chr(10)||
+'<TD>'||SEGMENT7||'</TD></TR>'                               
+from FA_LOCATIONS                               
+where location_id in
+      (select location_id
+      from fa_distribution_history
+      where asset_id = &&asset);
+prompt </TABLE><P><P>                           
+
+REM
+REM =========== Check FA_ASSET_KEYWORDS ==========
+REM
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=15 BGCOLOR=BLACK><font color=white face=arial>
+prompt <B><A NAME="catgl">FA_ASSET_KEYWORDS
+prompt <TR>
+prompt <TD>CODE_COMBINATION_ID</TD>
+prompt <TD>SUMM<BR>FLAG</TD>
+prompt <TD>ENAB<BR>FLAG</TD>
+prompt <TD>START<BR>DATE<BR>ACTIVE</TD>
+prompt <TD>END<BR>DATE<BR>ACTIVE</TD>
+prompt <TD>SEGMENT1</TD>
+prompt <TD>SEGMENT2</TD>
+prompt <TD>SEGMENT3</TD>
+prompt <TD>SEGMENT4</TD>
+prompt <TD>SEGMENT5</TD>
+prompt <TD>SEGMENT6</TD>
+prompt <TD>SEGMENT7</TD>
+prompt <TD>SEGMENT8</TD>
+prompt <TD>SEGMENT9</TD>
+prompt <TD>SEGMENT10</TD>
+prompt </TR>                            
+select                          
+'<TD>'||CODE_COMBINATION_ID||'</TD>'||chr(10)||                         
+'<TD>'||SUMMARY_FLAG||'</TD>'||chr(10)||                                
+'<TD>'||ENABLED_FLAG||'</TD>'||chr(10)||                                
+'<TD>'||START_DATE_ACTIVE||'</TD>'||chr(10)||                           
+'<TD>'||END_DATE_ACTIVE||'</TD>'||chr(10)||     
+'<TD>'||SEGMENT1||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT2||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT3||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT4||'</TD>'||chr(10)||                            
+'<TD>'||SEGMENT5||'</TD>'||chr(10)||
+'<TD>'||SEGMENT6||'</TD>'||chr(10)||
+'<TD>'||SEGMENT7||'</TD>'||chr(10)||
+'<TD>'||SEGMENT8||'</TD>'||chr(10)||
+'<TD>'||SEGMENT9||'</TD>'||chr(10)||
+'<TD>'||SEGMENT10||'</TD></TR>'
+from FA_ASSET_KEYWORDS
+where  code_combination_id in
+      (select asset_key_ccid
+      from fa_additions
+      where asset_id = &&asset);
+prompt </TABLE><P><P>                           
+
+
+REM
+REM =========== CHECK DBA_TRIGGERS ==========
+REM
+
+prompt <TABLE BORDER=1>
+prompt <TR><TD COLSPAN=13 BGCOLOR=BLACK><font color=white face=arial>
+prompt <B><A NAME="tri">DBA_TRIGGERS</A></B></TD></TR>
+prompt <TR>
+prompt <TD>TRIGGER_NAME</TD>
+prompt <TD>TABLE_NAME</TD>
+prompt <TD>TABLE_OWNER</TD>
+prompt <TD>OWNER</TD>
+prompt <TD>STATUS</TD>
+prompt </TR>
+select  
+'<TD>'||TRIGGER_NAME||'</TD>'||chr(10)||
+'<TD>'||TABLE_NAME||'</TD>'||chr(10)||
+'<TD>'||TABLE_OWNER||'</TD>'||chr(10)||
+'<TD>'||OWNER||'</TD>'||chr(10)||
+'<TD>'||STATUS||'</TD></TR>'
+from DBA_TRIGGERS
+where table_name like 'FA%';
+prompt </TABLE><P><P>
+
+
+prompt <P>Questions? Concerns? Complaints?<BR>
+prompt <P><BR><P><BR><P><BR>
+prompt </BODY>
+prompt </HTML>
+
+undef book
+undef asset
+spool off
+set heading on
+set feedback on  
+set verify on
+-- exit
+;
+
+
+.  
+
+--------------------------------------------------------------------------------
+ 
+ Copyright ? 2005, Oracle. All rights reserved. Legal Notices and Terms of Use.  

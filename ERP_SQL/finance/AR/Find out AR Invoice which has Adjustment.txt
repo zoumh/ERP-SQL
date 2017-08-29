@@ -1,0 +1,3 @@
+-----Find out AR Invoice which has Adjustment on it
+select a.trx_number from apps.ra_customer_trx_all a,apps.AR_ADJUSTMENTS_all b
+where a.customer_trx_id=b.customer_trx_id

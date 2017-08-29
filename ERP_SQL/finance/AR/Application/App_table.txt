@@ -1,0 +1,85 @@
+
+
+
+-----Get Invoice Number
+select * from apps.ra_customer_trx_all where trx_number in ('240312','M250054')
+
+
+
+---View , Include every type, 
+select * from apps.AR_APP_ADJ_V  where CUSTOMER_TRX_ID=203561
+
+
+------Which Invoice has adjustment?
+select a.trx_number from apps.ra_customer_trx_all a,apps.AR_ADJUSTMENTS_all b
+where a.customer_trx_id=b.customer_trx_id
+
+
+
+------Application
+select * from apps.AR_RECEIVABLE_APPLICATIONS_all where applied_customer_trx_id in (85355,98552)
+
+
+------Adjustment
+select * from apps.AR_ADJUSTMENTS_all where customer_trx_id in (85355,98552)
+
+
+---------Open Balance of Receipt
+
+select ACCTD_AMOUNT_DUE_REMAINING from apps.AR_PAYMENT_SCHEDULES_ALL where Class='PMT' and status='OP'
+and GL_DATE>=to_date('2005-10-1','yyyy-mm-dd') and GL_DATE<=to_date('2005-10-31','yyyy-mm-dd') 
+
+
+---------Open Balance of AR Invoice
+select sum(ACCTD_AMOUNT_DUE_REMAINING) Due_Amt--,sum(nvl(a.EXCHANGE_RATE,1)* a.AMOUNT_DUE_ORIGINAL) amt
+from apps.ar_payment_schedules_all a,apps.ra_customer_trx_all b 
+where a.PAYMENT_SCHEDULE_ID>0 and a.AMOUNT_DUE_REMAINING<>0
+and a.GL_DATE>=to_date('2005-10-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2005-10-31','yyyy-mm-dd') 
+and  b.COMPLETE_FLAG='Y'
+and a.CUSTOMER_TRX_ID =b.CUSTOMER_TRX_ID
+
+
+---Details
+select b.ORG_ID,--Class,
+b.trx_number Invoice,b.trx_date Invoice_Date,b.COMPLETE_FLAG,
+b.CT_REFERENCE ,b.invoice_currency_code Currency,h.name Source,
+e.Type Class,
+e.DESCRIPTION Type,c.gl_date,
+b.ATTRIBUTE1 DFF,
+g.CUSTOMER_NUMBER Ship_To_Number,b.SHIP_TO_SITE_USE_ID,
+f.CUSTOMER_NUMBER Bill_To_Number,b.Bill_TO_SITE_USE_ID ,
+d.name Term,b.term_due_date,
+i.name Sales_Person,
+--(select name from apps.RA_SALESREPS_ALL where SALESREP_ID=b.PRIMARY_SALESREP_ID) Sales_Person,
+b.PURCHASE_ORDER,
+b.comments,j.segment3 Account,j.segment4 PRD_Acc,j.segment5 PRJ_Acc,c.amount,ACCTD_AMOUNT,ACCOUNT_CLASS,  
+b.EXCHANGE_RATE,k.AMOUNT_DUE_ORIGINAL,ACCTD_AMOUNT_DUE_REMAINING Due_CNY_Amt 
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all c
+,apps.AR_customers_v f
+,apps.ra_cust_trx_types_all e
+,apps.ra_terms_tl d
+,apps.AR_customers_v g
+,apps.RA_BATCH_SOURCES_all h
+,apps.RA_SALESREPS_ALL i
+,apps.GL_CODE_combinations j,
+apps.ar_payment_schedules_all k
+where b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and b.SHIP_TO_CUSTOMER_ID=g.CUSTOMER_ID(+)
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and b.CUST_TRX_TYPE_ID=e.CUST_TRX_TYPE_ID
+and d.term_id=b.term_id
+and d.language='US'
+and c.ACCOUNT_CLASS='REC'
+and b.BATCH_SOURCE_ID=h.BATCH_SOURCE_ID
+and i.SALESREP_ID(+)=b.PRIMARY_SALESREP_ID--(+)
+and c.CODE_COMBINATION_ID=j.CODE_COMBINATION_ID
+--and b.trx_number='50930'
+and  b.COMPLETE_FLAG='Y'
+and k.CUSTOMER_TRX_ID =b.CUSTOMER_TRX_ID
+and k.PAYMENT_SCHEDULE_ID>0 and k.AMOUNT_DUE_REMAINING<>0
+and k.GL_DATE>=to_date('2005-10-1','yyyy-mm-dd') and k.GL_DATE<=to_date('2005-10-30','yyyy-mm-dd') 
+order by b.trx_number
+
+
+

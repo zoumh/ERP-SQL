@@ -1,0 +1,194 @@
+这两个料是Buy的KRH, Item_Cost上设的Based on rollup=N, 都是对的,
+
+错的是Alert的逻辑,目前编写的逻辑是:
+1. Item category1 是: DPY Item, KRH Item 或 ROA Item 
+2. Item 的 'Pending'Cost Type 的 Based on rollup=N
+
+所以这两个Item都附合Alert的逻辑,就会出来的,
+解决:只能把Alert的逻辑给改进了
+
+Yu Ying: 能看看吗?
+
+New logic is:
+1. Item category1 是: DPY Item, KRH Item 或 ROA Item 
+2. Item 的 'Pending'Cost Type 的 Based on rollup=N
+3. Item make/buy =Make ? yes, it's.--user confirmed
+
+
+
+  1224-9857.2                   VP     W508.KRH ITEM                           
+  1224-9852.2                   VP     W508.KRH ITEM  
+
+
+select rpad(msi.SEGMENT1,30,' ') ||decode(msi.ORGANIZATION_ID,130,'VP','AC')||'     '||mic.segment1||'.'||mic.segment2 ,
+cic.COST_TYPE,cic.BASED_ON_ROLLUP
+from apps.mtl_system_items msi, apps.CST_ITEM_COST_TYPE_V cic, apps.MTL_ITEM_CATEGORIES_V  mic
+where msi.INVENTORY_ITEM_ID = cic.INVENTORY_ITEM_ID 
+and msi.ORGANIZATION_ID = cic.ORGANIZATION_ID
+and msi.INVENTORY_ITEM_ID = mic.INVENTORY_ITEM_ID
+and msi.ORGANIZATION_ID = mic.ORGANIZATION_ID 
+and cic.COST_TYPE = 'Pending'
+and cic.BASED_ON_ROLLUP <> 1 -------1=Y,2=N
+and mic.segment2 in ('DPY ITEM','ROA ITEM', 'KRH ITEM')
+and msi.SEGMENT1 in ('1224-9857.2','1224-9852.2')
+
+
+
+select msi.SEGMENT1,cic.BASED_ON_ROLLUP,decode(msi.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,
+decode(cic.BASED_ON_ROLLUP,1,'Y',2,'N','NA') Based_on_rollup,
+cic.COST_TYPE,msi.INVENTORY_ITEM_STATUS_CODE Item_Status,
+decode(msi.ORGANIZATION_ID,130,'VP','AC') Org,mic.segment1,mic.segment2
+from mtl_system_items msi, CST_ITEM_COST_TYPE_V cic, MTL_ITEM_CATEGORIES_V  mic
+where msi.INVENTORY_ITEM_ID = cic.INVENTORY_ITEM_ID 
+and msi.ORGANIZATION_ID = cic.ORGANIZATION_ID
+and msi.INVENTORY_ITEM_ID = mic.INVENTORY_ITEM_ID
+and msi.ORGANIZATION_ID = mic.ORGANIZATION_ID 
+and cic.COST_TYPE = 'Pending'
+--and cic.BASED_ON_ROLLUP <> 1   -------1=Y,2=N
+and mic.segment2 in ('DPY ITEM','ROA ITEM', 'KRH ITEM')
+--and msi.planning_make_buy_code<>2  ---planning_make_buy_code,1,'Make',2,'Buy'
+and msi.ORGANIZATION_ID>127
+and msi.SEGMENT1 in ('1223-9867.1','1204-0248.3','1211-7002.2','1217-3035')
+and msi.CREATION_DATE>to_date('2009-1-11','yyyy-mm-dd')
+
+
+---------CR568 2009-10
+For a make Item, it is based on roll up,it's user define item cost should always be 0.
+So the total logic be:
+1. Item category1 是: DPY Item, KRH Item 或 ROA Item 
+2. Item make/buy =Make  ---planning_make_buy_code,1,'Make',2,'Buy'
+3. Item 的Cost Type='Pending' 
+4.1 Item Cost Based on rollup=N 
+   or 
+4.2 Item Cost Based on rollup=Y, User Define item Cost≠”0”
+
+(Find need to add and mic.category_set_id=1 in SQL !)
+
+
+select msi.SEGMENT1 Item,
+decode(msi.ORGANIZATION_ID,130,'VP',128,'AC',132,'IP',131,'CS','NA') Org,mic.segment1 Cate1,mic.segment2 Cate2,
+cic.ITEM_COST,cic.TL_MATERIAL User_Define_Cost
+from apps.mtl_system_items msi, apps.CST_ITEM_COSTS cic, apps.MTL_ITEM_CATEGORIES_V  mic
+where msi.INVENTORY_ITEM_ID = cic.INVENTORY_ITEM_ID 
+and msi.ORGANIZATION_ID = cic.ORGANIZATION_ID
+and msi.INVENTORY_ITEM_ID = mic.INVENTORY_ITEM_ID
+and msi.ORGANIZATION_ID = mic.ORGANIZATION_ID 
+and mic.category_set_id=1
+and cic.COST_TYPE_ID = 3--'Pending'
+and mic.segment2 in ('DPY ITEM','ROA ITEM', 'KRH ITEM')
+and msi.planning_make_buy_code<>2  ---1,'Make',2,'Buy'
+and (cic.BASED_ON_ROLLUP_FLAG <> 1 -------1=Y,2=N
+       or
+     (cic.BASED_ON_ROLLUP_FLAG = 1  and cic.TL_MATERIAL<>0 --and cic.ITEM_COST<>cic.TL_MATERIAL
+     )
+    ) 
+
+
+
+----Item attributes of test item , for checking
+select --msi.CREATION_DATE,
+mic.category_set_id,mic.STRUCTURE_ID,
+decode(msi.ORGANIZATION_ID,130,'VP',128,'AC',132,'IP',131,'CS','NA') Org,
+msi.SEGMENT1 Item ,
+'Pending' Cost_Type,decode(msi.planning_make_buy_code,1,'Make',2,'Buy') make_buy_code,
+decode(cic.BASED_ON_ROLLUP_FLAG,1,'Y',2,'N') BASED_ON_ROLLUP,
+mic.segment1 Cate1,mic.segment2 Cate2 
+from apps.mtl_system_items_b msi, apps.CST_ITEM_COSTS cic, apps.MTL_ITEM_CATEGORIES_V  mic
+where msi.INVENTORY_ITEM_ID = cic.INVENTORY_ITEM_ID 
+and msi.ORGANIZATION_ID = cic.ORGANIZATION_ID
+and msi.INVENTORY_ITEM_ID = mic.INVENTORY_ITEM_ID
+and msi.ORGANIZATION_ID = mic.ORGANIZATION_ID 
+and cic.COST_TYPE_ID = 3--'Pending'
+--and mic.segment2 in ('DPY ITEM','ROA ITEM', 'KRH ITEM')
+--and to_char(msi.planning_make_buy_code)<>cic.planning_make_buy_code
+and msi.ORGANIZATION_ID=130
+and mic.category_set_id=1
+and msi.SEGMENT1 in ('1204-0248.3','1204-0248.1','1204-0248.5','1204-0248.9','1204-0248.4','1204-0248.2','1204-0248.7','1204-0248.8')
+--and  msi.CREATION_DATE>to_date('2009-10-1','yyyy-mm-dd')
+order by msi.SEGMENT1
+
+
+--------CR 615
+For a make  Item, it is based on roll up,if it's user define item cost not be 0, the total cost would be double.
+For a Buy Item, it should not based on rollup, it must have cost defined.
+
+The new logic would be like below:
+<1> The check range is to VP and AC org.
+<2> If Item status in Org iis inactive,then not send out Alert for the item in Org.
+<3>:
+1.Item category1 是: DPY Item, KRH/KRC Item ,ROA Item 或者 ROA Module
+
+2. Item make/buy =Make 
+
+3. Item 的Cost Type='Pending' 
+
+  4.1 Item Cost Based on rollup=N 
+
+     or 
+   4.2  Item Cost Based on rollup=Y, User Define item Cost≠”0”
+
+另一种情况是：
+
+1.Item category1 是: DPY Item, KRH/KRC Item ,ROA Item,或者 ROA Module
+
+2. Item make/buy =Buy
+
+3. Item 的Cost Type='Pending' 
+
+  4.1 Item Cost Based on rollup=Y
+
+     or 
+   4.2  Item Cost Based on rollup=N, User Define item Cost=”0”
+
+In above two conditions, the alert should list out the parts.
+
+
+
+---SQL (VP,AC)
+select msi.SEGMENT1 Item,msi.INVENTORY_ITEM_STATUS_CODE Item_Status,
+decode(msi.ORGANIZATION_ID,130,'VP',128,'AC',132,'IP',131,'CS','NA') Org,mic.segment1 Cate1,mic.segment2 Cate2,
+cic.ITEM_COST, cic.TL_MATERIAL User_Define_Cost,
+decode(msi.planning_make_buy_code,1,'Make',2,'Buy') make_buy_code,
+decode(cic.BASED_ON_ROLLUP_FLAG,1,'Y',2,'N') BASED_ON_ROLLUP 
+from apps.mtl_system_items msi, apps.CST_ITEM_COSTS cic, apps.MTL_ITEM_CATEGORIES_V  mic
+where msi.INVENTORY_ITEM_ID = cic.INVENTORY_ITEM_ID 
+and msi.ORGANIZATION_ID = cic.ORGANIZATION_ID
+and msi.INVENTORY_ITEM_ID = mic.INVENTORY_ITEM_ID
+and msi.ORGANIZATION_ID = mic.ORGANIZATION_ID
+and mic.category_set_id=1
+and cic.COST_TYPE_ID = 3--'Pending'
+and msi.INVENTORY_ITEM_STATUS_CODE <>'Inactive'
+and mic.segment2 in ('DPY ITEM','ROA ITEM', 'KRH ITEM','ROA MODULE')
+and msi.ORGANIZATION_ID in (130,128)
+and (msi.planning_make_buy_code=1  ---1,'Make',2,'Buy'
+        and (cic.BASED_ON_ROLLUP_FLAG =2 -------1=Y,2=N
+              or
+              (cic.BASED_ON_ROLLUP_FLAG = 1
+                and cic.TL_MATERIAL<>0
+--                and cic.ITEM_COST<>cic.TL_MATERIAL
+              )
+            )
+    )
+union   --- union all will include duplicate records
+select msi.SEGMENT1 Item,msi.INVENTORY_ITEM_STATUS_CODE Item_Status,
+decode(msi.ORGANIZATION_ID,130,'VP',128,'AC',132,'IP',131,'CS','NA') Org,mic.segment1 Cate1,mic.segment2 Cate2,
+cic.ITEM_COST, cic.TL_MATERIAL User_Define_Cost,
+decode(msi.planning_make_buy_code,1,'Make',2,'Buy') make_buy_code,
+decode(cic.BASED_ON_ROLLUP_FLAG,1,'Y',2,'N') BASED_ON_ROLLUP
+from apps.mtl_system_items msi, apps.CST_ITEM_COSTS cic, apps.MTL_ITEM_CATEGORIES_V  mic
+where msi.INVENTORY_ITEM_ID = cic.INVENTORY_ITEM_ID
+and msi.ORGANIZATION_ID = cic.ORGANIZATION_ID
+and msi.INVENTORY_ITEM_ID = mic.INVENTORY_ITEM_ID
+and msi.ORGANIZATION_ID = mic.ORGANIZATION_ID
+and mic.category_set_id=1
+and cic.COST_TYPE_ID = 3--'Pending'
+and msi.INVENTORY_ITEM_STATUS_CODE<>'Inactive'
+and mic.segment2 in ('DPY ITEM','ROA ITEM', 'KRH ITEM','ROA MODULE')
+and msi.ORGANIZATION_ID in (130,128)
+and (msi.planning_make_buy_code=2  ---1,'Make',2,'Buy'
+        and (cic.BASED_ON_ROLLUP_FLAG =1 -------1=Y,2=N
+            or
+            (cic.BASED_ON_ROLLUP_FLAG = 2  and cic.TL_MATERIAL=0 )
+            )
+    )
+

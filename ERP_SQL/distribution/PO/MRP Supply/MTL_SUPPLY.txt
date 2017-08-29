@@ -1,0 +1,77 @@
+
+
+MTL_SUPPLY
+Records in MTL_SUPPLY are created every time you approve a requisition or a PO or create an intransit shipment.
+Records in MTL_SUPPLY will be recreated whenever there are transactions such as return to receiving, return to vendor or cancellation of purchase orders.
+Records in MTL_SUPPLY are deleted every time you change the document status to not approved.
+The supply type code of a REQ supply record is changed to PO every time a requisition is autocreated. Similarly the supply type code is changed from PO to RECEIVING when a PO is fully received.
+
+
+There are four different types of supply captured in this table
+1) Approved Requisitions
+2) Approved Purchase orders
+3) Shipments from suppliers
+4) Intransit shipments from another organization
+
+
+
+
+---------If PO line Item diff with mtl_supply , then the Open PO will not be recognized as MRP Demand
+(This is because 'BMC PO's Item Batch Change Request' didn't update the Item in apps.mtl_supply table)
+
+select b.LAST_UPDATE_DATE,b.CREATION_DATE,b.segment1 PO,c.LINE_NUM,sum(d.QUANTITY ) Qty,sum(d.QUANTITY_RECEIVED ) Rec_Qty,
+e.segment1 Supply_Item,f.segment1 PO_Item 
+--,c.closed_code ,c.CLOSED_FLAG
+from apps.mtl_supply a,apps.po_headers_all b,apps.po_lines_all c,apps.po_line_locations_all d,
+apps.mtl_system_items e,apps.mtl_system_items f
+where a.po_header_id=b.po_header_id
+and a.po_line_id =c.po_line_id 
+and a.po_line_id =d.po_line_id
+and a.po_header_id=d.po_header_id
+and a.PO_LINE_LOCATION_ID =d.LINE_LOCATION_ID  
+and c.item_id<>a.item_id
+and c.org_id=b.org_id
+and c.org_id>=127
+and (c.closed_code ='OPEN' or c.closed_code is null)
+and b.AUTHORIZATION_STATUS ='APPROVED'
+and e.INVENTORY_ITEM_ID=a.item_id
+and f.INVENTORY_ITEM_ID=c.item_id
+and f.ORGANIZATION_ID=c.org_id
+and e.ORGANIZATION_ID=a.to_ORGANIZATION_ID
+group by b.segment1,c.LINE_NUM,a.PO_LINE_LOCATION_ID,e.segment1,f.segment1,b.LAST_UPDATE_DATE,b.CREATION_DATE
+having sum(d.QUANTITY )<>sum(d.QUANTITY_RECEIVED )
+
+
+----------------
+
+select * from apps.MTL_SUPPLY where po_header_id=142855
+
+po_line_id=269368
+
+--------Find PO_Header_id,PO_line_id
+select  distinct d.po_header_id ,b.PO_LINE_ID,d.CREATION_DATE,d.segment1 po_no,b.LINE_NUM,
+d.CLOSED_CODE H_close_code,b.CLOSED_FLAG l_close_flg,b.CLOSED_CODE l_close_code,
+b.CANCEL_FLAG l_cancel_flg,b.CANCEL_DATE,b.CANCELLED_BY,
+a.CANCEL_FLAG s_canel_flg,a.CLOSED_CODE s_close_cd,a.CLOSED_FLAG s_close_flg,
+c.segment1 item_no,a.quantity qty_ordered,
+ a.quantity_received, a.QUANTITY_BILLED,A.QUANTITY_CANCELLED, b.ATTRIBUTE1,A.NEED_BY_DATE,
+ e.name,f.AGENT_name,a.SHIP_TO_ORGANIZATION_ID 
+from apps.po_line_locations_all a,apps.po_lines_all b, apps.mtl_system_items c ,apps.po_headers_all d,
+APPS.HR_ALL_ORGANIZATION_UNITS e,apps.PO_AGENTS_V f,apps.PO_DISTRIBUTIONS_ALL g
+where 
+--a.quantity_received<(a.quantity-A.QUANTITY_CANCELLED)
+--or a.QUANTITY_BILLED<(a.quantity_received-A.QUANTITY_CANCELLED))and 
+c.inventory_item_id=b.item_id 
+and c.organization_id=b.org_id 
+and a.PO_LINE_ID=b.PO_LINE_ID
+and b.po_header_id=d.po_header_id 
+AND TYPE_LOOKUP_CODE ='STANDARD'
+and To_char(d.CREATION_DATE,'YYYY-MM-DD')>='2007-01-31'
+and e.ORGANIZATION_ID=a.SHIP_TO_ORGANIZATION_ID
+and d.AGENT_ID=f.AGENT_ID
+and a.SHIP_TO_ORGANIZATION_ID=130
+and d.segment1='1042904'
+--and b.LINE_NUM='1'
+and a.line_location_id=g.line_location_id
+and a.PO_LINE_ID=g.PO_LINE_ID
+and a.po_header_id=g.po_header_id 

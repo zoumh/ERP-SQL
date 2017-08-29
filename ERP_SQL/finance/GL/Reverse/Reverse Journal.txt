@@ -1,0 +1,144 @@
+
+--------After Open next Period,find out which Accrual Journal not get Reversed in Next Period
+
+-----(1) Which Accrual Journal not have ACCRUAL_REV_JE_HEADER_ID in the next new opened Period
+select JE_CATEGORY,JE_SOURCE,PERIOD_NAME, name Journal_Name,accrual_rev_flag,date_created,posted_date,accrual_rev_period_name,ACCRUAL_REV_JE_HEADER_ID,
+accrual_rev_status,actual_flag,decode(STATUS,'U','Un-Post','P','Post') Post_Status
+from apps.gl_je_headers
+where PERIOD_NAME=:First_Period
+and name not like 'Reverses%'
+and JE_CATEGORY in 
+    (
+    select  JE_CATEGORY_NAME 
+    from apps.GL_AUTOREVERSE_OPTIONS_V where AUTOREVERSE_FLAG='Y' or AUTOPOST_REVERSAL_FLAG='Y'
+    )
+and JE_HEADER_ID in
+    (select JE_HEADER_ID from apps.gl_je_headers where PERIOD_NAME=:First_Period 
+    and name not like 'Reverses%'
+    and JE_CATEGORY in 
+        (
+        select  JE_CATEGORY_NAME 
+        from apps.GL_AUTOREVERSE_OPTIONS_V where AUTOREVERSE_FLAG='Y' or AUTOPOST_REVERSAL_FLAG='Y'
+        )
+    and ACCRUAL_REV_JE_HEADER_ID is null or ACCRUAL_REV_JE_HEADER_ID not in 
+        (select JE_HEADER_ID from apps.gl_je_headers where PERIOD_NAME=:Next_Period
+        and name like 'Reverses%'
+        and JE_CATEGORY in 
+            (
+            select  JE_CATEGORY_NAME 
+            from apps.GL_AUTOREVERSE_OPTIONS_V where AUTOREVERSE_FLAG='Y' or AUTOPOST_REVERSAL_FLAG='Y'
+            )
+        )
+    )
+
+
+----(2) Check the Flag/Period/Status of the problemed Journal & its Reversed Journal
+select accrual_rev_status,accrual_rev_flag,JE_CATEGORY,JE_SOURCE,PERIOD_NAME,name Journal,date_created,posted_date,accrual_rev_period_name,ACCRUAL_REV_JE_HEADER_ID,
+actual_flag,STATUS
+from apps.gl_je_headers
+where name ='AL0801E-01'
+or name like '%AL0801E-01%'
+
+
+
+
+
+----Find out Journals should be run out auto-Reverse next time
+
+select *
+from apps.gl_je_headers
+where accrual_rev_flag='Y'
+
+select * from apps.GL_JE_BATCHES_HEADERS_V where BATCH_NAME ='FW060929GL'
+
+------------------ Find out Should Accrual but not because of rev_Period is null
+
+SELECT glsob.name SOB,
+       jb.name batch_name,
+       jh.name journal_name,jb.STATUS Batch_Status,jb.DEFAULT_PERIOD_NAME Batch_Period,
+       jh.PERIOD_NAME Journal_Period, 
+	   jh.je_header_id,
+       jc.user_je_category_name,ACCRUAL_REV_JE_HEADER_ID,jh.DATE_CREATED , 
+       jh.status Journal_Status,jh.accrual_rev_flag,jh.accrual_rev_status,jh.accrual_rev_period_name
+  FROM apps.gl_je_headers jh,
+       apps.gl_je_batches jb,
+       apps.gl_autoreverse_options aro,
+       apps.gl_sets_of_books glsob,
+       apps.gl_je_categories_tl jc
+ WHERE aro.je_category_name = jh.je_category
+   AND jh.set_of_books_id = aro.set_of_books_id
+   AND jh.je_batch_id = jb.je_batch_id
+   AND aro.autoreverse_flag = 'Y'
+--   AND jh.accrual_rev_period_name IS NULL
+ --  AND jh.accrual_rev_status IS NULL
+   AND glsob.set_of_books_id = jh.set_of_books_id
+   AND jc.je_category_name = jh.je_category
+   and jc.LANGUAGE ='US'	
+   and jh.accrual_rev_flag='Y'
+
+
+SELECT glsob.name,
+       jb.name batch_name,
+       jh.name journal_name,
+       jh.je_header_id,
+       jc.user_je_category_name,
+       jh.status
+  FROM apps.gl_je_headers jh,
+       apps.gl_je_batches jb,
+       apps.gl_autoreverse_options aro,
+       apps.gl_sets_of_books glsob,
+       apps.gl_je_categories_tl jc
+ WHERE aro.je_category_name = jh.je_category
+   AND jh.set_of_books_id = aro.set_of_books_id
+   AND jh.je_batch_id = jb.je_batch_id
+   AND aro.autoreverse_flag = 'Y'
+   AND jh.accrual_rev_period_name IS NULL
+   AND jh.accrual_rev_status IS NULL
+   AND glsob.set_of_books_id = jh.set_of_books_id
+   AND jc.je_category_name = jh.je_category
+   and jc.LANGUAGE ='US'	
+
+
+----test submit auto reverse program 
+SELECT jh.je_header_id,
+       ACCRUAL_REV_JE_HEADER_ID,
+       jb.name batch_name,
+       jh.name journal_name,
+	   jh.DATE_CREATED ,jh.accrual_rev_flag,
+       jh.status Journal_Status,jh.accrual_rev_status,jh.accrual_rev_period_name
+  FROM apps.gl_je_headers jh,
+       apps.gl_je_batches jb,
+       apps.gl_autoreverse_options aro,
+       apps.gl_sets_of_books glsob,
+       apps.gl_je_categories_tl jc
+ WHERE aro.je_category_name = jh.je_category
+   AND jh.set_of_books_id = aro.set_of_books_id
+   AND jh.je_batch_id = jb.je_batch_id
+   AND aro.autoreverse_flag = 'Y'
+--   AND jh.accrual_rev_period_name IS NULL
+ --  AND jh.accrual_rev_status IS NULL
+   AND glsob.set_of_books_id = jh.set_of_books_id
+   AND jc.je_category_name = jh.je_category
+   and jc.LANGUAGE ='US'	
+--   and jh.accrual_rev_flag='Y'
+and jh.name like '%HZ%'
+
+select * from apps.GL_JE_BATCHES_HEADERS_V where BATCH_NAME like '%HZ%'
+   
+select * from apps.gl_je_headers where NAME like '%HZ%'
+
+update apps.gl_je_headers set accrual_rev_flag='Y',accrual_rev_status=null,accrual_rev_period_name='OCT-06' where je_header_id=125792
+
+commit
+
+
+
+
+select *
+from apps.gl_je_batches
+where name like '%HZ%'
+
+select *
+from apps.gl_je_headers
+where name like '%HZ%'
+and je_category='Accrual'

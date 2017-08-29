@@ -1,0 +1,29 @@
+
+
+
+select * from apps.BMC_WIP_RE_BATCH where BATCH_ID=301
+
+select * from apps.BMC_WIP_RE_MAIN_ITEM where RETURN_ID=323
+
+select * from apps.BMC_WIP_RE_MAIN_ITEM_L where RETURN_ID=323
+
+select * from apps.BMC_WIP_RE_MAIN_ITEM_L_v  
+
+
+
+
+----Find out BMC Backup Tables :
+select * from all_objects where object_name like '%BMC_WIP_RE%' AND OBJECT_TYPE='TABLE'
+
+
+select count(*),BATCH_NAME from apps.BMC_WIP_RE_BATCH group by BATCH_NAME
+
+
+select * from apps.mtl_material_transactions where TRANSACTION_REFERENCE='SHIFT C' and ORGANIZATION_ID=130
+
+select sum(qty) from apps.BMC_WIP_RE_MAIN_ITEM_L where RETURN_ID=323
+
+select sum(TRANSACTION_QUANTITY) from apps.mtl_material_transactions where TRANSACTION_REFERENCE='SHIFT C' and ORGANIZATION_ID=130
+
+
+

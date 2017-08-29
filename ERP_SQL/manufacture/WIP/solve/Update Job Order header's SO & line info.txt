@@ -1,0 +1,22 @@
+
+
+
+----To fill in the SO number & line number (flexfield) on Job Order header 
+Should use SO herder_id & line_id to fill in the attribute1 & attribute2 field on apps.WIP_DISCRETE_JOBS 
+
+
+select * from apps.WIP_DISCRETE_JOBS_v where wip_entity_name='70336438/11'
+
+
+update apps.WIP_DISCRETE_JOBS  set attribute1=150923 ,attribute2=209762  where wip_entity_id=308544
+
+
+-------------Find out JO from SO
+
+select a.wip_entity_name,QUANTITY_COMPLETED,QUANTITY_REMAINING,b.ORDER_NUMBER,c.LINE_NUMBER ,START_QUANTITY ,ORDERED_QUANTITY 
+from apps.WIP_DISCRETE_JOBS_v a,apps.OE_ORDER_HEADERS_all b,apps.OE_ORDER_lineS_all c
+where c.header_id=b.header_id
+and b.header_id=a.attribute1
+and c.line_id=a.attribute2
+--and a.wip_entity_name='0070455666/1'
+and b.ORDER_NUMBER in ('145908','145936')

@@ -1,0 +1,76 @@
+
+
+---------------------------------Scraped Material -- Detail --V3 (issue & the receipt)
+
+
+select   msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH,
+mmt.TRANSACTION_QUANTITY as Qty,trunc(mmt.transaction_date) as Trans_Date,MGD.SEGMENT1 Alias_SOURCE,
+MMT.TRANSACTION_REFERENCE,mtt.DESCRIPTION,mtr.reason_name
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.MTL_TRANSACTION_REASONS   mtr,apps.mtl_generic_dispositions  MGD 
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mtr.reason_id(+)=mmt.reason_id 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and mmt.organization_id = msi.organization_id 
+and msi.organization_id in (83,86,84,87) 
+and mtt.transaction_type_name in ('Account alias issue','Miscellaneous issue','Account receipt','Account alias receipt')
+--and    trunc(mmt.transaction_date) >= to_date('20050101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050131','YYYYMMDD')
+and msi.segment1 in ('ROA 128 0351','ROA 128 0351/2','ROA 128 0351/3','RNH 942 59/2','RNH 942 59','RLE 907 17')
+
+
+
+
+---------------------------------Scraped Material -- Detail --V2
+
+select   msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH,
+mmt.TRANSACTION_QUANTITY as Qty,trunc(mmt.transaction_date) as Trans_Date,MGD.SEGMENT1 Alias_SOURCE,
+MMT.TRANSACTION_REFERENCE,mtt.DESCRIPTION,mtr.reason_name
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.MTL_TRANSACTION_REASONS   mtr,apps.mtl_generic_dispositions  MGD 
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mtr.reason_id(+)=mmt.reason_id 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+and mmt.organization_id = msi.organization_id 
+and msi.organization_id in (83,86,84,87) 
+and mtt.transaction_type_name in ('Account alias issue','Miscellaneous issue')
+--and    trunc(mmt.transaction_date) >= to_date('20050101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050131','YYYYMMDD')
+and msi.segment1 in ('ROA 128 0351','ROA 128 0351/2','ROA 128 0351/3','RNH 942 59/2','RNH 942 59','RLE 907 17')
+
+
+
+
+
+---------------------------------Scraped Material --Summary
+
+
+select   msi.segment1 Item,mtt.transaction_type_name,sum(mmt.TRANSACTION_QUANTITY) as Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = 83 and msi.organization_id = 83 
+and mtt.transaction_type_name in ('Account alias issue','Miscellaneous issue')
+--and    trunc(mmt.transaction_date) >= to_date('20050101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050131','YYYYMMDD')
+and msi.segment1 in ('ROA 128 0351','ROA 128 0351/2','ROA 128 0351/3','RNH 942 59/2','RNH 942 59','RLE 907 17')
+group by msi.segment1,mtt.transaction_type_name
+

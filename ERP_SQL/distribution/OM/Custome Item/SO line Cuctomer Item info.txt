@@ -1,0 +1,39 @@
+
+
+----Find SO line Customer Item & Type which ID is null (may cause fulfill)
+
+
+select a.HEADER_ID,a.line_id,to_char(b.ORDER_NUMBER) OR_Num,a.ITEM_IDENTIFIER_TYPE,a.ORDERED_ITEM_ID,d.CUSTOMER_ITEM_ID Cust_Item_ID_map,
+to_Char(a.LINE_NUMBER) Line_Num
+,b.FLOW_STATUS_CODE Head_Status,a.FLOW_STATUS_CODE line_Status
+,a.ORDERED_ITEM,c.segment1 Sys_Item
+,a.SHIPPED_QUANTITY
+,a.ORDERED_QUANTITY
+,a.SHIPPING_QUANTITY,a.UNIT_SELLING_PRICE,a.UNIT_SELLING_PRICE*a.SHIPPING_QUANTITY*8.28 Amount
+,a.CREATION_DATE
+,a.LAST_UPDATE_DATE,
+a.ACTUAL_SHIPMENT_DATE,a.FULFILLMENT_DATE,
+a.TAX_DATE,a.PRICING_DATE,a.SCHEDULE_SHIP_DATE,a.SCHEDULE_ARRIVAL_DATE,a.ACTUAL_ARRIVAL_DATE,a.SCHEDULE_STATUS_CODE
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.mtl_system_items_b c,apps.MTL_CUSTOMER_ITEM_XREFS_V d
+where a.HEADER_ID=b.HEADER_ID
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.ship_from_org_id=c.organization_id
+and d.master_organization_id=81
+and d.inventory_item_id=c.inventory_item_id
+and d.customer_item_number=a.ORDERED_ITEM
+and d.customer_id=b.invoice_to_org_id
+--and b.ORDER_NUMBER in ('111994','111996','111997')
+--and a.FLOW_STATUS_CODE='FULFILLED'
+and a.ITEM_IDENTIFIER_TYPE='CUST'
+and a.ORDERED_ITEM_ID is null
+and a.FLOW_STATUS_CODE<>'CANCELLED'
+and a.ORDERED_QUANTITY>0 
+
+
+----Read the a.line_id,d.CUSTOMER_ITEM_ID, then update ORDERED_ITEM_ID=d.CUSTOMER_ITEM_ID
+
+select * from apps.OE_ORDER_lineS_all where line_id=284929
+
+update OE_ORDER_lineS_all  set ORDERED_ITEM_ID=10659 where line_id=284929
+
+

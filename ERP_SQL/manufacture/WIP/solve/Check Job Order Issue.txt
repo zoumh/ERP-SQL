@@ -1,0 +1,35 @@
+
+
+To check why a Job Order has double Mtl Qty then BOM
+
+
+select wip_entity_id from wip_entities where wip_entity_name = '0070457573/1'
+
+537829
+
+select * from wip_discrete_jobs where wip_entity_id =537829
+
+select * from wip_operations where wip_entity_id =537829
+
+select * from wip_requirement_operations where wip_entity_id =537829
+
+select * from wip_move_transactions where wip_entity_id =537829
+
+select * from wip_period_balances where wip_entity_id =537829
+
+select * from wip_transaction_accounts where wip_entity_id =537829
+
+select * from wip_transactions where wip_entity_id =537829
+
+select * from mtl_material_transactions where transaction_source_id = 537829 and transaction_source_type_id = 5
+
+select * from mtl_material_transactions_temp where transaction_source_id = 537829 
+and transaction_source_type_id = 5
+
+select * from mtl_transaction_accounts where transaction_source_id =537829
+
+select * from WIP_MOVE_TXN_INTERFACE where wip_entity_id =537829
+
+select * from wip_txn_interface_errors where TRANSACTION_ID in 
+(select TRANSACTION_ID from WIP_MOVE_TXN_INTERFACE where wip_entity_id = 537829)
+

@@ -1,0 +1,43 @@
+
+
+
+All AR Invoice with Customer/Rec_Account:
+
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number
+,convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER
+,g.segment3 as Receive_Acc,e.ACCOUNT_CLASS,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,e.GL_POSTED_DATE
+,b.TRX_DATE as Inv_Date  
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.GL_CODE_combinations g
+,apps.AR_customers_v f
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+--and e.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+and e.ACCOUNT_CLASS='REC'
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER
+
+
+
+
+
+------------Sum Rev acc by Customer
+select sum(c.amount) Amt,sum(c.ACCTD_AMOUNT) CNY_Amt,c.ACCOUNT_CLASS , a.segment3 Acc,
+f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,
+b.invoice_currency_code Currency--,to_char(c.GL_DATE,'yyyy-mm') Period
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all c
+,apps.AR_customers_v f,apps.gl_code_combinations a
+where b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and c.ACCOUNT_CLASS='REV'
+and a.code_combination_id=c.code_combination_id
+and c.GL_DATE >=to_date('2006-01-02','yyyy-mm-dd')
+and c.GL_DATE <=to_date('2006-09-30','yyyy-mm-dd')
+and complete_flag='Y'
+group by c.ACCOUNT_CLASS,f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,b.invoice_currency_code,a.segment3

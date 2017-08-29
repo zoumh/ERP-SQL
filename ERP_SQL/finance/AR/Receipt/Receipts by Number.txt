@@ -1,0 +1,19 @@
+
+
+
+
+select a.STATUS,b.CUSTOMER_NAME,a.RECEIPT_NUMBER, a.RECEIPT_DATE,a.AMOUNT,a.CURRENCY_CODE,
+a.CUSTOMER_SITE_USE_ID,a.ORG_ID, a.PAY_FROM_CUSTOMER
+from apps.ar_cash_receipts_all a,apps.AR_CUSTOMERS_V b
+where a.PAY_FROM_CUSTOMER=b.CUSTOMER_ID --and a.STATUS not in ('NSF','REV','STOP')
+and RECEIPT_DATE >= to_date('20060401','YYYYMMDD') 
+and RECEIPT_DATE <= to_date('20060430','YYYYMMDD')
+--and a.RECEIPT_NUMBER like '%FW%'
+
+
+select a.STATUS,a.RECEIPT_NUMBER,a.RECEIPT_DATE,a.AMOUNT,a.CURRENCY_CODE 
+from apps.ar_cash_receipts_all a 
+where RECEIPT_DATE >= to_date('20060401','YYYYMMDD') 
+and RECEIPT_DATE <= to_date('20060430','YYYYMMDD')
+
+

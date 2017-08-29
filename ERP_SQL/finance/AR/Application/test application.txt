@@ -1,0 +1,28 @@
+
+
+CRP2
+
+1. Create Invoice ='test1' , 1000 USD
+   a new record in apps.ar_payment_schedules_all 
+	status=OP (Open)
+	Class=INV
+	Customer_trx_id=invoice_id	
+
+
+2. If create a receipt without Customer number/Invoice number
+   Will create new record in ar_cash_receipts_all (status=UNID)
+   No new record will be created in apps.ar_payment_schedules_all
+   
+
+3. Create a on account receipt (no invoice applied)
+   a new record in apps.ar_payment_schedules_all 
+	status=OP (Open)
+	Class=PMT
+	Cash_Receipt_ID=ar_cash_receipts_all.Cash_Receipt_ID
+
+	The new record in ar_cash_receipts_all  (status=UNAPP)
+
+
+
+	
+

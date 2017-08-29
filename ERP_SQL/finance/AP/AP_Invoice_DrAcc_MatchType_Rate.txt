@@ -1,0 +1,66 @@
+
+
+
+
+--AP accounting table to find all Rate=8.28
+
+select a.CURRENCY_CODE Curr,CURRENCY_CONVERSION_RATE Rate,a.REFERENCE5 as Invoice_number
+,a.ENTERED_DR,a.ENTERED_CR,a.ACCOUNTED_DR,a.ACCOUNTED_CR
+,b.PERIOD_NAME ,c.segment3 account_number
+,REFERENCE6 line_Type,b.AE_CATEGORY
+,b.ACCOUNTING_DATE,b.GL_TRANSFER_FLAG,a.AE_LINE_TYPE_CODE,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+--and (GL_TRANSFER_FLAG is null or GL_TRANSFER_FLAG'Y')
+--and c.segment3='21210300'
+and (b.PERIOD_NAME='NOV-04') 
+
+
+
+-----AP invoice Rate & Dist_Rate & Exp Acc & match Type 
+
+select b.LINE_TYPE_LOOKUP_CODE,b.DIST_MATCH_TYPE,a.INVOICE_NUM,to_char(b.DISTRIBUTION_LINE_NUMBER) Inv_Dist,
+b.BASE_AMOUNT,b.AMOUNT, b.EXCHANGE_RATE Dist_Rate,a.EXCHANGE_RATE as HeadRate,
+ a.INVOICE_CURRENCY_CODE as Curr,a.INVOICE_DATE,a.GL_DATE,c.segment3 as Acc,b.INVOICE_ID
+from APPS.AP_INVOICE_DISTRIBUTIONS_ALL b,apps.AP_INVOICES_ALL a,apps.GL_CODE_combinations c
+where b.PERIOD_NAME='NOV-04'
+and a.INVOICE_ID=b.INVOICE_ID
+and b.DIST_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and a.INVOICE_CURRENCY_CODE='USD'
+and b.EXCHANGE_RATE=8.28
+and b.ACCOUNTING_DATE= to_date('2004-11-6','yyyy-mm-dd')
+order by a.INVOICE_NUM,a.GL_DATE
+
+
+
+
+---------AP Source, AP Invoice  (CC with Dr Account & Cr Account)
+
+-------AP Invoice Dist Info with PO_num
+---New add price,Qty,PO
+select c.INVOICE_NUM,NVL(A.BASE_AMOUNT,a.AMOUNT) as Line_Amount_CNY,a.AMOUNT Line_Amount,
+convert(a.description,'ZHS16GBK') line_Description,
+convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.segment1 Vendor_num ,c.INVOICE_AMOUNT,c.invoice_currency_code Curr,a.exchange_Rate Rate,
+c.INVOICE_DATE,c.DESCRIPTION,b.segment2 CC,b.segment3 as Dr_Account,d.segment3 Cr_Account,c.GL_DATE,a.accounting_date,
+a.quantity_invoiced,a.unit_price,f.segment1 PO_Num
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+and b.segment3='41059903'
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and f.po_header_id(+)=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and a.accounting_date>=to_date('2005-01-01','yyyy-mm-dd')
+and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')
+
+
+select  from  APPS.AP_INVOICE_DISTRIBUTIONS_ALL
+where EXCHANGE_RATE=8.28 and ACCOUNTING_DATE= to_date('2004-11-6','yyyy-mm-dd')

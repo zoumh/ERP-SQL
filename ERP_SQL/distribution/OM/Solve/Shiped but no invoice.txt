@@ -1,0 +1,42 @@
+
+--------------use this to update status make shipped OR lines could create invoice
+
+
+-- input the sales order_line to decide to push data to invoice interface
+ Declare
+   b Varchar2(500); 
+     Cursor Cso Is
+         Select a.Header_Id, a.Line_Id, To_Char(b.Order_Number) Or_Num, To_Char(a.Line_Number) Line_Num, a.Flow_Status_Code,
+                        a.Ordered_Item, a.Inventory_Item_Id, c.Segment1 Sys_Item,
+                        a.Ship_From_Org_Id,
+                        a.Item_Identifier_Type, a.Ordered_Item_Id,b.sold_to_org_id,INVOICE_INTERFACE_STATUS_CODE
+         From Apps.Oe_Order_Lines_All a, Apps.Oe_Order_Headers_All b, Apps.Mtl_System_Items_b c
+         Where 
+          a.orig_sys_document_ref like '00%'And 
+          a.INVOICE_INTERFACE_STATUS_CODE = 'NOT_ELIGIBLE' 
+          And a.Header_Id = b.Header_Id 
+          And c.Inventory_Item_Id = a.Inventory_Item_Id 
+          And a.Ship_From_Org_Id = c.Organization_Id;
+              
+     Vcstorditem  Number(10);
+
+Begin
+  For r1 In cso Loop
+      Update Apps.Oe_Order_Lines_All h
+                                  Set Flow_Status_Code = 'FULFILLED',
+                                           INVOICE_INTERFACE_STATUS_CODE = Null
+      Where h.Header_Id = r1.Header_Id
+        And h.Line_Id = r1.Line_Id
+        And h.Ship_From_Org_Id = r1.Ship_From_Org_Id
+        And h.Inventory_Item_Id = r1.Inventory_Item_Id;
+                   
+            OE_Invoice_WF.Invoice_Interface('OEOL',to_number(R1.Line_Id), 123787, 'RUN',b);
+       Wf_Engine.HandleError('OEOL',to_number(R1.Line_Id), 'INVOICE_INTERFACE', 'RETRY', Null); 
+    
+  End Loop;
+      
+End;
+
+Commit;
+
+

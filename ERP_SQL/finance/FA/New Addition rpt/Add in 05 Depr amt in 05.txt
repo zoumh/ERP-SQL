@@ -1,0 +1,24 @@
+
+
+-------List FA added in 05, the Depr Amount in 2005
+
+SELECT   
+AD.ASSET_NUMBER,--De.ASSET_ID,
+fca.SEGMENT1 Maj_Cate,fca.SEGMENT2 Min_Cate,fca.SEGMENT3 Status, de.Accmu_Depr Accmu_Depr_in05
+FROM
+       apps.FA_ADDITIONS AD,
+	   apps.FA_CATEGORY_BOOKS cb,
+	   apps.FA_CATEGORIES_VL FCA,
+	  (select sum(dd.deprn_amount) Accmu_Depr,ASSET_ID,pd.BOOK_TYPE_CODE from apps.FA_DEPRN_DETAIL dd,apps.FA_DEPRN_PERIODS PD
+	   where dd.BOOK_TYPE_CODE='BMC_FA_BOOK'
+	   and dd.PERIOD_COUNTER =pd.PERIOD_COUNTER 
+	   and   dd.BOOK_TYPE_CODE=pd.BOOK_TYPE_CODE
+	   and  dd.deprn_amount<>0
+	   and pd.PERIOD_NAME  like '%05%' group by ASSET_ID,pd.BOOK_TYPE_CODE) De
+WHERE De.ASSET_ID = ad.ASSET_ID
+and ad.ASSET_CATEGORY_ID =fca.CATEGORY_ID and de.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and fca.CATEGORY_ID=cb.CATEGORY_ID
+and cb.BOOK_TYPE_CODE=de.BOOK_TYPE_CODE
+--and AD.ASSET_NUMBER='12007475'
+and ad.CREATION_DATE >=to_date('2005-1-1','yyyy-mm-dd')
+and ad.CREATION_DATE <=to_date('2005-12-31','yyyy-mm-dd')

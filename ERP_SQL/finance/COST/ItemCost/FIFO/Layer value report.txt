@@ -1,0 +1,93 @@
+
+<logic of standard layer value report>
+
+
+--SELECT *
+SELECT sum(CIL.layer_quantity) Qty1,
+sum(round(CIL.layer_cost*CIL.layer_quantity)) amt1,
+sum(nvl(CILCD.layer_cost,0)*CIL.layer_quantity) Amt2
+FROM
+apps.cst_inv_layers CIL,
+apps.cst_inv_layer_cost_details CILCD
+WHERE cil.ORGANIZATION_ID=132
+and CILCD.layer_id = CIL.layer_id 
+and CILCD.inv_layer_id = CIL.inv_layer_id
+--and  create_transaction_id=102567025
+--and CIL.LAYER_QUANTITY<>0
+--and CIL.LAYER_COST <>0
+--and  LAYER_QUANTITY<0 
+
+
+1. DPY 101 2971/850.R3B/2 in IP WIP Comp mtl Transaction didn't create layer cost in table: 
+cst_inv_layers,CST_QUANTITY_LAYERS,cst_inv_layer_cost_details ,
+cause layer value report (=-20 pics) not same with SQL onhand(=0)! cause 20 pics diff 
+
+2. Cost=0's cause diff result (parameter use cost<>0 will miss Qty on output)
+
+
+
+<SQL of the FIFO cost History Screen> layer cost has Transaction_Type
+select TRANSACTION_DATE,TRANSACTION_TYPE,NEW_QUANTITY NEW_Onhand_Qty,PRIMARY_QUANTITY PRIMARY_Trans_Qty,PRIOR_COSTED_QUANTITY,ACTUAL_COST,CHANGE,PRIOR_COST,NEW_COST
+from CST_CG_COST_HISTORY_V
+where INVENTORY_ITEM_ID=--113931--
+193588 
+and organization_id = 132
+order by TRANSACTION_DATE desc
+
+
+
+----------IP Onhand (FIFO cost type) total Qty (not same with layer report because DPY 101 2971/850.R3B/2 has a isssue on WIP_Comp trans cost booking )
+select a.ORIG_DATE_RECEIVED,h.organization_code Org_Name, b.segment1 Item,b.DESCRIPTION DESCRIPTION, 
+a.REVISION, (a.transaction_quantity)  onhand , 
+d.item_cost, 
+((a.transaction_quantity)*decode(g.asset_inventory,1,d.item_cost,0))  Amt 
+, a.subinventory_code, c.cost_group,e.segment1 family_class, e.segment2 sub_class ,e.segment4 Comp_Type 
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.CST_ITEM_COST_TYPE_V d,apps.MTL_SECONDARY_INVENTORIES_FK_V g, 
+APPS.mtl_parameters h,apps.mtl_item_categories_v e 
+where a.organization_id=b.organization_id 
+and c.organization_id=d.organization_id 
+and a.organization_id=c.organization_id 
+and a.organization_id=g.organization_id 
+and a.organization_id=h.organization_id 
+and a.organization_id=e.organization_id 
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID 
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code 
+and a.organization_id=132 
+and category_set_id = 1 
+and structure_id=101 
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id 
+and a.cost_group_id=c.cost_group_id 
+and d.COST_TYPE ='FIFO'
+order by a.organization_id,a.subinventory_code, b.segment1,a.REVISION
+
+
+
+select * from apps.mtl_system_items_b where segment1='DPY 101 2971/850.R3B'--'DPY 101 2971/850.R3B/2' 
+
+select * from apps.mtl_material_transactions where INVENTORY_ITEM_ID=113931
+
+---------Mtl Trans, with Cost , TransType
+
+select   mmt.ACTUAL_COST,mmt.transaction_date, mmt.transaction_id,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.organization_id Organization ,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+--and    trunc(mmt.transaction_date) >= to_date('20070808','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) < to_date('20070812','YYYYMMDD')
+and mtt.transaction_type_name not in ('Sales Order Pick','Container Pack','Subinventory Transfer')
+--and mmt.TRANSACTION_QUANTITY>0
+and msi.segment1='DPY 101 3009/170'
+order by trunc(mmt.transaction_date),mmt.transaction_id

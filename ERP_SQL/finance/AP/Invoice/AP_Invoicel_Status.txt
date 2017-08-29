@@ -1,0 +1,211 @@
+
+
+---------Status from APPS.AP_INVOICES_V  (Run by Apps only)
+Package:
+AP_INVOICES_PKG.get_approval_status (it will call below package)
+AP_INVOICES_UTILITY_PKG.get_approval_status  (it will lookup dist.MATCH_STATUS_FLAG, see below)
+
+APPS.AP_INVOICE_DISTRIBUTIONS_ALL.MATCH_STATUS_FLAG    	Screen show 
+-----------------------------------------------------   ------------------
+null 	 						'Never Validated'
+N 	distribution not pass validate			'Needs Revalidation'
+T       distribution been Validated     		'Validated' 
+A       dist been Validated and Inv been approved.	'Validated'
+
+
+APPS.AP_INVOICES_V.APPROVAL_STATUS_LOOKUP_CODE 			Screen show 
+-----------------------------------------------   		------------------
+APPROVED  (所有分配行MATCH_STATUS_FLAG in ('A''T')		---At Screen=Validated (standard invoice)
+AVAILABLE 							---At Screen=Available (for prepayment)
+CANCELLED (AP_INVOICES_all.CANCELLED_DATE is not null)		---At Screen=Cancelled
+FULL      							---At Screen=Fully Applied (for prepayment)
+NEEDS REAPPROVAL (发票有Hold或任一行MATCH_STATUS_FLAG='N'	---At Screen=Needs Revalidation
+NEVER APPROVED 	 (所有分配行MATCH_STATUS_FLAG is null)		---At Screen=Never Validated
+
+
+APPROVAL_STATUS_LOOKUP_CODE	INVOICE_TYPE
+-------------------------------------------------------------
+APPROVED			CREDIT
+CANCELLED			CREDIT
+NEEDS REAPPROVAL		CREDIT
+APPROVED			DEBIT
+CANCELLED			DEBIT
+APPROVED			EXPENSE REPORT
+CANCELLED			EXPENSE REPORT
+NEVER APPROVED			EXPENSE REPORT
+AVAILABLE			PREPAYMENT
+CANCELLED			PREPAYMENT
+FULL				PREPAYMENT
+APPROVED			STANDARD
+CANCELLED			STANDARD
+NEEDS REAPPROVAL		STANDARD
+NEVER APPROVED			STANDARD
+ 
+
+
+select
+APPROVAL_STATUS_LOOKUP_CODE,PREPAYMENTS_APPLIED_FLAG,GL_DATE,AMOUNT_PAID,DESCRIPTION,INVOICE_NUM,BATCH_NAME,INVOICE_CURRENCY_CODE,INVOICE_TYPE,PAYMENT_STATUS
+from APPS.AP_INVOICES_v 
+where INVOICE_TYPE_LOOKUP_CODE='PREPAYMENT' 
+and PAY_GROUP_LOOKUP_CODE='EM' 
+
+
+
+select INVOICE_NUM,
+decode(APPROVAL_STATUS_LOOKUP_CODE,'APPROVED','Validated','NEEDS REAPPROVAL','Needs Revalidation','CANCELLED','Cancelled',APPROVAL_STATUS_LOOKUP_CODE) Status,WFAPPROVAL_STATUS
+,APPROVAL_READY_FLAG,PAYMENT_STATUS_FLAG,POSTING_FLAG,
+INVOICE_AMOUNT,BASE_AMOUNT,AMOUNT_PAID,EXCHANGE_RATE,INVOICE_CURRENCY_CODE Curr,
+B.SEGMENT3 Cr_ACCOUNT,INVOICE_TYPE,PAY_GROUP_LOOKUP_CODE Pay_Group,VENDOR_NAME,VENDOR_NUMBER,VENDOR_SITE_CODE,
+BATCH_NAME,INVOICE_DATE,TERMS_NAME,GL_DATE,PERIOD_NAME
+PO_NUMBER,RECEIPT_NUMBER,B.SEGMENT2 Cr_CostCenter,B.SEGMENT4 Cr_Prod,B.SEGMENT5 Cr_proj
+from APPS.AP_INVOICES_V a,apps.GL_CODE_COMBINATIONS_V B
+WHERE A.ACCTS_PAY_CODE_COMBINATION_ID=B.CODE_COMBINATION_ID 
+and APPROVAL_STATUS_LOOKUP_CODE<>'CANCELLED'
+and PAYMENT_STATUS_FLAG<>'Y'
+
+
+
+---Cancel status
+Table:
+	AP_INVOICE_DISTRIBUTIONS_ALL
+Fields:
+	ACCRUAL_POSTED_FLAG,
+	POSTED_FLAG,
+	CASH_POSTED_FLAG
+都为'N'时, Accounted flag='No'
+至少一个为'Y',一个为'N'时,Accounted flag='Partial'
+全为'Y'时,Accounted flag='Yes'
+
+
+select DISTRIBUTION_LINE_NUMBER,ACCRUAL_POSTED_FLAG,POSTED_FLAG,CASH_POSTED_FLAG,
+MATCH_STATUS_FLAG,ACCOUNTING_EVENT_ID
+from APPS.AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_ID =388073
+
+
+
+
+--------Approval Status:
+
+-- 1.
+APPS.AP_INVOICES_ALL.WFAPPROVAL_STATUS
+
+
+
+-- 2.
+AP_INVOICE_DISTRIBUTIONS_ALL.MATCH_STATUS_FLAG
+
+There is actually no column on the AP_INVOICES_ALL table that corresponds to  the Approval Status of the Invoice.  
+
+The value that appears on the Invoice form is derived from the AP_INVOICE_DISTRIBUTIONS_ALL rows related to the invoice 
+from the column MATCH_STATUS_FLAG.  MATCH_STATUS_FLAG can have the following values: 
+NULL, "A" (Approved), "N" (Not Approved), "T" (Tested).  
+
+
+The Approval Status is derived as follows:  
+An Invoice is Never Approved if ALL distributions have MATCH_STATUS_FLAG = NULL 
+An Invoice is Approved if ALL distributions have MATCH_STATUS_FLAG = "A". If encumbrances are not being used then an Invoice is Approved 
+if ALL  distributions have MATCH_STATUS_FLAG = "A" or "T".  
+An Invoice is Needs Reapproval if ANY distributions have MATCH_STATUS_FLAG = "N". 
+If encumbrances are being used then an Invoice is Needs Approved if ALL  distributions have MATCH_STATUS_FLAG = "N" or "T".  
+We also look at unreleased holds on the invoice.  You can have all distributions approved and still have a hold on the invoice. 
+This will set the status to Needs Reapproval for the invoice.  
+
+
+
+
+
+
+---------Cancel Status:
+----AP_INVOICES_all.CANCELLED_DATE is not null =cancelled
+
+--my: AP_Invoice_all.INVOICE_AMOUNT=0
+
+------AP_INVOICE_DISTRIBUTIONS_ALL.REVERSAL_FLAG
+AP_INVOICE_DISTRIBUTIONS_ALL.REVERSAL_FLAG='Y' 
+
+
+APPS.AP_INVOICES_V.APPROVAL_STATUS_LOOKUP_CODE='CANCELLED'  ---> use same DB fields as below
+
+
+
+---Or use view to list
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('81');
+END;
+
+
+select TERMS_DATE,INVOICE_NUM ,APPROVAL_STATUS_LOOKUP_CODE,PAYMENT_STATUS ,INVOICE_AMOUNT,CANCELLED_AMOUNT,AMOUNT_PAID, PAYMENT_AMOUNT_TOTAL, INVOICE_TYPE   
+from APPS.AP_INVOICES_V where round(sysdate-TERMS_DATE)>365
+and APPROVAL_STATUS_LOOKUP_CODE<>'CANCELLED'
+and (PAYMENT_STATUS is null or PAYMENT_STATUS<>'Yes')
+and INVOICE_TYPE ='Standard'
+
+
+
+
+
+
+--------Validate Status: (CANCELLED, APPROVED,NEEDS REAPPROVAL) Screen Value (cancelled,Validated,needs revalidation)
+--Call package :
+
+AP_INVOICES_PKG.GET_APPROVAL_STATUS( AI.INVOICE_ID, AI.INVOICE_AMOUNT
+, AI.PAYMENT_STATUS_FLAG, AI.INVOICE_TYPE_LOOKUP_CODE) as APPROVAL_STATUS_LOOKUP_CODE 
+
+--Or use View
+select * from APPS.AP_INVOICES_V where INVOICE_NUM='12'
+
+
+
+
+--------Hold Invoice
+SELECT a.INVOICE_NUM,  HOLD_LOOKUP_CODE,HOLD_REASON,HOLD_DATE,
+INVOICE_CURRENCY_CODE Curr,INVOICE_AMOUNT,BASE_AMOUNT,AMOUNT_PAID,INVOICE_TYPE_LOOKUP_CODE Inv_type,
+PAY_GROUP_LOOKUP_CODE Pay_Group,GL_Date,b.RELEASE_LOOKUP_CODE
+FROM APPS.AP_HOLDS_ALL b,APPS.AP_INVOICES_ALL A
+where a.invoice_id=b.invoice_id
+and a.INVOICE_NUM='11'
+and b.RELEASE_LOOKUP_CODE is not null
+
+
+---------------Check AP Invoice not created Accounting 
+-----(AP_INVOICE_DISTRIBUTIONS_all.POSTED_FLAG <>'Y')
+
+select d.INVOICE_NUM,f.ACCOUNTING_DATE,f.POSTED_FLAG Accounted_Flag,
+c.segment2 CC,c.segment3 account_number
+from apps.GL_CODE_combinations c,apps.ap_invoices_all d
+,apps.AP_INVOICE_DISTRIBUTIONS_all f
+where f.DIST_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and d.INVOICE_ID=f.INVOICE_ID
+--and a.AE_LINE_TYPE_CODE='ERV'
+--and f.ACCOUNTING_DATE >=to_Date('2007-1-1','YYYY-MM-DD')
+--and f.ACCOUNTING_DATE <=to_Date('2007-6-30','YYYY-MM-DD')
+and d.INVOICE_NUM in ('111','112','03995354','113')
+and f.POSTED_FLAG <>'Y' ------Not create Accounting
+
+
+
+------------GL Transfer Flag, not Transfer GL 
+-------- (ap_ae_lines_all.gl_sl_link_id is null)
+select b.ACCOUNTING_DATE as INV_AccountDate,a.REFERENCE6,a.AE_LINE_TYPE_CODE,a.REFERENCE1 as Supplier 
+,QUANTITY_INVOICED,POSTED_FLAG,a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,
+c.segment2 CC,c.segment3 account_number,a.REFERENCE5 as Invoice_number,a.CURRENCY_CODE--,a.ENTERED_DR,a.ENTERED_CR,
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.ap_invoices_all d
+,apps.AP_INVOICE_DISTRIBUTIONS_all f
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and a.REFERENCE5=d.INVOICE_NUM
+--and a.AE_LINE_TYPE_CODE='ERV'
+and a.SOURCE_TABLE='AP_INVOICE_DISTRIBUTIONS'
+and d.INVOICE_NUM in ('111','112','03995354','113')
+and a.SOURCE_ID=f.invoice_distribution_id
+and a.gl_sl_link_id is null --not Transfer GL
+
+ 
+
+
+
+
+
+
+

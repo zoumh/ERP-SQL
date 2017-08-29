@@ -1,0 +1,39 @@
+
+---------(SO release created MO tasks in mtl_trans_tmp)
+
+select  TRX_SOURCE_LINE_ID,MOVE_ORDER_LINE_ID,e.ORDER_NUMBER,f.LINE_NUMBER,
+c.organization_id,c.segment1 Item,a.transaction_header_id,a.transaction_temp_id,a.creation_date,a.transaction_date,a.LAST_UPDATE_DATE,
+a.subinventory_code,a.transfer_subinventory,a.transaction_quantity,MTT.TRANSACTION_TYPE_NAME,a.ORGANIZATION_ID,a.LOCATOR_ID,
+a.POSTING_FLAG,a.PROCESS_FLAG,decode(a.transaction_status,2,'Save Only',3,'Ready to Process','default') Trans_Status
+from apps.mtl_material_transactions_temp a,apps.mtl_system_items c,
+apps.MTL_TRANSACTION_TYPES MTT,apps.mtl_txn_request_headers d,apps.mtl_txn_request_lines b,
+apps.OE_ORDER_HEADERS_all e,apps.OE_ORDER_lineS_all f
+where c.organization_id=a.organization_id and a.inventory_item_id=c.inventory_item_id
+and a.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+and d.header_id=b.header_id
+and b.line_id=a.move_order_line_id
+and e.header_id=f.header_id
+and b.txn_source_line_id=f.line_id
+and c.segment1='SXA 109 2476.R1'
+and e.ORDER_NUMBER='4011138'
+and f.LINE_NUMBER='10'
+
+
+select  TRX_SOURCE_LINE_ID,MOVE_ORDER_LINE_ID,e.ORDER_NUMBER,f.LINE_NUMBER,
+c.organization_id,c.segment1 Item,a.transaction_header_id,a.transaction_temp_id,a.creation_date,a.transaction_date,a.LAST_UPDATE_DATE,
+a.subinventory_code,a.transfer_subinventory,a.transaction_quantity,MTT.TRANSACTION_TYPE_NAME,a.ORGANIZATION_ID,a.LOCATOR_ID,
+a.POSTING_FLAG,a.PROCESS_FLAG,decode(a.transaction_status,2,'Save Only',3,'Ready to Process','default') Trans_Status
+from apps.mtl_material_transactions_temp a,apps.mtl_system_items c,
+apps.MTL_TRANSACTION_TYPES MTT,apps.mtl_txn_request_headers d,apps.mtl_txn_request_lines b,
+apps.OE_ORDER_HEADERS_all e,apps.OE_ORDER_lineS_all f
+where c.organization_id=a.organization_id and a.inventory_item_id=c.inventory_item_id
+and a.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+and d.header_id=b.header_id
+and b.line_id=a.move_order_line_id
+and e.header_id=f.header_id
+and b.txn_source_line_id=f.line_id
+and c.segment1='SXA 109 2476.R1'
+--and e.ORDER_NUMBER='4011138'
+--and f.LINE_NUMBER='10'
+order by f.LINE_NUMBER
+

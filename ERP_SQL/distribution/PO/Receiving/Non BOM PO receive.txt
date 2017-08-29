@@ -1,0 +1,227 @@
+
+
+
+----Non-BOM PO receive date (Account >4xxx, or <4xxx, not include 12xx), with Vendor,CNY Amt
+select f.PO_DISTRIBUTION_ID,g.LINE_TYPE,h.ORGANIZATION_CODE,i.segment2 CostCenter,i.segment3 Account_No,
+b.segment1 PO,c.LINE_NUM Line,e.SHIPMENT_NUM Ship_Line,f.DISTRIBUTION_NUM Dist_Line,
+d.segment1 Item,c.ITEM_DESCRIPTION,decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) QUANTITY,
+a.transaction_type,a.CREATION_DATE receive_date,
+a.PO_UNIT_PRICE*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) amount,
+a.CURRENCY_CODE,
+(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) CNY_Amt,
+vdr.vendor_name supplier
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b, 
+(select segment1,inventory_item_id,organization_id from apps.mtl_system_items where organization_id=127) d,
+APPS.mtl_parameters h,apps.PO_line_types g,
+apps.PO_LINE_LOCATIONS_ALL e,apps.PO_DISTRIBUTIONS_all f,apps.GL_code_combinations i,
+apps.po_vendors vdr
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.po_line_id=c.po_line_id
+and a.PO_LINE_LOCATION_ID=e.LINE_LOCATION_ID
+and a.PO_DISTRIBUTION_ID=f.PO_DISTRIBUTION_ID
+and a.source_document_code='PO'
+and a.organization_id= SHIP_TO_ORGANIZATION_ID
+and a.ORGANIZATION_ID=h.ORGANIZATION_ID
+and c.org_id=b.org_id
+and d.inventory_item_id (+) =c.item_id 
+and g.LINE_TYPE_ID=c.LINE_TYPE_ID
+and f.code_combination_id=i.CODE_COMBINATION_ID
+AND vdr.vendor_id = b.vendor_id
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and a.DESTINATION_TYPE_CODE='RECEIVING'
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.transaction_date>=to_date('2008-10-1','YYYY-MM-DD')
+--and a.transaction_date<to_date('2009-5-1','YYYY-MM-DD')
+and ((i.segment3<'4' and i.segment3 not like '12%')
+      or i.segment3>'4')
+
+
+
+-----AP Invoice info (tow table could link by PO_DISTRIBUTION_ID)
+SELECT a.PO_DISTRIBUTION_ID,c.invoice_num,
+--CONVERT(VDR.VENDOR_NAME,'ZHS16GBK') AS Supplier,
+                        vdr.vendor_name supplier, vdr.vendor_id,
+          c.invoice_amount, c.invoice_date, c.description,
+          b.segment3 AS ACCOUNT, b.segment2 AS cost_center,
+          a.accounting_date gl_date, c.attribute1 AS inv_trans_num,
+          c.invoice_currency_code AS inv_curr,
+          a.distribution_line_number AS line, a.amount AS line_amount,
+          NVL (a.base_amount, a.amount) AS line_amount_cny,
+          a.quantity_invoiced line_match_qty,
+                                             --CONVERT(a.description,'ZHS16GBK') line_Description
+                                             a.description line_description,
+          b.segment4 prd, b.segment5 prj,
+                                         --Begin Below New added CR No.247 28953023
+                                         po.po_date, po.preparer, po.item
+     --End CR No.247
+   FROM   apps.ap_invoice_distributions_all a,
+          apps.gl_code_combinations b,
+          apps.ap_invoices_all c,
+          apps.po_vendors vdr,
+          --Begin Below New added CR No.247 28953023
+          (SELECT d.po_distribution_id, e.segment1 po_num, f.line_num po_line,
+                  d.creation_date po_date, pe.full_name preparer, msi.item
+             FROM apps.po_distributions_all d,
+                  apps.po_headers_all e,
+                  apps.po_lines_all f,
+                  apps.po_requisition_headers_all prh,
+                  apps.po_requisition_lines_all prl,
+                  apps.po_req_distributions_all prd,
+                  apps.per_people_v7 pe,
+                  (SELECT segment1 item, inventory_item_id
+                     FROM apps.mtl_system_items_b
+                    WHERE organization_id = 127) msi
+            WHERE e.po_header_id = d.po_header_id
+              AND e.po_header_id = f.po_header_id
+              AND f.po_line_id = d.po_line_id
+              AND f.item_id = msi.inventory_item_id(+)
+              and prh.requisition_header_id =
+                                                     prl.requisition_header_id
+              AND prl.requisition_line_id = prd.requisition_line_id
+              AND prh.preparer_id = pe.person_id
+              AND d.req_distribution_id = prd.distribution_id) po
+    --End CR No.247
+   WHERE  a.dist_code_combination_id = b.code_combination_id
+      AND a.invoice_id = c.invoice_id
+      AND vdr.vendor_id = c.vendor_id
+      AND a.po_distribution_id = po.po_distribution_id(+) --CR No.247 28953023
+      --and b.segment3='15010000'
+      --and po.po_num='1028343'
+and a.ACCOUNTING_DATE>=to_date('2009-04-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <to_date('2009-05-1','yyyy-mm-dd')
+and ((b.segment3<'4' and b.segment3 not like '12%')
+      or b.segment3>'4')
+
+
+
+----Non-BOM PO receive date (Account >4xxx, or <4xxx, not include 12xx)
+
+
+select g.LINE_TYPE,h.ORGANIZATION_CODE,i.segment2 CostCenter,i.segment3 Account_No,
+b.segment1 PO,c.LINE_NUM Line,e.SHIPMENT_NUM Ship_Line,f.DISTRIBUTION_NUM Dist_Line,
+d.segment1 Item,c.ITEM_DESCRIPTION,decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) QUANTITY,
+a.transaction_type,a.CREATION_DATE receive_date,
+a.PO_UNIT_PRICE*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) amount,
+a.CURRENCY_CODE
+--sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) CNY_Value
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b, 
+(select segment1,inventory_item_id,organization_id from apps.mtl_system_items where organization_id=127) d,
+APPS.mtl_parameters h,apps.PO_line_types g,
+apps.PO_LINE_LOCATIONS_ALL e,apps.PO_DISTRIBUTIONS_all f,apps.GL_code_combinations i
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.po_line_id=c.po_line_id
+and a.PO_LINE_LOCATION_ID=e.LINE_LOCATION_ID
+and a.PO_DISTRIBUTION_ID=f.PO_DISTRIBUTION_ID
+and a.source_document_code='PO'
+and a.organization_id= SHIP_TO_ORGANIZATION_ID
+and a.ORGANIZATION_ID=h.ORGANIZATION_ID
+and c.org_id=b.org_id
+and d.inventory_item_id (+) =c.item_id 
+and g.LINE_TYPE_ID=c.LINE_TYPE_ID
+and f.code_combination_id=i.CODE_COMBINATION_ID
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and a.DESTINATION_TYPE_CODE='RECEIVING'
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.transaction_date>=to_date('2009-1-1','YYYY-MM-DD')
+--and a.transaction_date<to_date('2009-5-1','YYYY-MM-DD')
+and ((i.segment3<'4' and i.segment3 not like '12%')
+      or i.segment3>'4')
+
+
+--------Not sure correct or not : AP-PO rcv link
+select aaa.PO,aaa.Line,aaa.Ship_Line,aaa.Dist_Line,
+aaa.QUANTITY,aaa.receive_date,aaa.transaction_type,aaa.amount,aaa.CNY_Amt,aaa.CURRENCY_CODE,aaa.supplier,
+bbb.invoice_num,bbb.line Invocie_line,bbb.invoice_date,bbb.description,bbb.ACCOUNT,bbb.cost_center,bbb.prd,bbb.prj,
+bbb.gl_date,bbb.line_amount,bbb.line_amount_cny,bbb.line_match_qty,bbb.po_date,bbb.preparer,bbb.item
+from
+(select f.PO_DISTRIBUTION_ID,g.LINE_TYPE,h.ORGANIZATION_CODE,i.segment2 CostCenter,i.segment3 Account_No,
+b.segment1 PO,c.LINE_NUM Line,e.SHIPMENT_NUM Ship_Line,f.DISTRIBUTION_NUM Dist_Line,
+d.segment1 Item,c.ITEM_DESCRIPTION,decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) QUANTITY,
+a.transaction_type,a.CREATION_DATE receive_date,
+a.PO_UNIT_PRICE*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) amount,
+a.CURRENCY_CODE,
+(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) CNY_Amt,
+vdr.vendor_name supplier
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b, 
+(select segment1,inventory_item_id,organization_id from apps.mtl_system_items where organization_id=127) d,
+APPS.mtl_parameters h,apps.PO_line_types g,
+apps.PO_LINE_LOCATIONS_ALL e,apps.PO_DISTRIBUTIONS_all f,apps.GL_code_combinations i,
+apps.po_vendors vdr
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.po_line_id=c.po_line_id
+and a.PO_LINE_LOCATION_ID=e.LINE_LOCATION_ID
+and a.PO_DISTRIBUTION_ID=f.PO_DISTRIBUTION_ID
+and a.source_document_code='PO'
+and a.organization_id= SHIP_TO_ORGANIZATION_ID
+and a.ORGANIZATION_ID=h.ORGANIZATION_ID
+and c.org_id=b.org_id
+and d.inventory_item_id (+) =c.item_id 
+and g.LINE_TYPE_ID=c.LINE_TYPE_ID
+and f.code_combination_id=i.CODE_COMBINATION_ID
+AND vdr.vendor_id = b.vendor_id
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and a.DESTINATION_TYPE_CODE='RECEIVING'
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.transaction_date>=to_date('2008-1-1','YYYY-MM-DD')
+--and a.transaction_date<to_date('2009-5-1','YYYY-MM-DD')
+and ((i.segment3<'4' and i.segment3 not like '12%')
+      or i.segment3>'4')
+) aaa, 
+(
+SELECT a.PO_DISTRIBUTION_ID,c.invoice_num,
+--CONVERT(VDR.VENDOR_NAME,'ZHS16GBK') AS Supplier,
+                        vdr.vendor_name supplier, vdr.vendor_id,
+          c.invoice_amount, c.invoice_date, c.description,
+          b.segment3 AS ACCOUNT, b.segment2 AS cost_center,
+          a.accounting_date gl_date, c.attribute1 AS inv_trans_num,
+          c.invoice_currency_code AS inv_curr,
+          a.distribution_line_number AS line, a.amount AS line_amount,
+          NVL (a.base_amount, a.amount) AS line_amount_cny,
+          a.quantity_invoiced line_match_qty,
+                                             --CONVERT(a.description,'ZHS16GBK') line_Description
+                                             a.description line_description,
+          b.segment4 prd, b.segment5 prj,
+                                         --Begin Below New added CR No.247 28953023
+                                         po.po_date, po.preparer, po.item
+     --End CR No.247
+   FROM   apps.ap_invoice_distributions_all a,
+          apps.gl_code_combinations b,
+          apps.ap_invoices_all c,
+          apps.po_vendors vdr,
+          --Begin Below New added CR No.247 28953023
+          (SELECT d.po_distribution_id, e.segment1 po_num, f.line_num po_line,
+                  d.creation_date po_date, pe.full_name preparer, msi.item
+             FROM apps.po_distributions_all d,
+                  apps.po_headers_all e,
+                  apps.po_lines_all f,
+                  apps.po_requisition_headers_all prh,
+                  apps.po_requisition_lines_all prl,
+                  apps.po_req_distributions_all prd,
+                  apps.per_people_v7 pe,
+                  (SELECT segment1 item, inventory_item_id
+                     FROM apps.mtl_system_items_b
+                    WHERE organization_id = 127) msi
+            WHERE e.po_header_id = d.po_header_id
+              AND e.po_header_id = f.po_header_id
+              AND f.po_line_id = d.po_line_id
+              AND f.item_id = msi.inventory_item_id(+)
+              and prh.requisition_header_id =
+                                                     prl.requisition_header_id
+              AND prl.requisition_line_id = prd.requisition_line_id
+              AND prh.preparer_id = pe.person_id
+              AND d.req_distribution_id = prd.distribution_id) po
+    --End CR No.247
+   WHERE  a.dist_code_combination_id = b.code_combination_id
+      AND a.invoice_id = c.invoice_id
+      AND vdr.vendor_id = c.vendor_id
+      AND a.po_distribution_id = po.po_distribution_id(+) --CR No.247 28953023
+      --and b.segment3='15010000'
+      --and po.po_num='1028343'
+and a.ACCOUNTING_DATE>=to_date('2009-04-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <to_date('2009-05-1','yyyy-mm-dd')
+and ((b.segment3<'4' and b.segment3 not like '12%')
+      or b.segment3>'4')
+) bbb
+where bbb.PO_DISTRIBUTION_ID=aaa.PO_DISTRIBUTION_ID(+)      
+
+

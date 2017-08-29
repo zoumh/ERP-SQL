@@ -1,0 +1,18 @@
+
+
+when request_id in ra_interface_lines_all has value , the Auto invoice program won't import OM into AR 
+(complete without error, but no action)
+
+Clear request_id in the table, so Auto invoice program can import AR invoice successfully.
+------------------------------------
+
+
+select * from apps.ra_interface_lines_all WHERE nvl(interface_status,'x') != 'P' and request_id is not null
+
+
+UPDATE ra_interface_lines_all		
+SET interface_line_id = null,		    
+customer_trx_id = null,		    
+request_id = null,		    
+link_to_line_id = null		
+WHERE nvl(interface_status,'x') != 'P' and request_id is not null;

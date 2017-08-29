@@ -1,0 +1,196 @@
+
+
+--------------------Item's Price in Latest PO
+
+----------------List Item's latest update price (If their are different PO Price in the same latest_update_date, then duplicate records per Item)
+
+select distinct Item,Price_CNY,UNIT_PRICE,RATE,PO,Curr,a.last_update_date,a.item_id from
+(
+select d.SEGMENT1 Item,
+b.UNIT_PRICE*DECODE(a.CURRENCY_CODE,'CNY',1,a.RATE)  Price_CNY,
+b.UNIT_PRICE,a.RATE,a.CURRENCY_CODE Curr,a.SEGMENT1 PO,b.quantity,b.item_description, b.last_update_date ,b.item_id
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.mtl_system_items_b d
+where d.INVENTORY_ITEM_ID=b.item_id
+and a.po_header_id=b.po_header_id
+and d.ORGANIZATION_ID=83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+) a,
+(
+select max(b.last_update_date) last_update_date,b.item_id from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b 
+where a.po_header_id=b.po_header_id
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and b.LINE_TYPE_ID=1020 
+and item_id is not null 
+group by b.item_id
+) b
+where a.last_update_date=b.last_update_date and a.item_id=b.item_id
+order by Item,a.last_update_date
+
+
+
+
+------To check if some Item has different PO Price at same Last_update_Date, them to manual update above result to give unique result for each Item
+
+
+select Item,item_id,count(*) Count--,Price_CNY,UNIT_PRICE,RATE,Curr,PO,quantity,item_description,a.last_update_date,a.item_id 
+from 
+(
+select distinct Item,Price_CNY,UNIT_PRICE,RATE,Curr,a.last_update_date,a.item_id from
+(
+select d.SEGMENT1 Item,
+b.UNIT_PRICE*DECODE(a.CURRENCY_CODE,'CNY',1,a.RATE)  Price_CNY,
+b.UNIT_PRICE,a.RATE,a.CURRENCY_CODE Curr,a.SEGMENT1 PO,b.quantity,b.item_description, b.last_update_date ,b.item_id
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.mtl_system_items_b d
+where d.INVENTORY_ITEM_ID=b.item_id
+and a.po_header_id=b.po_header_id
+and d.ORGANIZATION_ID=83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+) a,
+(
+select max(b.last_update_date) last_update_date,b.item_id from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b 
+where a.po_header_id=b.po_header_id
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and b.LINE_TYPE_ID=1020 
+and item_id is not null 
+group by b.item_id
+) b
+where a.last_update_date=b.last_update_date and a.item_id=b.item_id
+)
+group by Item,item_id,Curr
+having count(*)>1
+
+
+
+
+
+----------Use latest_created rule to search PO Price, PO Price latest update  will over write this !
+
+select d.SEGMENT1 as Item,
+b.UNIT_PRICE*DECODE(a.CURRENCY_CODE,'CNY',1,a.RATE) AS Price_CNY,
+b.UNIT_PRICE,a.RATE,a.CURRENCY_CODE Curr,a.SEGMENT1 PO,b.quantity,b.item_description, b.creation_date 
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.mtl_system_items_b d
+where d.INVENTORY_ITEM_ID=b.item_id
+and a.po_header_id=b.po_header_id
+and d.ORGANIZATION_ID=83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and d.Item_Type='COM'  --- COM Item for No-BOM Material ?
+--and b.LINE_TYPE_ID=1020 
+--and item_id is not null 
+and b.rowid in 
+(select max(b.rowid) from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b 
+where a.po_header_id=b.po_header_id
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and b.LINE_TYPE_ID=1020 
+and item_id is not null 
+group by b.item_id) 
+--and d.SEGMENT1='ROP 101 4047/1'
+
+
+
+
+-----------------Item's Latest Invoice Price (Very slow, can only for few Items query)
+
+SELECT ee.segment1 Item,
+(SELECT  aa.UNIT_PRICE*DECODE(dd.INVOICE_CURRENCY_CODE,'CNY',1,aa.EXCHANGE_RATE) AS Price_CNY
+  FROM 
+   apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, 
+   apps.PO_DISTRIBUTIONS_ALL bb, 
+   apps.po_lines_all cc,
+   (SELECT apa.invoice_id,apa.LAST_UPDATE_DATE,apa.INVOICE_CURRENCY_CODE,apa.invoice_num
+	FROM apps.AP_INVOICES_ALL apa 
+		ORDER BY LAST_UPDATE_DATE DESC) dd
+ WHERE aa.po_distribution_id=bb.po_distribution_id 
+ AND aa.invoice_id=dd.invoice_id 
+ AND bb.po_line_id=cc.po_line_id
+ AND cc.ITEM_ID=ee.inventory_item_id
+ AND ROWNUM=1) As INV_Price,
+(SELECT aa.UNIT_PRICE
+  FROM 
+   apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, 
+   apps.PO_DISTRIBUTIONS_ALL bb, 
+   apps.po_lines_all cc,
+   (SELECT apa.invoice_id,apa.LAST_UPDATE_DATE,apa.INVOICE_CURRENCY_CODE,apa.invoice_num
+	FROM apps.AP_INVOICES_ALL apa 
+		ORDER BY LAST_UPDATE_DATE DESC) dd
+ WHERE aa.po_distribution_id=bb.po_distribution_id 
+ AND aa.invoice_id=dd.invoice_id 
+ AND bb.po_line_id=cc.po_line_id
+ AND cc.ITEM_ID=ee.inventory_item_id
+ AND ROWNUM=1) As UNIT_PRICE,
+(SELECT dd.INVOICE_CURRENCY_CODE
+  FROM 
+   apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, 
+   apps.PO_DISTRIBUTIONS_ALL bb, 
+   apps.po_lines_all cc,
+   (SELECT apa.invoice_id,apa.LAST_UPDATE_DATE,apa.INVOICE_CURRENCY_CODE,apa.invoice_num
+	FROM apps.AP_INVOICES_ALL apa 
+		ORDER BY LAST_UPDATE_DATE DESC) dd
+ WHERE aa.po_distribution_id=bb.po_distribution_id 
+ AND aa.invoice_id=dd.invoice_id 
+ AND bb.po_line_id=cc.po_line_id
+ AND cc.ITEM_ID=ee.inventory_item_id
+ AND ROWNUM=1) As INV_CURR,
+(SELECT  aa.EXCHANGE_RATE
+  FROM 
+   apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, 
+   apps.PO_DISTRIBUTIONS_ALL bb, 
+   apps.po_lines_all cc,
+   (SELECT apa.invoice_id,apa.LAST_UPDATE_DATE,apa.INVOICE_CURRENCY_CODE,apa.invoice_num
+	FROM apps.AP_INVOICES_ALL apa 
+		ORDER BY LAST_UPDATE_DATE DESC) dd
+ WHERE aa.po_distribution_id=bb.po_distribution_id 
+ AND aa.invoice_id=dd.invoice_id 
+ AND bb.po_line_id=cc.po_line_id
+ AND cc.ITEM_ID=ee.inventory_item_id
+ AND ROWNUM=1) As Rate,
+(SELECT  aa.LAST_UPDATE_DATE
+  FROM 
+   apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, 
+   apps.PO_DISTRIBUTIONS_ALL bb, 
+   apps.po_lines_all cc,
+   (SELECT apa.invoice_id,apa.LAST_UPDATE_DATE,apa.INVOICE_CURRENCY_CODE,apa.invoice_num
+	FROM apps.AP_INVOICES_ALL apa 
+		ORDER BY LAST_UPDATE_DATE DESC) dd
+ WHERE aa.po_distribution_id=bb.po_distribution_id 
+ AND aa.invoice_id=dd.invoice_id 
+ AND bb.po_line_id=cc.po_line_id
+ AND cc.ITEM_ID=ee.inventory_item_id
+ AND ROWNUM=1) As LAST_UPDATE_DATE, 
+(SELECT dd.invoice_num
+  FROM 
+   apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, 
+   apps.PO_DISTRIBUTIONS_ALL bb, 
+   apps.po_lines_all cc,
+   (SELECT apa.invoice_id,apa.LAST_UPDATE_DATE,apa.INVOICE_CURRENCY_CODE,apa.invoice_num
+	FROM apps.AP_INVOICES_ALL apa 
+		ORDER BY LAST_UPDATE_DATE DESC) dd
+ WHERE aa.po_distribution_id=bb.po_distribution_id 
+ AND aa.invoice_id=dd.invoice_id 
+ AND bb.po_line_id=cc.po_line_id
+ AND cc.ITEM_ID=ee.inventory_item_id
+ AND ROWNUM=1) As invoice_num
+from   apps.mtl_system_items ee  
+where ee.organization_id=83
+and ee.inventory_item_status_code='Active'
+and ee.segment1 in ('ROP 101 3050/2','RTM 501 908/2','RYT 901 933/1')
+
+
+

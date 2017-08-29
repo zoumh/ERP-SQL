@@ -1,0 +1,709 @@
+ONE PAYMENT APPLY TWO SUPPLIER'S INVOICE AND BE DOUBLE APPLIED  
+
+
+TAR Number  3644717.994   Open Date 29-MAR-04 03:19:36 
+Support Identifier  3869015   Name Henry Sihomb 
+Severity  2   Last Update 16-APR-04 00:26:12 
+Product Oracle Payables   Product Version   11.5.9 
+Platform    Detailed Status Hard Close 
+TAR Reference   n/a   BUG Reference n/a 
+
+Abstract
+ 
+ONE PAYMENT APPLY TWO SUPPLIER'S INVOICE AND BE DOUBLE APPLIED  
+    
+
+    
+Resolution History 
+ 
+
+29-MAR-04 03:19:36 GMT
+
+
+Can you easily recover from, bypass or work around the problem? = NO
+Does your system or application continue normally after the problem occurs? = 
+YES
+Are the standard features of the system or application still available; is the 
+loss of service minor? = YES
+
+### Oracle Outsourcing (OHS) Customer ### 
+Unknown
+
+### Critical 11i patches not applied ### 
+No.
+
+### SSTK Docs ###
+Yes
+
+### GEMMS, Vertical, or Government Payables Client ###
+Does Not Apply
+
+### Instance name and type ### 
+Name=Prd
+Type=Production
+
+### Responsibility name and request ID ### 
+Payable superuser
+
+### Description of Problem ### 
+We found that one payment been applied to two suppliers' invoice, and each 
+invoice has been applied twise.
+After create accounting, the accounting entry show:
+
+Dr:Liability (the first invoice-A Supplier)
+Dr:Rounding (the 2nd invoice-B Supplier; but entered debit equal to zero.)
+Cr:Cash (1st+2nd Invoices)
+And the accounting status is partial.
+After we run "Oracle payables transfer to GL", the journal complated with error 
+code EU02.
+
+### Payables Mini-Pack Level ###
+No.
+
+### Steps to Reproduce Issue ###
+Payments>Entry>Payments...>Enter/Adjust Invoices
+
+### Form or Report Name and Version ###
+Form Name : APXPAWKB
+Form Version : 11.5.319.1159.18
+
+### Critical date for issue ###
+Month end
+
+### Debug File ###
+no
+
+### Payment batch stuck script ###
+Unknown
+
+### Diagnose Payment Setup Script uploaded ###
+Unknown
+
+### Diagnose Payment Batch Selection Script uploaded ###
+Unknown
+
+### Checks Mailed? ###
+Unknown
+
+Contact me via : E-mail -> henry.Sihombing@ericsson.com
+
+
+
+29-MAR-04 03:34:38 GMT
+
+Country: CHINA
+The customer has uploaded the following file via MetaLink:
+C:\Documents_and_Settings\Administrator\Desktop\AP_Payment_error.doc
+
+
+
+29-MAR-04 04:30:36 GMT
+
+Hi Henry,
+
+Please run the aplist diagnostic script for both affected invoices - see (Note:148388.1)
+
+Thanks, Mark.
+
+
+29-MAR-04 04:57:44 GMT
+
+Country: CHINA
+The customer has uploaded the following file via MetaLink:
+D:\temp\APListh_16391_diag.html
+
+
+
+29-MAR-04 04:58:45 GMT
+
+Country: CHINA
+The customer has uploaded the following file via MetaLink:
+D:\temp\APListh_16392_diag.html
+
+
+
+30-MAR-04 01:47:37 GMT
+
+New info : Dear All,
+It's very urgent,because of the month-end close.
+We want to undo transfer to gl and acconting,and void these payment.Then re-run 
+payable accounting process and transfer to gl.
+It's ok?
+Thanks a lot!
+Jessie 
+
+
+
+30-MAR-04 02:29:45 GMT
+
+New info : Please raise this Tar to Severity 2, because this issue effect our 
+month end closing !! Please give solution Quick , thanks.
+
+
+
+30-MAR-04 03:26:59 GMT
+
+===========================================
+** HUB **
+CUSTOMER UPDATE
+
+Customer contact name (if not same as in SR header):
+
+Verify preferred method of contact:
+Phone#: 
+Email:
+
+Comments for this update:
+
+Received phone call from CN SCI Steve He, he said customer request upgrade the TAR to severity 2.
+
+Done .
+
+Christina
+
+
+===========================================
+
+
+30-MAR-04 04:22:34 GMT
+
+Hi,
+
+Attached is the undo accounting script.
+to reverse the payment accounting and gl you will need to do the following:
+
+If the payment (or part of it) is still in the gl interface table, you can delete it. 
+If the payment has been imported then you may need to make an adjusting journal after.
+
+Use the undo accounting script attached and undo the following accounting event ids:
+20897
+20898
+20901
+20902
+
+Then void the payments and create new payments.
+
+Then run the accounting process again, ensure the following parameters:
+Debug = y
+Transfer to gl = n (if accounting is successful you can then do the gl transfer.)
+
+Regards, Mark.
+
+
+30-MAR-04 04:45:48 GMT
+
+New info : Hi Mark,
+Thanks for quick response.
+Please inform where to download the undo accounting scripts?
+Or email to : harris.zhou@ericsson.com
+BR,
+Harris
+
+
+
+
+30-MAR-04 06:50:37 GMT
+
+New info : Hi,Mark,
+Thank you very much.But we don't know what shall we do.Please show us step by 
+step.
+Thank you very much.
+
+
+
+31-MAR-04 02:32:12 GMT
+
+Hi Harris,
+
+Undo accounting script is attached.
+Please complete the steps in METALINK.US 30-MAR-2004 04:45:48 GMT and update the SR.
+
+Thanks, Mark.
+
+
+31-MAR-04 03:45:47 GMT
+
+New info : Hi Mark,
+We have two choices , Could you please help us to make decision ?
+Choice 1. If we don't run your un-do script, just correct the GL batch in the 
+interface then import the Batch to GL for this period, can Oracle help us to 
+fix the problem to close AP "period Mar-2004" later? 
+(Now it is at the month end closing , our company can't afford to stop Oracle 
+to make Clone, and our Test instance can't re-procedure this error )
+Choice2. If We follow your un-do script, we need to stop Oracle 6 hours for 
+backup & run /verify , & we may restore back in case fail to fix the wrong AP 
+payment transaction. -------Our company didn't recommend us to stop system to 
+try choice 2.
+Please tell us if choice 1 can be taken --- say , Oracle can help use to fix 
+this problem later --- in case we don't run un-do script & correct the GL 
+interface to import to GL ? 
+BR,
+Harris 
+
+
+
+31-MAR-04 05:27:30 GMT
+
+Hi,
+
+I sent you the undo accounting script earlier today from my Oracle email account. This is an official script that is used for these types of issues.
+The best way forward is to implement the fix outlined in MSTEPHAN.AU 30-MAR-2004 04:2
+2:34 GMT.
+
+I understand that you are in the process of backing up Production to test this fix in Test. Please update me once you have completed this.
+
+Regards, Mark.
+
+
+31-MAR-04 05:27:39 GMT
+
+Email Update button has been pressed: Sending email to henry.Sihombing@ericsson.
+com. 
+
+
+31-MAR-04 06:15:33 GMT
+
+===========================================
+** HUB **
+CUSTOMER UPDATE
+
+Customer contact name (if not same as in SR header):
+
+Verify preferred method of contact:
+Phone#: 
+Email:
+
+Comments for this update:
+
+Called customer and explained why doesn't be raised sev. 1.
+Customer agreed doesn't be raised the tar. The reason is as the below:
+The grid has provided the solution for the tar and waited for customer to test.
+
+Hub TW
+Marian
+
+===========================================
+
+
+31-MAR-04 06:26:46 GMT
+
+New info : Please refer to tar 3633606.996, whether need more scripts ?
+Best Regards
+
+
+
+31-MAR-04 06:46:58 GMT
+
+Hi Henry and Co,
+
+As per our phone discussion, I suggest the following to move this issue forward and to allow you to close your period.:
+
+1. Use the undo accounting script and undo the following accounting event ids:
+
+20897
+20898
+20901
+20902
+20903
+
+Therefore you will need to run the script 5 times, once for each event id.
+
+2. Your next step will be to run the sweep program to sweep all unaccounted transactions into the next period (speak to one of your AP users for this)
+
+3. You should now be able to close the period.
+
+This will give us time to fix the payments in the next period.
+
+Regards, Mark.
+
+
+31-MAR-04 06:47:23 GMT
+
+Email Update button has been pressed: Sending email to henry.Sihombing@ericsson.
+com. 
+
+
+31-MAR-04 06:58:03 GMT
+
+New info : The above tar is the similar situation with this case and we use 
+below steps to fix the problem, and that's why we ask for more script.
+Pls read below steps and if it is ok, then we would follow it:-
+UPDATE
+=============
+Henry to fix the old issues:
+IMPORTANT: RUN ON TEST FIRST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+1. (Client) Query to find out how many problem records there are
+select distinct aip.accounting_event_id
+from ap_invoice_payments_all aip
+where aip.accounting_event_id is not null
+and aip.posted_flag = 'Y'
+and exists
+(select 1 from ap_invoice_payments_all aip2
+where aip2.check_id = aip.check_Id
+and aip2.accounting_event_id is not null
+and aip2.accounting_event_id = aip.accounting_event_id
+and aip2.posted_flag != 'Y')
+2. (Client) 
+create table bug2998717 as
+select distinct aip.accounting_event_id
+from ap_invoice_payments_all aip
+where aip.accounting_event_id is not null
+and aip.posted_flag = 'Y'
+and exists
+(select 1 from ap_invoice_payments_all aip2
+where aip2.check_id = aip.check_Id
+and aip2.accounting_event_id is not null
+and aip2.accounting_event_id = aip.accounting_event_id
+and aip2.posted_flag != 'Y')
+3. (Client)
+3a. select count(*) from bug2998717;
+3b. Verify count equals rows returned from step 1
+4. (Client) Apply these scripts which will be emailed to you:
+APRunBeforeUndoAtgh.sql
+APUndoAtgWithBackup.sql
+CoreApiHtml.sql
+CoreApiTxt.sql
+unpost11i.sql
+fixevents.sql 
+5. (Client) Run APRunBeforeUndoAtgh.sql with the following parameters:
+Enter option 2 for Display Selected and Related Event Details(Enter 2)
+Enter option 3 for Accounting Events in an Existing Table (Enter 3)
+Enter table name = bug2998717
+Upload the spooled output to the tar.
+6. Upload to Support for review of the output of the report. (STOP AT THIS 
+POINT until further advise)
+7. (Client) Undo the accounting for the accounted payments affected by 
+bug#2998717
+7a. Run APUndoAtgWithBackup.sql with the following parameters:
+org_id = org_id with problem records
+Table Name = bug2998717
+Delete Events? = N
+7b. Verify correct rows deleted/udpated. Review the rows updated/completed and 
+compare to results from
+APRunBeforeUndoAtg.sql. If they are the same, COMMIT, otherwise, ROLLBACK.
+8. (Client) Run fixevents.sql to fix the payments affected by bug#2998717 (fix 
+from datafix bug#3085634)
+If data transferred and stuck in the GL_INTERFACE:
+9. (Client) Unpost the transfer
+9a. Verify period corresponding to transferred data is open in AP. 
+9b. Run unpost11i.sql for Transfer Run ID to unpost the transfer.
+Text continued in next action...
+
+
+
+31-MAR-04 06:59:04 GMT
+
+Text continued from previous action...
+
+If data transfer to GL and posted
+10. Create adjusting JEs in GL based on data from APRunBeforeUndoAtgh.sql
+11. Run Payables Accounting Process and transfer and verify GL Journal import 
+into GL completes successfully.
+
+
+
+31-MAR-04 08:32:01 GMT
+
+New info : Clarification on our previous few updates:
+It seems that the "APUndoAtgWithBackup.sql" script suggested by Metalink 
+support in this TAR is similar to our previous tar 3633606.996. we find that 
+although the problem is different, the suggested solution/script/step (i.e. 
+undo the transaction and re-post) is similar. Therefore, we would like 
+Metalink support to confirm / suggest if there are other scripts/steps needed 
+for solving the current problem based on our previous similar knowledge.
+Best Regards,
+Gary and Jason
+
+
+
+31-MAR-04 08:39:48 GMT
+
+New info : Another clarification, we would also like Metalink Support to verify 
+
+and confirm if the steps 1 to 11 (copied from other TAR) can resolve/workaround
+
+the current TAR.
+Best Regards,
+Gary and Jason
+
+
+
+31-MAR-04 23:08:38 GMT
+
+Hi,
+
+The two issue are different. You do not require any additional scripts. 
+Please implement the steps outlined in MSTEPHAN.AU 31-MAR-2004 06:46:58 GMT and a
+dvise Support of the outcome.
+
+Thanks, Mark.
+
+
+31-MAR-04 23:08:47 GMT
+
+Email Update button has been pressed: Sending email to henry.Sihombing@ericsson.
+com. 
+
+
+01-APR-04 02:59:01 GMT
+
+New info : There is one parameter in your script: 
+Table Name - Enter table name with Accounting event id's to undo.
+.
+Which we need to capture the accounting_event_id before running your 
+recommanded script. So it seems that it is not possible to run this script 
+alone. Therefore we speculate that there are some preparation step before 
+running this recommanded script, pls advise.
+.
+Regards
+Gary
+
+
+
+
+01-APR-04 04:41:06 GMT
+
+Hi Gary,
+
+Please try entering ap_checks when it asks for table parameter.
+Let me know if you can then proceed.
+
+Thanks, Mark.
+
+
+01-APR-04 04:41:28 GMT
+
+Email Update button has been pressed: Sending email to henry.Sihombing@ericsson.
+com. 
+
+
+01-APR-04 05:57:01 GMT
+
+New info : The table ap_checks is empty, is that ok?
+
+
+
+01-APR-04 06:09:02 GMT
+
+New info : Would you pls check this table(ap_checks)?
+Because I found that the parameter table needs to be input should be contain 
+the accounting_event_id and I found there is no this field in that table.
+.
+Furthermore, when I go through the script I found that there is an error 
+message ('The table must exist to run this script. Run APRunBeforeUndoAtg.sql 
+to create this table');
+.
+So that I wonder should we run this script before?
+.
+Regards
+Gary
+
+
+
+01-APR-04 06:12:03 GMT
+
+New info : Would you please go through the script before tell us "You do not 
+require any additional scripts."?
+
+
+
+01-APR-04 06:15:07 GMT
+
+New info : My ODC contact no. is 86-10-64571188 Ext.272
+
+
+
+01-APR-04 06:25:38 GMT
+
+Hi Henry,
+
+Please use the attached undo accounting script instead.
+It will not ask for table name.
+Just undo the accounting event ids mentioned earlier in the SR.
+
+Thanks, Mark.
+
+
+01-APR-04 06:41:05 GMT
+
+New info : Can you explain more about below parameter:-
+REM Display Option - Controls what data to display
+REM Select Option - Controls what data to select
+REM Table Name (Optional) - Name of table with accounting events to undo
+REM Event ID (Optional) - Accounting event id to undo
+REM Undo Now - Enter Y to undo accounting for the event(s)
+REM Sweep Now - Enter Y to sweep undone accounting from closed periods
+REM Sweep to Period - Enter the period to sweep to
+REM Delete Event Now - Enter Y only if instructed to do so by support
+.
+Thanks
+Gary
+
+
+
+01-APR-04 06:45:39 GMT
+
+New info : Hi,Mark,
+Please remember that we have transfered this payment to GL,but can't import it 
+because of error EU02. So we have to un-do transfer first,than un-do 
+accounting,and cancle this payment,re-create accounting,re-tranfer....
+Please help us to check it.
+Thanks!
+
+
+
+01-APR-04 07:32:03 GMT
+
+New info : For the accounting_event_id parameter, should we input below id one 
+
+by one?
+20897
+20898
+20901
+20902
+20903
+.
+Thanks
+Gary
+
+
+
+01-APR-04 08:03:16 GMT
+
+
+Hello
+Thanks for the update. I have placed the SR in RVW for the owning Engineer to review
+The owning Engineer will investigate further and provide an update
+Best Regards
+Chidambara
+@CTC update putting the status to RVW 
+
+01-APR-04 08:03:30 GMT
+
+Email Update button has been pressed: Sending email to henry.Sihombing@ericsson.
+com. 
+
+
+01-APR-04 08:30:38 GMT
+
+
+Hello
+As per the discussion with Kentaro, 
+
+A Severity 1 TAR indicates that both your Analysts and the Oracle Analysts will 
+work this tar on a 24 by 7 basis until resolved. You may request that the tar 
+be made a Severity 2, if your Analysts will not be available after normal 
+working hours.
+
+In order for Support to efficiently work your Severity 1 issue, please complete 
+the following information and return it as soon as possible. While some of this 
+may be redundant and already available in the TAR, it is to your benefit to 
+confirm all the information regarding your issue.The more complete and detailed 
+the information is, the better we can assist you towards resolution.
+
+===========================================================================
+General Severity 1 Information
+===========================================================================
+
+** Business reason for requesting a Severity 1 TAR:
+
+
+** Contact Information: (At least 2 contacts are necessary on a Severity 1 TAR)
+
+Contact 1:
+Name: 
+Business Phone: 
+24 Hour Phone/Pager: 
+E-Mail Address:
+Contact 2:
+Name: 
+Business Phone: 
+24 Hour Phone/Pager: 
+E-Mail Address:
+Manager/Additional Contact:
+Name: 
+Business Phone: 
+24 Hour Phone/Pager: 
+E-Mail Address:
+
+Regards,
+Chidambara 
+
+01-APR-04 08:30:52 GMT
+
+Email Update button has been pressed: Sending email to henry.Sihombing@ericsson.
+com. 
+
+
+01-APR-04 23:05:32 GMT
+
+Hi Henry,
+
+I had already provided this information in MSTEPHAN.AU 31-MAR-2004 06:46:58 GMT.
+
+Yes you will need to run the undo accouning process once for every event id.
+Therefore to undo
+20897
+20898
+20901
+20902
+20903
+You will need to run the script six times.
+
+Regards, Mark.
+
+
+01-APR-04 23:05:41 GMT
+
+Email Update button has been pressed: Sending email to henry.Sihombing@ericsson.
+com. 
+
+
+04-APR-04 23:57:22 GMT
+
+TAR has passed review date of:
+04-APR-2004
+
+
+05-APR-04 00:10:32 GMT
+
+Hi Henry,
+
+Please advise of the outcome of MSTEPHAN.AU 01-APR-2004.
+
+Thanks, Mark.
+
+
+05-APR-04 00:10:43 GMT
+
+Email Update button has been pressed: Sending email to henry.Sihombing@ericsson.
+com. 
+
+
+07-APR-04 01:00:22 GMT
+
+TAR has passed review date of:
+07-APR-2004
+
+
+07-APR-04 01:15:35 GMT
+
+Hi Henry,
+
+Is this SR still an issue for you? If so please provide an udpate to MSTEPHAN.AU 01-APR-2004.
+If I have not heard from you by tomorrow, I'll assume that the issue is resolved an close the SR.
+
+Regards, Mark.
+
+
+07-APR-04 01:15:48 GMT
+
+Email Update button has been pressed: Sending email to henry.Sihombing@ericsson.
+com. 
+
+
+08-APR-04 02:02:48 GMT
+
+TAR has passed review date of:
+08-APR-2004
+ 

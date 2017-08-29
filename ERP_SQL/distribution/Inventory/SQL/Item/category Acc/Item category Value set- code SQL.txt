@@ -1,0 +1,152 @@
+
+
+---------Family Class Value set:
+select * from apps.FND_FLEX_VALUES_VL where flex_value_set_id=1007646 and 
+CREATION_DATE>=to_date('2007-7-10','yyyy-mm-dd')
+
+
+---------Sub Class value set
+select * from apps.FND_FLEX_VALUES_VL where flex_value_set_id=1007647 and 
+CREATION_DATE>=to_date('2007-7-10','yyyy-mm-dd')
+
+
+-------Sub Class value dependent on Family Class
+select PARENT_FLEX_VALUE_LOW,PARENT_FLEX_VALUE_HIGH,FLEX_VALUE from apps.FND_FLEX_VALUES_VL where flex_value_set_id=1007647 and 
+CREATION_DATE>=to_date('2007-7-10','yyyy-mm-dd')
+
+
+------------------Item category Code combination
+
+select category_set_id, category_set_name,STRUCTURE_ID,STRUCTURE_NAME 
+from apps.MTL_CATEGORY_SETS_V where structure_name='Item Categories'
+
+category_set_id=1
+STRUCTURE_ID=101
+
+select id_flex_structure_name,id_flex_num STRUCTURE_ID,APPLICATION_ID  
+from apps.FND_ID_FLEX_STRUCTURES_VL where id_flex_structure_name like '%Item Categories%'
+
+select segment1,segment2,structure_name,structure_id from Apps.MTL_CATEGORIES_V 
+where structure_id =101
+or structure_name='Item Categories'
+and CREATION_DATE>=to_date('2007-7-10','yyyy-mm-dd')
+
+
+
+
+
+
+----------All Items with this category Set (ECO)
+--------Get category_set_id,STRUCTURE_ID
+select category_set_id, category_set_name,STRUCTURE_ID,STRUCTURE_NAME 
+from apps.MTL_CATEGORY_SETS_V where category_set_name like '%ECO%' --'Item Categories'
+
+
+
+
+
+----Get Category StructUre_ID:
+select id_flex_structure_name,id_flex_num STRUCTURE_ID,APPLICATION_ID  
+from apps.FND_ID_FLEX_STRUCTURES_VL where id_flex_structure_name like '%ECO%'--'Item Categories'
+
+
+
+SELECT a.segment1 Item,a.description, a.Item_Type,--a.INVENTORY_ITEM_ID,
+b.segment1 Category1,c.description,
+a.purchasing_item_Flag,a.purchasing_Enabled_Flag,
+a.cumulative_total_lead_time,a.full_lead_time,
+a.WIP_supply_type,a.inventory_item_status_code status,
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,a.mrp_planning_code
+from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b,apps.MTL_CATEGORIES_V c
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID= b.ORGANIZATION_ID
+and c.CATEGORY_ID=b.CATEGORY_ID
+and b.category_set_id=1100000042
+and a.segment1='DPY 101 3044/142'
+
+
+---------Category Code ( 1 view=two table)
+
+---ECO Category_Code
+select segment1,segment2,structure_name,structure_id from Apps.MTL_CATEGORIES_V 
+where structure_id =50262
+or structure_name='ECO Item Categories'
+
+select * from apps.MTL_CATEGORIES_V where STRUCTURE_ID =50262
+
+select segment1,segment2 from MTL_CATEGORIES_B_KFV where STRUCTURE_ID =50262
+
+select * from MTL_CATEGORIES_TL where CATEGORY_ID in (select CATEGORY_ID from MTL_CATEGORIES_B_KFV where STRUCTURE_ID =50262)
+
+update MTL_CATEGORIES_B_KFV set segment2=segment1 where STRUCTURE_ID =50262
+
+
+-----------Flexfield Segment Item Category
+
+select * from apps.FND_ID_FLEX_STRUCTURES_VL  where id_flex_structure_code='ITEM_CATEGORIES'
+
+
+
+-----------Value of Category Value set 
+
+
+-----To find Value set ID by using count(*) to match with screen export list
+
+
+select count(*),flex_value_set_id from apps.FND_FLEX_VALUES_VL group by flex_value_set_id
+
+flex_value_set_id=1007646 (Item Category)
+
+select flex_value ,ENABLED_FLAG,START_DATE_ACTIVE,END_DATE_ACTIVE,
+DESCRIPTION,FLEX_VALUE_MEANING,flex_value_set_id from apps.FND_FLEX_VALUES_VL where flex_value_set_id=1007646 --(Item Category)
+
+select flex_value_set_id,flex_value from apps.FND_FLEX_VALUES_VL where flex_value ='ZXC12'
+
+select * from apps.FND_FLEX_VALUES_VL where flex_value_set_id=1009182
+
+
+FND_FLEX_VALUES_VL
+
+
+----------All Items,category Description within this category Set (ECO)
+
+SELECT a.segment1 Item,a.description, a.Item_Type,--a.INVENTORY_ITEM_ID,
+b.segment1 Category1,c.description,
+a.purchasing_item_Flag,a.purchasing_Enabled_Flag,
+a.cumulative_total_lead_time,a.full_lead_time,
+a.WIP_supply_type,a.inventory_item_status_code status,
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,a.mrp_planning_code
+from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b,apps.MTL_CATEGORIES_V c
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID= b.ORGANIZATION_ID
+and c.CATEGORY_ID=b.CATEGORY_ID
+and b.category_set_id=1100000042
+--and a.segment1='DPY 101 3044/142'
+and b.segment1=15
+
+
+
+
+
+
+select segment1,segment2,description from apps.MTL_CATEGORIES_V where segment2='EL4'
+
+
+select creation_date,segment1,segment2,description from apps.MTL_CATEGORIES_V --where segment2='AA3'
+
+
+
+select DISABLE_DATE, ENABLED_FLAG, segment1,segment2,description from apps.MTL_CATEGORIES_V --where segment2='EL4'
+
+
+--------Item Category set, segment1 (Family Class)
+select flex_value,description,enabled_flag, flex_value_set_id from apps.FND_FLEX_VALUES_VL 
+where flex_value_set_id=1007646 and flex_value='9901'
+
+
+select * from apps.FND_FLEX_VALUES_VL where flex_value_set_id=1007646 and flex_value='9901'
+
+
+

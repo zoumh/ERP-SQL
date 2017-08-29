@@ -1,0 +1,5 @@
+
+
+
+apps.FND_FOLDER_COLUMNS
+stores information about displayed fields in folders.

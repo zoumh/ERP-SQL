@@ -1,0 +1,17 @@
+
+
+----Receipt Headers which do not have corresponding Receipt Lines
+
+
+select receipt_num, creation_date from apps.rcv_shipment_headers
+where shipment_header_id not in (select shipment_header_id
+from apps.rcv_shipment_lines)
+order by creation_date desc
+
+
+
+select receipt_num, creation_date from rcv_shipment_headers
+where shipment_header_id not in (select shipment_header_id
+from rcv_shipment_lines);
+
+

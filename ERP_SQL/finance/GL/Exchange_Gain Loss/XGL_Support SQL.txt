@@ -1,0 +1,276 @@
+
+
+
+Realized Exchange Gain Loss come from Invoice
+
+------------ Invoiced XGL amount during May (can trace the Invoice GL-Date)
+
+--'ITEM_TO_PO' ---> OK, my caculated & Oracle's
+
+
+select e.UNIT_PRICE*f.QUANTITY_INVOICED*(nvl(f.EXCHANGE_RATE,0) -nvl(g.RATE,0) ) as XGL,
+f.EXCHANGE_RATE_VARIANCE as XGL_Ora
+,f.EXCHANGE_RATE as Inv_rate,g.RATE as PO_Rate,
+f.UNIT_PRICE as Inv_Price,e.UNIT_PRICE as PO_Price,
+f.QUANTITY_INVOICED,a.CURRENCY_CODE,trunc(g.RATE_DATE) as PO_RateDate
+,b.ACCOUNTING_DATE as INV_AccountDate,f.AMOUNT as Inv_Amt
+,a.REFERENCE5 as Invoice_number
+,a.REFERENCE6,a.AE_LINE_TYPE_CODE,a.REFERENCE1 as Supplier--,e.SEGMENT1 as PO
+,POSTED_FLAG,f.DIST_MATCH_TYPE as Inv_match
+,a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment3 account_number
+--,a.ENTERED_DR,a.ENTERED_CR,
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.ap_invoices_all d
+,apps.AP_INVOICE_DISTRIBUTIONS_all f,apps.PO_DISTRIBUTIONS_ALL g,apps.po_lines_all e
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and e.PO_LINE_ID=g.PO_LINE_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and a.REFERENCE5=d.INVOICE_NUM
+and a.AE_LINE_TYPE_CODE='ERV'
+and a.SOURCE_TABLE='AP_INVOICE_DISTRIBUTIONS'
+and a.SOURCE_ID=f.invoice_distribution_id
+and f.po_distribution_id=g.po_distribution_id
+and c.segment3='550305'
+and (b.PERIOD_NAME='MAY-04' ) 
+--and a.CURRENCY_CODE='JPY'
+and f.ACCOUNTING_DATE >=to_Date('2004-5-1','YYYY-MM-DD')
+and f.ACCOUNTING_DATE <=to_Date('2004-5-31','YYYY-MM-DD')
+and f.PERIOD_NAME='MAY-04' 
+and f.DIST_MATCH_TYPE ='ITEM_TO_PO'
+--and f.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+--and e.line_type_id<>1020  --- BMO PO
+and g.DESTINATION_TYPE_CODE='INVENTORY'  -- BOM PO
+order by a.CURRENCY_CODE,d.invoice_num
+
+
+select sum(e.UNIT_PRICE*f.QUANTITY_INVOICED*(nvl(f.EXCHANGE_RATE,0) -nvl(g.RATE,0) )) as XGL,
+sum(f.EXCHANGE_RATE_VARIANCE) as XGL_Ora ,a.CURRENCY_CODE
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.ap_invoices_all d
+,apps.AP_INVOICE_DISTRIBUTIONS_all f,apps.PO_DISTRIBUTIONS_ALL g,apps.po_lines_all e
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and e.PO_LINE_ID=g.PO_LINE_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and a.REFERENCE5=d.INVOICE_NUM
+and a.AE_LINE_TYPE_CODE='ERV'
+and a.SOURCE_TABLE='AP_INVOICE_DISTRIBUTIONS'
+and a.SOURCE_ID=f.invoice_distribution_id
+and f.po_distribution_id=g.po_distribution_id
+and c.segment3='550305'
+and (b.PERIOD_NAME='MAY-04' ) 
+--and a.CURRENCY_CODE='USD'
+--and f.ACCOUNTING_DATE >=to_Date('2004-5-1','YYYY-MM-DD')
+--and f.ACCOUNTING_DATE <=to_Date('2004-5-31','YYYY-MM-DD')
+and f.PERIOD_NAME='MAY-04' 
+and f.DIST_MATCH_TYPE ='ITEM_TO_PO'
+--and f.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+--and e.line_type_id<>1020  --- BOM PO
+and g.DESTINATION_TYPE_CODE='INVENTORY'  -- BOM PO
+group by a.CURRENCY_CODE
+
+
+
+
+
+--'ITEM_TO_RECEIPT'
+
+SELECT a.PO_UNIT_PRICE* b.QUANTITY_INVOICED*(B.EXCHANGE_RATE -A.CURRENCY_CONVERSION_RATE ) as XGL 
+,(B.EXCHANGE_RATE_VARIANCE) as XGL_Ora,c.INVOICE_CURRENCY_CODE
+,B.EXCHANGE_RATE as Inv_Rate,a.CURRENCY_CONVERSION_RATE as Rec_Rate
+,b.QUANTITY_INVOICED,b.UNIT_PRICE as Inv_Price,a.PO_UNIT_PRICE 
+,B.AMOUNT as Inv_Amt
+,a.CURRENCY_CONVERSION_DATE as Rec_Date
+,c.INVOICE_NUM,b.DISTRIBUTION_LINE_NUMBER as Inv_Dist
+,b.ACCOUNTING_DATE as Inv_Book_date,g.CREATION_DATE as PO_date,b.DIST_MATCH_TYPE,b.DESCRIPTION,b.MATCH_STATUS_FLAG
+,a.QUANTITY_BILLED,a.PO_HEADER_ID,a.PO_LINE_LOCATION_ID
+FROM apps.RCV_TRANSACTIONS a,  apps.AP_INVOICE_DISTRIBUTIONS_all b ,apps.ap_invoices_all c,apps.PO_DISTRIBUTIONS_ALL g
+WHERE B.RCV_TRANSACTION_ID=A.TRANSACTION_ID
+--and b.ACCOUNTING_DATE >=to_Date('2004-5-1','YYYY-MM-DD')
+--and b.ACCOUNTING_DATE <=to_Date('2004-5-31','YYYY-MM-DD')
+and b.invoice_id=c.invoice_id
+--and c.INVOICE_CURRENCY_CODE='USD'
+and b.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+and b.PERIOD_NAME='MAY-04' 
+and b.po_distribution_id=g.po_distribution_id
+and g.DESTINATION_TYPE_CODE='INVENTORY'
+order by c.INVOICE_CURRENCY_CODE
+
+
+
+
+
+SELECT sum(a.PO_UNIT_PRICE* b.QUANTITY_INVOICED*(B.EXCHANGE_RATE -A.CURRENCY_CONVERSION_RATE )) as XGL , 
+sum(B.EXCHANGE_RATE_VARIANCE) as XGL_Ora,c.INVOICE_CURRENCY_CODE
+FROM apps.RCV_TRANSACTIONS a,  apps.AP_INVOICE_DISTRIBUTIONS_all b ,apps.ap_invoices_all c,apps.PO_DISTRIBUTIONS_ALL g
+WHERE B.RCV_TRANSACTION_ID=A.TRANSACTION_ID
+--and b.ACCOUNTING_DATE >=to_Date('2004-5-1','YYYY-MM-DD')
+--and b.ACCOUNTING_DATE <=to_Date('2004-5-31','YYYY-MM-DD')
+and b.invoice_id=c.invoice_id
+--and c.INVOICE_CURRENCY_CODE='USD'
+and b.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+and b.PERIOD_NAME='MAY-04' 
+and b.po_distribution_id=g.po_distribution_id
+and g.DESTINATION_TYPE_CODE='INVENTORY'
+group by c.INVOICE_CURRENCY_CODE
+
+
+
+
+
+----Use exchange_rate_variance By currency,Period
+select sum(exchange_rate_variance)
+from apps.AP_INVOICE_DISTRIBUTIONS_all a,apps.ap_invoices_all b ,apps.PO_DISTRIBUTIONS_ALL g,apps.po_lines_all e
+where a.INVOICE_ID=b.INVOICE_ID
+and b.INVOICE_CURRENCY_CODE='JPY'
+and PERIOD_NAME='MAY-04' and (DIST_MATCH_TYPE ='ITEM_TO_RECEIPT' or DIST_MATCH_TYPE ='ITEM_TO_PO')
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and (a.Match_status_flag='A')
+and a.POSTED_FLAG='Y'
+and e.line_type_id<>1020 -- 1020 is NO BOM PO Type
+and e.PO_LINE_ID=g.PO_LINE_ID
+and a.po_distribution_id=g.po_distribution_id
+
+
+
+
+-------------------------AP Pay / amount from previous month Invoice List
+
+select b.GL_Date as Inv_GL_Date,a.AMOUNT Paid_Amt,a.EXCHANGE_RATE as PayRate,a.INVOICE_BASE_AMOUNT Paid_CNY_Amt,a.ACCOUNTING_DATE as Pay_Date
+,b.INVOICE_NUM,b.PAYMENT_CURRENCY_CODE as Currency,b.INVOICE_AMOUNT,b.AMOUNT_PAID,b.INVOICE_DATE,b.DESCRIPTION,b.EXCHANGE_RATE as Inv_Rate,b.EXCHANGE_DATE as Inv_rateDate
+,(nvl(b.EXCHANGE_RATE,0)-nvl(a.EXCHANGE_RATE,0)) as Rate_Diff, (nvl(b.EXCHANGE_RATE,0)-nvl(a.EXCHANGE_RATE,0))*a.AMOUNT as X_GnL
+,a.PERIOD_NAME,a.REVERSAL_FLAG 
+from apps.AP_INVOICE_PAYMENTS_all  a,apps.ap_invoices_all b
+where a.INVOICE_ID=b.INVOICE_ID
+--a.PERIOD_NAME='MAY-04' 
+and (b.PAYMENT_CURRENCY_CODE='JPY' or b.PAYMENT_CURRENCY_CODE='EUR')
+--and b.GL_DATE>=to_date('2004-01-1','YYYY-MM-DD')
+--and b.GL_DATE<=to_date('2004-05-31','YYYY-MM-DD' )
+order by b.INVOICE_ID;
+
+
+(Old)
+select b.GL_Date as Inv_GL_Date,a.AMOUNT,a.EXCHANGE_RATE as PayRate,a.INVOICE_BASE_AMOUNT,decode(a.EXCHANGE_RATE,null,a.AMOUNT,a.PAYMENT_BASE_AMOUNT) as Payment_Amount_CNY ,a.ACCOUNTING_DATE as Pay_Date
+,b.INVOICE_NUM,b.PAYMENT_CURRENCY_CODE as Currency,b.INVOICE_AMOUNT,b.AMOUNT_PAID,b.INVOICE_DATE,b.DESCRIPTION,b.EXCHANGE_RATE as Inv_Rate,b.EXCHANGE_DATE as Inv_rateDate
+,(b.EXCHANGE_RATE-a.EXCHANGE_RATE) as Rate_Diff, (b.EXCHANGE_RATE-a.EXCHANGE_RATE)*a.AMOUNT as X_GnL
+from apps.AP_INVOICE_PAYMENTS_all  a,apps.ap_invoices_all b
+where a.PERIOD_NAME='MAY-04' 
+and a.INVOICE_ID=b.INVOICE_ID
+and (b.PAYMENT_CURRENCY_CODE='JPY' or b.PAYMENT_CURRENCY_CODE='EUR')
+and b.GL_DATE>=to_date('2004-01-1','YYYY-MM-DD')
+and b.GL_DATE<=to_date('2004-05-31','YYYY-MM-DD' )
+--and a.EXCHANGE_RATE is not null
+order by b.INVOICE_ID
+
+
+
+select sum((b.EXCHANGE_RATE-a.EXCHANGE_RATE)*a.AMOUNT) as X_GnL 
+from apps.AP_INVOICE_PAYMENTS_all  a,apps.ap_invoices_all b
+where PERIOD_NAME='MAY-04' 
+and a.INVOICE_ID=b.INVOICE_ID
+and b.PAYMENT_CURRENCY_CODE='JPY'
+--and a.EXCHANGE_RATE is not null
+--order by b.INVOICE_ID
+
+
+
+----------------- GL adjustment & Pay USD cause G/L
+select LINE_PERIOD_NAME,BATCH_NAME,CURRENCY_CODE as Currency
+,LINE_ENTERED_DR,LINE_ENTERED_CR,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR
+,HEADER_NAME,JE_SOURCE,JE_CATEGORY,LINE_EFFECTIVE_DATE,LINE_DESCRIPTION
+,LINE_REFERENCE_4,LINE_REFERENCE_1,LINE_REFERENCE_2 ,HEADER_DESCRIPTION
+ from apps.GL_JE_JOURNAL_LINES_V where LINE_CODE_COMBINATION_ID in 
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='550305' )
+and (CURRENCY_CODE='USD' or CURRENCY_CODE='JPY')  and LINE_PERIOD_NAME='APR-04' and (LINE_ENTERED_DR<>0 or LINE_ENTERED_CR<>0)
+and je_source='Manual'
+--and LINE_DESCRIPTION like'KY%JPY%'
+
+select sum(LINE_ENTERED_DR),sum(LINE_ENTERED_CR),sum(LINE_ACCOUNTED_DR),sum(LINE_ACCOUNTED_CR),
+sum(LINE_ACCOUNTED_DR-LINE_ACCOUNTED_CR) as Balance 
+from apps.GL_JE_JOURNAL_LINES_V where LINE_CODE_COMBINATION_ID in 
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='550305' )
+and (CURRENCY_CODE='USD' or CURRENCY_CODE='JPY') and LINE_PERIOD_NAME='APR-04' and (LINE_ENTERED_DR<>0 or LINE_ENTERED_CR<>0)
+and je_source='Manual'
+and LINE_DESCRIPTION like'KY%JPY%'
+
+
+
+--------------Invoice XLS amount during May
+(1)--- Use AP Accounting table , only get Invoice number
+select a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment3 account_number
+,a.REFERENCE5 as Invoice_number,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE
+,b.ACCOUNTING_DATE,a.REFERENCE6,a.AE_LINE_TYPE_CODE,a.REFERENCE1 as Supplier
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and c.segment3='550305'
+and (b.PERIOD_NAME='MAY-04' ) 
+and a.CURRENCY_CODE='JPY'
+
+select sum(nvl(a.ACCOUNTED_DR,0)),sum(nvl(a.ACCOUNTED_CR,0)),sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0)) 
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and c.segment3='550305'
+and (b.PERIOD_NAME='MAY-04' ) 
+and a.CURRENCY_CODE='EUR'
+and REFERENCE6='AP Invoices'
+
+
+
+
+=======>  PO --Inv XGL
+
+1. Find our INV_PO XGL amount Per Currency
+select sum(exchange_rate_variance)
+from apps.AP_INVOICE_DISTRIBUTIONS_all a,apps.ap_invoices_all b --,apps.PO_DISTRIBUTIONS_ALL b
+where a.INVOICE_ID=b.INVOICE_ID
+and b.INVOICE_CURRENCY_CODE='EUR'
+and PERIOD_NAME='MAY-04' and (DIST_MATCH_TYPE ='ITEM_TO_RECEIPT' or DIST_MATCH_TYPE ='ITEM_TO_PO')
+
+
+
+
+
+select f.EXCHANGE_RATE_VARIANCE*f.AMOUNT as XSL,a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment3 account_number
+,a.REFERENCE5 as Invoice_number,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE
+,b.ACCOUNTING_DATE,a.REFERENCE6,a.AE_LINE_TYPE_CODE,a.REFERENCE1 as Supplier--,e.SEGMENT1 as PO
+,trunc(g.CREATION_DATE) as PO_Date,g.QUANTITY_BILLED,g.RATE as PO_Rate,g.AMOUNT_BILLED
+,f.EXCHANGE_DATE as Inv_rate,QUANTITY_INVOICED,POSTED_FLAG,UNIT_PRICE as Inv_Price,f.DIST_MATCH_TYPE as Inv_match
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.ap_invoices_all d
+,apps.AP_INVOICE_DISTRIBUTIONS_all f,apps.PO_DISTRIBUTIONS_ALL g--,apps.po_headers_all e
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and a.REFERENCE5=d.INVOICE_NUM
+and a.SOURCE_TABLE='AP_INVOICE_DISTRIBUTIONS'
+and a.SOURCE_ID=f.invoice_distribution_id
+and f.po_distribution_id=g.po_distribution_id
+and c.segment3='550305'
+and (b.PERIOD_NAME='MAY-04' ) 
+and a.CURRENCY_CODE='JPY'
+and f..DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+
+
+select * from apps.AP_INVOICE_DISTRIBUTIONS_all --apps.PO_DISTRIBUTIONS_ALL--APPS.ap_ae_lines_all--apps.ap_invoices_all
+where DIST_MATCH_TYPE not like '%PO%'
+
+
+
+
+select aa.DIST_MATCH_TYPE as Match_Type,EXCHANGE_RATE_VARIANCE,AMOUNT,aa.BASE_AMOUNT,EXCHANGE_RATE_VARIANCE*AMOUNT as XLS_Amt,
+aa.EXCHANGE_RATE,UNIT_PRICE , c.INVOICE_NUM
+,aa.RECEIPT_CONVERSION_RATE,c.INVOICE_CURRENCY_CODE
+,d.CURRENCY_CONVERSION_RATE as Rec_Rate, d.CURRENCY_CONVERSION_DATE as Rec_Date,d.PO_UNIT_PRICE,d.QUANTITY,(d.PO_UNIT_PRICE*d.QUANTITY*(aa.EXCHANGE_RATE-d.CURRENCY_CONVERSION_RATE)) as XLS_Amt
+,PERIOD_NAME,LINE_TYPE_LOOKUP_CODE as line_type , b.segment3
+ from  apps.AP_INVOICE_DISTRIBUTIONS_ALL aa ,apps.GL_CODE_COMBINATIONS b ,apps.AP_INVOICES_ALL c,apps.RCV_TRANSACTIONS d
+ where  aa.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+ and aa.invoice_id=c.invoice_id
+ and aa.RCV_TRANSACTION_ID=d.TRANSACTION_ID
+ and  PERIOD_NAME='MAY-04'
+ and aa.LINE_TYPE_LOOKUP_CODE='ITEM'
+ and aa.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+ and aa.PO_DISTRIBUTION_ID=1139
+
+
+select * from  apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, apps.PO_DISTRIBUTIONS_ALL bb,apps.AP_INVOICES_ALL c
+where aa.po_distribution_id=bb.po_distribution_id
+and aa.invoice_id=c.invoice_id
+and aa.DIST_MATCH_TYPE ='ITEM_TO_RECEIPT'
+and aa.PO_DISTRIBUTION_ID=1139

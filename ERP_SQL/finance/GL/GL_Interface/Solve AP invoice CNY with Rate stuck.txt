@@ -1,0 +1,90 @@
+
+
+select distinct status,user_je_category_name,user_je_source_name from apps.GL_interface
+
+
+
+
+select GL_SL_LINK_ID,(c.ACCOUNTED_DR) CNY_DR,(c.ACCOUNTED_CR) CNY_CR,(c.ENTERED_DR) Dr,(c.ENTERED_CR) Cr ,
+b.segment3,b.CODE_COMBINATION_ID
+from apps.GL_interface c ,apps.gl_code_combinations b 
+where c.status='EC12' and c.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+
+--------Find AP invoice number by GL_SL_LINK_ID
+select a.AE_HEADER_ID,a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment3 account_number
+,a.REFERENCE5 as Invoice_number,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE
+,b.ACCOUNTING_DATE,a.REFERENCE6,a.AE_LINE_TYPE_CODE,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier
+,decode(CURRENCY_CONVERSION_RATE,null,1,CURRENCY_CONVERSION_RATE) Rate
+,REFERENCE6 line_Type,b.AE_CATEGORY,b.GL_TRANSFER_FLAG
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and GL_SL_LINK_ID=48694 
+
+
+select INVOICE_NUM ,c.ACCOUNTED_DR,c.ACCOUNTED_CR,c.ENTERED_DR,c.ENTERED_CR,c.CURRENCY_CODE,c.CURRENCY_CONVERSION_RATE Rate,
+c.DESCRIPTIOn,     
+b.segment2,b.segment3,b.segment4,a.CODE_COMBINATION_ID 
+from apps.GL_interface a,apps.gl_code_combinations b,APPS.ap_ae_lines_all c,apps.AP_INVOICES_ALL d,apps.ap_ae_HEADeRs_all e
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.GL_SL_LINK_ID=c.GL_SL_LINK_ID
+and a.status='EC12'
+and c.SOURCE_ID=d.INVOICE_ID (+)
+and c.AE_HEADER_ID =e.AE_HEADER_ID 
+
+
+
+select c.ACCOUNTED_DR ,(c.ACCOUNTED_CR) ,(c.ENTERED_DR) ,c.ENTERED_CR 
+from APPS.ap_ae_lines_all c  where GL_SL_LINK_ID=38294
+
+
+select sum(c.ACCOUNTED_DR) CNY_DR,sum(c.ACCOUNTED_CR) CNY_CR,sum(c.ENTERED_DR) Dr,sum(c.ENTERED_CR) Cr ,
+b.segment3,b.CODE_COMBINATION_ID
+from apps.GL_interface c ,apps.gl_code_combinations b 
+where c.status='EC12' and c.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+group by b.CODE_COMBINATION_ID,b.segment3
+
+select sum(c.ACCOUNTED_DR) CNY_DR,sum(c.ACCOUNTED_CR) CNY_CR,sum(c.ENTERED_DR) Dr,sum(c.ENTERED_CR) Cr,
+b.segment3
+from apps.GL_interface a,apps.gl_code_combinations b,APPS.ap_ae_lines_all c
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.GL_SL_LINK_ID=c.GL_SL_LINK_ID
+and a.status='EC12'
+group by b.segment3
+
+ 
+
+
+select sum(c.ACCOUNTED_DR) CNY_DR,sum(c.ACCOUNTED_CR) CNY_CR,sum(c.ENTERED_DR) Dr,sum(c.ENTERED_CR) Cr 
+from apps.GL_interface c where status='EC12'
+group by CODE_COMBINATION_ID
+
+select * from apps.GL_interface  where GROUP_ID =537844
+
+select CODE_COMBINATION_ID from apps.GL_interface where status='EC12'
+
+select segment2,segment3,segment4,CODE_COMBINATION_ID from apps.gl_code_combinations where CODE_COMBINATION_ID in
+(select CODE_COMBINATION_ID from apps.GL_interface where status='EC12')
+
+
+
+select a.AE_HEADER_ID,a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment3 account_number
+,a.REFERENCE5 as Invoice_number,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE
+,b.ACCOUNTING_DATE,a.REFERENCE6,a.AE_LINE_TYPE_CODE,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier
+,decode(CURRENCY_CONVERSION_RATE,null,1,CURRENCY_CONVERSION_RATE) Rate
+,REFERENCE6 line_Type,b.AE_CATEGORY,b.GL_TRANSFER_FLAG
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+--(GL_TRANSFER_FLAG is null or GL_TRANSFER_FLAG<>'Y')
+and b.ACCOUNTING_DATE>=to_date('2006-1-22','yyyy-mm-dd')
+
+and a.REFERENCE5 like '7029'
+
+select * from APPS.ap_ae_lines_all where AE_HEADER_ID in (157781,157782)
+
+select * from apps.ap_ae_HEADeRs_all where AE_HEADER_ID in (157781,157782)
+
+select * from apps.AP_INVOICES_ALL where INVOICE_NUM ='7029'
+
+

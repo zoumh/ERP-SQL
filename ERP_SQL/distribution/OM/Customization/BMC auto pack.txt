@@ -1,0 +1,136 @@
+
+----FOr EDI SO,OE_ORDER_lineS_all.ORIG_SYS_DOCUMENT_REF is PO_Num OE_ORDER_lineS_all.ORIG_SYS_LINE_REF is the PO_line_number
+
+--DC DPY AutoPacking: Enter PO number : 
+SUBSTR(OE_ORDER_lineS_all.ORIG_SYS_DOCUMENT_REF,3,10)||'/'||OE_ORDER_lineS_all.ORIG_SYS_LINE_REF 
+If SO=248789,PO=0070853646,PO_line=00010 , then here enter '70853646/00010'
+
+User find could also be:
+SUBSTR(OE_ORDER_lineS_all.ORIG_SYS_DOCUMENT_REF,3,10)||'/'||SUBSTR(OE_ORDER_lineS_all.ORIG_SYS_LINE_REF,4,5) 
+If SO=248789,PO=0070853646,PO_line=00010 , then here enter '70853646/10'
+
+
+--Domestic AutoPacking: Enter PO number : 
+SUBSTR(OE_ORDER_lineS_all.CUST_PO_NUMBER,3,10)||'/'||SUBSTR(OE_ORDER_lineS_all.ORIG_SYS_LINE_REF,4,7) 
+If SO=309145,PO=0070852914,PO_line=00010 , then here enter '70852914/10'
+
+User find could also be: /11 !!
+If SO=309145,PO=0070852914,PO_line=00010 , then here enter '70852914/11'
+
+
+
+-----Find PO number enter value for Auto Packing  : 
+select * from apps.OE_ORDER_HEADERS_ALL where ORDER_NUMBER in ('309145','248789')
+
+select LINE_NUMBER,HEADER_ID,CUST_PO_NUMBER,ORIG_SYS_DOCUMENT_REF,ORIG_SYS_LINE_REF ,ITEM_REVISION,
+SUBSTR(OE_ORDER_lineS_all.ORIG_SYS_DOCUMENT_REF,3,10)||'/'||OE_ORDER_lineS_all.ORIG_SYS_LINE_REF DC_DPY_AutoP_PO,
+SUBSTR(OE_ORDER_lineS_all.ORIG_SYS_DOCUMENT_REF,3,10)||'/'||SUBSTR(OE_ORDER_lineS_all.ORIG_SYS_LINE_REF,4,7) Domestic_AutoP_PO 
+from apps.OE_ORDER_lineS_all where HEADER_ID in (781754 )
+
+--------For test BMC Autopacking, prepare PO_line_num as if it comes from EDI,also Item_Revision
+
+update apps.OE_ORDER_lineS_all set ORIG_SYS_DOCUMENT_REF='00708529142',ORIG_SYS_LINE_REF='00050',ITEM_REVISION='10A' 
+where HEADER_ID=781754 and LINE_NUMBER='5'
+
+commit
+
+
+-----Find JO from SO (only completed JO could submit auto packing)
+select b.ORDER_NUMBER,c.LINE_NUMBER,a.class_code,b.CUST_PO_NUMBER,a.wip_entity_name,
+START_QUANTITY,QUANTITY_COMPLETED,QUANTITY_REMAINING,c.LINE_NUMBER ,ORDERED_QUANTITY 
+from apps.WIP_DISCRETE_JOBS_v a,apps.OE_ORDER_HEADERS_all b,apps.OE_ORDER_lineS_all c
+where c.header_id=b.header_id
+and b.header_id=a.attribute1
+and c.line_id=a.attribute2
+--and a.wip_entity_name='0070455666/1'
+and b.ORDER_NUMBER in ('248789')
+--and b.CUST_PO_NUMBER like ('%70545203%')
+
+
+
+User steps for BMC Auto Packing:
+1. Enter LPN , at BMC Input LPN screen, done byFG user in BMC (same team do WIP complete)
+   first enter the PO number is the format above ,
+   (If SO=248789,PO=0070853646,PO_line=00010 , then here PO number could be '70853646/10' or '70853646/00010')!
+   (If SO=309471,PO=0070853646,PO_line=00010 , then here PO number could be '70853646/10' or '70853646/00010')!
+
+   1) if click 'Save' samall icon on head,only create record in BMC_AUTO_PK_LPN_INFO
+      if push save Button in next step,will create record in BMC_AUTO_PK_SO_INFO
+   2) if click 'Delete' samall icon on head,will delete record in BMC_AUTO_PK_LPN_INFO
+      keep record in BMC_AUTO_PK_LPN_INFO 
+   3) if push save Button ,only create record in BMC_AUTO_PK_LPN_INFO
+   4) if requiry the PO number by '0070853646', 
+	then if click 'Save' samall icon on head,no create record in BMC_AUTO_PK_SO_INFO table, 
+	if then  push save Button will create record in BMC_AUTO_PK_SO_INFO table  
+ ---> So must push save Button  + click 'Save' samall icon on head , in this step!
+
+2. at BMC Auto Packing or BMC Domestic Auto Packing,after Goods were send to outside WH,(needs check/enter Qty again)
+   Scaned PO format= PO (no prefix 00)/10 , like 50001321/10, then push (B) 'For scaned PO number' to query out    prevous record re-enter LPN info(Weight,Volumn,conterner --outside WH user to check Packing is all right) 
+   Outside WH user re-enter LPN info(Qty,Weight,Volumn,conterner) again,then Save,then push (B) AutoPack, 
+   in next screen,check the SO line, then push (B) Submit , screen line status='PICKED'
+   background do :
+      subInv_Transfer from RFE --> TB , Pack LPN, release SO,complete task,stock move to FG.SL...
+   BMC_AUTO_PK_SO_INFO.STATUS=PICKED ,BMC_AUTO_PK_LPN_INFO.STATUS=PACKED->PICKED
+
+3. (B) refresh, screen line status='PICKED',at BMC Auto Packing screen
+   (B)Ship Confirm , in new screen, (B) Ship Confirm again
+   STATUS=SHIPPED	
+
+4. SE Receipt (Domeatic only)
+
+-----------------BMC Auto Packing Tables (Export)
+select * from all_objects where object_name like '%BMC_AUTO%' AND OBJECT_TYPE='TABLE'
+
+
+--------DC DPY auto packing
+select * from apps.BMC_AUTO_PK_SO_INFO where so_NUMBER in ('306244')
+
+select * from apps.BMC_AUTO_PK_LPN_INFO where so_NUMBER in ('306244')
+
+
+
+BMC_AUTOLPN_TYPE_T
+
+
+-------------Domestic auto packing tables
+------Header (SO,line)
+select * from  APPS.BMC_AUTO_SO_NEW where so_number='309118' 
+
+------line (LPN of a SO line)
+select * from APPS.BMC_AUTO_LPN_NEW where so_number='309118'
+
+
+User steps for Domestic Auto Packing:
+1. Enter LPN , at BMC Domestic Input LPN screen, done byFG user in BMC (same team do WIP complete)
+   first enter the PO number is the format :
+   (If SO=309471,PO=00708945445,PO_line=00010 , then here PO number could be '708945445/11' or '708945445/10')!
+
+   1) push save Button(or click 'Save' samall icon on head) 
+      will create record in BMC_AUTO_SO_NEW & BMC_AUTO_LPN_NEW
+   2) if click 'Delete' samall icon on head,will delete record in BMC_AUTO_LPN_NEW
+      keep record in BMC_AUTO_SO_NEW
+
+2. at BMC Domestic Auto Packing screen,after Goods were send to outside WH,(needs check/enter Qty again)
+   Query by SO or PO (00708945445), if prevous SO line has two LPN,here still see total Qty of 1 line
+   Push (B) Open, (B) Submit
+   screen line status='PACKED' ->re-query will be 'PICKED'
+   background do :
+      subInv_Transfer from RFD --> TD , Pack LPN, release SO,complete task,stock move to FG.SL...
+   BMC_AUTO_LPN_NEW.STATUS=PICKED ,BMC_AUTO_SO_NEW.STATUS=PICKED
+
+3. (B) refresh, screen line status='PICKED',at BMC Domestic Auto Packing
+   (B)Ship Confirm , in new screen, (B) Ship Confirm again
+   STATUS=SHIPPED	
+
+4. SE Receipt  
+   Query by SO or PO (00708945445), (B) Open, (B) Submit
+
+
+-----Find Domestic Auto packing user request,time,lpn  (from head & line table)
+select a.CREATION_DATE Head_Create,a.LAST_UPDATE_DATE Head_last_update,b.CREATION_DATE Line_Create,b.LAST_UPDATE_DATE Line_last_update,
+a.SO_NUMBER,a.SO_LINE_NUMBER,a.ITEM_NUMBER, a.attribute3 REQUEST_ID,b.STATUS,
+b.VP_LPN,QUANTITY,WEIGHT,SEAL_NUMBER,VOLUME
+from  APPS.BMC_AUTO_SO_NEW a,APPS.BMC_AUTO_LPN_NEW b
+where  a.so_number=b.so_number and a.SO_LINE_NUMBER=b.SO_LINE_NUMBER
+and a.so_number  IN (309137,309138,309139,309118) 
+order by a.so_number,a.SO_LINE_NUMBER

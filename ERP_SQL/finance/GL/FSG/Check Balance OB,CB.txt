@@ -1,0 +1,19 @@
+
+
+--------To list one account's YOB,PTD,YTD Balance
+select a.PERIOD_NAME,sum(a.Begin_Balance_Dr) POB_Dr,sum(a.Begin_Balance_Cr) POB_Cr,
+sum(a.Begin_Balance_Dr)-sum(a.Begin_Balance_Cr) POB,
+sum(a.PERIOD_NET_DR) PDR,sum(a.PERIOD_NET_CR) PCR,
+sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,a.period_num
+from apps.GL_Balances a,apps.GL_CODE_combinations b 
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+  and a.ACTUAL_FLAG='A' 
+  and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+  and a.CURRENCY_CODE='CNY'
+  and b.segment3='100101'
+  and a.period_year='2005'
+  group by a.PERIOD_NAME,a.period_num,b.segment3
+  order by a.period_num
+  
+
+

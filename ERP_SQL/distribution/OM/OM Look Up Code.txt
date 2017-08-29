@@ -1,0 +1,17 @@
+
+-------Price List Type
+
+LIST_TYPE_CODE 	
+CHARGES 	Freight and Special ChargesList
+DEL 		Deal
+DLT 		Discount List
+PML 		Price Modifier List
+PRL 		Price List
+PRO 		Promotion
+SLT 		Surcharge List
+
+
+
+
+
+

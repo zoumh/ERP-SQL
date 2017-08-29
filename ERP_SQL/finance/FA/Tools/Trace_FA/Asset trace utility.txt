@@ -1,0 +1,10 @@
+
+
+Starting 11iFA.M, Asset trace utility is included as a concurrent program in Oracle Assets.
+Steps to execute it from Oracle Assets:
+
+1. Navigate to Other> Request> Run 
+2. Submit the Generate Asset trace concurrent program
+
+The report output is in HTML format and it includes MRC tables and revaluation fields.
+

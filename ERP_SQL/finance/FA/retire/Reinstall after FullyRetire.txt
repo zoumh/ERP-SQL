@@ -1,0 +1,36 @@
+
+
+----List FA has Reinstall/reclass/transfer transaction after fulretirement
+
+SELECT
+fb.ASSET_NUMBER,TRANSACTION_TYPE_CODE,
+fdh.transaction_date_entered
+FROM
+fa_additions_b fb, 
+fa_transaction_headers  fdh,
+fnd_user  fnd,
+BMC_FA_BATCH_MASS_CHANGE_T BT
+WHERE 1=1 
+and   fb.ASSET_ID=fdh.asset_id
+and   fdh.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and   fdh.LAST_UPDATED_BY=fnd.USER_ID
+--and   fdh.TRANSACTION_HEADER_ID_OUT is  null 
+and   fb.ASSET_ID=bt.ASSET_ID
+--and  fdh.TRANSACTION_HEADER_ID=fdh1.TRANSACTION_HEADER_ID_IN
+and   fdh.transaction_type_code='REINSTATEMENT'  
+and exists
+   ( 
+      select fa1.asset_id 
+      from fa_transaction_headers fa1, 
+      (select  asset_id,max(transaction_header_id)  thi 
+      from fa_transaction_headers 
+   where book_type_code='BMC_FA_BOOK' 
+      group by asset_id) fa2 
+      where fa1.asset_id=fa2.asset_id 
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi 
+   and fa1.asset_id=fb.asset_id 
+      and transaction_type_code in('TRANSFER','RECLASS','REINSTATEMENT' ) 
+   and fa1.book_type_code='BMC_FA_BOOK' 
+      )
+
+

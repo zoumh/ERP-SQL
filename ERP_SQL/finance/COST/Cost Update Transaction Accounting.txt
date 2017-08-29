@@ -1,0 +1,116 @@
+
+------Inventory Standard Cost update (should use mtl_transaction_accounts.primary_quantity)
+
+
+select   mmt.transaction_date, mmt.ACTUAL_COST,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+     mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+--     mmt.TRANSACTION_QUANTITY as Qty,
+     mta.primary_quantity Qty,
+         mmt.transaction_id, 
+         mst.transaction_source_type_name, 
+         (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+          and mst.transaction_source_type_name like 'Job%') job, 
+         mta.gl_batch_id, 
+         decode(mmt.organization_id,130,'VP','Unknown') Organization ,
+         gcc.segment3 as Account_Num, 
+         cst.item_cost, cst.material_cost, cst.resource_cost,
+         trunc(mmt.transaction_date) as Trans_Date,
+         to_char(oeh.ORDER_NUMBER) Order_number,
+         mtt.DESCRIPTION as Type_Description,
+         mmt.REVISION,
+         MGD.SEGMENT1 Alias_SOURCE,
+         MMT.TRANSACTION_REFERENCE Trans_Reference
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL         oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Move Order Transfer')
+and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+and    transaction_type_name not like '%Container%'
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=130 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 130 and mmt.organization_id = 130 and msi.organization_id = 130
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    trunc(mmt.transaction_date) >= to_date('20070627','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20070630','YYYYMMDD') 
+and msi.segment1='KRH 101 475.R6B'
+--and    gcc.segment3='123201'
+--and    mtt.transaction_type_name='Account alias issue'
+
+
+
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 mmt.TRANSACTION_QUANTITY as Trans_Qty,
+	 mta.primary_quantity Booked_Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION,
+		 MGD.SEGMENT1 Alias_SOURCE,
+		 MMT.TRANSACTION_REFERENCE Trans_Reference
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    trunc(mmt.transaction_date) > to_date('20041231','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20050331','YYYYMMDD') 
+and gcc.segment3='123201'
+and    mtt.transaction_type_name='Standard cost update'
+--and mmt.transaction_id=10059842
+and  msi.segment1 in ('RNH 942 27','SXK 109 5745','SXK 109 5787','SXK 109 5841','SXA 109 4637')
+
+
+
+
+
+-------WIP Standard Cost Update
+
+
+

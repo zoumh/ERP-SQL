@@ -1,0 +1,26 @@
+
+-----------------Onhand has Qty but Avaliable is Zero (SO Pick release task can't use the LPN !)
+
+1. To check the LPN_CONTEXT of this LPN
+select LPN_CONTEXT,lpn_id from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='CNCB5+DVMXR0'
+
+LPN_CONTEXT=11 (picked)
+
+2. update APPS.WMS_LICENSE_PLATE_NUMBERS set LPN_CONTEXT=1 where LICENSE_PLATE_NUMBER='CNCB5+DVMXR0'
+Change the LPN_CONTEXT=1, then can finish the task!
+
+-----------------------------------------
+
+
+Code	Meaning	Description	Tag	From	To	Enabled	[  ]
+1	Resides in Inventory	Resides in Inventory		30-May-00		*	
+10	Prepack for WIP	Prepack for WIP		11-Jun-01		*	
+11	Picked	Picked		31-Aug-01		*	
+2	Resides in WIP	Resides in WIP		30-May-00		*	
+3	Resides in Receiving	Resides in Receiving		30-May-00		*	
+4	Issued out of Stores	Issued out of Stores		30-May-00		*	
+5	Defined but not used	Defined but not used		30-May-00		*	
+6	Resides in Intransit	Resides in Intransit		30-May-00		*	
+7	Resides in Vendor	Resides in Vendor		30-May-00		*	
+8	Packing context	Packing context		30-May-00		*	
+9	Loaded to Dock	Loaded to Dock		3-Apr-01		*	

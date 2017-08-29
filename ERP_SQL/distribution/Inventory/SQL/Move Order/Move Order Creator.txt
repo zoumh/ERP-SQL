@@ -1,0 +1,37 @@
+
+
+
+ select a.CREATION_DATE,request_number,b.USER_NAME  from apps.mtl_txn_request_headers a,apps.fnd_user b
+where organization_id = 130--&org_id --Organization id for Inventory Organization 
+and user_id=a.CREATED_BY 
+and request_number = '469012' -- Move order number
+
+
+---------------Mtl Trans, Move Order who create
+
+select MTT.TRANSACTION_TYPE_NAME,
+MMT.SUBINVENTORY_CODE, 
+transaction_date, 
+MSI.SEGMENT1 item_number, 
+nvl(MMT.revision,'0') item_id, 
+nvl(transaction_cost,actual_cost) cost, 
+MMT.transaction_quantity quantity, 
+MMT.TRANSACTION_REFERENCE, 
+MGD.SEGMENT1 SOURCE, 
+transaction_quantity*nvl(transaction_cost,actual_cost) amount, 
+FU.USER_NAME requestor 
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI, 
+apps.mtl_generic_dispositions MGD, 
+apps.FND_USER FU
+WHERE  MMT.organization_id=130
+AND (MMT.TRANSACTION_COST IS NOT NULL OR MMT.ACTUAL_COST IS NOT NULL) 
+AND MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.ORGANIZATION_ID 
+AND MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+AND FU.USER_ID=MMT.CREATED_BY
+and TRANSACTION_ID =27363683
+

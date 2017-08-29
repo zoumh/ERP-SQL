@@ -1,0 +1,79 @@
+
+Only for current Time's Balance
+
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,aps.VENDOR_SITE_CODE
+,sum((api.INVOICE_AMOUNT-nvl(api.amount_paid,0))*decode(api.INVOICE_CURRENCY_CODE,'CNY',1,EXCHANGE_RATE)) as CNY_Balance
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,sum(api.INVOICE_AMOUNT-nvl(api.amount_paid,0)) balance
+,sum(api.INVOICE_AMOUNT) as Inv_Amount
+,sum(nvl(api.amount_paid,0)) as Paid
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY'))
+and api.INVOICE_DATE>=to_date('2003-01-27','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-03-31','yyyy-mm-dd')
+group by VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE,api.INVOICE_CURRENCY_CODE
+
+
+
+
+
+--------------Two table to v-lookup the Balance (= Invoiced-Paid)
+
+(AP Invoice Amount from Oracle : GL Date in the range / Pay Group in BOM AP)
+AP Invoiced amount sum by Supplier
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'CNY',1,api.EXCHANGE_RATE)) as CNY_INV_Amt
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY'))
+and api.GL_DATE>=to_date('2004-01-1','yyyy-mm-dd')
+and api.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')
+and api.WFAPPROVAL_STATUS='MANUALLY APPROVED'
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE--,api.INVOICE_CURRENCY_CODE
+order by to_number(VDR.SEGMENT1)
+
+
+
+
+
+(AP Paid amount in Oracle : Pay date in the range / Invoice Pay group in BOM AP)
+AP Paid sum by supplier:
+
+select to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (a.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2004-01-1','yyyy-mm-dd')
+and b.accounting_date<=to_date('2004-03-31','yyyy-mm-dd')
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+group by to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE),VDR.VENDOR_NAME,VDR.SEGMENT1,aps.VENDOR_SITE_CODE order by to_number(VDR.SEGMENT1)
+
+
+
+
+

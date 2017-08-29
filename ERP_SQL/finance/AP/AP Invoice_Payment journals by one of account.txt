@@ -1,0 +1,39 @@
+
+
+
+----------------------Inquiry AP Full Journal by one of AP Invoice Dr Charge Account
+
+select a.REFERENCE5 as Invoice_number,REFERENCE6 line_Type,a.AE_LINE_TYPE_CODE
+,c.segment3 account_number,d.description Acc_Desc
+,a.ACCOUNTED_DR,a.ACCOUNTED_CR
+,a.description line_Desc,b.ACCOUNTING_DATE,a.ENTERED_DR,a.ENTERED_CR
+,a.CURRENCY_CODE Curr,CURRENCY_CONVERSION_RATE Rate
+,b.PERIOD_NAME ,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier,c.segment2 CC
+,a.AE_HEADER_ID,b.AE_CATEGORY,b.GL_TRANSFER_FLAG
+--select count(*)
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.FND_FLEX_VALUES_VL d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and d.FLEX_VALUE=c.segment3
+and d.FLEX_VALUE_SET_ID =1007641
+and b.ACCOUNTING_DATE<to_date('2005-1-01','yyyy-mm-dd')
+and a.REFERENCE1||'-'||a.REFERENCE5 in
+(select aa.REFERENCE1||'-'||aa.REFERENCE5 Reference
+from 
+(
+select a.REFERENCE5,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1501%' )
+and b.ACCOUNTING_DATE>=to_date('2004-1-27','yyyy-mm-dd')
+and b.ACCOUNTING_DATE<to_date('2004-6-01','yyyy-mm-dd')
+and REFERENCE6='AP Invoices'
+group by a.REFERENCE5,a.REFERENCE1
+) aa
+)
+order by a.REFERENCE5,a.REFERENCE6,b.ACCOUNTING_DATE,a.AE_LINE_TYPE_CODE
+
+

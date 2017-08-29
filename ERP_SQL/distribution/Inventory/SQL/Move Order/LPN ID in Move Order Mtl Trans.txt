@@ -1,0 +1,27 @@
+
+
+ST of Oracle MO Transfer (SB->SAxx) in 2005 JAN-OCT
+
+1. Transfer Partial LPN Qty, use customization Trans then:
+	CONTENT_LPN_ID is null,
+	lpn_id or transfer_lpn_id is not null
+
+2. Transfer Full LPN Qty & use NetTerm to do task,then:
+	CONTENT_LPN_ID is not null,lpn_id is null
+(62024 line) 
+
+
+3.
+	CONTENT_LPN_ID is not null,
+	transfer_lpn_id is not null (and lpn_id is null)
+(270 line)
+
+
+select count(*) from apps.mtl_material_transactions mmt where 
+TRANSACTION_TYPE_ID in (64,122,123,101)
+and (mmt.transfer_subinventory like 'SA%') 
+and (mmt.subinventory_code in ('SB')) 
+and    trunc(mmt.transaction_date) >= to_date('20050115','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20051021','YYYYMMDD') 
+--and (CONTENT_LPN_ID is not null)-- and (lpn_id is not null or transfer_lpn_id is not null))
+and (CONTENT_LPN_ID is null)

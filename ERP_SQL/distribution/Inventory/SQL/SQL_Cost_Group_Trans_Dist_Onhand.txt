@@ -1,0 +1,230 @@
+
+
+-----Item's ID
+select INVENTORY_ITEM_ID,ORGANIZATION_ID,SEGMENT1 from apps.mtl_system_items b
+where (b.segment1='DPY 101 2732/162R10L')
+
+
+------Cost_Group_ID
+select COST_GROUP,DESCRIPTION,ORGANIZATION_ID,COST_GROUP_TYPE,COST_GROUP_ID from apps.cst_cost_groups
+
+
+-----------Onhand Qty by Cost_Group
+
+SELECT to_char(INVENTORY_ITEM_ID) Item_ID,to_char(ORGANIZATION_ID) ORG, PRIMARY_TRANSACTION_QUANTITY Qty,
+SUBINVENTORY_CODE WH,to_char(UPDATE_TRANSACTION_ID) Trans_ID,ORIG_DATE_RECEIVED,to_char(COST_GROUP_ID) Cost_Grp_ID
+FROM apps.mtl_onhand_quantities_detail 
+WHERE inventory_item_id in ( 23612)
+
+
+---------Trans Qty by Cost_Group
+
+SELECT to_char(INVENTORY_ITEM_ID) Item_ID,to_char(ORGANIZATION_ID) ORG, to_char(COST_GROUP_ID) COST_GROUP_ID,
+SUBINVENTORY_CODE WH, to_char(TRANSACTION_ID) Trans_ID, to_char(TRANSACTION_TYPE_ID) Trans_Type_ID
+,TRANSACTION_QUANTITY,PRIMARY_QUANTITY,TRANSACTION_DATE,to_char(DISTRIBUTION_ACCOUNT_ID) Account_ID,ACTUAL_COST,NEW_COST,
+TRANSACTION_QUANTITY*nvl(ACTUAL_COST,0) Value
+FROM apps.mtl_material_transactions
+WHERE inventory_item_id in ( 23612)
+
+----------------
+
+---Mtl Trans
+(detail)
+select TRANSACTION_QUANTITY*nvl(ACTUAL_COST,0) Value,a.TRANSACTION_DATE,b.SEGMENT1,a.COST_GROUP_ID,c.cost_group,TRANSACTION_QUANTITY,nvl(ACTUAL_COST,0) cost
+from apps.mtl_material_transactions a,apps.mtl_system_items b ,apps.cst_cost_groups c
+where a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 and c.ORGANIZATION_ID=83
+and    trunc(a.transaction_date) <= to_date('20040630','YYYYMMDD') 
+and a.cost_group_id=c.cost_group_id
+and (b.segment1='RTK 993 1370/52' or b.segment1='SXK 109 5517')
+order by a.COST_GROUP_ID
+
+
+
+
+(sum)
+select sum(TRANSACTION_QUANTITY*nvl(ACTUAL_COST,0)) Trans_Value,a.COST_GROUP_ID,c.cost_group--a.TRANSACTION_DATE,b.SEGMENT1,a.COST_GROUP_ID,TRANSACTION_QUANTITY,nvl(ACTUAL_COST,0) cost
+from apps.mtl_material_transactions a,apps.mtl_system_items b ,apps.cst_cost_groups c
+where a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 and c.ORGANIZATION_ID=83
+and a.cost_group_id=c.cost_group_id
+and    trunc(a.transaction_date) <= to_date('20040630','YYYYMMDD') 
+group by a.COST_GROUP_ID,c.cost_group
+
+
+
+select * from apps.mtl_system_items where INVENTORY_ITEM_ID=2096
+
+select * from  apps.mtl_material_transactions
+where trunc(transaction_date) >= to_date('20040720','YYYYMMDD') and organization_id=83
+
+
+select msi.segment1 item_code, gcc.segment3,a.base_transaction_value,trunc(a.transaction_date) as Trans_Date
+ from apps.mtl_transaction_accounts a,  apps.mtl_system_items_b msi,
+  apps.gl_code_combinations gcc
+  where a.reference_account = gcc.code_combination_id 
+  and msi.inventory_item_id = a.inventory_item_id 
+  and a.organization_id=83 and msi.organization_id=83
+  and (msi.segment1='RTK 993 1370/52' or msi.segment1='SXK 109 5517')
+  and    trunc(a.transaction_date) <= to_date('20040630','YYYYMMDD') 
+  and gcc.segment3 in ('121101','121102','121105','124301','124302')
+  
+  
+select * from apps.mtl_transaction_accounts 
+
+
+select --msi.segment1 item_code, gcc.segment3,trunc(a.transaction_date) as Trans_Date
+sum(a.base_transaction_value),gcc.segment3
+ from apps.mtl_transaction_accounts a,  apps.mtl_system_items_b msi,
+  apps.gl_code_combinations gcc
+  where a.reference_account = gcc.code_combination_id 
+  and msi.inventory_item_id = a.inventory_item_id 
+  and a.organization_id=83 and msi.organization_id=83
+  --and (msi.segment1='RTK 993 1370/52' or msi.segment1='SXK 109 5517')
+  and    trunc(a.transaction_date) <= to_date('20040630','YYYYMMDD') 
+  and gcc.segment3 in ('121101','121102','121105','124301','124302')
+  group by gcc.segment3
+  
+
+
+
+
+------Mtl_Account Distribution
+
+(sum)
+select --msi.segment1 item_code, gcc.segment3,trunc(a.transaction_date) as Trans_Date
+sum(a.base_transaction_value),gcc.segment3
+ from apps.mtl_transaction_accounts a,  apps.mtl_system_items_b msi,
+  apps.gl_code_combinations gcc
+  where a.reference_account = gcc.code_combination_id 
+  and msi.inventory_item_id = a.inventory_item_id 
+  and a.organization_id=83 and msi.organization_id=83
+  --and (msi.segment1='RTK 993 1370/52' or msi.segment1='SXK 109 5517')
+  and    trunc(a.transaction_date) <= to_date('20040630','YYYYMMDD') 
+  and gcc.segment3 in ('121101','121102','121105')
+  group by gcc.segment3
+
+
+(detail)
+select msi.segment1 item_code, gcc.segment3,a.base_transaction_value,trunc(a.transaction_date) as Trans_Date
+ from apps.mtl_transaction_accounts a,  apps.mtl_system_items_b msi,
+  apps.gl_code_combinations gcc
+  where a.reference_account = gcc.code_combination_id 
+  and msi.inventory_item_id = a.inventory_item_id 
+  and a.organization_id=83 and msi.organization_id=83
+  --and (msi.segment1='RTK 993 1370/52' or msi.segment1='SXK 109 5517')
+  and    trunc(a.transaction_date) <= to_date('20040630','YYYYMMDD') 
+  and gcc.segment3 in ('121101','121102','121105')
+
+
+
+------Mtl Transaction
+
+
+
+
+
+
+
+
+
+select * --distinct(SUBINVENTORY_CODE) 
+from apps.mtl_material_transactions a,apps.mtl_system_items b 
+where a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83
+and b.segment1='RTK 993 1370/52' and SUBINVENTORY_CODE is null
+
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+--and    trunc(mmt.transaction_date) = to_date('20040609','YYYYMMDD') 
+and  msi.segment1='RTK 993 1370/52'
+and gcc.segment3 in ('121101','121102','121105')
+
+
+select   sum(to_number(mta.base_transaction_value, 9999999999.9999)) value,gcc.segment3
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+--and    trunc(mmt.transaction_date) = to_date('20040609','YYYYMMDD') 
+and  msi.segment1='RTK 993 1370/52'
+and gcc.segment3 in ('121101','121102','121105')
+group by gcc.segment3
+
+
+
+
+
+select * from apps.mtl_material_transactions a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83 and a.INVENTORY_ITEM_ID=b.inventory_item_id 
+and (b.segment1='RTK 993 1370/52' or b.segment1='SXK 109 5517')
+
+
+
+
+
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83 and a.INVENTORY_ITEM_ID=b.inventory_item_id 
+and (b.segment1='RTK 993 1370/52' or b.segment1='SXK 109 5517')
+
+
+
+select msi.segment1 item_code, gcc.segment3,a.base_transaction_value,trunc(a.transaction_date) as Trans_Date
+ from apps.mtl_transaction_accounts a,  apps.mtl_system_items_b msi,
+  apps.gl_code_combinations gcc
+  where a.reference_account = gcc.code_combination_id 
+  and msi.inventory_item_id = a.inventory_item_id 
+  and a.organization_id=83 and msi.organization_id=83
+  and (msi.segment1='RTK 993 1370/52' or msi.segment1='SXK 109 5517')

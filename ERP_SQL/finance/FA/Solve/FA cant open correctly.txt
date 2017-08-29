@@ -1,0 +1,47 @@
+
+
+----------Solve FA_ADD_WARRANTIES (存在双份有效记录,FA can't Open correctly--many fields empty)
+select b.asset_number,a.DATE_EFFECTIVE,a.DATE_INEFFECTIVE,c.description Create_by
+from apps.FA_ADD_WARRANTIES a,APPS.FA_ADDITIONS_V b,apps.fnd_user c
+where a.ASSET_ID=b.ASSET_ID
+and a.CREATED_BY=c.user_id
+--and b.asset_number='13001351'
+and a.ASSET_ID in
+  (select ASSET_ID from apps.FA_ADD_WARRANTIES 
+    where DATE_EFFECTIVE<=sysdate and (DATE_INEFFECTIVE>sysdate or DATE_INEFFECTIVE is null )
+    group by ASSET_ID
+    having count(*)>1
+  )
+order by b.asset_number,a.CREATION_DATE
+
+1.    
+select ROWID,R.*
+from   APPS.fa_add_warranties R
+WHERE ASSET_ID IN
+(
+'100003454',
+'100012824',
+'100014666',
+'100014683',
+'100015584',
+'100016645',
+'100017127',
+'100018244'
+)
+AND TO_CHAR(DATE_EFFECTIVE,'YYYY')='2008'
+ 
+2.
+update APPS.fa_add_warranties R
+set date_ineffective = r.DATE_EFFECTIVE
+WHERE ASSET_ID IN
+(
+'100003454',
+'100012824',
+'100014666',
+'100014683',
+'100015584',
+'100016645',
+'100017127',
+'100018244'
+)
+AND TO_CHAR(DATE_EFFECTIVE,'YYYY')='2008'

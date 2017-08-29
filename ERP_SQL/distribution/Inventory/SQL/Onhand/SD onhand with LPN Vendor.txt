@@ -1,0 +1,53 @@
+
+--------Sum by locator,LPN,Model,Vendor (include PO & RMA Vendor)
+select 
+ (select distinct  VDR.VENDOR_NAME     
+            from apps.rcv_transactions rcv,apps.PO_VENDORS VDR
+            where VDR.VENDOR_ID=rcv.VENDOR_ID
+            and rcv.transfer_lpn_id=b.LPN_ID
+            and rcv.ORGANIZATION_ID=130
+            and rcv.DESTINATION_TYPE_CODE='INVENTORY'
+            and rcv.TRANSACTION_TYPE='DELIVER'
+        ) PO_Vendor,
+ (select ee.CUSTOMER_NAME 
+            from apps.rcv_transactions aa,
+                 apps.OE_ORDER_HEADERS_all oh,
+                 apps.AR_CUSTOMERS_V ee 
+            where aa.LPN_ID=b.LPN_ID
+            AND   AA.TRANSFER_LPN_ID=b.LPN_ID
+            and oh.HEADER_ID=aa.oe_order_header_id
+            and aa.customer_id=ee.CUSTOMER_ID 
+             and    aa.TRANSACTION_TYPE='DELIVER'  
+  and AA.DESTINATION_TYPE_CODE='INVENTORY'
+  AND AA.ORGANIZATION_ID=130
+   and aa.source_document_code='RMA'  
+         ) Claim_Vendor,
+a.segment1 Item_Number,SUM(b.primary_transaction_quantity) Quantities, 
+       c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+       b.subinventory_code Sub_inventory,        
+       e.license_plate_number LPN,f.segment1 Model,
+       a.inventory_item_status_code Item_Status,
+       b.CREATION_DATE,b.DATE_RECEIVED,b.ORIG_DATE_RECEIVED,e.CREATION_DATE LPN_Create,
+       b.LPN_ID
+FROM   apps.MTL_SYSTEM_ITEMS_B a,
+       apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+       apps.mtl_item_locations c,
+       apps.wms_license_plate_numbers e ,
+       apps.mtl_item_categories_v f
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+      AND b.LOCATOR_ID=c.Inventory_LOCATion_ID
+      AND b.LPN_ID=e.LPN_id(+)
+      AND (b.subinventory_code='SD')
+      AND a.organization_id=130
+      and a.organization_id=c.organization_id
+      and a.organization_id=f.organization_id 
+      and b.INVENTORY_ITEM_ID=f.inventory_item_id
+      and f.category_set_id = 1 
+      and f.structure_id=101 
+--and a.segment1='RNV 799 015.R1A'
+GROUP BY  a.segment1 ,b.inventory_item_id,
+       b.subinventory_code , f.segment1,
+       c.segment2,c.segment3,c.segment4,c.segment5 ,
+       e.license_plate_number,b.LPN_ID,a.inventory_item_status_code,
+      b.CREATION_DATE,b.DATE_RECEIVED,b.ORIG_DATE_RECEIVED,e.CREATION_DATE
+      order by b.LPN_ID,e.license_plate_number,a.segment1,b.CREATION_DATE,  b.LPN_ID

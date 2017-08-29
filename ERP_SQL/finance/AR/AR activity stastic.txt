@@ -1,0 +1,11 @@
+
+
+---------ST from actual transactions
+
+select v.number_of number_of_Transactions,a.name,a.status,a.Type,b.segment3 Acc,a.end_date_active,a.INACTIVE_DATE, GL_ACCOUNT_SOURCE, TAX_CODE_SOURCE, 
+a.org_id,a.creation_date 
+from apps.AR_RECEIVABLES_TRX_all a,apps.GL_CODE_COMBINATIONS b,
+--(select number_of,RECEIVABLES_TRX_ID  from (select count (*) number_of,RECEIVABLES_TRX_ID from apps.ar_cash_receipts_all c group by RECEIVABLES_TRX_ID) cc
+(select count (*) number_of,RECEIVABLES_TRX_ID from apps.ar_cash_receipts_all c group by RECEIVABLES_TRX_ID) v
+where b.CODE_COMBINATION_ID(+)=a.CODE_COMBINATION_ID
+and v.RECEIVABLES_TRX_ID=a.RECEIVABLES_TRX_ID

@@ -1,0 +1,6 @@
+
+
+ (N) Inventory (WMS)  Setup-Trans Setup - Interface -- Trans Interface manager
+ (M) Tools --Launch Manager
+
+

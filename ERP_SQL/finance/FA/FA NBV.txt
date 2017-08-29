@@ -1,0 +1,28 @@
+
+
+Net Book Value
+
+---BMC_FA_BOOK
+
+	  (select fa.asset_id,(COST- DEPRN_RESERVE) NBV 
+	  from fa.fa_deprn_detail fa
+	  where fa.rowid in
+ 	  ( 
+	  select max(rowid) from fa.fa_deprn_detail
+	  where BOOK_TYPE_CODE='BMC_FA_BOOK'
+	  group by asset_id
+	  ))
+	  
+	  
+---BMC_TAX_BOOK
+
+	  (select fa.asset_id,(COST- DEPRN_RESERVE) NBV 
+	  from fa.fa_deprn_detail fa
+	  where fa.rowid in
+ 	  ( 
+	  select max(rowid) from fa.fa_deprn_detail
+	  where BOOK_TYPE_CODE='BMC_TAX_BOOK'
+	  group by asset_id
+	  ))
+	  
+

@@ -1,0 +1,59 @@
+
+
+----------very slow , with NBV
+
+
+SELECT fav.asset_number,fav.asset_id
+,	fav.description
+,      fak.segment1 as K_Prj
+,      fak.segment2 as K_Prd
+,fav.TAG_NUMBER ,fav.SERIAL_NUMBER
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),1,2) as MajCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as MinCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as StatusCat--,a.DESCRIPTION as Cate_Desc
+,fav.ATTRIBUTE1 Remark,fav.ATTRIBUTE2 IT_Asset_Name,fav.ATTRIBUTE3 Property_Type,fav.ATTRIBUTE4 Warranty
+,	fab.DATE_PLACED_IN_SERVICE
+,	fab.COST,FA_NBV.nbv FA_NBV,Tax_NBV.nbv Tax_NBV
+FROM APPS.FA_ADDITIONS_V fav
+,    apps.FA_BOOKS_V fab
+,	 apps.FA_CATEGORIES_VL a
+,    apps.FA_ASSET_KEYWORDS fak,
+	  (select fa.asset_id,(COST- DEPRN_RESERVE) NBV 
+	  from fa.fa_deprn_detail fa
+	  where fa.rowid in
+ 	  ( 
+	  select max(rowid) from fa.fa_deprn_detail
+	  where BOOK_TYPE_CODE='BMC_TAX_BOOK'
+	  group by asset_id
+	  )) Tax_NBV,
+	  (select fa.asset_id,(COST- DEPRN_RESERVE) NBV 
+	  from fa.fa_deprn_detail fa
+	  where fa.rowid in
+ 	  ( 
+	  select max(rowid) from fa.fa_deprn_detail
+	  where BOOK_TYPE_CODE='BMC_FA_BOOK'
+	  group by asset_id
+	  )) FA_NBV	  
+WHERE fav.asset_id=fab.asset_id 
+and fav.ASSET_KEY_CCID = fak.CODE_COMBINATION_ID
+AND FAB.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),1,2)='01'
+and SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) in ('02','03') 
+--and SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2)='06'
+and a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+and fav.asset_id=FA_NBV.asset_id
+and fav.asset_id=Tax_NBV.asset_id
+and fav.asset_id not in 
+	  (
+	  select fa.asset_id
+	  from apps.fa_transaction_headers fa
+	  where fa.rowid in
+ 	  ( 
+	  select max(rowid) from apps.fa_transaction_headers
+	  where transaction_type_code='FULL RETIREMENT'
+	  group by asset_id
+	  )
+	  )
+--and 	fab.COST<>fab.ORIGINAL_COST  
+--and fav.asset_number='13000092'--'12000383'
+

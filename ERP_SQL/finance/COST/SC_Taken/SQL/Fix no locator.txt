@@ -1,0 +1,14 @@
+
+
+
+----Find error PO delivery transaction (no locator BVOJK WH) cause onhand no locator (could only be PO return)
+
+---------Fill in locator in count tag table, otherwise couldn't input the Qty
+
+UPDATE apps.mtl_physical_adjustments 
+SET adjustment_QUANTITY=0
+WHERE ADJUSTMENT_ID=433677
+
+UPDATE apps.mtl_physical_adjustments 
+SET COUNT_QUANTITY=45000 
+WHERE ADJUSTMENT_ID=433677 

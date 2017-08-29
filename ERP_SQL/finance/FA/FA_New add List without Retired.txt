@@ -1,0 +1,52 @@
+
+--------FA new addition list without Retired
+
+select to_char(fab.CREATION_DATE,'YYYY-MM-DD') Add_Date,fth.TRANSACTION_DATE_ENTERED Date_In_Service,
+fab.ASSET_NUMBER,
+fab.tag_number,fab.serial_number,
+fl.segment1||'.'||fl.segment2||'.'||fl.segment3  Location,fak.segment1 FA_Key1,fak.segment2 FA_Key2,fab.ATTRIBUTE_CATEGORY_CODE,
+fai.INVOICE_NUMBER,fai.PO_NUMBER,fb.COST,fb.ORIGINAL_COST,
+gcc.SEGMENT3 Exp_Acc,gcc.segment2 CC,fb.DEPRECIATE_FLAG,fab.ATTRIBUTE1 Remark,fat.DESCRIPTION
+/*select fab.CREATION_DATE,fth.TRANSACTION_DATE_ENTERED,fth.DATE_EFFECTIVE,fab.ASSET_ID,fab.tag_number,fab.serial_number,
+fab.ASSET_NUMBER,fak.segment1 project,fak.segment2 product,fab.ATTRIBUTE_CATEGORY_CODE,
+fai.INVOICE_NUMBER,fai.PO_NUMBER,fb.COST,fb.ORIGINAL_COST,fat.DESCRIPTION,
+gcc.SEGMENT3 Account,gcc.segment2 "Cost Center",glp.gl_date,fb.DEPRECIATE_FLAG,fab.ATTRIBUTE1 Remark*/
+from apps.fa_additions_b fab,apps.fa_asset_keywords fak,apps.fa_asset_invoices fai,apps.gl_code_combinations gcc,
+apps.fa_books fb,apps.fa_transaction_headers fth,apps.fa_additions_tl fat,apps.fa_distribution_history fdh,apps.fa_locations fl,
+(select asset_id,
+to_char(add_months(MIN(to_date(fdp.PERIOD_NAME,'MON-YY')),1),'MON-YY')||' to '||
+      to_char(max(to_date(fdp.PERIOD_NAME,'MON-YY')),'MON-YY') GL_DATE
+      from apps.fa_deprn_detail fdd,apps.fa_deprn_periods fdp
+      where fdd.BOOK_TYPE_CODE='BMC_FA_BOOK'
+      and fdd.PERIOD_COUNTER=fdp.PERIOD_COUNTER
+      and fdp.BOOK_TYPE_CODE='BMC_FA_BOOK'
+      group by asset_id
+      )glp
+      where fab.asset_key_ccid=fak.code_combination_id(+)
+	  and fab.ASSET_ID=fai.ASSET_ID(+)
+      and fab.asset_id=fb.asset_id
+      and fab.ASSET_ID=fat.ASSET_ID
+      and fab.ASSET_ID=glp.asset_id
+      and fab.ASSET_ID=fdh.ASSET_ID
+  	  and fab.asset_id not in 
+	  (
+	  select fa.asset_id
+	  from apps.fa_transaction_headers fa
+	  where fa.rowid in
+ 	  ( 
+	  select max(rowid) from apps.fa_transaction_headers
+	  where transaction_type_code='FULL RETIREMENT'
+	  group by asset_id
+	  )
+	  )
+      and fat.LANGUAGE='US'
+      --and fab.ASSET_ID=fth.ASSET_ID
+      and fb.BOOK_TYPE_CODE='BMC_FA_BOOK'
+      and fb.TRANSACTION_HEADER_ID_IN=fth.TRANSACTION_HEADER_ID
+      and fb.transaction_header_id_out is null
+      and fdh.CODE_COMBINATION_ID=gcc.CODE_COMBINATION_ID(+)
+	  and fdh.location_id=fl.location_id
+      and fdh.TRANSACTION_HEADER_ID_OUT is null
+      and (fab.creation_date >= to_date('1996/1/1','yyyy/mm/dd'))
+      and (fab.creation_date <= to_date('2005/2/3','yyyy/mm/dd'));
+

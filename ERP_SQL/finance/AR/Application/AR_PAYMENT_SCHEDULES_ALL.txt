@@ -1,0 +1,53 @@
+
+AR_PAYMENT_SCHEDULES_ALL
+
+This table stores all transactions except adjustments and miscellaneous cash receipts.
+Oracle Receivables updates this table when activity occurs against an invoice,Oracle Receivables updates this table when activity occurs
+against an invoice, debit memo, chargeback, credit memo, on account
+credit, or receipt.
+
+
+Oracle Receivables groups different transactions by the column CLASS. These classes include :
+invoice (INV), 
+debit memos (DM), 
+guarantees (GUAR), 
+credit memos (CM), 
+deposits (DEP),
+chargebacks (CB), 
+and receipts (PMT).
+
+Transaction classes determine which columns in this table Oracle Receivables updates when a
+transaction occurs, and whether a transaction relates to either the RA_CUSTOMER_TRX_ALL table or the AR_CASH_RECEIPTS_ALL table.
+
+AR_PAYMENT_SCHEDULES_ALL joins to the RA_CUSTOMER_TRX_ALL table for non¨Cpayment transaction entries
+such as the creation of credit memos, debit memos, invoices,chargebacks, or deposits.
+
+AR_PAYMENT_SCHEDULES_ALL uses the foreign key CUSTOMER_TRX_ID to join to the RA_CUSTOMER_TRX_ALL table for these transactions.
+
+AR_PAYMENT_SCHEDULES_ALL joins to the AR_CASH_RECEIPTS_ALL table for invoice¨Crelated payment
+transactions using the foreign key CASH_RECEIPT_ID.
+
+When a receipt is applied, Oracle Receivables updates AMOUNT_APPLIED, STATUS and AMOUNT_DUE_REMAINING.
+
+STATUS changes from ¡¯OP¡¯ to ¡¯CL¡¯ for any transaction that has an AMOUNT_DUE_REMAINING value of 0. ACTUAL_DATE_CLOSED and GL_DATE_CLOSED are populated with the date of the latest transaction.
+
+
+CLASS 		INV/CM 		AR_LOOKUPS
+		CB 		Chargeback
+		CM 		Credit Memo
+		DEP 		Deposit
+		DM 		Debit Memo
+		GUAR 		Guarantee
+		INV 		Invoice
+		PMT 		Receipt
+
+
+
+
+
+
+
+
+
+
+

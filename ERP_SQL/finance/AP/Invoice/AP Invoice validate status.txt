@@ -1,0 +1,24 @@
+
+AP Invoice Validate Status: 
+
+AP Invoice --APPROVAL_STATUS='Validated':
+and a.INVOICE_ID NOT IN (select DISTINCT d.INVOICE_ID from AP_HOLDS_ALL d WHERE RELEASE_LOOKUP_CODE is null)
+AND AIV.INVOICE_ID NOT IN           --APPROVAL_STATUS='Validated'
+      (SELECT DISTINCT AIDA.INVOICE_ID FROM AP_INVOICE_DISTRIBUTIONS_ALL AIDA WHERE match_status_flag <> 'A');
+
+
+
+(Not correct !)
+AP_INVOICE_DISTRIBUTIONS_ALL.MATCH_STATUS_FLAG 
+=T: Need ReValidate , 
+=A: Validated , 
+=blank: Never Validated
+
+
+
+select 
+,api.INVOICE_NUM
+,apd.MATCH_STATUS_FLAG           -- T: Need ReValidate , A: Validated , blank: Never Validated
+from 	AP_INVOICES_ALL api
+,	AP_INVOICE_DISTRIBUTIONS_ALL apd
+where api.INVOICE_ID=apd.INVOICE_ID

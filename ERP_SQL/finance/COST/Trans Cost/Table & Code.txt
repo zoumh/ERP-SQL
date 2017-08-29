@@ -1,0 +1,38 @@
+
+select * from apps.mtl_material_transactions where transaction_id=53403444
+
+
+------------
+select * from apps.MTL_TRANSACTION_ACCOUNTS where transaction_id=53403444
+
+ACCOUNTING_LINE_TYPE 
+1 Inv valuation
+2 Account
+3 Overhead absorption
+4 Resource absorption
+5 Receiving Inspection
+6 Purchase price variance or rate variance
+7 WIP valuation
+8 WIP variance
+9 Inter每org payables
+10 Inter每org receivables
+11 Inter每org transfer credit
+12 Inter每org freight charge
+13 Average cost variance
+14 Intransit Inventory
+15 Encumbrance Reversal
+99 Unknown
+
+
+----
+MTL_CST_ACTUAL_COST_DETAILS 
+stores actual cost, prior cost, and new cost information for a transaction by element and by level
+
+select * from apps.MTL_CST_ACTUAL_COST_DETAILS where transaction_id=53403444
+
+----
+
+MTL_CST_TXN_COST_DETAILS 
+stores the cost of a transaction by element and level.
+
+select * from apps.MTL_CST_TXN_COST_DETAILS where transaction_id=53403442

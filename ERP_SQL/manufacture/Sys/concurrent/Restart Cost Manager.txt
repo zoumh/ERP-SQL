@@ -1,0 +1,41 @@
+
+
+
+To cancel the Cost Manager:
+System Administrator -- Requests -- View -- Go To Specific Request and in the Name give Cost M
+anager.
+From here the Cost Manager which is Pending Scheduled, Cancel it.
+
+or run 
+
+
+SELECT request_id RequestId,
+request_date RequestDt,
+phase_code Phase,
+status_code Status FROM
+apps.fnd_concurrent_requests fcr, 
+apps.fnd_concurrent_programs fcp
+WHERE fcp.application_id = 702 AND
+fcp.concurrent_program_name = 'CMCTCM' AND
+fcr.concurrent_program_id = fcp.concurrent_program_id AND
+fcr.program_application_id = 702 AND fcr.phase_code <> 'C'
+
+Cancel the request id other than running. Let the running request get over.
+
+
+
+-----
+
+To Resubmit the transactions:
+
+update mtl_material_transactions
+set costed_flag = 'N', 
+transaction_group_id = NULL,
+transaction_set_id = NULL
+where costed_flag = 'E' or costed_flag = 'N'
+
+
+5. To launch the Cost Manager
+Inventory -- Setup -- Transactions -- Interface Managers
+Tools (Menu Bar) -- Launch Manager --Submit
+( NO scheduling for the Cost Manager should be done in the Requet Form)

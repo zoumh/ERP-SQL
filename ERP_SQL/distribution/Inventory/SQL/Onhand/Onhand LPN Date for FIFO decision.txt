@@ -1,0 +1,85 @@
+
+
+-----------Onhand with Create date,LPN date for FIFO rule
+SELECT  to_char(e.LPN_ID) LPN_ID,b.CREATION_DATE,b.DATE_RECEIVED,b.ORIG_DATE_RECEIVED,e.CREATION_DATE LPN_Create,e.license_plate_number LPN,
+a.segment1 Item_Number,SUM(b.primary_transaction_quantity) Quantities, 
+       c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+b.subinventory_code Sub_inventory,  a.organization_id,b.INVENTORY_ITEM_ID,      
+       e.license_plate_number LPN,b.Revision
+FROM   apps.MTL_SYSTEM_ITEMS_B a,
+       apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+       apps.mtl_item_locations c,
+       apps.wms_license_plate_numbers e
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+      AND b.LOCATOR_ID=c.Inventory_LOCATion_ID
+      AND b.LPN_ID=e.LPN_id(+)
+      AND (b.subinventory_code='SEFG')
+      AND a.inventory_item_status_code='Active'
+--      AND a.organization_id=130
+      and a.organization_id=c.organization_id
+      and a.organization_id=b.organization_id
+      and a.organization_id=e.organization_id
+--      and a.segment1='DPY 101 1503/11'
+      and a.organization_id>127
+GROUP BY  a.segment1 ,
+       b.revision,
+       b.subinventory_code , 
+       c.segment2,c.segment3,c.segment4,c.segment5 ,
+       e.license_plate_number,
+      b.CREATION_DATE,b.DATE_RECEIVED,b.ORIG_DATE_RECEIVED,e.CREATION_DATE,a.organization_id,b.INVENTORY_ITEM_ID
+      order by a.segment1,b.CREATION_DATE asc
+
+
+SELECT 	   b.CREATION_DATE,b.DATE_RECEIVED,b.ORIG_DATE_RECEIVED,e.CREATION_DATE LPN_Create,e.license_plate_number LPN,
+a.segment1 Item_Number,SUM(b.primary_transaction_quantity) Quantities, 
+	   c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+b.subinventory_code Sub_inventory, 	   
+	   e.license_plate_number LPN,b.Revision
+FROM   apps.MTL_SYSTEM_ITEMS_B a,
+	   apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+	   apps.mtl_item_locations c,
+	   apps.wms_license_plate_numbers e
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+	  AND b.LOCATOR_ID=c.Inventory_LOCATion_ID
+	  AND b.LPN_ID=e.LPN_id(+)
+	  AND (b.subinventory_code='SG')
+	  AND a.inventory_item_status_code='Active'
+	  AND a.organization_id=130
+	  and a.organization_id=c.organization_id
+	  and a.segment1='1/KRH 101 435/850.R3A'
+--	  and e.license_plate_number='A00001'
+GROUP BY  a.segment1 ,
+	   b.revision,
+	   b.subinventory_code , 
+	   c.segment2,c.segment3,c.segment4,c.segment5 ,
+	   e.license_plate_number,
+	  b.CREATION_DATE,b.DATE_RECEIVED,b.ORIG_DATE_RECEIVED,e.CREATION_DATE
+	  order by a.segment1,b.CREATION_DATE 
+
+
+
+-----MO Allocate
+
+select d.REQUEST_NUMBER,c.ORGANIZATION_ID,c.segment1 Item,a.TRANSACTION_QUANTITY,a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where
+d.REQUEST_NUMBER='HZ012' and 
+--c.segment1='KRH 101 316/3.R6A' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+a.TRANSACTION_SOURCE_ID =d.HEADER_ID and
+a.move_order_line_id=b.line_id and
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+order by TRANSACTION_DATE desc
+
+
+select * from apps.mtl_material_transactions_temp where transaction_header_id=28521260
+
+delete from apps.mtl_material_transactions_temp where transaction_header_id=28521260

@@ -1,0 +1,100 @@
+
+
+---------------PO Item Price , Order by last_update_date
+
+select d.SEGMENT1 as Item,
+b.UNIT_PRICE*DECODE(a.CURRENCY_CODE,'CNY',1,a.RATE) AS Price_CNY,
+b.UNIT_PRICE,a.RATE,a.CURRENCY_CODE Curr,a.SEGMENT1 PO,b.quantity,b.item_description, b.creation_date,b.last_update_date 
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.mtl_system_items_b d
+where d.INVENTORY_ITEM_ID=b.item_id
+and a.po_header_id=b.po_header_id
+and d.ORGANIZATION_ID=83
+--and (a.AUTHORIZATION_STATUS ='APPROVED')  
+--and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+--and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+--and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and d.segment1='ROP 101 1101/4C'
+order by b.last_update_date desc--b.creation_date desc
+
+
+
+
+select d.SEGMENT1 as Item,
+b.UNIT_PRICE*DECODE(a.CURRENCY_CODE,'CNY',1,a.RATE) AS Price_CNY,
+b.UNIT_PRICE,a.RATE,a.CURRENCY_CODE Curr,a.SEGMENT1 PO,b.quantity,b.item_description, b.creation_date 
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.mtl_system_items_b d
+where d.INVENTORY_ITEM_ID=b.item_id
+and a.po_header_id=b.po_header_id
+and d.ORGANIZATION_ID=83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and d.segment1='ROP 101 3050/2'
+
+
+
+
+-------------
+select a.SEGMENT1 as PO,b.LINE_NUM,--c.SHIPMENT_NUM,e.DISTRIBUTION_NUM--,b.PO_HEADER_ID
+b.CREATION_DATE as PO_Date
+,b.UNIT_PRICE
+,a.CURRENCY_CODE as Curr
+,a.RATE
+,d.SEGMENT1 as Item
+--to_num(b.item_id) as Item
+,b.ITEM_DESCRIPTION
+,a.ORG_ID
+,b.LAST_UPDATE_DATE Line_Last_Update
+--,DESTINATION_TYPE_CODE
+,b.LINE_TYPE_ID
+from apps.PO_HEADERS_ALL a, apps.PO_LINES_ALL b,apps.mtl_system_items_b d
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and d.INVENTORY_ITEM_ID(+)=b.item_id 
+and (d.ORGANIZATION_ID=83)--c.SHIP_TO_ORGANIZATION_ID(+))--'81' or d.ORGANIZATION_ID='83') ---Org is multi if use 81 & 83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+--and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+and a.CURRENCY_CODE <>'CNY' and a.CURRENCY_CODE <>'USD'
+--and b.LINE_TYPE_ID=1021  -- 1021=ARC, 1020=NON_BOM PO Line Type
+--and a.SEGMENT1='TP28735'
+--and b.CREATION_DATE >=to_date('2004-10-01','YYYY-MM-DD')
+--and b.CREATION_DATE <=to_date('2005-03-31','YYYY-MM-DD')
+--and d.segment1='ROP 101 3050/2'--d.SEGMENT1 in ('RNH 942 27','SXK 109 5745','SXK 109 5787','SXK 109 5841','SXK 109 5745','RNH 942 27','SXK 109 5787','SXA 109 4637')
+order by d.SEGMENT1,a.CURRENCY_CODE ,a.SEGMENT1 ,b.LINE_NUM--,c.SHIPMENT_NUM;
+
+-------??
+select a.SEGMENT1 as PO,b.LINE_NUM,--c.SHIPMENT_NUM,e.DISTRIBUTION_NUM--,b.PO_HEADER_ID
+b.CREATION_DATE as PO_Date
+,b.UNIT_PRICE
+,a.CURRENCY_CODE as Curr
+,a.RATE
+,d.SEGMENT1 as Item
+--to_num(b.item_id) as Item
+,b.ITEM_DESCRIPTION
+,a.ORG_ID
+,b.LAST_UPDATE_DATE Line_Last_Update
+--,DESTINATION_TYPE_CODE
+,b.LINE_TYPE_ID
+from apps.PO_HEADERS_ALL a, apps.PO_LINES_ALL b,apps.mtl_system_items_b d
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and d.INVENTORY_ITEM_ID(+)=b.item_id 
+and (d.ORGANIZATION_ID=83)--c.SHIP_TO_ORGANIZATION_ID(+))--'81' or d.ORGANIZATION_ID='83') ---Org is multi if use 81 & 83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+--and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+--and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+--and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+--and a.CURRENCY_CODE <>'CNY' and a.CURRENCY_CODE <>'USD'
+and b.LINE_TYPE_ID=1021  -- 1021=ARC, 1020=NON_BOM PO Line Type
+--and a.SEGMENT1='TP28735'
+and b.CREATION_DATE >=to_date('2004-10-01','YYYY-MM-DD')
+and b.CREATION_DATE <=to_date('2005-03-31','YYYY-MM-DD')
+and d.SEGMENT1 in ('RNH 942 27','SXK 109 5745','SXK 109 5787','SXK 109 5841','SXK 109 5745','RNH 942 27','SXK 109 5787','SXA 109 4637')
+order by d.SEGMENT1,a.CURRENCY_CODE ,a.SEGMENT1 ,b.LINE_NUM--,c.SHIPMENT_NUM;

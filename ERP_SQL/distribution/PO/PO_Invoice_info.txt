@@ -1,0 +1,140 @@
+
+
+
+---------Matched PO/Invoice/Match Qty/Amount/Price
+
+select a.po_distribution_id,b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist
+,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE,a.amount match_amount,a.base_amount CNY_Match_amount,b.invoice_currency_code Curr,a.exchange_rate Rate,
+a.QUANTITY_INVOICED,a.unit_price match_Price,a.price_adjustment_flag
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+--and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and d.segment1='1013680'
+order by d.segment1--b.INVOICE_NUM
+
+
+
+(here is NON-BOM PO lines, one Vendor, Invoice Dist amt & accounts)
+
+
+--------Using Invocie Info (Accounting Date & Accounts,VAT)
+
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,
+a.segment1 PO_Num,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+--d.quantity_ordered Dist_Ordered_Qty,d.quantity_cancelled Dist_Canced_Qty,
+--d.QUANTITY_BILLED Dist_Billed_Qty,
+h.QUANTITY_INVOICED Dist_Billed_Qty,
+--d.QUANTITY_DELIVERED Dist_Rec_Qty,
+--(d.quantity_ordered-d.quantity_cancelled)*b.unit_price Ordered_Amount,
+--(d.quantity_ordered-d.quantity_cancelled)*b.unit_price*nvl(d.rate,1) Ordered_Amount_CNY,
+--d.QUANTITY_DELIVERED*b.unit_price Delivery_Amount,
+--d.QUANTITY_BILLED*b.unit_price Billed_Amount, 
+--b.unit_price,nvl(d.rate,1) Rate,
+a.currency_code Curr,Item_Description,g.segment1 Item_Num,
+e.segment2 PO_CC,e.segment3 PO_Accounts,e.segment4 PO_PRD,e.segment4 PO_PRJ,
+--d.creation_date,b.cancel_flag Line_Cancel-Flg,
+i.INVOICE_NUM,h.DISTRIBUTION_LINE_NUMBER Inv_Dist,h.AMOUNT Inv_Dist_Amt,
+h.ACCOUNTING_DATE Inv_Accounting_date,
+h.DESCRIPTION,--h.DIST_CODE_COMBINATION_ID
+h.UNIT_PRICE Inv_Price,h.QUANTITY_INVOICED,k.Name VAT_Code,k.tax_rate,
+j.segment2 Inv_CC,j.segment3 Inv_Accounts,j.segment4 Inv_PRD,j.segment4 Inv_PRJ,
+nvl(i.exchange_rate,1) rate,i.invoice_currency_code Inv_Curr
+from 	apps.PO_HEADERS_ALL a
+,		apps.PO_LINES_ALL b
+,		apps.po_Line_locations_all c
+,		apps.PO_DISTRIBUTIONS_ALL d
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+,		apps.gl_code_combinations e
+,		apps.PO_line_types f
+,		apps.mtl_system_items_b g
+,		apps.AP_INVOICE_DISTRIBUTIONS_all h
+,		apps.ap_invoices_all i
+,		apps.gl_code_combinations j
+,		apps.AP_TAX_CODES_all k
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and h.DIST_CODE_COMBINATION_ID=j.CODE_COMBINATION_ID
+and h.po_distribution_id(+)=d.po_distribution_id
+and i.INVOICE_ID=h.INVOICE_ID
+and h.tax_code_id=k.TAX_ID
+and (b.line_type_id=1020)-- or b.item_id is null)----N-BOM PO Line
+--and a.segment1='0000057023'--0000056941'--'1010075'--'0000056941'
+--and d.creation_date<to_date('2005-01-01','YYYY-MM-DD')
+and VDR.VENDOR_NAME='FOXCONN PRECISION COMPONENT (BEIJING) CO., LTD'
+and VDR.VENDOR_ID=a.VENDOR_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and g.INVENTORY_ITEM_ID(+)=b.item_id 
+and f.line_type='Non-BOM Purchasing'
+and VDR.SEGMENT1=136
+order by a.segment1 ,b.line_num,c.shipment_num ,d.DISTRIBUTION_NUM
+
+
+----------Using PO info
+
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,
+a.segment1 PO_Num,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+d.quantity_ordered Dist_Ordered_Qty,d.quantity_cancelled Dist_Canced_Qty,
+d.QUANTITY_BILLED Dist_Billed_Qty,d.QUANTITY_DELIVERED Dist_Rec_Qty,
+(d.quantity_ordered-d.quantity_cancelled)*b.unit_price Ordered_Amount,
+(d.quantity_ordered-d.quantity_cancelled)*b.unit_price*nvl(d.rate,1) Ordered_Amount_CNY,
+d.QUANTITY_DELIVERED*b.unit_price Delivery_Amount,
+d.QUANTITY_BILLED*b.unit_price Billed_Amount, 
+b.unit_price,nvl(d.rate,1) Rate,
+a.currency_code Curr,Item_Description,g.segment1 Item_Num,
+e.segment2 CC,e.segment3 Accounts,e.segment4 PRD,e.segment4 PRJ,
+d.creation_date,b.cancel_flag Line_Cancel
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.po_Line_locations_all c,apps.PO_DISTRIBUTIONS_ALL d
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+,		apps.gl_code_combinations e,apps.PO_line_types f
+,apps.mtl_system_items_b g
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and (b.line_type_id=1020)-- or b.item_id is null)----N-BOM PO Line
+--and a.segment1='0000057023'--0000056941'--'1010075'--'0000056941'
+--and d.creation_date<to_date('2005-01-01','YYYY-MM-DD')
+and VDR.VENDOR_NAME='FOXCONN PRECISION COMPONENT (BEIJING) CO., LTD'
+and VDR.VENDOR_ID=a.VENDOR_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and g.INVENTORY_ITEM_ID(+)=b.item_id 
+and f.line_type='Non-BOM Purchasing'
+and VDR.SEGMENT1=136
+order by a.segment1 ,b.line_num,c.shipment_num ,d.DISTRIBUTION_NUM

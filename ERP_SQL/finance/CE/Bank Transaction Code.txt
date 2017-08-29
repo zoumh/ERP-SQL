@@ -1,0 +1,12 @@
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('127');
+END;
+
+
+select BANK_ACCOUNT_NAME,BANK_ACCOUNT_NUM,BANK_ACCOUNT_CURRENCY_CODE Curr,
+BANK_BRANCH_NAME,BANK_NAME,type_Dsp Type,trx_code Code,START_DATE,END_DATE,
+RECONCILE_FLAG_DSP Trans_Source
+from apps.CE_TRANSACTION_CODES_V  where BANK_NAME='Bank of China'
+and BANK_ACCOUNT_NUM='00002108092014'
+

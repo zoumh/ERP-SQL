@@ -1,0 +1,6 @@
+
+
+
+select request_date,promise_date,creation_date,pricing_date,last_update_date,schedule_ship_date,actual_shipment_date,
+fulfillment_date  from apps.OE_ORDER_lineS_all where header_id=1014
+

@@ -1,0 +1,17 @@
+
+
+select * from apps.GL_daily_RATEs where CONVERSION_DATE=to_date('2004-03-10','yyyy-mm-dd')
+
+
+
+
+
+select CONVERSION_DATE, CONVERSION_TYPE, FROM_CURRENCY, TO_CURRENCY, CONVERSION_RATE, STATUS_CODE, CREATION_DATE, LAST_UPDATE_DATE
+from apps.GL_DAILY_RATES 
+where CONVERSION_TYPE = 'Corporate' 
+and (trunc(CONVERSION_DATE) = to_date('29-FEB-2004','DD-MON-YYYY') 
+or trunc(CONVERSION_DATE) = to_date('27-JAN-2004','DD-MON-YYYY'))
+and FROM_CURRENCY in ('USD', 'CNY') 
+and TO_CURRENCY in ('USD', 'CNY'); 
+
+

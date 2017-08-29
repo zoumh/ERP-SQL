@@ -1,0 +1,16 @@
+
+
+----------Key Flexfield segments
+select SEGMENT_NAME,FLEX_VALUE_SET_ID,SEGMENT_NUM,ID_FLEX_NUM, APPLICATION_ID,ID_FLEX_CODE
+from apps.FND_ID_FLEX_SEGMENTS_VL where SEGMENT_NAME like '%BMC%'
+and SEGMENT_NAME in ('BMC_CCC','BMC_ACC','BMC_PRD','BMC_PRJ')
+
+
+
+---------List Value set (Name & ID)
+select FLEX_VALUE_SET_ID,FLEX_VALUE_SET_NAME 
+from apps.FND_FLEX_VALUE_SETS where FLEX_VALUE_SET_NAME like '%BMC%'
+
+
+
+

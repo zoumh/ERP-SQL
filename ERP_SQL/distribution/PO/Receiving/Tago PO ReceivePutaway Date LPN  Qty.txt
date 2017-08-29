@@ -1,0 +1,38 @@
+
+
+
+--------------Received Date , LPN, Qty , Putaway Date
+
+
+
+select --a.transaction_id,b.parent_Transaction_id,
+a.Item,a.Item_Description,a.LPN,a.Receive_Date,a.Receive_Qty,b.PutAway_Date,b.PutAway_Qty
+from
+(
+select a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=83
+and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+and a.transaction_date>=to_date('2005-01-01','YYYY-MM-DD')
+and a.transaction_date<=to_date('2005-03-31','YYYY-MM-DD')
+) a,
+(
+select a.creation_date PutAway_Date,a.quantity PutAway_Qty,b.license_plate_number LPN,
+a.parent_Transaction_id
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+and a.transaction_type='DELIVER'
+and a.source_document_code='PO'
+) b
+where a.LPN=b.LPN(+)
+and a.Transaction_id =b.parent_Transaction_id(+)

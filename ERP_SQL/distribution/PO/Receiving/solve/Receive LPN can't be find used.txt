@@ -1,0 +1,76 @@
+
+
+Could be found at Onhand (in receiving)
+but can't be found in Receiving Trans Summary & putaway
+
+create in
+apps.rcv_transactions
+
+but not create in 
+apps.rcv_shipment_headers
+
+
+
+select e.segment1 PO,c.LINE_NUM ,a.transfer_lpn_id,a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_HEADERS_ALL e
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=130
+and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+and a.PO_HEADER_ID=e.PO_HEADER_ID 
+--and a.PO_header_id=115778
+and LICENSE_PLATE_NUMBER in ('D00050239-B','D00050240-B','D00050241-B','D00050242-B','D00050243-B','D00050244-B',
+'D00050245-B','D00050246-B','D00050247-B','D00050248-B','D00050249-B','D00050250-B','D00050251-B')
+
+
+
+select * from apps.rcv_shipment_headers e where SHIPMENT_HEADER_ID in
+(select a.SHIPMENT_HEADER_ID
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+--and d.organization_id=83
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and a.PO_header_id=115778
+and LICENSE_PLATE_NUMBER in ('D00050239-B','D00050240-B','D00050241-B','D00050242-B','D00050243-B','D00050244-B',
+'D00050245-B','D00050246-B','D00050247-B','D00050248-B','D00050249-B','D00050250-B','D00050251-B')
+)
+
+
+
+
+select a.ACCOUNTED_DR,a.ACCOUNTED_CR,ACCOUNTING_DATE,a.CURRENCY_CODE,a.CURRENCY_CONVERSION_RATE Rate,
+a.ENTERED_DR,a.ENTERED_CR,b.segment3 Account,a.TRANSACTION_DATE,a.reference4 PO,a.SOURCE_DOC_QUANTITY
+FROM APPS.RCV_RECEIVING_SUB_LEDGER a,apps.GL_CODE_combinations b where 
+a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID  
+and RCV_TRANSACTION_ID in
+(select a.TRANSACTION_ID 
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+--and d.organization_id=83
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and a.PO_header_id=115778
+and LICENSE_PLATE_NUMBER in ('D00050239-B','D00050240-B','D00050241-B','D00050242-B','D00050243-B','D00050244-B',
+'D00050245-B','D00050246-B','D00050247-B','D00050248-B','D00050249-B','D00050250-B','D00050251-B')
+)
+
+
+

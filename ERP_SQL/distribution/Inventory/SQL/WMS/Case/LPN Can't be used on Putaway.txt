@@ -1,0 +1,10 @@
+
+
+----------------------LPN can't be used in Putaway (LPN_CONTEXT=5,Defined but not used)
+
+select * from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='L0027683'--'M0032721' 
+
+change LPN_CONTEXT=3,Resides in Receiving , to aolve
+
+update APPS.WMS_LICENSE_PLATE_NUMBERS set LPN_CONTEXT=3 where LICENSE_PLATE_NUMBER='''L0027683'
+

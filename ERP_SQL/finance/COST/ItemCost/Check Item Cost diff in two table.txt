@@ -1,0 +1,117 @@
+
+-------tables
+cst_item_cost_details
+cst_item_costs
+
+
+Flag:
+apps.CST_ITEM_COST_TYPE_V.BASED_ON_ROLLUP,1,'Base on rollup',2,'No Rollup'
+
+bom.cst_item_cost_details.rollup_source_type
+1 User defined
+2 Default
+3 Rolled up
+
+
+-----check component cost in two tabel  (Frozen Cost Type)
+select a.inventory_item_id,c.BASED_ON_ROLLUP,
+c.ITEM_NUMBER,b.segment1 as Item, item_type, inventory_item_status_code,
+a.item_cost, 
+e.item_cost_detail_UserDefine,
+c.COST_TYPE,a.organization_id,c.DESCRIPTION
+from apps.cst_item_costs a, apps.mtl_system_items b 
+,apps.CST_ITEM_COST_TYPE_V c,
+(select (item_cost) item_cost_detail_UserDefine,inventory_item_id,organization_id,cost_type_id 
+from apps.cst_item_cost_details where organization_id=130 and rollup_source_type=1 and cost_type_id=1) e
+where 
+a.inventory_item_id=b.inventory_item_id 
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and b.segment1 != 'FORKLIFT' and b.item_type != 'CTR'
+and a.BASED_ON_ROLLUP_FLAG=2 ---no roll up
+and c.COST_TYPE='Frozen'
+and a.cost_type_id=c.cost_type_id
+and a.cost_type_id=e.cost_type_id
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.organization_id=e.organization_id
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=130
+and (a.item_cost<>e.item_cost_detail_UserDefine)
+order by segment1
+
+--------check component cost in two tabel (Pending type)
+select a.inventory_item_id,c.BASED_ON_ROLLUP,
+c.ITEM_NUMBER,b.segment1 as Item, item_type, inventory_item_status_code,
+a.item_cost, 
+e.item_cost_detail_UserDefine,
+c.COST_TYPE,a.organization_id,c.DESCRIPTION
+from apps.cst_item_costs a, apps.mtl_system_items b 
+,apps.CST_ITEM_COST_TYPE_V c,
+(select (item_cost) item_cost_detail_UserDefine,inventory_item_id,organization_id,cost_type_id 
+from apps.cst_item_cost_details where organization_id=130 and rollup_source_type=1 and cost_type_id=3) e
+where 
+a.inventory_item_id=b.inventory_item_id 
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and b.segment1 != 'FORKLIFT' and b.item_type != 'CTR'
+and a.BASED_ON_ROLLUP_FLAG=2 ---no roll up
+and c.COST_TYPE='Pending'
+and a.cost_type_id=c.cost_type_id
+and a.cost_type_id=e.cost_type_id
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.organization_id=e.organization_id
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=130
+and (a.item_cost<>e.item_cost_detail_UserDefine)
+--and b.segment1 ='SXK 109 6127.R2A'
+order by segment1
+
+-------check Item(who have BOM)'s cost in two tabel
+select a.inventory_item_id,d.cost_type_id,c.BASED_ON_ROLLUP,
+c.ITEM_NUMBER,b.segment1 as Item, item_type, inventory_item_status_code,
+to_number(a.item_cost,999999.99999) Item_cost, 
+d.item_cost_detail_rollup,
+to_number(a.material_cost,999999.99999) material_cost, 
+to_number(a.resource_cost,999999.99999) resource_cost ,c.COST_TYPE,a.organization_id,c.DESCRIPTION
+from apps.cst_item_costs a, apps.mtl_system_items b 
+,apps.CST_ITEM_COST_TYPE_V c,
+(select sum(item_cost) item_cost_detail_rollup,inventory_item_id,organization_id,cost_type_id 
+from apps.cst_item_cost_details where rollup_source_type=3 group by inventory_item_id,organization_id,cost_type_id) d
+where 
+a.inventory_item_id=b.inventory_item_id 
+and b.segment1 != 'FORKLIFT' and b.item_type != 'CTR'
+and c.COST_TYPE='Frozen'
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=d.organization_id
+and a.organization_id=d.organization_id
+and a.organization_id=130
+and d.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.cost_type_id=c.cost_type_id
+and a.cost_type_id=d.cost_type_id
+and (a.item_cost<>d.item_cost_detail_rollup)
+and a.BASED_ON_ROLLUP_FLAG=1 ---roll up
+order by segment1
+
+
+
+
+-------------Check VP Item Cost Creation Dat<>Last Update Date
+select a.CREATION_DATE,a.LAST_UPDATE_DATE,b.segment1 as Item,b.inventory_item_status_code Status,
+a.item_cost,decode(a.BASED_ON_ROLLUP_FLAG,1,'Base on rollup',2,'No Rollup') roll_up,c.COST_TYPE
+from apps.cst_item_costs a,apps.mtl_system_items b,apps.CST_ITEM_COST_TYPE_V c
+where a.inventory_item_id=b.inventory_item_id 
+and a.organization_id=b.organization_id 
+and a.CREATION_DATE<>a.LAST_UPDATE_DATE
+and a.organization_id=130
+and c.COST_TYPE='Pending'
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.organization_id=c.organization_id 
+--and (b.segment1 ='SXK 109 6126' or b.segment1 like 'SXK 109 6126.%')
+order by b.segment1
+
+
+

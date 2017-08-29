@@ -1,0 +1,48 @@
+
+------SO AR Type (include line Type), with AR Type(if has) , COGS & Rev Account 
+select decode(a.WAREHOUSE_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+b.name SO_Type, a.END_DATE_ACTIVE,c.name AR_Typ,d.segment3 COGS_Account,--
+e.segment3 REVENUE_Account,
+a.currency_code,a.conversion_type_code,
+b.LANGUAGE,a.TRANSACTION_TYPE_CODE
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b,apps.ra_cust_trx_types_all c,
+apps.gl_code_combinations d
+,apps.gl_code_combinations e
+where 
+a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID 
+and a.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID(+)
+and d.CODE_COMBINATION_ID(+)=a.COST_OF_GOODS_SOLD_ACCOUNT
+and e.CODE_COMBINATION_ID(+)=c.GL_ID_REV
+and a.org_id>=127
+and b.LANGUAGE='US' 
+--and a.TRANSACTION_TYPE_CODE='ORDER'
+order by b.name
+
+
+
+
+--include old OU
+select b.name SO_Type, a.END_DATE_ACTIVE,c.name AR_Typ,d.segment3 COGS_Account,--
+e.segment3 REVENUE_Account,
+a.currency_code,a.conversion_type_code,
+b.LANGUAGE,a.TRANSACTION_TYPE_CODE
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b,apps.ra_cust_trx_types_all c,
+apps.gl_code_combinations d,
+apps.gl_code_combinations e
+where a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID and a.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID
+and b.LANGUAGE='US' --and a.TRANSACTION_TYPE_CODE='ORDER'
+and d.CODE_COMBINATION_ID=a.COST_OF_GOODS_SOLD_ACCOUNT
+and e.CODE_COMBINATION_ID=c.GL_ID_REV
+order by b.name
+
+
+
+
+--------------AR type ST 
+select count(*) count ,
+NAME AR_Type,e.DESCRIPTION
+from apps.ra_customer_trx_all b
+,apps.ra_cust_trx_types_all e
+where  b.CUST_TRX_TYPE_ID=e.CUST_TRX_TYPE_ID
+and b.CREATION_DATE>=to_date('2006-01-5','yyyy-mm-dd') 
+group by e.NAME,e.description

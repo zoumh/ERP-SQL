@@ -1,0 +1,39 @@
+
+
+---List Item, Category,Creater for PLM compliance  1234-5678
+
+
+select  
+(select b.segment1 Cate from apps.mtl_item_categories_v b where b.category_set_id=1
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID and b.ORGANIZATION_ID=a.ORGANIZATION_ID) Cate,
+a.segment1 Item,inventory_item_status_code status,Item_Type,a.CREATION_DATE,
+a.CREATED_BY,c.User_Name,c.description UName,a.DESCRIPTION ItemDesc  
+from apps.mtl_system_items a,apps.fnd_user c
+where --a.segment1 in ('0LK2-2345','9083-0987','C2133-DDFF','') and 
+a.ORGANIZATION_ID=130
+and instr(a.segment1,'-',1,1) =5
+and c.user_id=a.CREATED_BY
+and  (substr(a.segment1,1,1))  >= '0' and (substr(a.segment1,1,1))  <= '9'
+and  (substr(a.segment1,2,1))  >= '0' and (substr(a.segment1,2,1))  <= '9'
+and  (substr(a.segment1,3,1))  >= '0' and (substr(a.segment1,3,1))  <= '9'
+and  (substr(a.segment1,4,1))  >= '0' and (substr(a.segment1,4,1))  <= '9'
+
+
+
+-------------
+
+select ORGANIZATION_CODE,organization_id from apps.org_organization_definitions-- where organization_id = 130
+
+select 
+a.segment1 Item,inventory_item_status_code status,Item_Type,a.CREATION_DATE,
+a.CREATED_BY,c.User_Name,c.description UName,a.DESCRIPTION  
+from apps.mtl_system_items a,apps.fnd_user c
+where --a.segment1 in ('0D12-3456','1234-5678') and 
+a.ORGANIZATION_ID in (132,130,128)
+and instr(a.segment1,'-',1,1) =5
+and  (substr(a.segment1,1,1))  >= '0' and (substr(a.segment1,1,1))  <= '9'
+and  (substr(a.segment1,2,1))  >= '0' and (substr(a.segment1,2,1))  <= '9' 
+and  (substr(a.segment1,3,1))  >= '0' and (substr(a.segment1,3,1))  <= '9'
+and  (substr(a.segment1,4,1))  >= '0' and (substr(a.segment1,4,1))  <= '9' 
+and c.user_id=a.CREATED_BY
+

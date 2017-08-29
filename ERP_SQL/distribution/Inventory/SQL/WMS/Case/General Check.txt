@@ -1,0 +1,72 @@
+
+-----Find Locator from ID
+select c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,INVENTORY_ITEM_ID,SUBINVENTORY_CODE 
+from apps.mtl_item_locations c
+where INVENTORY_LOCATION_ID=35851
+and organization_id>127
+
+---Find Onhand from Locator ID
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl where LOCATOR_ID=30101
+
+----Find Locator ID from Name
+select INVENTORY_ITEM_ID ,INVENTORY_LOCATION_ID ,SUBINVENTORY_CODE
+from apps.mtl_item_locations c
+where c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 in ('R.16.12.2')
+and organization_id>127
+
+KRC 114 1752.R1C
+
+select * from apps.mtl_system_items where segment1='KRC 114 1752.R1C'
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl 
+where LOCATOR_ID in (30109) and INVENTORY_ITEM_ID =89243
+
+1231929
+
+select * from apps.wms_license_plate_numbers WHERE LICENSE_PLATE_NUMBER ='DA00072564-B'
+
+select * from apps.wms_license_plate_numbers WHERE  lpn_id=1227852-- in (1242483,1211013,1211012)--(1175422,1175421,1175665)
+
+LOCATOR_ID in (30109) and LPN_CONTEXT =5
+
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_id =1227852-- in (1242483,1211013,1211012)--(1175422,1175421,1175665)
+
+in (select lpn_id from apps.wms_license_plate_numbers WHERE LOCATOR_ID in (30745) and LPN_CONTEXT =4)
+
+
+select sum(QUANTITY ) from apps.wms_lpn_contents WHERE parent_lpn_id --=1238039-- in (1242483,1211013,1211012)--(1175422,1175421,1175665)
+in (select lpn_id from apps.wms_license_plate_numbers WHERE LOCATOR_ID in (30745) and LPN_CONTEXT =4)
+and revision='21B'
+
+select * from apps.WMS_LPN_HISTORIES where --lpn_id in (1175665,1242483)
+--LICENSE_PLATE_NUMBER  in ('DA00052015-B','E00053344-B')
+parent_lpn_id in (1227852)
+
+
+-----Find Locator from ID
+select c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,INVENTORY_ITEM_ID,,SUBINVENTORY_CODE  
+from apps.mtl_item_locations c
+where INVENTORY_LOCATION_ID=35851
+and organization_id>127
+
+
+----------
+select SUBINVENTORY_CODE,INVENTORY_ITEM_ID ,INVENTORY_LOCATION_ID  
+from apps.mtl_item_locations c
+where c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 in ('R.16.12.2')
+and organization_id>127
+
+select * from apps.mtl_system_items where segment1 in ('KRH 101 470.R1A') --inventory_item_id=92857
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl where LOCATOR_ID=30101 and inventory_item_id in (88926)
+
+select * from apps.wms_license_plate_numbers WHERE  lpn_id in (1323513)--LICENSE_PLATE_NUMBER='SG070207043A-B'
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_id in (1323513,1323514,1323516,1323517,1323519,1323522)
+
+select * from all_objects where object_name like 'BMC%BKUP%' AND OBJECT_TYPE='TABLE'
+
+insert into BMC_LPN_BKUP070207 select * from apps.wms_license_plate_numbers where lpn_id in (1323513,1323514,1323516,1323517,1323519,1323522)
+
+update apps.wms_license_plate_numbers set subinventory_code='SG',locator_id=30101,lpn_context=1 where lpn_id =1718848

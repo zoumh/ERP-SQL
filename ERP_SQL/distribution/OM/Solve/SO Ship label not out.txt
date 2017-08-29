@@ -1,0 +1,16 @@
+
+
+---------One SO 168660 , 12 LPNs , one LPN can't output the label (BMC Standard Ship Label)
+
+Check apps.wsh_delivery_details.INVENTORY_ITEM_ID , if it is empty then can't print the label !
+(for those container lines with LPN)
+
+
+---- use Delivery number to find the info 
+select INVENTORY_ITEM_ID,ITEM_DESCRIPTION,SOURCE_HEADER_ID,SOURCE_LINE_ID,DELIVERY_DETAIL_ID
+requestd_quantity,shipped_quantity,container_name LPN,move_order_line_id,subinventory,revision,
+CUST_PO_NUMBER,net_weight,volume,gross_weight from apps.wsh_delivery_details b where
+delivery_detail_id in 
+(select delivery_detail_id from apps.wsh_delivery_assignments  where delivery_ID=800066921) 
+order by SOURCE_LINE_ID,delivery_detail_id
+  

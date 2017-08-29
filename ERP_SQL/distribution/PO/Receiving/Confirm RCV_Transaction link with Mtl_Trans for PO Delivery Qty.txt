@@ -1,0 +1,26 @@
+
+
+--------Confirm RCV_Transaction link with Mtl_Trans for PO Delivery Qty
+
+select   --msi.inventory_item_id,mmt.transaction_id,msi.segment1 Item,mmt.transaction_date,mmt.REVISION 
+mtt.transaction_type_name,count(),sum(decode(mmt.lpn_id,null,1,0)) lpn_id,
+sum(decode(mmt.transfer_lpn_id,null,1,0)) Trans_lpn_id,count(rcv.QUANTITY) rcv_count,
+sum(mmt.TRANSACTION_QUANTITY ) mmt_Qty,sum(rcv.QUANTITY) rcv_qty
+--,mmt.transfer_subinventory To_WH,(mmt.TRANSACTION_QUANTITY) Qty
+from
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt,apps.rcv_transactions rcv
+where  --(msi.segment1 ='RTK 201 06BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id  
+and    mmt.organization_id=130   
+and    trunc(mmt.transaction_date) = to_date('20060801','YYYYMMDD') 
+and    trunc(mmt.transaction_date) = to_date('20060811','YYYYMMDD') 
+and mtt.transaction_type_name in ('PO Receipt','Return to Vendor','Move Order Transfer','SF Move Order Transfer','SH Move Order Transfer')
+--and mmt.TRANSACTION_QUANTITY =0
+and (mmt.lpn_id mmt.transfer_LPN_ID or mmt.lpn_id is null or mmt.transfer_LPN_ID is null)
+and mmt.RCV_TRANSACTION_ID =rcv.transaction_id (+)
+and    mmt.organization_id=rcv.organization_id (+)
+group by mtt.transaction_type_name
+
+
+

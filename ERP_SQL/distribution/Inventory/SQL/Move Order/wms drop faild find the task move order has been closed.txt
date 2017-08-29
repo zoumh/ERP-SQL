@@ -1,0 +1,30 @@
+
+--this script is used to find the invalid records in wms_dispatched_tasks which move orders have been closed or cancled
+--Li jing
+
+Select wdt.move_order_line_id, mtrl.inventory_item_id, mtrl.line_status,b.REQUEST_NUMBER,MTRL.LAST_UPDATE_DATE
+from apps.wms_dispatched_tasks wdt, apps.mtl_txn_request_lines mtrl, apps.MTL_TXN_REQUEST_HEADERS b
+where wdt.status in (1,2,3,4)
+and mtrl.line_status in (5,6)
+and wdt.move_order_line_id = mtrl.line_id 
+and b.HEADER_ID=mtrl.HEADER_ID;
+
+
+DELETE FROM wms_dispatched_tasks wdt
+WHERE status in (1,2,3,4)
+and wdt.move_order_line_id in
+(SELECT mtrl.line_id FROM mtl_txn_request_lines mtrl
+WHERE mtrl.line_status in (5,6))
+
+
+
+
+------Table: WMS_DISPATCHED_TASKS
+Comment: Dispatched Tasks Table
+Text:
+Table that holds all the tasks that are :
+(1) Dispatched to the user (user has accepted a task)
+(2) Queued to the user (assigned to the user manually)
+(3) Loaded (user has loaded the task on to his equipment but has not dropped it off yet)
+(4) Erred
+

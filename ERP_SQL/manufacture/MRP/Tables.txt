@@ -1,0 +1,51 @@
+
+
+
+----MTL_DEMAND
+This table stores demand and reservation information used in Available
+To Promise, Planning and other Manufacturing functions. There are
+three major row types stored in the table: Summary Demand rows,
+Open Demand Rows, and Reservation Rows.
+
+select * from apps.MTL_DEMAND  where inventory_item_id in --73720
+
+
+----MTL_SUPPLY
+There are four different types of supply captured in this table:
+1) Approved Requisitions
+2) Approved Purchase orders
+3) Shipments from suppliers
+4) Intransit shipments from another organization
+
+One record of REQ type will be created for one requisition line when the requisition is approved. 
+One record of PO type will be created per PO distribution when a PO is approved. 
+One record per shipment line will be created when a shipment is created.
+
+Records in MTL_SUPPLY are deleted every time you change the document status to not approved.
+
+The supply type code of a REQ supply record is changed to PO every time a requisition is autocreated.
+
+The supply type code is changed from PO to RECEIVING when a PO is fully received.
+
+If a PO is partially received then a supply with the supply type code of RECEIVING will be created for the quantity received. When the receipt is delivered the RECEIVING supply is deleted. SHIPMENT supply works in the same way as PO supply.
+
+
+----MTL_SALES_ORDERS
+stores Inventory¡¯s local definition of sales orders.
+Unlike account numbers which are stored as flexfields in GL_CODE_COMBINATIONS, or purchase orders which are stored in
+PO_HEADERS, sales orders are not assumed to originate in any particular application. MTL_SALES_ORDERS exists for the purpose of mapping sales orders between other applications and Inventory.
+MTL_SALES_ORDERS is a key flexfield table with no structure defining column or set defining column. The flexfield code for this table is MKTS. Only one structure for the flexfield may be defined for any installation of Inventory. Inventory demand interface and demand manager will validate sales orders on segment values, and will create a new SALES_ORDER_ID when necessary.
+
+
+------MRP_WORKBENCH_BUCKET_DATES 
+is a table that stores the start date of buckets for the Planner Workbench Horizontal Plan.
+has a row for every bucket type and plan name.
+
+BUCKET_TYPE:
+1 Days
+2 Weeks
+3 Periods
+
+
+
+

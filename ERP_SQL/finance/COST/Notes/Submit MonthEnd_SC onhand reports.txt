@@ -1,0 +1,72 @@
+
+----------------------------
+Month end Inventory Report:
+
+On hand Report SQL --- std Cost for PROD & ARC
+(Schedule this Report in "COST_Management": BMC_INV_Snapshot
+Table:
+PRD_snapshot
+ARC_snapshot )
+
+Layer Inventory Value Report --- FIFO for PRJ  ((ID=309933)
+
+
+WIP Report for PROD:
+WIP Value Report (ID=309926)
+Discrete Job Value Report -Standard Costing  (ID=309930)
+
+Discrete Job List Report (For PRD & PRJ , un-Closed WO Report)
+
+
+---------------------------------------------------------------
+
+Industrialization Project Organization                                                                                                              Report Date   29-FEB-2004 23:54
+                                                                   Layer Inventories Value Report - FIFO/LIFO Costing
+                                                                                Summary          (CNY)
+
+                  Cost Group Option:  All Cost Groups
+                Specific Cost Group:
+                            Sort By:  Item+
+                           Currency:  CNY
+                      Exchange Rate:  1
+                       Category Set:  Inventory
+                    Categories From:
+                                 To:
+                         Items From:
+                                 To:
+            Include Zero Cost Layer:  Yes
+        Include Zero Quantity Layer:  No
+
+
+
+
+---------------------------------------------------------------
+
+BMC Production Organization                                                                          Report Date:  29-FEB-2004 23:55
+Period Close Date:  29-FEB-04                             WIP Value Report                                  Page:      1  of      23
+Include Jobs Closed During Period                       Period to Date (CNY)
+
+
+---------------------------------------------------------------
+
+
+
+BMC Production Organization                                                                          Report Date:  29-FEB-2004 23:55
+                                                     Discrete Job Value Report
+                                                           Summary (CNY)
+
+
+                      Sort By:  Job
+                  Report Type:  Summary
+                   Class Type:  Standard Discrete
+    Include Bulk Requirements:  Yes
+  Include Vendor Requirements:  Yes
+                 Classes From:
+                           To:
+                    Jobs From:
+                           To:
+                       Status:
+              Assemblies From:
+                           To:
+                      Project:
+

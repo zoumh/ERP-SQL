@@ -1,0 +1,88 @@
+
+-- Find the PO_Header from Shipment_Header_Id
+Select Po_Header_Id, Po_Line_Id, vendor_id,vendor_site_id,Transaction_Type, Transfer_Lpn_Id, Shipment_Header_Id,rcv.*
+From   Apps.Rcv_Transactions rcv
+Where  Shipment_Header_Id=1013811
+
+
+---Verify this RECEIPT_NUM  
+select * from Apps.Rcv_Shipment_Headers where SHIPMENT_HEADER_ID=1013811
+ 
+select * from Apps.Rcv_Shipment_lines where SHIPMENT_HEADER_ID=1013811
+
+
+--------List PO Info  
+select a.TRANSACTION_ID,a.PARENT_TRANSACTION_ID,--a.INV_TRANSACTION_ID,a.INTERFACE_SOURCE_CODE,a.INTERFACE_TRANSACTION_ID,
+a.creation_date ,a.quantity,a.DESTINATION_TYPE_CODE, Shipment_Header_Id,
+a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,b.segment1 Item,
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB,a.CURRENCY_CODE 
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,apps.mtl_system_items b
+where 
+a.source_document_code='PO'
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+--and Shipment_Header_Id =1013811
+and b.ORGANIZATION_ID =a.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID =d.item_id
+and c.SEGMENT1 ='1075505' 
+and d.LINE_NUM='16'
+and a.CREATION_DATE>=to_date('2008-12-26','yyyy-mm-dd')
+order by c.segment1,d.LINE_NUM,a.creation_date
+
+
+
+select * from apps.rcv_transactions where TRANSACTION_ID in (4655069,4655000)
+
+
+select * from APPS.RCV_RECEIVING_SUB_LEDGER where RCV_TRANSACTION_ID in (4655069,4655000)
+ (select TRANSACTION_ID from apps.rcv_transactions where TRANSACTION_ID in (4655069,4655000))
+
+
+select * from apps.GL_IMPORT_REFERENCES where GL_SL_LINK_ID in 
+   (select GL_SL_LINK_ID from APPS.RCV_RECEIVING_SUB_LEDGER where RCV_TRANSACTION_ID in (4655069,4655000))
+
+
+
+select b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME Journal, b.LINE_JE_LINE_NUM
+,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,--JE_CATEGORY,
+c.USER_JE_CATEGORY_NAME,
+b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,
+apps.GL_JE_CATEGORIES c,
+(select JE_BATCH_ID,JE_HEADER_ID,JE_LINE_NUM from apps.GL_IMPORT_REFERENCES where GL_SL_LINK_ID in 
+   (select GL_SL_LINK_ID from APPS.RCV_RECEIVING_SUB_LEDGER where RCV_TRANSACTION_ID in (4655069,4655000))) d
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and b.JE_BATCH_ID=d.JE_BATCH_ID
+and b.JE_HEADER_ID=d.JE_HEADER_ID
+and b.LINE_JE_LINE_NUM=d.JE_LINE_NUM
+and  (b.PERIOD_NAME in ('DEC-08'))
+and ACTUAL_FLAG='A'
+and HEADER_STATUS ='P'
+
+
+-------PO receive Journal sum by Batch
+select a.JE_BATCH_NAME,
+sum(nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0)) amt
+from APPS.RCV_RECEIVING_SUB_LEDGER a,apps.gl_code_combinations b,apps.rcv_transactions c  
+where  a.period_name ='JAN-09'  and 
+a.CREATION_DATE>to_date('20090101 00:00:00','YYYYMMDD HH24:MI:SS')
+and a.CREATION_DATE<to_date('20090201 00:00:00','YYYYMMDD HH24:MI:SS')
+and b.code_combination_id=a.CODE_COMBINATION_ID
+and b.segment3='120100'
+and c.ORGANIZATION_ID =130
+and a.RCV_TRANSACTION_ID=c.TRANSACTION_ID
+group by a.JE_BATCH_NAME
+
+
+
+
+
+
+
+

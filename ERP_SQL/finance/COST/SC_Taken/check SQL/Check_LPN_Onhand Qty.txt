@@ -1,0 +1,125 @@
+
+
+----------TO Check LPN's Qty with Inventory Onhand Qty
+
+
+
+select  a.LPN_Qty,b.Onhand_Qty,c.LICENSE_PLATE_NUMBER LPN,
+d.segment1 Item,e.SEGMENT1 Category1,e.SEGMENT2 Category2,
+a.LPN_ID,a.Item_ID
+from
+(select PARENT_LPN_ID LPN_ID,INVENTORY_ITEM_ID Item_ID,ORGANIZATION_ID,
+sum(QUANTITY) LPN_Qty
+from apps.wms_lpn_contents b
+--where ORGANIZATION_ID=83 
+group by PARENT_LPN_ID,INVENTORY_ITEM_ID,ORGANIZATION_ID) a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,ORGANIZATION_ID,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a
+--where ORGANIZATION_ID=83 
+group by lpn_id,INVENTORY_ITEM_ID,ORGANIZATION_ID) b,
+apps.wms_license_plate_numbers c,
+apps.mtl_system_items d,
+apps.mtl_item_categories_v e
+where a.LPN_ID=b.LPN_ID 
+and a.Item_ID=b.Item_ID
+and a.Item_ID=d.inventory_item_id
+and a.lpn_id=c.lpn_id
+and d.ORGANIZATION_ID=a.ORGANIZATION_ID
+and c.ORGANIZATION_ID=b.ORGANIZATION_ID
+and e.ORGANIZATION_ID=a.ORGANIZATION_ID
+and c.ORGANIZATION_ID=a.ORGANIZATION_ID
+and e.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.LPN_Qty<>b.Onhand_Qty
+
+
+
+-----------old (only prod)
+select  a.LPN_Qty,b.Onhand_Qty,c.LICENSE_PLATE_NUMBER LPN,
+d.segment1 Item,e.SEGMENT1 Category1,e.SEGMENT2 Category2,
+a.LPN_ID,a.Item_ID
+from
+(select PARENT_LPN_ID LPN_ID,INVENTORY_ITEM_ID Item_ID,
+sum(QUANTITY) LPN_Qty
+from apps.wms_lpn_contents b
+where ORGANIZATION_ID=83 
+group by PARENT_LPN_ID,INVENTORY_ITEM_ID) a,
+(select lpn_id,INVENTORY_ITEM_ID Item_ID,
+sum(TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a
+where ORGANIZATION_ID=83 
+group by lpn_id,INVENTORY_ITEM_ID) b,
+apps.wms_license_plate_numbers c,
+apps.mtl_system_items d,
+apps.mtl_item_categories_v e
+where a.LPN_ID=b.LPN_ID 
+and a.Item_ID=b.Item_ID
+and a.Item_ID=d.inventory_item_id
+and a.lpn_id=c.lpn_id
+and d.ORGANIZATION_ID=83 
+and c.ORGANIZATION_ID=83
+and e.ORGANIZATION_ID=83
+and e.INVENTORY_ITEM_ID=d.INVENTORY_ITEM_ID
+and a.LPN_Qty<>b.Onhand_Qty
+
+
+----------or using two view :
+CREATE OR REPLACE VIEW APPS.test_SC_LPN
+AS
+select b.PARENT_LPN_ID LPN_ID,
+sum(b.QUANTITY) LPN_Qty
+from apps.wms_lpn_contents b
+where b.ORGANIZATION_ID=83 
+--and a.lpn_id=177142
+group by b.PARENT_LPN_ID
+
+
+
+
+CREATE OR REPLACE VIEW APPS.test_SC_Onhand
+AS
+select a.lpn_id,
+sum(a.TRANSACTION_QUANTITY) Onhand_Qty
+from apps.MTL_ONHAND_QUANTITIES_DETAIl a
+where a.ORGANIZATION_ID=83 
+--and a.lpn_id=177142
+group by a.lpn_id
+
+
+
+
+select * from APPS.test_SC_LPN a,APPS.test_SC_Onhand b
+where a.lpn_ID=b.LPN_ID and a.LPN_QTY<>b.ONHAND_QTY
+
+
+
+-------------------------------------------------------------
+
+
+---LPN number/ID/Status
+
+
+select LPN_CONTEXT Status,LPN_ID,LICENSE_PLATE_NUMBER from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='PS0001021'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

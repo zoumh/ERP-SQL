@@ -1,0 +1,64 @@
+
+
+-------------All daily update record
+
+select b.SEGMENT1 Item,a.standard_cost,a.update_date,a.update_description 
+from apps.CST_COST_HISTORY_V a,apps.mtl_system_items_b b
+where a.inventory_item_id=b.inventory_item_id
+and a.update_date>= to_date('2004-10-01','YYYY-MM-DD')
+and a.update_date<= to_date('2005-03-31','YYYY-MM-DD')
+and a.organization_id=83 and b.organization_id=83
+and b.SEGMENT1 in ('RNH 942 27','SXK 109 5745','SXK 109 5787','SXK 109 5841','SXK 109 5745','RNH 942 27','SXK 109 5787','SXA 109 4637')
+order by b.SEGMENT1,a.update_date
+
+
+
+
+----------Cost update history --show distinct cost lines & range of date
+
+select item,standard_cost,mi,ma
+from  
+(
+select b.SEGMENT1 Item,a.standard_cost standard_cost,
+to_char(min(a.update_date),'YYYY-MM-DD') mi,to_char(max(a.update_date),'YYYY-MM-DD') ma
+from apps.CST_COST_HISTORY_V a,apps.mtl_system_items_b b
+where a.inventory_item_id=b.inventory_item_id
+and a.update_date>= to_date('2005-4-25','YYYY-MM-DD')
+and a.update_date<= to_date('2005-4-30','YYYY-MM-DD')
+and a.organization_id=83 and b.organization_id=83
+--and b.SEGMENT1 in ('RNH 942 27')--,'SXK 109 5745','SXK 109 5787','SXK 109 5841','SXK 109 5745','RNH 942 27','SXK 109 5787','SXA 109 4637')
+group by b.SEGMENT1 ,a.standard_cost 
+) order by item ,ma
+
+
+
+select item,standard_cost,decode(mi,ma,mi,mi||'~'||ma) Date_Range
+from  
+(
+select b.SEGMENT1 Item,a.standard_cost standard_cost,to_char(min(a.update_date),'YYYY-MM-DD') mi,to_char(max(a.update_date),'YYYY-MM-DD') ma
+from apps.CST_COST_HISTORY_V a,apps.mtl_system_items_b b
+where a.inventory_item_id=b.inventory_item_id
+and a.update_date>= to_date('2004-10-01','YYYY-MM-DD')
+and a.update_date<= to_date('2005-12-31','YYYY-MM-DD')
+and a.organization_id=83 and b.organization_id=83
+and b.SEGMENT1 in ('RNH 942 27')--,'SXK 109 5745','SXK 109 5787','SXK 109 5841','SXK 109 5745','RNH 942 27','SXK 109 5787','SXA 109 4637')
+group by b.SEGMENT1 ,a.standard_cost 
+) order by item ,decode(mi,ma,mi,mi||'~'||ma)
+
+
+
+	------use min,Max date to show distinct cost lines & range of date
+
+select item,standard_cost,mi Start_Date,ma End_Date--decode(mi,ma,mi,mi||'~'||ma)
+from  
+(
+select b.SEGMENT1 Item,a.standard_cost standard_cost,to_char(min(a.update_date),'YYYY-MM-DD') mi,to_char(max(a.update_date),'YYYY-MM-DD') ma
+from apps.CST_COST_HISTORY_V a,apps.mtl_system_items_b b
+where a.inventory_item_id=b.inventory_item_id
+and a.update_date>= to_date('2004-10-01','YYYY-MM-DD')
+and a.update_date<= to_date('2005-12-31','YYYY-MM-DD')
+and a.organization_id=83 and b.organization_id=83
+and b.SEGMENT1 in ('RNH 942 27')--,'SXK 109 5745','SXK 109 5787','SXK 109 5841','SXK 109 5745','RNH 942 27','SXK 109 5787','SXA 109 4637')
+group by b.SEGMENT1 ,a.standard_cost 
+) order by item ,mi,ma--decode(mi,ma,mi,mi||'~'||ma)
+

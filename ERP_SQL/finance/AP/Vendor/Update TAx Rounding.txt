@@ -1,0 +1,58 @@
+
+
+-------List Site Tax rule<> Near
+select b.org_id,c.SEGMENT1 As Vender_Num,convert(c.VENDOR_NAME,'ZHS16GBK') as Name  ,b.VENDOR_SITE_CODE,
+c.AP_TAX_ROUNDING_RULE Vendor_Tax_Rounding_Rull,b.AP_TAX_ROUNDING_RULE Site_Tax_Rounding_Rull 
+from apps.AP_TERMS_LINES a,apps.PO_VENDOR_SITES_ALL b,apps.PO_VENDORS c,apps.GL_CODE_combinations d
+,apps.GL_CODE_combinations e,apps.FND_USER f
+where a.TERM_ID=b.TERMS_ID
+and b.ACCTS_PAY_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and b.PREPAY_CODE_COMBINATION_ID=e.CODE_COMBINATION_ID
+and b.VENDOR_ID=c.VENDOR_ID
+and b.CREATED_BY =f.USER_ID
+--and VENDOR_TYPE_LOOKUP_CODE<>'EMPLOYEE'
+--and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+--and c.SEGMENT1='6'
+and b.AP_TAX_ROUNDING_RULE<>'N'
+and b.org_id=127
+order by b.VENDOR_ID,b.VENDOR_SITE_CODE
+
+
+
+----All tax rule
+select b.ORG_ID,c.SEGMENT1 As Vender_Num,convert(c.VENDOR_NAME,'ZHS16GBK') as Name  ,b.VENDOR_SITE_CODE,
+c.AP_TAX_ROUNDING_RULE Vendor_Tax_Rounding_Rule,b.AP_TAX_ROUNDING_RULE Site_Tax_Rounding_Rule 
+from apps.AP_TERMS_LINES a,apps.PO_VENDOR_SITES_ALL b,apps.PO_VENDORS c,apps.GL_CODE_combinations d
+,apps.GL_CODE_combinations e,apps.FND_USER f
+where a.TERM_ID=b.TERMS_ID
+and b.ACCTS_PAY_CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and b.PREPAY_CODE_COMBINATION_ID=e.CODE_COMBINATION_ID
+and b.VENDOR_ID=c.VENDOR_ID
+and b.CREATED_BY =f.USER_ID
+and VENDOR_TYPE_LOOKUP_CODE<>'EMPLOYEE'
+--and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+--and c.SEGMENT1='6'
+and b.ORG_ID>=127
+order by b.VENDOR_ID,b.VENDOR_SITE_CODE
+
+select * from apps.PO_VENDOR_SITES_ALL where 
+VENDOR_ID = (select VENDOR_ID from apps.PO_VENDORS where SEGMENT1='6')
+
+update apps.PO_VENDORS set AP_TAX_ROUNDING_RULE='N' where SEGMENT1='6'
+
+update apps.PO_VENDOR_SITES_ALL set AP_TAX_ROUNDING_RULE='N' where 
+VENDOR_ID = (select VENDOR_ID from apps.PO_VENDORS where SEGMENT1='6')
+
+commit
+
+-----Updated
+change vendor Tax option to 'nest'
+ 
+ 
+create table bmc_vendor_bkup as select * from apps.PO_VENDORS
+ 
+select segment1,AP_TAX_ROUNDING_RULE from apps.PO_VENDORS where AP_TAX_ROUNDING_RULE <>'N'
+ 
+update apps.PO_VENDORS set AP_TAX_ROUNDING_RULE='N' where AP_TAX_ROUNDING_RULE<>'N'
+
+

@@ -1,0 +1,90 @@
+
+
+------------After quaterly update price, need to update Open SO's price
+----use Order type
+
+select 
+b.ORDER_NUMBER,
+a.LINE_NUMBER||'.'||SHIPMENT_NUMBER Line,b.FLOW_STATUS_CODE Head_Status
+,a.FLOW_STATUS_CODE Line_Status
+,a.ORDERED_ITEM
+,a.ORDERED_QUANTITY
+,a.CANCELLED_QUANTITY
+,a.FULFILLED_QUANTITY
+,a.INVOICED_QUANTITY
+,a.SHIPPED_QUANTITY
+,a.SHIPPING_QUANTITY
+,a.PRICING_QUANTITY
+--,a.UNIT_LIST_PRICE OR_Price,
+,a.UNIT_SELLING_PRICE OR_Sell_Price,f.operand Price_from_List
+,e.name SalesRep,
+c.NAME Type_Name,
+a.CREATION_DATE,
+b.ship_to_org_id Ship_To_Location,
+b.invoice_to_org_id Bill_To_Location,
+--a.cancelled,
+a.open_flag,
+c.description Type_Desc,
+a.ACTUAL_SHIPMENT_DATE
+,a.LAST_UPDATE_DATE,
+a.tax_code,a.tax_value,d.Name Price_List_Name,b.HEADER_ID
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c,
+apps.qp_list_headers d,apps.ra_salesreps_all e,apps.qp_list_lines_v f,apps.mtl_system_items_b g
+where a.HEADER_ID=b.HEADER_ID
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+and a.price_list_id=d.list_header_id 
+and c.LANGUAGE='US'
+and e.SALESREP_ID=a.SALESREP_ID
+--and d.Name in ('New DC DPY Price List','New Domestic DPY Price List')
+and c.NAME in ('DC DPY Order','Domestic Order')
+and b.FLOW_STATUS_CODE in ('BOOKED','ENTERED')
+and d.list_header_id=f.list_header_id 
+--and d.name='New Domestic DPY Price List'--'New DC DPY Price List'
+--and f.PRODUCT_ATTR_VAL_DISP=g.segment1
+and g.inventory_item_id=f.product_id
+and g.inventory_item_id=a.inventory_item_id
+and g.ORGANIZATION_ID=83
+--and g.inventory_item_id=3103
+and a.CREATION_DATE<to_date('2005-07-1','YYYY-MM-DD' )
+--and f.operand<>a.UNIT_LIST_PRICE
+and a.UNIT_SELLING_PRICE<>f.operand
+order by b.ORDER_NUMBER,a.LINE_NUMBER||'.'||SHIPMENT_NUMBER
+
+
+
+------use price list type
+select 
+b.ORDER_NUMBER,
+a.LINE_NUMBER||'.'||SHIPMENT_NUMBER Line,b.FLOW_STATUS_CODE Head_Status
+,a.FLOW_STATUS_CODE Line_Status
+,a.ORDERED_ITEM
+,a.ORDERED_QUANTITY
+,a.CANCELLED_QUANTITY
+,a.FULFILLED_QUANTITY
+,a.INVOICED_QUANTITY
+,a.SHIPPED_QUANTITY
+,a.SHIPPING_QUANTITY
+,a.PRICING_QUANTITY
+,a.UNIT_LIST_PRICE
+,a.UNIT_SELLING_PRICE
+,e.name SalesRep,
+c.NAME Type_Name,
+a.CREATION_DATE,
+b.ship_to_org_id Ship_To_Location,
+b.invoice_to_org_id Bill_To_Location,
+--a.cancelled,
+a.open_flag,
+c.description Type_Desc,
+a.ACTUAL_SHIPMENT_DATE
+,a.LAST_UPDATE_DATE,
+a.tax_code,a.tax_value,d.Name Price_List_Name,b.HEADER_ID
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c,
+apps.qp_list_headers d,apps.ra_salesreps_all e
+where a.HEADER_ID=b.HEADER_ID
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+and a.price_list_id=d.list_header_id 
+and c.LANGUAGE='US'
+and e.SALESREP_ID=a.SALESREP_ID
+and d.Name in ('New DC DPY Price List','New Domestic DPY Price List')
+and b.FLOW_STATUS_CODE in ('BOOKED','ENTERED')
+

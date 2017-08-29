@@ -1,0 +1,37 @@
+
+
+Find a invoice's Match Type:
+select a.DIST_MATCH_TYPE,b.INVOICE_NUM,b.INVOICE_ID
+from apps.AP_INVOICE_DISTRIBUTIONS_all a,apps.ap_invoices_all b --,apps.PO_DISTRIBUTIONS_ALL b
+where a.INVOICE_ID=b.INVOICE_ID
+and b.INVOICE_NUM='30301488'
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+
+
+-------Non-BOM PO matching details
+select b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist
+,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+order by d.segment1--b.INVOICE_NUM
+
+
+
+-----PO line Type
+select distinct(description) from apps.PO_LINE_types_tl a,apps.PO_LINEs_all b where a.LINE_TYPE_ID=b.LINE_TYPE_ID
+
+select LINE_TYPE,LINE_TYPE_ID,DESCRIPTION from apps.PO_line_types

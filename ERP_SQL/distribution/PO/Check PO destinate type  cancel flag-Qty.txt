@@ -1,0 +1,38 @@
+
+
+-----check PO destinate type  cancel flag-Qty
+select d.creation_date,d.TYPE_LOOKUP_CODE PO_Type,f.ACCRUE_ON_RECEIPT_FLAG,
+d.AUTHORIZATION_STATUS Approve_Status,
+e.CANCEL_FLAG line_cancel, f.CANCEL_FLAG Ship_Cancel,
+e.CLOSED_CODE Line_close,f.CLOSED_CODE ship_close,
+d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,
+to_char(f.SHIPMENT_NUM) PO_Ship_Num,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+f.QUANTITY Qty_Ordered,f.QUANTITY_RECEIVED,f.QUANTITY_CANCELLED,
+f.QUANTITY -f.QUANTITY_RECEIVED-f.QUANTITY_CANCELLED Qty_Open,
+f.QUANTITY_BILLED
+from apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f,
+apps.PO_DISTRIBUTIONS_ALL c
+where e.PO_HEADER_ID=d.PO_HEADER_ID
+and f.PO_HEADER_ID=d.PO_HEADER_ID
+and f.PO_LINE_ID=e.PO_LINE_ID
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and e.org_id=d.org_id
+--and f.QUANTITY_BILLED>f.QUANTITY_RECEIVED
+and d.org_id=127
+--f.ACCRUE_ON_RECEIPT_FLAG='N'
+/*(f.ACCRUE_ON_RECEIPT_FLAG<>c.ACCRUE_ON_RECEIPT_FLAG
+    or c.DESTINATION_TYPE_CODE ='INVENTORY' and c.ACCRUE_ON_RECEIPT_FLAG='N'
+    or c.DESTINATION_TYPE_CODE ='EXPENSE' and c.ACCRUE_ON_RECEIPT_FLAG='Y') */
+--and (d.segment1 ='1086395' and e.LINE_NUM=2)
+and d.creation_date>to_date('2009-1-1','yyyy-mm-dd')
+--and d.TYPE_LOOKUP_CODE <> 'STANDARD'
+--and e.CANCEL_FLAG ='Y' and (f.CANCEL_FLAG is null or f.CANCEL_FLAG='N')----line cancel, ship cancel is null
+and f.CANCEL_FLAG ='Y'
+and c.DESTINATION_TYPE_CODE ='INVENTORY'--EXPENSE' --
+--and (f.QUANTITY  - (NVL(f.QUANTITY_BILLED,0)) - (NVL(f.QUANTITY_CANCELLED,0))) > 0
+and f.QUANTITY -nvl(f.QUANTITY_RECEIVED-f.QUANTITY_CANCELLED
+order by d.segment1,e.LINE_NUM,f.SHIPMENT_NUM

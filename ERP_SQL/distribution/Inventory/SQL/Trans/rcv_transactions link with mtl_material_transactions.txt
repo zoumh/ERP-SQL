@@ -1,0 +1,288 @@
+
+
+-----MO Transfer LPN link to Vendor , also has SubTransfer Qty
+
+--------------rcv_transactions link with mtl_material_transactions
+
+
+select lpn.LICENSE_PLATE_NUMBER lpn,msi.segment1 Item,f.segment1 Model,f.segment2 Type,f.segment3,f.segment4,
+mtt.transaction_type_name,mmt.subinventory_code From_WH,
+decode(substr(mmt.transfer_subinventory,1,2),'SA','SAxx','OtherWH') To_WH,rcv.VENDOR_NAME,--count(*),
+sum(decode(transaction_type_name,'Subinventory Transfer',0,mmt.TRANSACTION_QUANTITY)) MO_Qty,
+sum(decode(transaction_type_name,'Subinventory Transfer',mmt.TRANSACTION_QUANTITY,0)) SubTransfer_Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.mtl_item_categories_v f,
+  apps.wms_license_plate_numbers LPN,
+  (select distinct a.transfer_lpn_id,VENDOR_NAME from apps.rcv_transactions a,apps.PO_VENDORS b where a.VENDOR_ID=b.VENDOR_ID) rcv 
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and (transaction_type_name like ('%Transfer') and transaction_type_name not in ('Cost Group Transfer','Direct Org Transfer'))
+and    trunc(mmt.transaction_date) >= to_date('20060701','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060703','YYYYMMDD')
+--and (mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+and (mmt.transfer_subinventory like 'SA%')
+and (mmt.subinventory_code in ('SB','SD'))
+and mmt.TRANSACTION_QUANTITY <=0
+and f.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and f.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and f.category_set_id=1
+and    mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+and mmt.organization_id = lpn.organization_id(+)  
+and f.segment3<>'JIT'
+--and lpn.LICENSE_PLATE_NUMBER is null
+and (msi.segment1 not like 'RTK%' and msi.segment1 not like '%LZ%')
+and msi.Item_Type='COM'
+and msi.planning_make_buy_code=2 --Buy
+and mmt.TRANSFER_LPN_ID=rcv.transfer_lpn_id(+)
+--and rcv.VENDOR_NAME is null
+--and rcv.transfer_lpn_id=207378
+group by decode(substr(mmt.transfer_subinventory,1,2),'SA','SAxx','OtherWH'),
+mmt.subinventory_code,mtt.transaction_type_name,lpn.LICENSE_PLATE_NUMBER,msi.segment1,rcv.VENDOR_NAME,
+f.segment1 ,f.segment2 ,f.segment3,f.segment4
+
+
+
+
+----------MO Qty, SubTransfer Qty, SB/SD to SAxx
+
+select   mmt.subinventory_code From_WH,transaction_type_name,
+decode(substr(mmt.transfer_subinventory,1,2),'SA','SAxx','OtherWH') To_WH,count(*),
+sum(decode(transaction_type_name,'Subinventory Transfer',0,mmt.TRANSACTION_QUANTITY)) MO_Qty,
+sum(decode(transaction_type_name,'Subinventory Transfer',mmt.TRANSACTION_QUANTITY,0)) SubTransfer_Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and (transaction_type_name like ('%Transfer') and transaction_type_name not in ('Cost Group Transfer','Direct Org Transfer'))
+and    trunc(mmt.transaction_date) >= to_date('20060701','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060730','YYYYMMDD')
+--and (mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+and (mmt.transfer_subinventory like 'SA%')
+and (mmt.subinventory_code in ('SB','SD'))
+and mmt.TRANSACTION_QUANTITY <=0
+group by mmt.subinventory_code,decode(substr(mmt.transfer_subinventory,1,2),'SA','SAxx','OtherWH'),transaction_type_name
+
+
+----------Mo From SB/SD to SA & other WH
+
+select   distinct mmt.subinventory_code From_WH,
+mmt.transfer_subinventory To_WH,count(*),
+sum(mmt.TRANSACTION_QUANTITY) Qty,round(sum(mmt.TRANSACTION_QUANTITY)/count(*),0) Avg
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and (transaction_type_name like ('%Transfer') and transaction_type_name not in ('Cost Group Transfer','Direct Org Transfer'))
+and    trunc(mmt.transaction_date) >= to_date('20060901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060930','YYYYMMDD')
+--and (mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+and (mmt.transfer_subinventory like 'SA%')
+and (mmt.subinventory_code in ('SB','SD'))
+and mmt.TRANSACTION_QUANTITY <=0
+group by mmt.transfer_subinventory ,mmt.subinventory_code
+
+
+
+----details verify
+
+select   msi.inventory_item_id,mmt.transaction_id,msi.segment1 Item,mmt.transaction_date,mmt.REVISION 
+mtt.transaction_type_name,mmt.subinventory_code From_WH,
+mmt.transfer_subinventory To_WH,(mmt.TRANSACTION_QUANTITY) Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer','SH Move Order Transfer')
+and (transaction_type_name like ('Sub%Transfer') and transaction_type_name not in ('Cost Group Transfer','Direct Org Transfer'))
+and    trunc(mmt.transaction_date) = to_date('20060901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060930','YYYYMMDD')
+and ((mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+or (mmt.subinventory_code = 'SA1' and mmt.transfer_subinventory = 'PQA') )
+--and (mmt.subinventory_code in ('SB','SD'))
+and mmt.TRANSACTION_QUANTITY <=0
+--and (mmt.subinventory_code = 'SA1' or mmt.transfer_subinventory like '%SA%')
+and msi.segment1='BKE 903 24.R2A'
+order by mmt.transaction_id
+
+select * from apps.mtl_material_transactions mmt where inventory_item_id=76030
+and    trunc(mmt.transaction_date) = to_date('20060901','YYYYMMDD') 
+and ((mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+or (mmt.subinventory_code = 'SA1' and mmt.transfer_subinventory = 'PQA') )
+
+
+------PO Receipt to SAxx (No LPN)
+
+select    mmt.subinventory_code From_WH,f.segment3,
+mmt.transfer_subinventory To_WH,count(*),
+sum(mmt.TRANSACTION_QUANTITY) Qty,round(sum(mmt.TRANSACTION_QUANTITY)/count(*),0) Avg
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,apps.mtl_item_categories_v f
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and (transaction_type_name in  ('PO Receipt','PO Rcpt Adjust','Return to Vendor'))
+and    trunc(mmt.transaction_date) >= to_date('20060901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060930','YYYYMMDD')
+and (mmt.subinventory_code like ('SA%'))
+--and mmt.TRANSACTION_QUANTITY <=0
+and f.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and f.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and f.category_set_id=1
+and f.segment3<>'JIT'
+group by mmt.transfer_subinventory ,mmt.subinventory_code,f.segment3
+
+
+
+-------------Sub Inv Transfer (SB/SD to SAxx)
+
+select lpn.LICENSE_PLATE_NUMBER lpn,msi.segment1 Item,--mmt.transaction_id,
+mtt.transaction_type_name,mmt.subinventory_code From_WH,
+mmt.transfer_subinventory To_WH,count(*),
+sum(mmt.TRANSACTION_QUANTITY) Qty,round(sum(mmt.TRANSACTION_QUANTITY)/count(*),0) Avg
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.mtl_item_categories_v f,
+  apps.wms_license_plate_numbers LPN
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and (transaction_type_name like ('%Transfer') and transaction_type_name not in ('Cost Group Transfer','Direct Org Transfer'))
+and    trunc(mmt.transaction_date) >= to_date('20060701','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060703','YYYYMMDD')
+--and (mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+and (mmt.transfer_subinventory like 'SA%')
+and (mmt.subinventory_code in ('SB','SD'))
+and mmt.TRANSACTION_QUANTITY <=0
+and f.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and f.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and f.category_set_id=1
+and    mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+and mmt.organization_id = lpn.organization_id(+)  
+and f.segment3<>'JIT'
+--and lpn.LICENSE_PLATE_NUMBER is null
+and (msi.segment1 not like 'RTK%' and msi.segment1 not like '%LZ%')
+and msi.Item_Type='COM'
+and msi.planning_make_buy_code=2 --Buy
+group by mmt.transfer_subinventory ,mmt.subinventory_code,mtt.transaction_type_name,lpn.LICENSE_PLATE_NUMBER,msi.segment1
+
+
+
+select lpn.LICENSE_PLATE_NUMBER lpn,
+mtt.transaction_type_name,mmt.subinventory_code From_WH,
+mmt.transfer_subinventory To_WH,count(*),
+sum(mmt.TRANSACTION_QUANTITY) Qty,round(sum(mmt.TRANSACTION_QUANTITY)/count(*),0) Avg
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.mtl_item_categories_v f,
+  apps.wms_license_plate_numbers LPN
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and (transaction_type_name like ('Sub%Transfer') and transaction_type_name not in ('Cost Group Transfer','Direct Org Transfer'))
+and    trunc(mmt.transaction_date) = to_date('20060901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060930','YYYYMMDD')
+--and (mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+and (mmt.transfer_subinventory like 'SA%')
+and (mmt.subinventory_code in ('SB','SD'))
+and mmt.TRANSACTION_QUANTITY <=0
+and f.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and f.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and f.category_set_id=1
+and    mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+and mmt.organization_id = lpn.organization_id(+)  
+and f.segment3<>'JIT'
+and lpn.LICENSE_PLATE_NUMBER is not null
+group by mmt.transfer_subinventory ,mmt.subinventory_code,mtt.transaction_type_name,lpn.LICENSE_PLATE_NUMBER
+
+
+
+select lpn.LICENSE_PLATE_NUMBER lpn,f.segment3 Category,msi.segment1 Item,mmt.transaction_date,mmt.REVISION,
+mtt.transaction_type_name,mmt.subinventory_code From_WH,
+mmt.transfer_subinventory To_WH,(mmt.TRANSACTION_QUANTITY) Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.mtl_item_categories_v f,
+  apps.wms_license_plate_numbers LPN
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and (transaction_type_name like ('Sub%Transfer') and transaction_type_name not in ('Cost Group Transfer','Direct Org Transfer'))
+and    trunc(mmt.transaction_date) >= to_date('20060901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060913','YYYYMMDD')
+--and (mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+and (mmt.transfer_subinventory like 'SA%')
+and (mmt.subinventory_code in ('SB','SD'))
+and mmt.TRANSACTION_QUANTITY <=0
+and f.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and f.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and f.category_set_id=1
+and    mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+and mmt.organization_id = lpn.organization_id(+)  
+and f.segment3<>'JIT'
+
+
+
+---select   mmt.subinventory_code From_WH,transaction_type_name,
+decode(substr(mmt.transfer_subinventory,1,2),'SA','SAxx','OtherWH') To_WH,count(*),
+sum(decode(transaction_type_name,'Subinventory Transfer',0,mmt.TRANSACTION_QUANTITY)) MO_Qty,
+sum(decode(transaction_type_name,'Subinventory Transfer',mmt.TRANSACTION_QUANTITY,0)) SubTransfer_Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and (transaction_type_name like ('%Transfer') and transaction_type_name not in ('Cost Group Transfer','Direct Org Transfer'))
+and    trunc(mmt.transaction_date) >= to_date('20060701','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060730','YYYYMMDD')
+--and (mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+and (mmt.transfer_subinventory like 'SA%')
+and (mmt.subinventory_code in ('SB','SD'))
+and mmt.TRANSACTION_QUANTITY <=0
+and (msi.segment1 not like 'RTK%' and msi.segment1 not like '%LZ%')
+and msi.Item_Type='COM'
+and msi.planning_make_buy_code=2
+group by mmt.subinventory_code,decode(substr(mmt.transfer_subinventory,1,2),'SA','SAxx','OtherWH'),transaction_type_name
+
+
+

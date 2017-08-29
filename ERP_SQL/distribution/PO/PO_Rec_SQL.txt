@@ -1,0 +1,50 @@
+
+select * from apps.rcv_transactions
+
+-------BOM PO Receive Trans by Receive Date
+select a.segment1 PO_Num,f.TRANSACTION_TYPE,
+to_char(b.line_num) line_num,to_char(c.shipment_num) Ship_num,
+c.quantity Order_ShipQty,c.quantity_cancelled Ship_Canced,
+(c.quantity-c.quantity_cancelled)*b.unit_price Order_Amnt,b.unit_price,nvl(a.rate,1) Rate,
+a.currency_code Curr,to_char(c.SHIP_TO_LOCATION_ID) Ship_To,
+f.QUANTITY Received_Qty,f.PO_unit_price,f.currency_code,f.currency_conversion_rate Rec_Rate,(f.QUANTITY * f.PO_unit_price)*f.currency_conversion_rate Rec_Amt_CNY,
+f.destination_type_code Rec_Destin,
+Item_Description,b.cancel_flag Line_Cancel,c.creation_date,c.quantity ShipLine_Qty,
+c.quantity_received ShipLine_Received
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.po_Line_locations_all c,
+--,apps.PO_DISTRIBUTIONS_ALL d,apps.gl_code_combinations e,
+apps.rcv_transactions f
+where 
+a.po_header_id=b.po_header_id
+and a.po_header_id=c.po_header_id
+and b.po_line_id=c.po_line_id
+--and d.line_location_id=c.line_location_id
+--and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and (b.line_type_id<>1020 )----Not N-BOM PO Line
+--and a.segment1='0000056577'--0000056941'--'1010075'--'0000056941'
+and f.po_header_id=a.po_header_id
+and f.po_line_id=b.po_line_id
+and f.po_line_location_id=c.line_location_id
+--and d.po_distribution_id=f.po_distribution_id(+)
+and f.TRANSACTION_TYPE not like 'DEL%' 
+and f.TRANSACTION_DATE<to_date('2005-03-01','YYYY-MM-DD')
+and f.TRANSACTION_DATE>to_date('2005-01-01','YYYY-MM-DD')
+order by a.segment1||'-'||b.line_num||'-'||c.shipment_num 
+
+
+
+
+select * from APPS.RCV_RECEIVING_SUB_LEDGER where ACCOUNTING_DATE=to_date('2004-6-2','YYYY-MM-DD') order by CURRENCY_CODE
+
+select currency_code,(nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0))/(nvl(ENTERED_DR,0)-nvl(ENTERED_CR,0)) as Rate_Calcu,
+reference4 as PO,je_header_name,je_line_description
+ currency_conversion_DATE,ACCOUNTING_DATE,currency_conversion_rate,creation_date,period_name 
+from APPS.RCV_RECEIVING_SUB_LEDGER 
+where period_name='JUN-04'--currency_conversion_DATE=to_date('2004-6-2','YYYY-MM-DD') 
+and (ENTERED_DR<>0 or ENTERED_CR<>0)
+and currency_code='USD'
+and (nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0))/(nvl(ENTERED_DR,0)-nvl(ENTERED_CR,0))=1
+order by CURRENCY_CODE
+
+
+

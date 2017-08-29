@@ -1,0 +1,22 @@
+
+
+-----------VP Production Stastic by Model / JO Class
+select sum(mmt.TRANSACTION_QUANTITY) as Qty,a.segment1 Model,wet.class_code--,a.ORGANIZATION_ID
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.WIP_DISCRETE_JOBS_V wet,apps.mtl_item_categories_v a
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.organization_id = msi.organization_id 
+and       wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assy Completion','WIP Assembly Return')
+--and msi.segment1 in ('LZT 108 8661.R1A','LZT 108 8661.R2A')
+and wet.PRIMARY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.category_set_id=1
+and a.ORGANIZATION_ID=mmt.ORGANIZATION_ID 
+and trunc(mmt.transaction_date) = to_date('20070615','YYYYMMDD')
+--and a.segment1 ='K810I'
+and a.ORGANIZATION_ID=130
+group by wet.class_code ,a.segment1--,a.ORGANIZATION_ID

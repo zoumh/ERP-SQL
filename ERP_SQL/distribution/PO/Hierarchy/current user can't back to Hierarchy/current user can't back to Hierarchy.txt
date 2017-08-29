@@ -1,0 +1,14 @@
+
+
+
+select person_id from apps.PER_PEOPLE_V7 where employee_number='22966145'
+
+select * from apps.per_all_assignments_f where person_id=1639
+
+
+update per_all_assignments_f a
+set effective_end_date = to_date('4712-12-31','YYYY-MM-DD')
+where a.position_id = 64 and a.person_id = 1639
+
+
+

@@ -1,0 +1,29 @@
+
+报告名是 <BMC_PRD_ONHAND_QTY>
+是要先进VP组织
+没有选择别的参数
+
+SELECT   b.segment1, SUM (a.transaction_quantity) onhand,
+         TO_NUMBER (d.item_cost, 999999.99999) COST,
+           SUM (a.transaction_quantity)
+         * TO_NUMBER (d.item_cost, 999999.99999) AS amt,
+         a.subinventory_code, c.cost_group  
+FROM     apps.mtl_onhand_quantities_detail a,
+         apps.mtl_system_items b,
+         apps.cst_cost_groups c,
+         apps.cst_item_costs d 
+   WHERE a.organization_id = 130 
+     AND a.inventory_item_id = b.inventory_item_id
+     and a.ORGANIZATION_ID = b.ORGANIZATION_ID
+     AND a.inventory_item_id = d.inventory_item_id(+)
+     and a.ORGANIZATION_ID = d.ORGANIZATION_ID(+)
+     AND a.cost_group_id = c.cost_group_id(+)
+     aND d.cost_type_id(+) = 1 
+     --and a.SUBINVENTORY_CODE = 'IPM/DPY'
+GROUP BY b.segment1,
+         a.subinventory_code,
+         c.cost_group,
+         TO_NUMBER (d.item_cost, 999999.99999) 
+--,f.segment1, f.segment2
+ORDER BY a.subinventory_code, b.segment1; 
+

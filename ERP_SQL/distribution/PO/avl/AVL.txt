@@ -1,0 +1,101 @@
+
+
+
+select * from apps.PO_ASL_SUPPLIERS_V 
+
+
+---AVL status
+select * from apps.PO_ASL_STATUSES
+
+
+------AVL (with Status,Item Category & Creator)
+select g.segment1 Model,g.segment4 Cmd,a.segment1 item,a.description,
+d.vendor_name,e.vendor_site_code,h.user_name AVL_Created_by,b.CREATION_DATE AVL_Create_Date
+,f.status,b.OWNING_ORGANIZATION_ID,b.disable_flag,
+DECODE(b.USING_ORGANIZATION_ID, -1, 'Y','N') GLOBAL_FLAG,
+c.processing_lead_time,c.min_order_qty,c.fixed_lot_multiple
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e,apps.PO_ASL_STATUSES f,
+(select * from apps.mtl_item_categories_v where CATEGORY_SET_ID=1) g
+,apps.fnd_user h
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+and g.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=a.ORGANIZATION_ID
+and b.asl_status_id=f.STATUS_ID
+and b.CREATED_BY=h.user_id
+and a.segment1='SXK 109 7394.P1A'
+order by a.segment1,d.vendor_name
+
+
+
+select distinct b.asl_id,d.vendor_name,--b.item_id,
+b.VENDOR_SITE_ID,e.vendor_site_code
+,a.segment1 item,a.description
+,f.status,b.OWNING_ORGANIZATION_ID,b.disable_flag,
+DECODE(b.USING_ORGANIZATION_ID, -1, 'Y','N') GLOBAL_FLAG,
+c.processing_lead_time,c.min_order_qty,c.fixed_lot_multiple
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e,apps.PO_ASL_STATUSES f
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+and a.segment1='SXA 109 5315/3.R1B'--'ROA 128 1186'--'SXK 109 7394.P1A'
+and b.asl_status_id=f.STATUS_ID
+order by a.segment1,d.vendor_name
+
+
+select distinct b.asl_id,d.vendor_name,
+b.VENDOR_SITE_ID,e.vendor_site_code
+,a.segment1 item,a.description
+,b.asl_status_id,b.OWNING_ORGANIZATION_ID,b.disable_flag,
+DECODE(b.USING_ORGANIZATION_ID, -1, 'Y','N') GLOBAL_FLAG,
+c.processing_lead_time,c.min_order_qty,c.fixed_lot_multiple
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+
+
+
+--------
+apps.PO_approved_supplier_list
+
+
+OWNING_ORGANIZATION_ID : auto from the key in OU
+
+
+USING_ORGANIZATION_ID : 
+if Global,then =-1

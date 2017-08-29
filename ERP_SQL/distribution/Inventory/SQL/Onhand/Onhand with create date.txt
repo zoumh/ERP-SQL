@@ -1,0 +1,134 @@
+
+Test mtl_onhand_quantities_detail finding:
+1.ORIG_DATE_RECEIVED is the onhand first time into Org/WH date,when the onhand were transfer to other WH,no change
+  if unpack (part), the new loose onhand's ORIG_DATE_RECEIVED/DATE_RECEIVED/CREATION_DATE is now,
+                    the remain Qty in old LPN  no change :ORIG_DATE_RECEIVED/DATE_RECEIVED/CREATION_DATE
+  if unpack LPN,ORIG_DATE_RECEIVED/DATE_RECEIVED/CREATION_DATE change to now
+  if cost group transfer,ORIG_DATE_RECEIVED/DATE_RECEIVED/CREATION_DATE change to now
+2.DATE_RECEIVED/CREATION_DATE is the onhand into this WH/locator's date,when transfer from other WH/locator,change each time 
+3.CREATE_TRANSACTION_ID/ONHAND_QUANTITIES_ID change each time transfer between WH (/locator?)
+4.FIFO consume onhand sequence by ONHAND_QUANTITIES_ID
+5.If onhand were not fully consumed(transfer out), the remain onhand record's UPDATE_TRANSACTION_ID were changed (last?)
+
+
+
+
+--With LPN & onhand create date,  locator  
+select a.DATE_RECEIVED Into_W03_Date,f.CREATION_DATE LPN_Create_Date,i.segment2||'.'||i.segment3||'.'||i.segment4||'.'||i.segment5 Locator,
+f.license_plate_number LPN,b.segment1 Item, sum(a.transaction_quantity)  onhand , 
+d.item_cost, b.description Item_Description,h.organization_code Org_Name,
+sum(a.transaction_quantity)*decode(g.asset_inventory,1,to_number(d.item_cost,999999.99999),0) as Amt 
+, a.subinventory_code, c.cost_group,e.segment1 family_class
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.MTL_SECONDARY_INVENTORIES_FK_V g, 
+APPS.mtl_parameters h,apps.mtl_item_categories_v e ,apps.wms_license_plate_numbers f,
+apps.mtl_item_locations i
+where a.organization_id=b.organization_id 
+and c.organization_id=d.organization_id 
+and a.organization_id=c.organization_id 
+and a.organization_id=g.organization_id 
+and a.organization_id=h.organization_id 
+and a.organization_id=e.organization_id 
+and f.organization_id(+)=a.organization_id
+AND a.LOCATOR_ID=i.Inventory_LOCATion_ID(+)
+AND a.organization_id=i.organization_id(+)
+AND a.LPN_ID=f.LPN_id(+)
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID 
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code 
+and a.organization_id=130 
+and category_set_id = 1 
+and structure_id=101 
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id 
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1 
+and a.subinventory_code = ('W03')
+--and b.segment1='1207-8619.2'
+group by f.license_plate_number ,
+i.segment2||'.'||i.segment3||'.'||i.segment4||'.'||i.segment5
+,b.segment1 ,d.item_cost, b.description,h.organization_code 
+, a.subinventory_code, c.cost_group,e.segment1, a.DATE_RECEIVED,g.asset_inventory
+,f.CREATION_DATE
+
+
+
+--------With LPN & onhand create date (too much lines need two excel)
+
+select a.ORIG_DATE_RECEIVED,a.DATE_RECEIVED,a.CREATION_DATE,
+f.CREATION_DATE LPN_Create_Date,f.license_plate_number LPN,
+h.organization_code Org_Name, b.segment1 Item, (a.transaction_quantity)  onhand , 
+d.item_cost, 
+(a.transaction_quantity)*decode(g.asset_inventory,1,to_number(d.item_cost,999999.99999),0) as Amt 
+, a.subinventory_code, c.cost_group,e.segment1 family_class, e.segment2 sub_class ,e.segment4 Comp_Type ,d.MATERIAL_COST
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.MTL_SECONDARY_INVENTORIES_FK_V g, 
+APPS.mtl_parameters h,apps.mtl_item_categories_v e ,apps.wms_license_plate_numbers f
+where a.organization_id=b.organization_id 
+and c.organization_id=d.organization_id 
+and a.organization_id=c.organization_id 
+and a.organization_id=g.organization_id 
+and a.organization_id=h.organization_id 
+and a.organization_id=e.organization_id 
+and f.organization_id(+)=a.organization_id
+AND a.LPN_ID=f.LPN_id(+)
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID 
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code 
+and a.organization_id=130 
+and category_set_id = 1 
+and structure_id=101 
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id 
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1 
+and a.subinventory_code not in ('Vendor Hub','W05')
+
+
+select a.ORIG_DATE_RECEIVED,a.DATE_RECEIVED,a.CREATION_DATE,
+f.CREATION_DATE LPN_Create_Date,f.license_plate_number LPN,
+h.organization_code Org_Name, b.segment1 Item, (a.transaction_quantity)  onhand , 
+d.item_cost, 
+(a.transaction_quantity)*decode(g.asset_inventory,1,to_number(d.item_cost,999999.99999),0) as Amt 
+, a.subinventory_code, c.cost_group,e.segment1 family_class, e.segment2 sub_class ,e.segment4 Comp_Type ,d.MATERIAL_COST
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.MTL_SECONDARY_INVENTORIES_FK_V g, 
+APPS.mtl_parameters h,apps.mtl_item_categories_v e ,apps.wms_license_plate_numbers f
+where a.organization_id=b.organization_id 
+and c.organization_id=d.organization_id 
+and a.organization_id=c.organization_id 
+and a.organization_id=g.organization_id 
+and a.organization_id=h.organization_id 
+and a.organization_id=e.organization_id 
+and f.organization_id(+)=a.organization_id
+AND a.LPN_ID=f.LPN_id(+)
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID 
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code 
+and a.organization_id=130 
+and category_set_id = 1 
+and structure_id=101 
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id 
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1 
+and a.subinventory_code in ('Vendor Hub','W05')
+
+
+-----------Verify
+select sum(ONHAND),sum(AMT) from apps.BMC_CST_ONHAND_VER_CATEG where ORG_NAME='VP' 
+and  subinventory_code not in ('Vendor Hub','W05')
+
+select sum(a.transaction_quantity)  onhand , 
+sum((a.transaction_quantity)*decode(g.asset_inventory,1,to_number(d.item_cost,999999.99999),0)) as Amt 
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.MTL_SECONDARY_INVENTORIES_FK_V g, 
+APPS.mtl_parameters h,apps.mtl_item_categories_v e ,apps.wms_license_plate_numbers f
+where a.organization_id=b.organization_id 
+and c.organization_id=d.organization_id 
+and a.organization_id=c.organization_id 
+and a.organization_id=g.organization_id 
+and a.organization_id=h.organization_id 
+and a.organization_id=e.organization_id 
+and f.organization_id(+)=a.organization_id
+AND a.LPN_ID=f.LPN_id(+)
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID 
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code 
+and a.organization_id=130 
+and category_set_id = 1 
+and structure_id=101 
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id 
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1 
+and a.subinventory_code not in ('Vendor Hub','W05')
+

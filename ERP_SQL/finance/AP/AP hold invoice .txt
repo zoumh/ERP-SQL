@@ -1,0 +1,14 @@
+
+
+---------delete all holds in new OU
+
+Create table apholdback127 as Select * from AP_HOLDS_ALL where org_id=127
+
+
+select * from AP_HOLDS_ALL where org_id=127
+
+delete from AP_HOLDS_ALL where org_id=127
+
+commit
+
+

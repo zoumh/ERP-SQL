@@ -1,0 +1,31 @@
+
+
+------Find Login_ID from  the linked Employee Name
+SELECT a.USER_Name Login_ID,a.description Login_Name,b.full_name Employee_Name,b.employee_number 
+FROM apps.FND_USER a,apps.PER_PEOPLE_V7 b
+WHERE b.FULL_NAME like 'Zhu%Li'
+and a.EMPLOYEE_ID=b.person_id
+
+
+------Find Login_ID from the linked Employee number
+SELECT a.USER_Name Login_ID,a.description Login_Name,b.full_name Employee_Name,b.employee_number 
+FROM apps.FND_USER a,apps.PER_PEOPLE_V7 b
+WHERE b.employee_number ='952127'
+and a.EMPLOYEE_ID=b.person_id
+
+
+------Find Employee Name from Login ID
+SELECT a.USER_Name Login_ID,a.description Login_Name,b.full_name Employee_Name,b.employee_number 
+FROM apps.FND_USER a,apps.PER_PEOPLE_V7 b
+WHERE a.EMPLOYEE_ID=b.person_id
+and a.USER_Name='28945428'
+
+
+--------Find All User/Empyloee of a position
+SELECT b.person_id,a.USER_Name Login_ID,a.description Login_Name,b.full_name Employee_Name,b.employee_number,
+c.D_POSITION_ID,c.D_JOB_ID 
+FROM apps.FND_USER a,apps.PER_PEOPLE_V7 b,apps.PER_ASSIGNMENTS_V7 c
+WHERE a.EMPLOYEE_ID=b.person_id
+and b.person_id=c.person_id
+and D_POSITION_ID='JIT HANDLER'
+

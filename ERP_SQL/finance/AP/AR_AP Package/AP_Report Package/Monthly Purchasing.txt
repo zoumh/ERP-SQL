@@ -1,0 +1,49 @@
+
+
+----------For AP monthly Purchasing by Vendor (AP Report Package)
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,
+sum(b.ACCOUNTED_DR) Dr_Amt,sum(b.ACCOUNTED_CR) Cr_Amt 
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_VENDORS VDR,
+apps.PO_VENDOR_SITES_all aps,
+apps.PO_HEADERS_ALL POH
+WHERE b.REFERENCE4=POH.segment1
+and VDR.VENDOR_ID=POH.VENDOR_ID
+and aps.VENDOR_SITE_ID=poh.VENDOR_SITE_ID
+and b.CODE_COMBINATION_ID IN (select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3 in ('120100','120101') )
+and  (b.PERIOD_NAME='APR-05' )
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE
+
+
+----------For AP monthly Purchasing by Curr (AP Report Package)
+select sum(b.ACCOUNTED_DR) Dr_Amt,sum(b.ACCOUNTED_CR) Cr_Amt,b.CURRENCY_CODE Currency
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_VENDORS VDR,
+apps.PO_VENDOR_SITES_all aps,
+apps.PO_HEADERS_ALL POH
+WHERE b.REFERENCE4=POH.segment1
+and VDR.VENDOR_ID=POH.VENDOR_ID
+and aps.VENDOR_SITE_ID=poh.VENDOR_SITE_ID
+and b.CODE_COMBINATION_ID IN (select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3 in ('120100','120101') )
+and  (b.PERIOD_NAME='APR-05' )
+group by b.CURRENCY_CODE
+
+
+
+----Detail with vendor Site & PO num
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,b.REFERENCE4 as PO
+,b.ACCOUNTED_DR,b.ACCOUNTED_CR ,b.PERIOD_NAME,b.ACCOUNTING_DATE ,b.TRANSACTION_DATE
+,b.CURRENCY_CODE,b.CURRENCY_CONVERSION_RATE as Rate
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_VENDORS VDR,
+apps.PO_VENDOR_SITES_all aps,
+apps.PO_HEADERS_ALL POH
+WHERE b.REFERENCE4=POH.segment1
+and VDR.VENDOR_ID=POH.VENDOR_ID
+and aps.VENDOR_SITE_ID=poh.VENDOR_SITE_ID
+and b.CODE_COMBINATION_ID IN (select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3 in ('120100','120101') )
+and  (b.PERIOD_NAME='APR-05' )

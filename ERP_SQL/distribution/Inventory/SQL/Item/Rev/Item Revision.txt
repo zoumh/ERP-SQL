@@ -1,0 +1,72 @@
+
+
+-----------Delete Item Revision in VP
+select * from apps.mtl_system_items where segment1='DPY 101 3068/64'
+
+
+---3 tables about revision
+select * from apps.MTL_ITEM_REVISIONS_B where inventory_item_id=107583 and organization_id=130
+and revision='03L' and revision_id=277414
+
+select * from apps.MTL_ITEM_REVISIONS_TL where inventory_item_id=107583 and organization_id=130
+and revision_id=277414
+
+
+delete from apps.MTL_ITEM_REVISIONS_TL where inventory_item_id=107583 and organization_id=130
+and revision_id=277414
+
+
+delete from apps.MTL_ITEM_REVISIONS_B where inventory_item_id=107583 and organization_id=130
+and revision_id=277414
+
+commit
+
+
+---------Check Domestic DPY Rev for Vp-SE
+select a.segment1 Item,b.REVISION 
+from apps.mtl_system_items a,apps.MTL_ITEM_REVISIONS_B b where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and  a.ORGANIZATION_ID=b.ORGANIZATION_ID  and a.ORGANIZATION_ID=130 and item_type='DPY' 
+and a.segment1='DPY 101 2956/54'
+minus
+select a.segment1 Item,b.REVISION 
+from apps.mtl_system_items a,apps.MTL_ITEM_REVISIONS_B b where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and  a.ORGANIZATION_ID=b.ORGANIZATION_ID  and a.ORGANIZATION_ID=133  and item_type='DPY'
+and a.segment1='DPY 101 2956/54'
+
+
+
+
+
+
+
+-----------------For DPY in SE & VP, but Rev not in SE
+
+CREATE OR REPLACE VIEW APPS.BMC_rev_vpse
+AS 
+select a.segment1 Item,b.REVISION 
+from apps.mtl_system_items a,apps.MTL_ITEM_REVISIONS_B b where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and  a.ORGANIZATION_ID=b.ORGANIZATION_ID  and a.ORGANIZATION_ID=130 and item_type='DPY' 
+--and a.segment1='DPY 101 2956/54'
+minus
+select a.segment1 Item,b.REVISION 
+from apps.mtl_system_items a,apps.MTL_ITEM_REVISIONS_B b where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and  a.ORGANIZATION_ID=b.ORGANIZATION_ID  and a.ORGANIZATION_ID=133  and item_type='DPY'
+--and a.segment1='DPY 101 2956/54'
+
+
+select a.segment1 Item,b.REVISION,c.segment1 Category1,c.segment2 Category2,a.DESCRIPTION 
+from apps.mtl_system_items a,apps.MTL_ITEM_REVISIONS_B b,apps.mtl_item_categories_v c,APPS.BMC_rev_vpse d 
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and  a.ORGANIZATION_ID=133 and b.ORGANIZATION_ID=130  and a.item_type='DPY' 
+and a.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and b.ORGANIZATION_ID=c.ORGANIZATION_ID
+and c.category_set_id=1
+and a.segment1=d.ITEM
+and b.REVISION=d.REVISION
+and b.IMPLEMENTATION_DATE is not null
+and a.segment1 like 'DPY%'
+
+
+
+
+

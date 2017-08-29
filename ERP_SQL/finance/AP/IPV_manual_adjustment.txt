@@ -1,0 +1,22 @@
+
+
+---manual add IPV lines in AP distribution lines
+
+select c.INVOICE_NUM 
+,c.INVOICE_CURRENCY_CODE as Inv_Curr,a.DISTRIBUTION_LINE_NUMBER as Line,a.AMOUNT as Line_Amount
+,a.EXCHANGE_RATE
+,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.VENDOR_ID,c.INVOICE_AMOUNT
+,c.INVOICE_DATE,c.DESCRIPTION,b.segment3 as Account,b.segment2 as Cost_Center,c.GL_DATE
+,c.ATTRIBUTE1 as Inv_Trans_Num
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and c.INVOICE_AMOUNT<>0
+and (b.segment3='123205' or b.segment3='123206')
+and c.GL_DATE>=to_date('2004-04-1','yyyy-mm-dd')
+and c.GL_DATE<=to_date('2004-06-30','yyyy-mm-dd')
+

@@ -1,0 +1,69 @@
+
+
+
+
+-------------current AP balance - open ap invoice for a vendor
+select a.invoice_num,a.INVOICE_AMOUNT,a.AMOUNT_PAID invoice_head_paid,b.Paid_Amt Payment_trans_amt,
+a.INVOICE_DATE ,c.VENDOR_NAME,c.Segment1 Vendor_Num
+from APPS.AP_INVOICES_all a,
+  (select sum(amount) Paid_Amt,invoice_id 
+  from apps.ap_invoice_payments_all 
+  --where CREATION_DATE< to_date('2007-09-01','yyyy-mm-dd')
+  group by invoice_id) b,
+apps.PO_VENDORS c   
+where a.vendor_id=567 and 
+a.invoice_id=b.invoice_id(+)
+--and a.invoice_num='NT-AP20070630-266'--NT-AP20071031-508'--'NT-AP20070831-391'
+--and nvl(a.AMOUNT_PAID,0)<>nvl(b.Paid_Amt,0) --for check invoice_head_paid_amt not correct
+and nvl(a.INVOICE_AMOUNT,0)<>nvl(b.Paid_Amt,0)
+and a.VENDOR_ID=c.VENDOR_ID
+and c.SEGMENT1='228'
+
+
+------------All Open AP Invoice at 2007-8-31 (PREPAID_AMOUNT not accuracy of apply date)
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('127');
+END;
+
+
+select
+c.INVOICE_NUM ,
+c.INVOICE_AMOUNT,
+e.Paid_Amt_BeforeSep1,
+c.PREPAID_AMOUNT,
+nvl(c.INVOICE_AMOUNT,0)-nvl(e.Paid_Amt_BeforeSep1,0) -nvl(c.PREPAID_AMOUNT,0) Open_Amount,
+c.creation_DATE nvoice_Create_Date,
+c.INVOICE_TYPE_LOOKUP_CODE Type,
+INVOICE_CURRENCY_CODE Currency,
+VENDOR_NUMBER Supplier_Number,
+VENDOR_NAME Supplier_Name
+from   
+APPS.AP_INVOICES_v c,
+ (select sum(amount) Paid_Amt_BeforeSep1,invoice_id 
+  from apps.ap_invoice_payments_all 
+  where CREATION_DATE< to_date('2007-09-01','yyyy-mm-dd')
+  group by invoice_id) e
+where 
+ c.creation_DATE <to_date('2007-09-01','yyyy-mm-dd')
+--and c.creation_DATE > to_date('2007-01-01','yyyy-mm-dd')
+and c.ORG_ID=127
+and c.INVOICE_AMOUNT<>0
+--and c.INVOICE_NUM='070712BMC'
+--and a.invoice_id(+)=c.invoice_id
+and e.invoice_id(+)=c.invoice_id
+and nvl(c.INVOICE_AMOUNT,0)-nvl(e.Paid_Amt_BeforeSep1,0) -nvl(c.PREPAID_AMOUNT,0)<>0
+and c.INVOICE_TYPE_LOOKUP_CODE<>'CREDIT'
+
+
+
+
+
+
+
+
+
+
+
+
+

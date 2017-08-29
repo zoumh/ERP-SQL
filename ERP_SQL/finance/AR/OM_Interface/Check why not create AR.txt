@@ -1,0 +1,7 @@
+
+-----------to check the time in AR-OM interface
+select distinct CREATION_DATE from apps.RA_INTERFACE_LINES_all --where INTERFACE_LINE_ATTRIBUTE1='185692'
+
+
+----------to check the time of created AR invoice in that date
+select distinct CREATION_DATE from apps.ra_customer_trx_all where trunc(CREATION_DATE)=to_date('2007-7-23','yyyy-mm-dd')

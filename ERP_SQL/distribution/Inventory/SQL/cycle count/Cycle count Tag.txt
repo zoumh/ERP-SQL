@@ -1,0 +1,22 @@
+
+
+select mcce.COUNT_LIST_SEQUENCE seq,
+       msi.segment1 item,
+       mcce.ITEM_DESCRIPTION,
+    mcce.system_quantity_current sys_qty,
+    '' count_QTY,
+    mcce.SUBINVENTORY stock,
+    mil.segment2||'.'||mil.segment3||'.'||mil.segment4||'.'||mil.segment5 Locator,
+    mcce.ABC_CLASS_NAME ABC,
+    mcce.PARENT_LPN LPN,
+    mcce.adjustment_quantity diff_qty,
+    mcce.adjustment_amount diff_amount,
+    mcce.item_unit_cost cost,mcce.count_status
+from apps.MTL_CYCLE_COUNT_ENTRIES_V mcce,
+     apps.mtl_system_items msi,
+  apps.mtl_item_locations mil
+where CYCLE_COUNT_HEADER_ID= &1
+      and mcce.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+   and mcce.ORGANIZATION_ID=msi.ORGANIZATION_ID
+   and mil.INVENTORY_LOCATION_ID=mcce.LOCATOR_ID
+order by mcce.COUNT_LIST_SEQUENCE

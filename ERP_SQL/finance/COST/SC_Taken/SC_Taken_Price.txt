@@ -1,0 +1,216 @@
+
+
+SC Taken List with latest AP Invoice Price & Batch (Input the physical_inventory_id)
+
+
+
+SELECT b.inventory_item_id,b.segment1 item, a.revision, a.subinventory_name, e.cost_group, 
+(SELECT g.license_plate_number FROM apps.wms_license_plate_numbers g WHERE a.parent_lpn_id=g.lpn_id) lpn,
+a.system_quantity, a.count_quantity, 
+(a.system_quantity- a.count_quantity) as Qty_Diff,
+TO_CHAR(actual_cost,999999999.9999) cost,
+(a.system_quantity- a.count_quantity)*actual_cost as Value_Diff,
+(SELECT  aa.UNIT_PRICE*DECODE(dd.INVOICE_CURRENCY_CODE,'CNY',1,aa.EXCHANGE_RATE) AS Price_CNY
+  FROM 
+   apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, 
+   apps.PO_DISTRIBUTIONS_ALL bb, 
+   apps.po_lines_all cc,
+   (SELECT apa.invoice_id,apa.LAST_UPDATE_DATE,apa.INVOICE_CURRENCY_CODE,apa.invoice_num
+	FROM apps.AP_INVOICES_ALL apa 
+		ORDER BY LAST_UPDATE_DATE DESC) dd
+ WHERE aa.po_distribution_id=bb.po_distribution_id 
+ AND aa.invoice_id=dd.invoice_id 
+ AND bb.po_line_id=cc.po_line_id
+ AND cc.ITEM_ID=b.inventory_item_id
+ AND ROWNUM=1) As INV_Price,
+ (SELECT  dd.BATCH_NAME
+ FROM 
+   apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, 
+   apps.PO_DISTRIBUTIONS_ALL bb, 
+   apps.po_lines_all cc,
+   (SELECT apa.invoice_id,apa.LAST_UPDATE_DATE,apa.INVOICE_CURRENCY_CODE,apa.invoice_num,apb.BATCH_NAME 
+	FROM apps.AP_INVOICES_ALL apa,apps.AP_BATCHES_ALL apb 
+	where apa.BATCH_ID=apb.BATCH_ID
+	ORDER BY LAST_UPDATE_DATE DESC) dd
+ WHERE aa.po_distribution_id=bb.po_distribution_id 
+ AND aa.invoice_id=dd.invoice_id 
+ AND bb.po_line_id=cc.po_line_id
+ AND cc.ITEM_ID=b.inventory_item_id
+ AND ROWNUM=1) as INV_BATCH,
+  (SELECT   dd.invoice_num
+ FROM 
+   apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, 
+   apps.PO_DISTRIBUTIONS_ALL bb, 
+   apps.po_lines_all cc,
+   (SELECT apa.invoice_id,apa.LAST_UPDATE_DATE,apa.INVOICE_CURRENCY_CODE,apa.invoice_num 
+	FROM apps.AP_INVOICES_ALL apa 	ORDER BY LAST_UPDATE_DATE DESC) dd
+ WHERE aa.po_distribution_id=bb.po_distribution_id 
+ AND aa.invoice_id=dd.invoice_id 
+ AND bb.po_line_id=cc.po_line_id
+ AND cc.ITEM_ID=b.inventory_item_id
+ AND ROWNUM=1) as INV_number
+FROM apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e
+WHERE a.physical_inventory_id =:d
+AND a.inventory_item_id=b.inventory_item_id AND a.organization_id=83 AND b.organization_id=83 
+AND a.locator_id=c.inventory_location_id AND c.organization_id=83 
+AND a.cost_group_id=e.cost_group_id 
+
+
+
+
+
+------OK, but without AP Invoice Batch name
+
+SELECT b.inventory_item_id,b.segment1 item, a.revision, a.subinventory_name, e.cost_group, 
+(SELECT g.license_plate_number FROM apps.wms_license_plate_numbers g WHERE a.parent_lpn_id=g.lpn_id) lpn,
+a.system_quantity, a.count_quantity, TO_CHAR(actual_cost,999999999.9999) cost,
+(SELECT aa.UNIT_PRICE*DECODE(dd.INVOICE_CURRENCY_CODE,'CNY',1,aa.EXCHANGE_RATE) AS Price_CNY
+FROM apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, apps.PO_DISTRIBUTIONS_ALL bb, apps.po_lines_all cc
+,(SELECT invoice_id,LAST_UPDATE_DATE,INVOICE_CURRENCY_CODE,invoice_num FROM apps.AP_INVOICES_ALL ORDER BY LAST_UPDATE_DATE DESC) dd
+WHERE aa.po_distribution_id=bb.po_distribution_id 
+AND aa.invoice_id=dd.invoice_id 
+AND bb.po_line_id=cc.po_line_id
+AND cc.ITEM_ID=b.inventory_item_id
+AND ROWNUM=1) as Price_CNY
+FROM apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e
+WHERE a.physical_inventory_id =:d
+AND a.inventory_item_id=b.inventory_item_id AND a.organization_id=83 AND b.organization_id=83 
+AND a.locator_id=c.inventory_location_id AND c.organization_id=83 
+AND a.cost_group_id=e.cost_group_id 
+
+
+
+----------Gary's orginal
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id) tag,
+b.segment1 item, a.revision, a.subinventory_name, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator, e.cost_group, 
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id) lpn,
+a.system_quantity, a.count_quantity, to_char(actual_cost,999999999.9999) cost
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e
+where a.physical_inventory_id =:d
+and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+and a.locator_id=c.inventory_location_id and c.organization_id=83 
+and a.cost_group_id=e.cost_group_id 
+--order by c.segment2, to_number(c.segment3), to_number(c.segment5), to_number(c.segment4)
+
+
+
+
+---------------------------------
+Query All(latest) invoice number,Date, distrib_unit_Price line from item_id:
+
+select cc.item_id
+,aa.UNIT_PRICE*decode(dd.INVOICE_CURRENCY_CODE,'CNY',1,aa.EXCHANGE_RATE) as Price_CNY
+,dd.invoice_num,invoice_date,GL_date 
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL aa, apps.PO_DISTRIBUTIONS_ALL bb, apps.po_lines_all cc
+,(select invoice_id,LAST_UPDATE_DATE,INVOICE_CURRENCY_CODE,invoice_num,invoice_date,GL_date from apps.AP_INVOICES_ALL order by LAST_UPDATE_DATE desc) dd
+where aa.po_distribution_id=bb.po_distribution_id 
+and aa.invoice_id=dd.invoice_id 
+and bb.po_line_id=cc.po_line_id
+and cc.ITEM_ID=3429
+--and rownum=1
+
+
+
+
+
+select d.invoice_num
+,a.DISTRIBUTION_LINE_NUMBER as Invoice_Dist_Line
+, d.batch_id, to_char(c.unit_price, 99999.9999),a.UNIT_PRICE,a.EXCHANGE_RATE,a.BASE_AMOUNT,a.BASE_INVOICE_PRICE_VARIANCE
+,a.INVOICE_PRICE_VARIANCE,a.QUANTITY_INVOICED,d.INVOICE_CURRENCY_CODE
+,c.item_id,e.segment1 as Item
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a, apps.PO_DISTRIBUTIONS_ALL b, apps.po_lines_all c, apps.AP_INVOICES_ALL d
+,apps.mtl_system_items e
+where a.po_distribution_id=b.po_distribution_id and a.invoice_id=d.invoice_id and b.po_line_id=c.po_line_id
+and e.organization_id=83
+and c.ITEM_ID=e.inventory_item_id
+and c.ITEM_ID=4159
+and rownum=1
+order by d.LAST_UPDATE_DATE,d.invoice_num,a.DISTRIBUTION_LINE_NUMBER
+
+
+
+Query all invoice distrib_unit_Price from item_id:
+
+select d.invoice_num
+,a.DISTRIBUTION_LINE_NUMBER as Invoice_Dist_Line
+, d.batch_id, to_char(c.unit_price, 99999.9999),a.UNIT_PRICE,a.EXCHANGE_RATE,a.BASE_AMOUNT,a.BASE_INVOICE_PRICE_VARIANCE
+,a.INVOICE_PRICE_VARIANCE,a.QUANTITY_INVOICED,d.INVOICE_CURRENCY_CODE
+,c.item_id,e.segment1 as Item
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a, apps.PO_DISTRIBUTIONS_ALL b, apps.po_lines_all c, apps.AP_INVOICES_ALL d
+,apps.mtl_system_items e
+where a.po_distribution_id=b.po_distribution_id and a.invoice_id=d.invoice_id and b.po_line_id=c.po_line_id
+and e.organization_id=83
+and c.ITEM_ID=e.inventory_item_id
+and c.ITEM_ID=4159
+order by d.invoice_num,a.DISTRIBUTION_LINE_NUMBER
+
+--------
+Query all invoice distrib_unit_Price from Invoice Number:
+
+select d.invoice_num
+,a.DISTRIBUTION_LINE_NUMBER as Invoice_Dist_Line
+, d.batch_id, to_char(c.unit_price, 99999.9999),a.UNIT_PRICE,a.EXCHANGE_RATE,a.BASE_AMOUNT,a.BASE_INVOICE_PRICE_VARIANCE
+,a.INVOICE_PRICE_VARIANCE,a.QUANTITY_INVOICED,d.INVOICE_CURRENCY_CODE
+,c.item_id,e.segment1 as Item
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a, apps.PO_DISTRIBUTIONS_ALL b, apps.po_lines_all c, apps.AP_INVOICES_ALL d
+,apps.mtl_system_items e
+where a.po_distribution_id=b.po_distribution_id and a.invoice_id=d.invoice_id and b.po_line_id=c.po_line_id
+and e.organization_id=83
+and c.ITEM_ID=e.inventory_item_id
+and d.invoice_num='SIS/23003424'
+
+----------
+
+With PO price:
+
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id) tag,
+b.segment1 item, a.revision, a.subinventory_name, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator, e.cost_group, 
+a.system_quantity, a.count_quantity, to_char(actual_cost,999999999.9999) cost
+--,g.BASE_AMOUNT,g.QUANTITY_INVOICED,g.BASE_AMOUNT/c.QUANTITY_INVOICED as Price
+,g.UNIT_PRICE*nvl(j.RATE,1) as CNY_Price
+,j.CURRENCY_CODE
+,g.UNIT_PRICE
+,nvl(j.RATE,1) as Rate
+,j.SEGMENT1 as PO,g.LINE_NUM
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e
+,(select ITEM_ID,max(PO_LINE_ID) as PO_LINE_ID from apps.PO_lines_all group by ITEM_ID having count(*)=1) h
+,(select ITEM_ID,PO_HEADER_ID,PO_LINE_ID,UNIT_PRICE,LINE_NUM from apps.PO_lines_all) g
+,apps.PO_headers_all j
+where a.physical_inventory_id =87
+and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+and a.locator_id=c.inventory_location_id and c.organization_id=83 
+and a.cost_group_id=e.cost_group_id 
+and (a.count_quantity<>0 or a.system_quantity<>0)
+and g.ITEM_ID=b.inventory_item_id
+and h.PO_LINE_ID=g.PO_LINE_ID
+and j.PO_HEADER_ID=g.PO_HEADER_ID
+order by tag
+
+
+
+On hand Qty >0 :
+
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id) tag,
+b.segment1 item, a.revision, a.subinventory_name, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator, e.cost_group, 
+a.system_quantity, a.count_quantity, to_char(actual_cost,999999999.9999) cost
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e
+where a.physical_inventory_id =87
+and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+and a.locator_id=c.inventory_location_id and c.organization_id=83 
+and a.cost_group_id=e.cost_group_id 
+and (a.count_quantity<>0 or a.system_quantity<>0)
+order by tag
+
+
+
+
+Find PO  from Item
+
+select c.segment1 as PO,a.LINE_NUM from apps.PO_lines_all a,apps.mtl_system_items b ,apps.PO_headers_all c
+where a.ITEM_ID=b.INVENTORY_ITEM_ID 
+and b.organization_id=83
+and a.PO_HEADER_ID=c.PO_HEADER_ID
+and b.segment1='ROK 101 002/2'

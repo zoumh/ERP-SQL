@@ -1,0 +1,19 @@
+select b.order_number,a.ORDERED_ITEM,a.ORDERED_QUANTITY,a.SHIPPING_QUANTITY,a.UNIT_SELLING_PRICE,
+a.INVOICE_INTERFACE_STATUS_CODE,a.FLOW_STATUS_CODE 
+from apps.OE_ORDER_LINES_all a,apps.OE_ORDER_HEADERS_all b
+where a.HEADER_ID=b.HEADER_ID
+and b.order_number not like '8%' 
+and b.order_number not like '44%' 
+and b.order_number not like'455%'
+and (a.INVOICE_INTERFACE_STATUS_CODE is null or a.INVOICE_INTERFACE_STATUS_CODE='NOT_ELIGIBLE') 
+and a.FLOW_STATUS_CODE='CLOSED'
+
+
+
+
+
+备注：
+1、760027/760023/4100002/4100003（以上四个Order因Item未钩选允许开票属性，导致没有产生AR Invoice，已经手工补开发票。期间：APR-04）；
+2、以8开头的订单：为Internal Order，不需要开发票；
+3、以44开头的订单：为ARC - W/in Warranty Dom Order，下月中统一开手工发票，向索爱收款；
+4、以455开头的订单：为ARC - Internal Service Order，不需要开发票

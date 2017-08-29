@@ -1,0 +1,60 @@
+
+
+
+
+MOVE_ORDER_TYPE:
+mtl_txn_request_headers.MOVE_ORDER_TYPE
+------------------------------------------
+1 Requisition
+2 Replenishment
+3 Pick Wave
+
+
+HEADER_STATUS :
+mtl_txn_request_headers.HEADER_STATUS
+-------------------------------------------
+1 Incomplete
+2 Pending Approval
+3 Approved
+4 Not Approved
+5 Closed
+6 Canceled
+7 Pre Approved
+8 Partially Approved
+
+
+LINE_STATUS :
+mtl_txn_request_lines.LINE_STATUS
+-------------------------------------------
+1 Incomplete
+2 Pending Approval
+3 Approved
+4 Not Approved
+5 Closed
+6 Canceled
+7 Pre Approved
+8 Partially Approved
+
+
+
+
+select a.request_number Move_Order_num,b.line_number,d.transaction_type_name Trans_type,a.ORGANIZATION_ID Org,
+decode(a.move_order_type,1,'Requisition',2,'Replenishment',3,'Pick Wave') move_order_type,
+a.date_required Head_Req_Date,
+decode(a.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,
+b.FROM_SUBINVENTORY_CODE Fr_WH,b.TO_SUBINVENTORY_CODE To_WH,
+c.segment1 Item,b.REVISION,b.quantity,b.quantity_delivered,b.quantity_detailed,b.primary_quantity,b.date_required Line_Req_Date,b.transaction_header_id,
+b.txn_source_id,b.txn_source_line_id,e.user_name UserID,e.description User_Name
+from apps.mtl_txn_request_headers a,apps.mtl_txn_request_lines b,apps.mtl_system_items_b c,
+apps.mtl_transaction_types d,apps.FND_USER e
+where a.transaction_type_id=d.transaction_type_id
+and a.header_id=b.header_id and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and b.inventory_item_id=c.INVENTORY_ITEM_ID
+and e.USER_ID=a.CREATED_BY
+and a.request_number in ('323593','323806','331528')
+order by a.request_number,b.line_number
+

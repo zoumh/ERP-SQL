@@ -1,0 +1,48 @@
+
+
+-------Add new Category code for 'ECO' ,
+	CATEGORY_SET_NAME='ECO',
+	STRUCTURE_ID=50262,
+	CATEGORY_SET_ID=1100000042
+
+--Path: setup-->items-->Categories-->Category Codes , Structure Name='ECO Item Categories'
+
+
+------To hide prevous Segment1  Code_Combination, then to setup use Segment2 new value
+
+update MTL_CATEGORIES_B_KFV set enabled_flag='N' where STRUCTURE_ID =50262 and segment1 is not null
+
+disable_date=to_date('2007-3-19','yyyy-mm-dd') ,
+--enabled_flag='Y'--,disable_date =null 
+where STRUCTURE_ID =50262 and segment2 in ('TF')--segment1 is not null
+
+
+------ECO Category Code Combination View
+
+select segment1,segment2,enabled_flag,disable_date from MTL_CATEGORIES_B_KFV where STRUCTURE_ID =50262 and segment1 is not null
+
+select * from MTL_CATEGORIES_B_KFV where STRUCTURE_ID =50262 and segment1 is not null--segment2 in ('TF','YY','WW')
+
+
+
+-------Check Item's ECO Category
+
+select c.segment1 Item,a.segment1,a.segment2,b.CATEGORY_SET_NAME,b.CATEGORY_SET_ID,b.STRUCTURE_ID
+--count(a.category_set_id) num--c.description Item_Desc,c.item_type,c.planning_make_buy_code Make_Buy,
+--a.category_set_id,b.category_set_name,b.description Cate_Set_Desc,b.control_level,b.structure_name,b.CONTROL_LEVEL_DISP,b.MULT_ITEM_CAT_ASSIGN_FLAG 
+from apps.mtl_item_categories_v a,apps.MTL_CATEGORY_SETS_V b,apps.mtl_system_items c
+where a.category_set_id=b.category_set_id
+and a.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+--and a.INVENTORY_ITEM_ID=5949 
+and a.ORGANIZATION_ID=130
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+--and a.segment1='WW'
+--and b.CATEGORY_SET_NAME='ECO'
+and c.segment1='DPY 101 2701/1P6A'
+and b.CATEGORY_SET_NAME='ECO'
+
+
+
+
+
+

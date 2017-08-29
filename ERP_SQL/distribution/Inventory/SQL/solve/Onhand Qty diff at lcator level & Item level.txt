@@ -1,0 +1,36 @@
+
+Uppacked onhand Item,
+Locator level (Qty=3300) & Item Level (Qty=3000). The diff is 300. And more we 
+find the onhand detail table has a record of Qty=300, it's CONTAINERIZED_FLAG 
+=1 while other lines = 2.And more,we find this line's LPN_ID has a value.Then 
+we check the LPN table,LPN_Context=11,no record at LPN_Context table for this 
+LPN_ID
+
+
+
+SR Number  5335691.992 
+
+
+Material Workbench can't see Item level,Packed but can't see LPN number
+(onhand CONTAINERIZED_FLAG =1,has LPN)
+
+select * from Apps.Mtl_System_Items_b where segment1='KRC 114 1734.R3M'
+
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl 
+where LOCATOR_ID=30109 and INVENTORY_ITEM_ID =89471
+
+select * from apps.wms_license_plate_numbers  WHERE  lpn_id=1218535
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_id=1218535
+
+
+
+
+
+
+---------------Solution may be
+
+update apps.MTL_ONHAND_QUANTITIES_DETAIl set containerized_flag=2 where lpn_id=1217565
+
+

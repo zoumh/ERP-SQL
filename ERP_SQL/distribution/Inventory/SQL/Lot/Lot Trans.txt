@@ -1,0 +1,99 @@
+
+
+
+
+-----------Receive Trans with Lot info
+
+select LOT_NUM,f.QUANTITY Lot_Qty,a.transaction_type,e.segment1 PO,c.LINE_NUM, a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_headerS_ALL e,apps.RCV_LOT_TRANSACTIONS f,apps.rcv_shipment_lines g
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+--and a.transaction_type='RECEIVE'
+--and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=a.organization_id
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and b.license_plate_number='PC0004871'
+and e.PO_HEADER_ID=c.PO_HEADER_ID
+and e.segment1='1031687'
+and f.SHIPMENT_LINE_ID=g.SHIPMENT_LINE_ID
+and a.SHIPMENT_LINE_ID=g.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+
+
+----------Mtl Transaction with Lot, (no LPN)
+select   mmt.transaction_date, lot.LOT_NUMBER,lot.PRIMARY_QUANTITY lot_Qty, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+	 mmt.subinventory_code, 
+	 mmt.TRANSACTION_QUANTITY as Qty, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 mtt.DESCRIPTION  		   		Type_Description, 
+		 mmt.REVISION, 
+		 mmt.subinventory_code 	   			Source_WareHouse, 
+		 mmt.transfer_subinventory 			Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  MTL_TRANSACTION_LOT_NUMBERS lot
+where  
+    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and    mmt.organization_id = lot.organization_id (+)
+and    mmt.TRANSACTION_ID=lot.TRANSACTION_ID (+)
+and    msi.segment1='RNH 942 213.R1D'
+and    trunc(mmt.transaction_date) > to_date('20060919','YYYYMMDD') 
+
+
+
+----------Mtl Transaction with Lot, LPN
+
+select   mmt.transaction_date, lpn.LICENSE_PLATE_NUMBER lpn,lot.LOT_NUMBER,lot.PRIMARY_QUANTITY lot_Qty, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+	 mmt.subinventory_code, 
+	 mmt.TRANSACTION_QUANTITY as Qty, 
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 mtt.DESCRIPTION  		   		Type_Description, 
+		 mmt.REVISION, 
+		 mmt.subinventory_code 	   			Source_WareHouse, 
+		 mmt.transfer_subinventory 			Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.wms_license_plate_numbers LPN,
+  MTL_TRANSACTION_LOT_NUMBERS lot
+where  
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and    mmt.organization_id = lot.organization_id (+)
+and    mmt.organization_id = lpn.organization_id (+)
+and    mmt.TRANSACTION_ID=lot.TRANSACTION_ID (+)
+and    msi.segment1='RNH 942 213.R1D'
+and    mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+--and mst.transaction_source_type_name='Move order'
+--and	   lpn.LICENSE_PLATE_NUMBER='M0041351'
+and    trunc(mmt.transaction_date) = to_date('20060919','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20051231','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue'; 
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer') 
+--and mst.transaction_source_type_name='Account alias' 
+

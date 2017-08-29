@@ -1,0 +1,44 @@
+
+
+----------Account's Balance Detail lines by Acc,CC
+
+select a.begin_balance_dr,a.begin_balance_cr,a.PERIOD_NET_DR,a.PERIOD_NET_CR,b.SEGMENT3 as Account,b.SEGMENT2 as CC,
+(a.begin_balance_dr-a.begin_balance_cr) as POB, (a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,
+(a.begin_balance_dr-a.begin_balance_cr+a.PERIOD_NET_DR-a.PERIOD_NET_CR) as YTD
+from apps.GL_Balances a,apps.GL_CODE_combinations b
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.ACTUAL_FLAG='A' 
+and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+and a.CURRENCY_CODE='CNY'
+and a.PERIOD_NAME='MAY-05'
+and b.segment3='41050101' and b.segment2 in ('4080','4070' )
+order by b.segment2,b.segment3
+
+
+-------------All Account's Balance
+
+select c.FLEX_VALUE Account_Num,c.DESCRIPTION,d.POB,d.PTD,d.YTD
+from apps.FND_FLEX_VALUES_VL c,
+(
+select sum(a.begin_balance_dr-a.begin_balance_cr+a.PERIOD_NET_DR-a.PERIOD_NET_CR) as YTD,b.SEGMENT3 as Account,
+sum(a.begin_balance_dr-a.begin_balance_cr) as POB,
+sum(a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD
+from apps.GL_Balances a,apps.GL_CODE_combinations b 
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+  and a.ACTUAL_FLAG='A' 
+  and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+  and a.CURRENCY_CODE='CNY'
+  and a.PERIOD_NAME='FEB-05'
+group by b.segment3
+) d,
+apps.FND_FLEX_VALUE_HIERARCHIES e
+where c.FLEX_VALUE_SET_ID=1007641 --BMC_ACC segment
+and c.FLEX_VALUE>='1000'
+and c.FLEX_VALUE<'8999999900'
+and c.FLEX_VALUE=d.Account(+)
+and c.FLEX_VALUE=e.PARENT_FLEX_VALUE(+)
+and e.FLEX_VALUE_SET_ID(+)=1007641
+and e.FLEX_VALUE_SET_ID IS NULL
+order by c.FLEX_VALUE
+
+

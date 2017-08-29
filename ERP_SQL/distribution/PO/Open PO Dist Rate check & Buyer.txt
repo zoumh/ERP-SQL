@@ -1,0 +1,41 @@
+
+-----------Open PO's Rate check , with Buyer
+
+
+CREATE OR REPLACE VIEW APPS.BMC_Open_PO_Rate_Check
+AS
+select nvl(d.rate,1) Rate,a.currency_code Curr,b.unit_price,
+a.segment1 PO_Num,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED) Dist_Open_Qty,
+d.quantity_ordered Dist_Order_Qty,d.quantity_cancelled Dist_Canced_Qty,d.QUANTITY_DELIVERED Dist_Rec_Qty,
+b.Item_Description,g.segment1 Item,d.creation_date,f.line_type,c.ship_to_organization_id,h.full_name Buyer
+from 	apps.PO_HEADERS_ALL a
+,		apps.PO_LINES_ALL b
+,		apps.po_Line_locations_all c
+,		apps.PO_DISTRIBUTIONS_ALL d
+,		apps.PO_line_types f
+,		apps.mtl_system_items_b g
+,		apps.PER_ALL_PEOPLE_F h
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and c.closed_code ='OPEN'
+and g.INVENTORY_ITEM_ID(+)=b.item_id 
+and a.currency_code<>'CNY'
+--and (d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)>0
+and (c.QUANTITY -c.QUANTITY_CANCELLED -c.QUANTITY_RECEIVED)>0	
+--and a.segment1 in ('1014581','1014751')
+and c.ship_to_organization_id=g.organization_id
+and h.person_id=a.AGENT_ID
+order by a.segment1 ,b.line_num,c.shipment_num ,d.DISTRIBUTION_NUM
+
+

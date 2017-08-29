@@ -1,0 +1,30 @@
+
+
+------------WIP completion with JO Class,Type Item Category,date,time,
+select   wet.CLASS_CODE, decode(wet.JOB_TYPE,1,'Standard',3,'Non-Standard') JO_Type,
+cat.segment1 model,wet.WIP_ENTITY_NAME,
+INVENTORY_ITEM_STATUS_CODE status,
+decode(mmt.ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+sum(mmt.TRANSACTION_QUANTITY) as Qty,mmt.transaction_date,trunc(mmt.transaction_date) trans_date
+,cat.segment2 Item_Type,msi.segment1 item
+from
+  apps.mtl_material_transactions mmt,
+  apps.mtl_transaction_types     mtt,
+  apps.mtl_system_items_b        msi,
+  apps.WIP_DISCRETE_JOBS_V       Wet,  -- ( or use apps.wip_entities)
+  apps.mtl_item_categories_v     cat
+where  mtt.transaction_type_id = mmt.transaction_type_id
+and    mmt.organization_id = msi.organization_id
+and    mmt.organization_id =cat.organization_id
+and    mmt.organization_id =wet.organization_id
+and    msi.inventory_item_id = mmt.inventory_item_id
+and    mmt.inventory_item_id = cat.inventory_item_id
+and    wet.wip_entity_id=mmt.transaction_source_id
+and mtt.transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+And  mmt.transaction_date=to_date('2008-4-28','yyyy-mm-dd')
+And  mmt.transaction_dateto_date('2008-4-29','yyyy-mm-dd')
+and msi.INVENTORY_ITEM_STATUS_CODE='Active'
+and  mmt.organization_id =130
+and cat.category_set_id=1
+group by wet.CLASS_CODE,INVENTORY_ITEM_STATUS_CODE,mmt.organization_id,
+cat.segment1,cat.segment2,mmt.transaction_date ,wet.WIP_ENTITY_NAME,msi.segment1 item

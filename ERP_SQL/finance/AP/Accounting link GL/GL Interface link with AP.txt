@@ -1,0 +1,43 @@
+
+
+
+apps.GL_interface.SUBLEDGER_DOC_SEQUENCE_ID = APPS.ap_ae_lines_all.SUBLEDGER_DOC_SEQUENCE_ID
+
+apps.GL_interface.SUBLEDGER_DOC_SEQUENCE_VALUE = APPS.ap_ae_lines_all.SUBLEDGER_DOC_SEQUENCE_VALUE
+
+apps.GL_interface.GL_SL_LINK_ID = APPS.ap_ae_lines_all.GL_SL_LINK_ID
+
+
+APPS.ap_ae_lines_all.reference1=Supplier Name
+APPS.ap_ae_lines_all.reference2=invoice header id
+APPS.ap_ae_lines_all.reference3= AP Invocie distribution line
+APPS.ap_ae_lines_all.reference5=AP invoice_number
+
+
+Table:
+apps.xla_gl_transfer_batches_all
+
+
+-----------Find AP information from GL_Interface table
+select  
+e.INVOICE_NUM,e.CREATION_DATE,
+a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment2 CC,c.segment3 account_number,
+g.segment2 Dist_CC,g.segment3 Dist_account_number
+,a.REFERENCE5 as Invoice_number,a.reference3 distribution_line,
+a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE
+,b.ACCOUNTING_DATE,a.REFERENCE6,a.AE_LINE_TYPE_CODE,a.REFERENCE1 as Supplier
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,
+apps.GL_interface d
+,apps.AP_INVOICES_ALL e,APPS.AP_INVOICE_DISTRIBUTIONS_ALL f,apps.GL_CODE_combinations g
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID(+)
+and f.DIST_CODE_COMBINATION_ID=g.CODE_COMBINATION_ID (+)
+and a.GL_SL_LINK_ID=d.GL_SL_LINK_ID
+and e.INVOICE_ID=f.INVOICE_ID
+and a.SOURCE_ID=f.INVOICE_DISTRIBUTION_ID
+--and c.segment3='21210300'
+and (b.PERIOD_NAME='JUL-08')
+and a.CREATION_DATE>=to_date('2008-7-20','yyyy-mm-dd')
+--and b.REQUEST_ID=17623567
+--and a.GL_TRANSFER_ERROR_CODE is not null
+and d.STATUS='EF05'

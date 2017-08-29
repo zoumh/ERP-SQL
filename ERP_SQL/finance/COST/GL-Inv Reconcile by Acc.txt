@@ -1,0 +1,48 @@
+
+
+
+select   sum(mta.base_transaction_value) value, 
+		 --mta.organization_id , 
+		 gcc.segment3 as Account_Num
+from 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta 
+where  mta.reference_account = gcc.code_combination_id 
+and mta.transaction_date>=to_date('2006-01-01','YYYY-MM-DD' )
+group by gcc.segment3
+
+
+
+select   sum(mta.base_transaction_value) value, 
+		 mta.organization_id , 
+		 gcc.segment3 as Account_Num
+from 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta 
+where  mta.reference_account = gcc.code_combination_id 
+and mta.transaction_date>=to_date('2006-01-01','YYYY-MM-DD' )
+group by mta.organization_id,gcc.segment3
+
+
+
+
+
+select 	sum(mta.base_transaction_value)	 
+from 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta 
+where  mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+and    mta.organization_id = 83 
+and    trunc(mta.transaction_date) >= to_date('20050101','YYYYMMDD') 
+and    trunc(mta.transaction_date) <= to_date('20050831','YYYYMMDD') 
+--and    mtt.transaction_type_name='Account alias issue'; 
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer') 
+--and mst.transaction_source_type_name='Account alias' 
+and gcc.segment3  in ('121101','121102');
+
+
+

@@ -1,0 +1,15 @@
+
+----------Find Truncked Date Trans Typecount
+select MTT.TRANSACTION_TYPE_NAME, count()
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI 
+WHERE  MMT.organization_id=130 and
+MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.organization_id
+and mmt.transaction_date=to_date('2007-11-12','yyyy-mm-dd')
+and to_char(mmt.transaction_date,'HH24MISS')='000000'
+group by MTT.TRANSACTION_TYPE_NAME
+

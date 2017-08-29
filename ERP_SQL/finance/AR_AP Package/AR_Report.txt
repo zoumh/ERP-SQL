@@ -1,0 +1,53 @@
+
+
+AR - ONE BY ONE IN CNY
+CUSTOMER NAME
+CUSTOMER ADDRESS
+YTD Sales to CUSTOMER (--> Monthly Invoice amount -- Sales with Tax)
+AVERAGE MONTH-END AR ( Current Customer Balance ---Export from Oracle AR-Collection-Customer Account Detail -- Export , Function Balance) 
+
+
+
+Monthly Invoice amount-- Sales with Tax :Sum by Customer
+
+select convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER
+,sum(e.ACCTD_AMOUNT) as CNY_Sales_Amount
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_customers_v f
+where b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and e.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+and e.ACCOUNT_CLASS='REC'
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER
+order by f.CUSTOMER_NUMBER
+
+
+
+Current Customer Balance :
+
+select 
+convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER ,sum(a.ACCTD_AMOUNT_DUE_REMAINING) as CNY_Balance
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,a.INVOICE_CURRENCY_CODE 
+order by f.CUSTOMER_NUMBER
+
+
+
+AR Balance by Currency
+
+select 
+a.INVOICE_CURRENCY_CODE 
+,sum(a.ACCTD_AMOUNT_DUE_REMAINING) as CNY_Balance
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+group by a.INVOICE_CURRENCY_CODE 
+
+

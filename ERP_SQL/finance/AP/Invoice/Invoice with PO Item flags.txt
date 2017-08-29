@@ -1,0 +1,41 @@
+
+---------AP Invoice with Dr Account,PO,Item flags
+
+select /*a.INVOICE_DISTRIBUTION_ID,a.PO_DISTRIBUTION_ID,
+e.PO_HEADER_ID,e.PO_LINE_ID,*/
+i.ITEM_TYPE,i.segment1,
+i.INVENTORY_ITEM_FLAG,i.INVENTORY_ASSET_FLAG,i.COSTING_ENABLED_FLAG,
+i.STOCK_ENABLED_FLAG,i.MTL_TRANSACTIONS_ENABLED_FLAG,
+c.INVOICE_NUM,NVL(A.BASE_AMOUNT,a.AMOUNT) as Line_Amount_CNY,a.AMOUNT Line_Amount,
+convert(a.description,'ZHS16GBK') line_Description,
+convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.segment1 Vendor_num ,c.INVOICE_AMOUNT,c.invoice_currency_code Curr,a.exchange_Rate Rate,
+c.INVOICE_DATE,c.DESCRIPTION,b.segment2 CC,b.segment3 as Dr_Account,d.segment3 Cr_Account,c.GL_DATE,a.accounting_date,
+a.quantity_invoiced,a.unit_price,f.segment1 PO_Num,g.LINE_NUM,h.SHIPMENT_NUM,e.DISTRIBUTION_NUM
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+,apps.po_lines_all g
+,apps.PO_LINE_LOCATIONS_ALL h
+,apps.mtl_system_items_b i
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+and b.segment3>'4'
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and f.po_header_id(+)=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and e.PO_HEADER_ID=g.PO_HEADER_ID
+and e.PO_LINE_ID=g.PO_LINE_ID
+and e.PO_HEADER_ID=h.PO_HEADER_ID
+and e.PO_LINE_ID=h.PO_LINE_ID
+and e.LINE_LOCATION_ID=h.LINE_LOCATION_ID
+and i.inventory_item_id=g.ITEM_ID
+and i.organization_id =h.SHIP_TO_ORGANIZATION_ID
+and a.accounting_date>=to_date('2009-01-01','yyyy-mm-dd')
+--and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')
+and c.INVOICE_NUM='1615656'
+

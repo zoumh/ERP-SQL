@@ -1,0 +1,87 @@
+
+------------ list Alias Transaction accounting by account,Alias Source
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+         mta.base_transaction_value , 
+     mta.primary_quantity  as Qty, 
+         mmt.transaction_id, 
+         mst.transaction_source_type_name, 
+         gcc.segment3 as Account_Num,
+         mmt.REVISION, 
+         MGD.SEGMENT1                       Alias_SOURCE, 
+         MMT.TRANSACTION_REFERENCE             Trans_Reference
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,  
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_generic_dispositions  MGD
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    transaction_type_name not like '%Container%' 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = mmt.organization_id  and msi.organization_id = mmt.organization_id 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and gcc.segment3 ='550121'
+--and MGD.SEGMENT1='Production Scrap - Packaging'
+and    trunc(mmt.transaction_date) >= to_date('20070217','YYYYMMDD')
+and    trunc(mmt.transaction_date) <  to_date('20090420','YYYYMMDD')
+
+
+
+------------sum list Transaction accounting by account
+select  sum(mta.base_transaction_value),count(*) 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and   mta.organization_id = mmt.organization_id  
+and gcc.segment3 ='550121'
+and    trunc(mmt.transaction_date) >= to_date('20070217','YYYYMMDD')
+and    trunc(mmt.transaction_date) <  to_date('20090420','YYYYMMDD')
+
+321519.1
+17389
+
+
+------------for compare verify: 
+
+------------sum list Alias Transaction accounting by Alias Source
+select  sum(mta.base_transaction_value),count(*) 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_generic_dispositions  MGD--, 
+--  apps.OE_ORDER_HEADERS_ALL         oeh, 
+--  apps.MTL_TRANSACTION_REASONS   mtr, 
+--  apps.PO_HEADERS_ALL              poh 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = mmt.organization_id  and msi.organization_id = mmt.organization_id 
+--and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+--and    mtr.reason_id(+)=mmt.reason_id 
+and gcc.segment3 ='550121'
+--and MGD.SEGMENT1='Production Scrap - Packaging'
+and    trunc(mmt.transaction_date) >= to_date('20070217','YYYYMMDD')
+and    trunc(mmt.transaction_date) <  to_date('20090420','YYYYMMDD')
+

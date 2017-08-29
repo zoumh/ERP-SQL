@@ -1,0 +1,6 @@
+
+---New add employee in hierarchy, could be list from Hierarchy position, 
+   but after submit PR for approve, can't create approve path!
+
+
+Run 'Synchronize WF Local Tables' program in System Administrator

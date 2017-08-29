@@ -1,0 +1,45 @@
+
+
+
+select a.ASSET_NUMBER,a.ASSET_NUMBER_DESC 
+,a.SEGMENT1||'.'||a.SEGMENT2||'.'||a.SEGMENT3 as Category
+,a.COMMENTS,b.ATTRIBUTE1 as FlexField
+from apps.FA_TRANSACTION_HISTORY_TRX_V a ,apps.FA_ADDITIONS_V b
+where TRANSACTION_TYPE='Full Retirement' 
+and b.ASSET_ID=a.ASSET_ID
+and PERIOD_ENTERED='MAY-04' 
+and BOOK_TYPE_CODE='BMC_FA_BOOK' 
+and a.ASSET_ID=100003257
+
+
+select * from apps.FA_ADDITIONS_V b order by asset_id --having count(*)>1 group by asset_id  order by asset_id 
+
+select distinct(transaction_type_code) from apps.FA_TRANSACTION_HISTORY_TRX_V 
+where book_type_code='BMC_FA_BOOK' 
+and period_entered='MAY-04'
+order by asset_id 
+
+
+select * from apps.FA_TRANSACTION_HISTORY_TRX_V 
+where book_type_code='BMC_FA_BOOK' 
+and period_entered='MAY-04'
+and transaction_type_code='ADDITION'
+order by asset_id 
+
+
+select ASSET_NUMBER,ASSET_NUMBER_DESC,TRANSACTION_DATE_ENTERED,PERIOD_ENTERED,INOVICE_TRANSACTION_ID from apps.FA_TRANSACTION_HISTORY_TRX_V 
+where book_type_code='BMC_FA_BOOK' 
+and period_entered='MAY-04'
+and transaction_type_code='ADDITION'
+order by asset_id 
+
+
+select * from apps.FA_INVOICE_DETAILS_V 
+where trunc(DATE_EFFECTIVE)>= to_date('2004-05-1','YYYY-MM-DD')
+and trunc(DATE_EFFECTIVE)<= to_date('2004-05-31','YYYY-MM-DD')
+
+select distinct(transaction_type_code) from apps.FA_TRANSACTION_HEADERS where book_type_code='BMC_FA_BOOK' order by asset_id 
+
+select * from apps.FA_ADJUSTMENTS where book_type_code='BMC_FA_BOOK' order by asset_id 
+
+

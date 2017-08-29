@@ -1,0 +1,127 @@
+
+
+------------List all existed Transaction Type
+select distinct MTT.TRANSACTION_TYPE_NAME,to_char(MSI.ORGANIZATION_ID) as Org_ID
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI 
+WHERE  --MMT.organization_id=83 
+MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.organization_id
+
+
+-------List ll existed Alias Type
+select MGD.SEGMENT1 Alias_SOURCE,MMT.ORGANIZATION_ID,count(MGD.SEGMENT1 ) as Count
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.mtl_generic_dispositions  MGD
+WHERE  MMT.organization_id=MGD.organization_id(+)
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+group by MMT.organization_id,MGD.SEGMENT1
+
+
+
+-----------
+select MTT.TRANSACTION_TYPE_NAME,
+MMT.SUBINVENTORY_CODE, 
+transaction_date, 
+MSI.SEGMENT1 item_number, 
+mmt.transaction_id, 
+nvl(transaction_cost,actual_cost) cost, 
+MMT.transaction_quantity quantity, 
+MMT.TRANSACTION_REFERENCE, 
+transaction_quantity*nvl(transaction_cost,actual_cost) amount, 
+mtt.DESCRIPTION as Type_Description
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI 
+WHERE  --MMT.organization_id=83 
+MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.organization_id
+and mmt.TRANSACTION_ID in ('5798526','5945710','5945735','5945736','5945766','5945767')
+
+
+
+-------From Wang Zhigang , for Alias Source
+
+select MTT.TRANSACTION_TYPE_NAME,CG.COST_GROUP, 
+MMT.SUBINVENTORY_CODE, 
+transaction_date, 
+MSI.SEGMENT1 item_number, 
+nvl(MMT.revision,'0') item_id, 
+nvl(transaction_cost,actual_cost) cost, 
+MMT.transaction_quantity quantity, 
+MMT.TRANSACTION_REFERENCE, 
+MGD.SEGMENT1 SOURCE, 
+transaction_quantity*nvl(transaction_cost,actual_cost) amount, 
+FU.USER_NAME requestor 
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI, 
+apps.mtl_generic_dispositions MGD, 
+apps.FND_USER FU,
+apps.CST_COST_GROUPS CG
+WHERE  MMT.TRANSACTION_TYPE_ID IN (31,41,32,42) 
+AND MMT.organization_id=83 
+AND (MMT.TRANSACTION_COST IS NOT NULL OR MMT.ACTUAL_COST IS NOT NULL) 
+AND MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.ORGANIZATION_ID 
+AND MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+AND FU.USER_ID=MMT.CREATED_BY
+AND MMT.COST_GROUP_ID=CG.COST_GROUP_ID(+);
+
+
+
+
+----------------MTL ACC with Alias Source
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, MGD.SEGMENT1 SOURCE,
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    trunc(mmt.transaction_date) >= to_date('20040601','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20040605','YYYYMMDD') 
+and mtt.transaction_type_name='Account alias issue'

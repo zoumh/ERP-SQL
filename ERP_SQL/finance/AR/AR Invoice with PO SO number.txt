@@ -1,0 +1,87 @@
+
+
+------------------List AR Invoice line & SO from SE's PO num (PO num on Invoice)
+
+
+select --h.CUSTOMER_TRX_ID,a.NAME as Type,
+to_char(b.TRX_NUMBER) as Inv_Number,h.line_number,b.purchase_order,h.sales_order,h.sales_order_line,
+g.segment1 Item, h.description,h.translated_description,h.quantity_Ordered,h.quantity_Invoiced,h.UNIT_SELLING_PRICE,
+b.INVOICE_CURRENCY_CODE as Curr,h.extended_amount Line_amt_no_Tax,h.revenue_amount,f.tax_rate,f.taxable_amount Base_amt_for_Tax,
+(f.taxable_amount+f.taxable_amount*f.tax_rate/100) Total_line_amt_include_tax,
+b.TRX_DATE as Inv_Date, 
+h.interface_line_attribute1,h.interface_line_attribute2,h.interface_line_attribute3,
+b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from --apps.ra_cust_trx_types_all a,
+apps.ra_customer_trx_all b
+,apps.ra_customer_trx_lines_all f
+,apps.ra_customer_trx_lines_all h
+,apps.mtl_system_items_b g
+where --a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID and 
+b.CUSTOMER_TRX_ID=h.CUSTOMER_TRX_ID
+and b.CUSTOMER_TRX_ID=f.CUSTOMER_TRX_ID
+and f.LINK_TO_CUST_TRX_LINE_ID=h.CUSTOMER_TRX_LINE_ID
+and g.organization_id>=127
+and g.inventory_item_id=h.inventory_item_id
+and h.line_type<>'TAX'
+and f.line_type='TAX'
+and b.purchase_order in ('70249890','70249908','70249935','70250306','70250317','70250293','70250300','70250306','70300464')
+order by b.TRX_NUMBER,h.line_number
+
+
+---------???AR Invoice (Rev Amount,Tax Rate,Price) with SO,PO ,ship_from_Org=IP 
+select --a.CUSTOMER_TRX_ID,LINK_TO_CUST_TRX_LINE_ID,
+c.PURCHASE_ORDER,a.SALES_ORDER,a.SALES_ORDER_LINE,a.INTERFACE_LINE_ATTRIBUTE2 SO_Type,
+c.TRX_NUMBER Invoice_Number,a.LINE_NUMBER,--a.LINE_TYPE, 
+a.DESCRIPTION Item_Desc,a.QUANTITY_ORDERED,a.QUANTITY_INVOICED,a.UNIT_STANDARD_PRICE,
+a.REVENUE_AMOUNT,b.TAXABLE_AMOUNT Base_amt_for_Tax,b.TAX_RATE,
+(f.taxable_amount+f.taxable_amount*f.tax_rate/100) Total_line_amt_include_tax
+from 
+(select CUSTOMER_TRX_ID,CUSTOMER_TRX_LINE_ID,SALES_ORDER,SALES_ORDER_LINE,INTERFACE_LINE_ATTRIBUTE2,
+LINE_NUMBER,LINE_TYPE,DESCRIPTION,QUANTITY_ORDERED,QUANTITY_INVOICED,UNIT_STANDARD_PRICE,
+EXTENDED_AMOUNT,REVENUE_AMOUNT from apps.ra_customer_trx_lines_all 
+where CREATION_DATE>=to_date('2008-1-1','yyyy-mm-dd') and LINE_TYPE='LINE') a,
+(select CUSTOMER_TRX_ID,TAX_RATE,AUTOTAX,LINK_TO_CUST_TRX_LINE_ID,LINE_NUMBER,LINE_TYPE,TAXABLE_AMOUNT
+from apps.ra_customer_trx_lines_all where CREATION_DATE>=to_date('2008-1-1','yyyy-mm-dd') and LINE_TYPE='TAX') b,
+apps.ra_customer_trx_all c
+where a.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and a.CUSTOMER_TRX_LINE_ID =b.LINK_TO_CUST_TRX_LINE_ID
+--and c.TRX_NUMBER='188635'
+and c.CREATION_DATE>=to_date('2008-1-1','yyyy-mm-dd')
+and c.INTERFACE_HEADER_ATTRIBUTE10=132 --Ship_from_Org_ID
+--and c.PURCHASE_ORDER is null
+order by c.TRX_NUMBER,a.LINE_TYPE,a.LINE_NUMBER
+
+
+
+----------AR Invoice (Line Type,Rev Taxbase Amount) with SO,PO ,ship_from_Org=IP 
+
+select c.PURCHASE_ORDER,a.SALES_ORDER,a.SALES_ORDER_LINE,a.INTERFACE_LINE_ATTRIBUTE2 SO_Type,
+c.TRX_NUMBER Invoice_Number,a.LINE_NUMBER,a.LINE_TYPE, 
+a.DESCRIPTION Item_Desc,a.QUANTITY_ORDERED,a.QUANTITY_INVOICED,a.UNIT_STANDARD_PRICE,
+a.EXTENDED_AMOUNT,a.REVENUE_AMOUNT,a.TAXABLE_AMOUNT,a.TAX_RATE
+from apps.ra_customer_trx_lines_all a,apps.ra_customer_trx_all c
+where c.CUSTOMER_TRX_ID=a.CUSTOMER_TRX_ID
+--and c.TRX_NUMBER='188635'
+and c.CREATION_DATE>=to_date('2008-1-1','yyyy-mm-dd')
+and c.INTERFACE_HEADER_ATTRIBUTE10=132 --Ship_from_Org_ID
+--and c.PURCHASE_ORDER is null
+order by c.TRX_NUMBER,a.LINE_TYPE,a.LINE_NUMBER
+
+
+
+----------AR Invoice (line Create by user) (Line Type,Rev Taxbase Amount) with SO,PO ,ship_from_Org=IP 
+
+select a.CREATION_DATE,a.LAST_UPDATE_DATE,b.user_name Create_By,d.user_name Last_Update_By,
+c.PURCHASE_ORDER,a.SALES_ORDER,a.SALES_ORDER_LINE,a.INTERFACE_LINE_ATTRIBUTE2 SO_Type,
+c.TRX_NUMBER Invoice_Number,a.LINE_NUMBER,a.LINE_TYPE, 
+a.DESCRIPTION Item_Desc,a.QUANTITY_ORDERED,a.QUANTITY_INVOICED,a.UNIT_STANDARD_PRICE,
+a.EXTENDED_AMOUNT,a.REVENUE_AMOUNT,a.TAXABLE_AMOUNT,a.TAX_RATE
+from apps.ra_customer_trx_lines_all a,apps.ra_customer_trx_all c,apps.fnd_user b,apps.fnd_user d
+where c.CUSTOMER_TRX_ID=a.CUSTOMER_TRX_ID
+and a.CREATED_BY=b.user_id
+and a.LAST_UPDATED_BY=d.user_id
+and c.TRX_NUMBER='261399'
+--and c.INTERFACE_HEADER_ATTRIBUTE10=132 --Ship_from_Org_ID
+--and c.PURCHASE_ORDER is null
+order by c.TRX_NUMBER,a.LINE_TYPE,a.LINE_NUMBER

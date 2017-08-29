@@ -1,0 +1,100 @@
+
+---------SO type with Price List (include line Type)
+select decode(a.WAREHOUSE_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP') Org,
+b.name SO_Type,--a.invoice_source_id, 
+e.Name Price_List_Name,
+a.END_DATE_ACTIVE,d.segment3 COGS_Account,--
+a.currency_code,a.conversion_type_code,
+b.LANGUAGE,a.TRANSACTION_TYPE_CODE
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b,
+apps.gl_code_combinations d,apps.qp_list_headers e
+where a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID --and a.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID
+and d.CODE_COMBINATION_ID(+)=a.COST_OF_GOODS_SOLD_ACCOUNT
+and e.list_header_id(+)=a.PRICE_LIST_ID 
+--and e.CODE_COMBINATION_ID=c.GL_ID_REV
+and a.org_id>=127
+and b.LANGUAGE='US' --and a.TRANSACTION_TYPE_CODE='ORDER'
+order by b.name
+
+
+
+---Sales Order Type with DFF for IE (include line Type)
+select decode(a.WAREHOUSE_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,b.name SO_Type,
+a.START_DATE_ACTIVE,a.END_DATE_ACTIVE,
+d.segment2 CC,d.segment3 COGS_Account,--
+a.currency_code,a.conversion_type_code,
+a.ATTRIBUTE1 Claim_Order_Flag, a.ATTRIBUTE2 Order_Bonded_Type,
+b.LANGUAGE,a.TRANSACTION_TYPE_CODE,a.invoice_source_id
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b,
+apps.gl_code_combinations d
+where a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID --and a.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID
+and d.CODE_COMBINATION_ID(+)=a.COST_OF_GOODS_SOLD_ACCOUNT
+and a.org_id>=127
+and b.LANGUAGE='US' 
+--and a.TRANSACTION_TYPE_CODE='ORDER'
+order by a.TRANSACTION_TYPE_CODE,b.name
+
+
+
+select * from apps.oe_transaction_types_tl
+
+---SO with Type
+select * from apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c 
+where c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID and c.LANGUAGE='US'
+
+select name,description,language,transaction_type_id from apps.OE_TRANSACTION_TYPES_TL
+
+
+------SO AR Type (include line Type), with AR Type(if has) , COGS & Rev Account 
+select b.name SO_Type, a.END_DATE_ACTIVE,c.name AR_Typ,d.segment3 COGS_Account,--
+e.segment3 REVENUE_Account,
+a.currency_code,a.conversion_type_code,
+b.LANGUAGE,a.TRANSACTION_TYPE_CODE
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b,apps.ra_cust_trx_types_all c,
+apps.gl_code_combinations d
+,apps.gl_code_combinations e
+where 
+a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID 
+and a.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID(+)
+and d.CODE_COMBINATION_ID(+)=a.COST_OF_GOODS_SOLD_ACCOUNT
+and e.CODE_COMBINATION_ID(+)=c.GL_ID_REV
+and a.org_id>=127
+and b.LANGUAGE='US' 
+--and a.TRANSACTION_TYPE_CODE='ORDER'
+order by b.name
+
+
+
+------AR/OR Trans Type (from exist SO)
+
+select a.NAME AR_Type,e.NAME SO_Type,c.ORDER_NUMBER,c.BOOKED_DATE
+,b.ORDERED_ITEM,b.ORDERED_QUANTITY,b.FULFILLED_QUANTITY
+from apps.ra_cust_trx_types_all a,apps.OE_ORDER_lineS_all b,apps.OE_ORDER_headers_all c,
+apps.OE_transaction_TYPES_all d,apps.OE_TRANSACTION_TYPES_TL e
+where c.ORDER_TYPE_ID=d.TRANSACTION_TYPE_ID
+and a.CUST_TRX_TYPE_ID=d.CUST_TRX_TYPE_ID
+and b.HEADER_ID=c.HEADER_ID
+and c.ORDER_TYPE_ID=e.TRANSACTION_TYPE_ID
+
+
+------------SO type with Assigned flow
+select  a.org_id,b.name SO_Type,a.invoice_source_id, a.END_DATE_ACTIVE,a.ORDER_CATEGORY_CODE,
+LINE_TYPE_ID flow_line_type_id,c.PROCESS_NAME Assign_flow,c.START_DATE_ACTIVE flow_start,c.END_DATE_ACTIVE flow_end,c.CREATION_DATE flow_Creation,
+d.segment2 CC,d.segment3 COGS_Account,--
+a.currency_code,a.conversion_type_code,
+a.ATTRIBUTE1 Claim_Order_Flag, a.ATTRIBUTE2 Order_Bonded_Type,
+b.LANGUAGE,a.TRANSACTION_TYPE_CODE
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b,
+apps.gl_code_combinations d,
+apps.oe_workflow_assignments c
+where a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID --and a.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID
+and a.TRANSACTION_TYPE_ID=c.ORDER_TYPE_ID
+and b.LANGUAGE='US' --and a.TRANSACTION_TYPE_CODE='ORDER'
+and d.CODE_COMBINATION_ID(+)=a.COST_OF_GOODS_SOLD_ACCOUNT
+--and e.CODE_COMBINATION_ID=c.GL_ID_REV
+--and b.name ='RC-Service Domestic Order'
+and c.PROCESS_NAME='R_BILL_ONLY'
+and a.org_id>=127
+order by b.name
+
+

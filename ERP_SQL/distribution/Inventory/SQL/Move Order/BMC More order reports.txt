@@ -1,0 +1,135 @@
+
+
+
+-----------After MO approve & Allocate or Tracted
+(user could use MO pick slip report to allocate Qty)
+
+select * 
+from 
+(SELECT mmt.pick_slip_number
+     , mmt.transaction_id
+     , mmt.transaction_set_id header_id
+     , mtrh.request_number request_number
+     , mtrl.line_number line_number 
+     , mmt.inventory_item_id inventory_item_id
+--     , &p_item_flexsql c_item_flexdat 
+     , msi.description 
+     , mmt.revision revision
+     , mmt.subinventory_code from_subinventory_code
+     , mmt.locator_id from_locator_id
+     , mmt.transfer_subinventory to_subinventory_code
+     , mmt.transfer_locator_id to_locator_id
+--     , decode(mmt.distribution_account_id, '','',&p_to_account_flexsql)  c_to_account_flexdat
+     , mmt.project_id
+     , mmt.task_id
+     , mtrl.created_by 
+     , fnd.user_name requester
+     , mmt.transaction_reference ref
+     , mmt.transaction_uom primary_uom
+     , abs(mmt.transaction_quantity) primary_qty
+     , 'Transacted'  Move_order_Status
+--     , mtrl.lpn_id lpn_number
+     , wlpn.license_plate_number lpn_number
+     , to_number(null) trx_temp_id
+     , mtrh.move_order_type
+     , mtrl.transaction_source_type_id
+     , mtrl.line_id
+     , mtrl.quantity quantity
+     , mtrl.quantity_detailed quantity_detailed
+     , mtrl.organization_id organization_id
+     , abs(mmt.TRANSACTION_QUANTITY) QUANTITY_DELIVERED  --          , mtrl.QUANTITY_DELIVERED QUANTITY_DELIVERED
+     , decode(mil.segment3,'98',1,length(mil.segment3)) loc0
+     , decode(mil.segment3,'98','0',mil.segment3) loc1
+     , mil.segment4 loc2
+  , mil.segment2||'.'||mil.segment3||'.'||mil.segment4||'.'||mil.segment5 from_locator
+  , msi.segment1 item
+  , milt.segment2||'.'||milt.segment3||'.'||milt.segment4||'.'||milt.segment5 to_locator
+,mtrh.creation_date 
+  ,mtrh.last_update_date
+  FROM mtl_material_transactions mmt
+     , mtl_txn_request_headers mtrh
+     , mtl_txn_request_lines mtrl
+     , wms_license_plate_numbers wlpn
+     , mtl_system_items msi
+     , gl_code_combinations gcc
+     , fnd_user fnd
+     , mtl_item_locations mil
+  , mtl_item_locations milt
+ WHERE  mmt.organization_id = :orgid
+       and mtrh.request_number = :reqno     
+       AND mmt.move_order_line_id = mtrl.line_id
+       AND mtrl.header_id = mtrh.header_id
+       AND msi.organization_id = mmt.organization_id       
+       AND msi.inventory_item_id = mmt.inventory_item_id       
+       AND mtrl.created_by = fnd.user_id
+       AND gcc.code_combination_id(+) = mmt.distribution_account_id
+       AND mmt.lpn_id = wlpn.lpn_id(+)
+       AND nvl(mmt.transaction_quantity,0) < 0
+       and mil.inventory_location_id(+)=mmt.locator_id
+    and milt.inventory_location_id(+)=mmt.transfer_locator_id
+UNION ALL
+SELECT mmtt.pick_slip_number
+     , mmtt.transaction_temp_id
+     , to_number('') header_id
+     , mtrh.request_number request_number
+     , mtrl.line_number line_number  
+     , mmtt.inventory_item_id inventory_item_id
+--     , &p_item_flexsql c_item_flexdat 
+     , msi.description 
+     , mmtt.revision revision
+     , mmtt.subinventory_code from_subinventory_code
+     , mmtt.locator_id from_locator_id
+     , mmtt.transfer_subinventory to_subinventory_code
+     , mmtt.transfer_to_location to_locator_id
+--     , decode(mmtt.distribution_account_id,'','',&p_to_account_flexsql) c_to_account_flexdat
+     , mmtt.project_id
+     , mmtt.task_id
+     , mtrl.created_by 
+     , fnd.user_name requester
+     , mmtt.transaction_reference ref
+     , mmtt.transaction_uom primary_uom
+     , abs(mmtt.transaction_quantity) primary_qty
+     , 'Allocated ' Move_order_Status
+--     , mtrl.lpn_id lpn_number
+     , wlpn.license_plate_number lpn_number
+     , mmtt.transaction_temp_id trx_temp_id
+     , mtrh.move_order_type
+     , mtrl.transaction_source_type_id
+     , mtrl.line_id
+     , mtrl.quantity quantity
+     , mtrl.quantity_detailed quantity_detailed
+     , mtrl.organization_id organization_id
+     , 0 QUANTITY_DELIVERED  --          , mtrl.QUANTITY_DELIVERED QUANTITY_DELIVERED
+     , decode(mil.segment3,'98',1,length(mil.segment3)) loc0
+     , decode(mil.segment3,'98','00',mil.segment3) loc1
+     , mil.segment4 loc2
+  , mil.segment2||'.'||mil.segment3||'.'||mil.segment4||'.'||mil.segment5 from_locator
+  , msi.segment1 item
+  , milt.segment2||'.'||milt.segment3||'.'||milt.segment4||'.'||milt.segment5 to_locator
+,mtrh.creation_date 
+  ,mtrh.last_update_date
+  FROM mtl_material_transactions_temp mmtt
+     , mtl_txn_request_headers mtrh
+     , mtl_txn_request_lines mtrl
+     , wms_license_plate_numbers wlpn
+     , mtl_system_items msi
+     , gl_code_combinations gcc
+     , fnd_user fnd
+     , mtl_item_locations mil
+  , mtl_item_locations milt
+ WHERE mmtt.organization_id = 130
+       and mtrh.request_number = :reqno     
+       AND mmtt.move_order_line_id = mtrl.line_id
+       AND mtrl.header_id = mtrh.header_id
+       AND msi.inventory_item_id = mmtt.inventory_item_id
+       AND msi.organization_id = mmtt.organization_id
+       AND mtrl.created_by = fnd.user_id
+       AND gcc.code_combination_id(+) = mmtt.distribution_account_id     
+       AND mmtt.lpn_id = wlpn.lpn_id(+)
+       AND nvl(mmtt.transaction_quantity,0) > 0
+       AND parent_line_id IS NULL
+       and mil.inventory_location_id(+)=mmtt.locator_id
+    and milt.inventory_location_id(+)=mmtt.transfer_to_location
+)
+order by loc0,loc1,loc2
+

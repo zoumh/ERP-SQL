@@ -1,0 +1,153 @@
+
+------GL side Sum by Account
+select b.JE_CATEGORY,b.JE_SOURCE,a.segment3 as Account,
+sum(nvl(b.LINE_ACCOUNTED_DR,0)-nvl(b.LINE_ACCOUNTED_CR,0)) Accounted_Amt, 
+sum(nvl(b.LINE_ENTERED_DR,0)-nvl(b.LINE_ENTERED_CR,0)) Amt
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME='FEB-09')
+and je_source = 'Payables'
+and a.segment3= '55031001'
+group by b.JE_CATEGORY,b.JE_SOURCE,a.segment3
+
+
+----------Foreign PO Matched invoice   with rate details in a period
+select b.INVOICE_NUM,a.ACCOUNTING_DATE,b.INVOICE_CURRENCY_CODE Inv_Curr,a.AMOUNT Inv_line_amt,
+d.segment1 as PO,c.CREATION_DATE PO_Dist_Create_Date,d.RATE PO_Rate,c.RATE PO_Dist_Rate,
+d.RATE_DATE PO_Rate_Date,c.RATE_DATE PO_Dist_Rate_date,
+a.EXCHANGE_RATE Inv_Rate,a.EXCHANGE_DATE Inv_Rate_Date,
+a.EXCHANGE_RATE_VARIANCE,
+to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist_num,b.INVOICE_TYPE_LOOKUP_CODE Inv_Type
+,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+a.QUANTITY_INVOICED,a.UNIT_PRICE,
+a.BASE_AMOUNT,
+a.PERIOD_NAME,
+a.PRICE_CORRECT_QTY ,a.INVOICE_PRICE_VARIANCE,a.REVERSAL_FLAG,a.VAT_CODE,a.TAX_RECOVERY_RATE,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and a.ORG_ID=b.ORG_ID
+and a.ORG_ID=c.ORG_ID
+and a.ORG_ID=d.ORG_ID
+and a.ORG_ID=e.ORG_ID
+and a.ORG_ID=f.ORG_ID
+--and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+--and d.segment1
+--and b.INVOICE_NUM='SEP08123007'
+--and d.RATE<>c.RATE 
+--and a.EXCHANGE_RATE_VARIANCE>100
+and a.PERIOD_NAME='JAN-09'
+and b.INVOICE_CURRENCY_CODE<>'CNY'
+and  a.po_distribution_id is not null
+order by d.segment1,e.LINE_NUM,f.SHIPMENT_NUM
+
+
+----------Foreign Foreign AP Invoice No PO Matched with rate
+select api.invoice_num,api.GL_DATE,api.INVOICE_CURRENCY_CODE Curr,api.INVOICE_AMOUNT,api.EXCHANGE_RATE Inv_Rate,
+api.INVOICE_TYPE_LOOKUP_CODE,aid.DIST_MATCH_TYPE,api.amount_paid
+from     apps.AP_INVOICES_ALL api,        
+apps.AP_INVOICE_DISTRIBUTIONS_all aid
+where api.INVOICE_ID=aid.INVOICE_ID
+and api.ORG_ID=aid.ORG_ID
+and api.GL_DATE>=to_date('2009-02-1','yyyy-mm-dd')
+and api.GL_DATE<to_date('2009-3-1','yyyy-mm-dd')
+--and api.WFAPPROVAL_STATUS='MANUALLY APPROVED'
+and api.INVOICE_AMOUNT<>0 -- not cancelled
+and aid.po_distribution_id is null
+and api.INVOICE_CURRENCY_CODE<>'CNY'
+and aid.LINE_TYPE_LOOKUP_CODE='ITEM'
+
+
+---------Foreign AP invoice & payment trans with rate
+select a.INVOICE_NUM,b.accounting_date Paid_date,b.amount Paid_Amt,a.AMOUNT_PAID paid_on_Inv,
+a.INVOICE_CURRENCY_CODE Curr,a.INVOICE_AMOUNT,a.GL_DATE,a.EXCHANGE_RATE Inv_rate,a.EXCHANGE_DATE Inv_rate_Date,
+vdr.VENDOR_TYPE_LOOKUP_CODE Vendor_Type,
+a.INVOICE_TYPE_LOOKUP_CODE Inv_Type,
+b.REVERSAL_FLAG,a.INVOICE_DATE,
+vdr.VENDOR_NAME,VDR.SEGMENT1 as Supplier_Num
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,        apps.PO_VENDORS VDR
+,        apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and b.ORG_ID=a.ORG_ID
+and a.ORG_ID=aps.ORG_ID
+--and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+--and ((VDR.PAY_GROUP_LOOKUP_CODE 'EM' and (VDR.PAY_GROUP_LOOKUP_CODE 'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>to_date('2009-1-1','yyyy-mm-dd')
+and b.accounting_date<to_date('2009-2-1','yyyy-mm-dd')
+--and (b.REVERSAL_FLAG'Y' or b.REVERSAL_FLAG is null)
+and a.INVOICE_CURRENCY_CODE <>'CNY'
+order by a.INVOICE_NUM
+
+
+
+-----------AR applied G/L in the period linked with GL (use Inv Rate & Receipt Rate)
+select
+cash.RECEIPT_NUMBER,
+cash.EXCHANGE_RATE Receipt_Rate,
+ar.AMOUNT_APPLIED,
+ra.EXCHANGE_RATE Invoice_Rate,
+(decode(cash.EXCHANGE_RATE,null,1,cash.EXCHANGE_RATE)*ar.AMOUNT_APPLIED) Receipt_amt,
+(decode(ra.EXCHANGE_RATE,null,1,ra.EXCHANGE_RATE)*ar.AMOUNT_APPLIED) Inv_amt,
+(decode(cash.EXCHANGE_RATE,null,1,cash.EXCHANGE_RATE)-decode(ra.EXCHANGE_RATE,null,1,ra.EXCHANGE_RATE))*ar.AMOUNT_APPLIED Diff,
+ra.TRX_NUMBER AR_Invoice,
+ar.ACCTD_AMOUNT_APPLIED_TO,
+cash.CURRENCY_CODE Receipt_Curr,ra.INVOICE_CURRENCY_CODE Inv_Curr,
+cash.EXCHANGE_DATE Receipt_Rate_date,
+cash.EXCHANGE_RATE_TYPE Receipt_Rate_Type,
+ra.EXCHANGE_DATE Invoice_Rate_Date,
+ra.EXCHANGE_rate_type Invoice_Rate_Type,
+h.PERIOD_NAME
+from
+apps.gl_je_headers h,
+apps.gl_je_lines l,
+apps.gl_import_references r,
+apps.AR_PAYMENT_SCHEDULES_ALL PS,
+apps.RA_CUSTOMER_TRX_ALL RA,
+apps.AR_RECEIVABLE_APPLICATIONS_ALL AR,
+apps.AR_CASH_RECEIPTS_ALL  CASH
+where h.je_header_id=l.je_header_id
+and   l.code_combination_id=44346
+and  l.JE_HEADER_ID=r.JE_HEADER_ID
+and  l.JE_LINE_NUM=r.JE_LINE_NUM
+and PS.CUSTOMER_TRX_ID=RA.CUSTOMER_TRX_ID
+AND  r.REFERENCE_4=cash.RECEIPT_NUMBER
+and  r.REFERENCE_5=ra.TRX_NUMBER
+AND  PS.PAYMENT_SCHEDULE_ID=AR.APPLIED_PAYMENT_SCHEDULE_ID
+AND  AR.DISPLAY='Y'
+AND  AR.CASH_RECEIPT_ID=CASH.CASH_RECEIPT_ID
+and  ra.EXCHANGE_RATE<>cash.EXCHANGE_RATE
+and h.period_name='FEB-09'
+
+
+------------Foreign AR Applied amount with Invoice Rate (not match with GL)
+select --a.APPLIED_CUSTOMER_TRX_ID,a.CUSTOMER_TRX_ID, APPLIED_CUSTOMER_TRX_LINE_ID,
+b.TRX_NUMBER Invoice_Num,b.INVOICE_CURRENCY_CODE Curr,
+a.AMOUNT_APPLIED,--a.LINE_APPLIED,a.TAX_APPLIED,
+b.TRX_DATE Inv_GL_Date,b.CREATION_DATE Inv_Create_Date,b.EXCHANGE_DATE Inv_Rate_Date,b.EXCHANGE_RATE Inv_Rate,
+a.GL_DATE Apply_Date,a.CREATION_DATE Apply_Create_Date,
+a.APPLICATION_TYPE,a.STATUS,a.APPLY_DATE,a.DISPLAY,a.GL_POSTED_DATE
+from apps.AR_RECEIVABLE_APPLICATIONS_all a,apps.ra_customer_trx_all b 
+where b.CUSTOMER_TRX_ID=a.APPLIED_CUSTOMER_TRX_ID
+and b.ORG_ID=a.org_id
+and a.GL_DATE>= to_date('20090101','YYYYMMDD') 
+and a.GL_DATE< to_date('20090201','YYYYMMDD')
+--and a.STATUS='APP'
+--and b.INVOICE_CURRENCY_CODE<>'CNY'
+--and a.CUSTOMER_TRX_ID in (551427,555326)
+

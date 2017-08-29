@@ -1,0 +1,19 @@
+
+
+ 
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  
+from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2006-1-26','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+
+
+
+----sum by PHYSICAL_INVENTORY_NAME
+
+select sum(nvl(ACTUAL_COST,0) * nvl(ADJUSTMENT_QUANTITY,0)) Diff_Amt,PHYSICAL_INVENTORY_NAME 
+from   apps.mtl_physical_adjustments a,apps.MTL_PHYSICAL_INVENTORIES b
+where  --a.physical_inventory_id =:d --and actual_cost > 50 
+a.PHYSICAL_INVENTORY_ID=b.PHYSICAL_INVENTORY_ID
+--a.physical_inventory_id in (735,736,737,738,739) and 
+and trunc(b.FREEZE_DATE)>= to_date('2006-1-26','YYYY-MM-DD')
+group by b.PHYSICAL_INVENTORY_NAME

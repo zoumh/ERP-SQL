@@ -1,0 +1,54 @@
+
+
+1.
+select segment3, code_combination_id ccid, account_type,chart_of_accounts_id
+from apps.gl_code_combinations
+where segment3 like '4101%' or segment3 like '4102%'
+and chart_of_accounts_id = 50241
+
+
+
+
+
+2.
+Update apps.gl_code_combinations
+set account_type = 'A'
+where segment3 like '4101%' or segment3 like '4102%'
+and chart_of_accounts_id = 50241
+and account_type= 'E';
+
+commit
+
+
+3.
+
+After you have confirmed on the above, do the rollback till the last period of the previous financial year and then 
+repost the transactions.
+
+I'm sending the rollback script to your mail id.
+
+
+
+
+
+
+
+
+------------check Account's Type
+select FLEX_VALUE,DESCRIPTION,HIERARCHY_LEVEL,COMPILED_VALUE_ATTRIBUTES
+,substr(to_char(COMPILED_VALUE_ATTRIBUTES),5,1) Acc_Type
+,substr(COMPILED_VALUE_ATTRIBUTES,1,1) Post
+,substr(COMPILED_VALUE_ATTRIBUTES,3,1) Bud,ENABLED_FLAG,SUMMARY_FLAG 
+from apps.FND_FLEX_VALUES_vl where FLEX_VALUE_SET_ID=1007641
+order by Flex_value
+
+
+
+
+-------------Code COmbination
+
+select detail_posting_allowed_flag Post_Allow,detail_budgeting_allowed_flag Bud_Allow,
+account_type,enabled_flag,summary_flag,segment1,segment2,segment3 
+from apps.gl_code_combinations 
+where segment3 like '4101%' or segment3 like '4102%'
+and chart_of_accounts_id=50241

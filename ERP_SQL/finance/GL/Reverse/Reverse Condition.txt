@@ -1,0 +1,27 @@
+
+
+apps.gl_je_headers jh:
+
+jh.accrual_rev_flag='Y'
+jh.accrual_rev_period_name =next period,& it is open or future
+ACCRUAL_REV_JE_HEADER_ID =null
+jh.accrual_rev_status =null
+ACTUAL_FLAG='A'
+STATUS='P'
+
+
+General Ledger generates and posts reversals for journals that satisfy the 
+following conditions
+ The journal balance type is Actual.
+ The journal category is enabled to be Autoreversed.
+ The journal is posted but not yet reversed.
+ The journal reversal period is open or future enterable.
+
+
+----with above condition, at Open next period, auto run 'Program - Automatic Reversal' & Posting Program
+
+
+
+-------List JE Category could Auto Reverse / Posting
+select  JE_CATEGORY_NAME,USER_JE_CATEGORY_NAME, AUTOREVERSE_FLAG,AUTOPOST_REVERSAL_FLAG
+from apps.GL_AUTOREVERSE_OPTIONS_V where AUTOREVERSE_FLAG='Y' or AUTOPOST_REVERSAL_FLAG='Y'

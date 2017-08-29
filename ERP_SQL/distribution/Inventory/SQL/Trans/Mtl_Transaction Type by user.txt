@@ -1,0 +1,67 @@
+
+
+---------Miscellence Trans Type of a user
+
+select MTT.TRANSACTION_TYPE_NAME,CG.COST_GROUP, 
+MMT.SUBINVENTORY_CODE, 
+transaction_date, 
+MSI.SEGMENT1 item_number, 
+nvl(MMT.revision,'0') item_id, 
+nvl(transaction_cost,actual_cost) cost, 
+MMT.transaction_quantity quantity, 
+MMT.TRANSACTION_REFERENCE,mmt.ORGANIZATION_ID,
+MGD.SEGMENT1 SOURCE, 
+transaction_quantity*nvl(transaction_cost,actual_cost) amount, 
+FU.USER_NAME requestor 
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI, 
+apps.mtl_generic_dispositions MGD, 
+apps.FND_USER FU,
+apps.CST_COST_GROUPS CG
+WHERE  (MMT.TRANSACTION_COST IS NOT NULL OR MMT.ACTUAL_COST IS NOT NULL) 
+AND MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.ORGANIZATION_ID 
+AND MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+AND FU.USER_ID=MMT.CREATED_BY
+AND MMT.COST_GROUP_ID=CG.COST_GROUP_ID(+)
+and (mtt.Transaction_type_name like '%Account%' or mtt.Transaction_type_name like '%Misce%') 
+--and mmt.transaction_date>=to_date('2006-5-20','yyyy-mm-dd')
+and FU.USER_NAME='289521111'
+
+
+---------------------Mtl Trans Type , user,date time
+
+select MTT.TRANSACTION_TYPE_NAME,CG.COST_GROUP, 
+MMT.SUBINVENTORY_CODE, 
+mmt.transaction_date, mmt.CREATION_DATE,
+MSI.SEGMENT1 item_number, 
+nvl(MMT.revision,'0') item_id, 
+nvl(transaction_cost,actual_cost) cost, 
+MMT.transaction_quantity quantity, 
+MMT.TRANSACTION_REFERENCE,mmt.ORGANIZATION_ID,
+MGD.SEGMENT1 SOURCE, 
+transaction_quantity*nvl(transaction_cost,actual_cost) amount, 
+FU.USER_NAME requestor 
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI, 
+apps.mtl_generic_dispositions MGD, 
+apps.FND_USER FU,
+apps.CST_COST_GROUPS CG
+WHERE  (MMT.TRANSACTION_COST IS NOT NULL OR MMT.ACTUAL_COST IS NOT NULL) 
+AND MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.ORGANIZATION_ID 
+AND MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+AND FU.USER_ID=MMT.CREATED_BY
+AND MMT.COST_GROUP_ID=CG.COST_GROUP_ID(+)
+and (mtt.Transaction_type_name not like '%djust%') 
+--and mmt.transaction_date>=to_date('2006-5-20','yyyy-mm-dd')
+and (mmt.TRANSACTION_DATE )>=to_date('20060903 11:59:59','YYYYMMDD HH24:MI:SS')
+and (mmt.TRANSACTION_DATE )<=to_date('20060904 07:59:59','YYYYMMDD HH24:MI:SS')
+
+

@@ -1,0 +1,265 @@
+
+----------List Currently Fully Retired FA
+select fa1.asset_id,fa.ASSET_NUMBER,fa1.transaction_type_code,fa1.TRANSACTION_DATE_ENTERED,fa1.DATE_EFFECTIVE
+      from fa_transaction_headers fa1,fa_additions_b fa,
+      (select  asset_id,max(transaction_header_id)  thi
+      from fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.asset_id=fa.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+      and transaction_type_code='FULL RETIREMENT' 
+order by fa.ASSET_NUMBER
+
+
+----------List Currently Fully Retired FA's all Transaction History
+select a.ASSET_NUMBER, 
+a.SEGMENT1||'.'||a.SEGMENT2||'.'||a.SEGMENT3 as Category,
+--,a.COMMENTS,b.ATTRIBUTE1 as FlexField_Remark,
+PERIOD_ENTERED,TRANSACTION_DATE_ENTERED,TRANSACTION_TYPE
+from apps.FA_TRANSACTION_HISTORY_TRX_V a ,apps.FA_ADDITIONS_V b
+where  b.ASSET_ID=a.ASSET_ID
+--and PERIOD_ENTERED='FEB-04' 
+and BOOK_TYPE_CODE='BMC_FA_BOOK' 
+--and a.ASSET_NUMBER='10992786'
+and b.ASSET_ID in 
+(
+      select fa1.asset_id
+      from fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+      and transaction_type_code='FULL RETIREMENT' 
+      )
+order by a.ASSET_NUMBER,TRANSACTION_HEADER_ID,TRANSACTION_DATE_ENTERED
+
+
+
+
+-----List Retire Reason & method (for twicw retire, only list the last one)
+
+select a.BOOK_TYPE_CODE,a.ASSET_ID,a.ASSET_NUMBER,a.RETIREMENT_TYPE_CODE,a.COST,a.COST_RETIRED,a.NBV_RETIRED,a.GAIN_LOSS_AMOUNT,a.DATE_RETIRED,a.STATUS 
+,b.DATE_PLACED_IN_SERVICE,b.DEPRN_START_DATE,b.DEPRN_METHOD_CODE,b.LIFE_IN_MONTHS,b.SALVAGE_VALUE
+from apps.FA_RETIREMENTS_V a, apps.FA_BOOKS_V b 
+where a.BOOK_TYPE_CODE=b.BOOK_TYPE_CODE
+and a.ASSET_ID=b.ASSET_ID
+and a.status='PROCESSED'
+and a.book_type_code='BMC_FA_BOOK'
+and ASSET_NUMBER='12001466'
+
+
+-----
+select a.ASSET_NUMBER,a.RETIREMENT_TYPE_CODE,a.ASSET_ID,
+a.book_type_code,a.COST_RETIRED,
+a.DATE_RETIRED ,a.NBV_RETIRED
+from apps.FA_RETIREMENTS_V a, APPS.FA_ADDITIONS_V b
+where a.ASSET_ID=b.ASSET_ID and a.book_type_code='BMC_FA_BOOK'
+and a.status='PROCESSED'
+--and a.ASSET_NUMBER='12001466'
+
+
+
+--------List Book's Asset Retire Info in Period (for twice REINSTATEMENT only list last one)
+
+select a.BOOK_TYPE_CODE,a.ASSET_ID,a.ASSET_NUMBER,a.RETIREMENT_TYPE_CODE,a.COST,a.COST_RETIRED,a.NBV_RETIRED,a.GAIN_LOSS_AMOUNT,a.DATE_RETIRED,a.STATUS 
+,b.DATE_PLACED_IN_SERVICE,b.DEPRN_START_DATE,b.DEPRN_METHOD_CODE,b.LIFE_IN_MONTHS,b.SALVAGE_VALUE,TAG_NUMBER  Scala_FA_Num
+from apps.FA_RETIREMENTS_V a, apps.FA_BOOKS_V b ,apps.FA_ADDITIONS_V c
+where a.BOOK_TYPE_CODE=b.BOOK_TYPE_CODE
+and b.ASSET_ID=c.ASSET_ID
+and a.ASSET_ID=b.ASSET_ID
+and a.status='PROCESSED'
+and a.book_type_code='BMC_FA_BOOK'
+and c.ASSET_NUMBER='12001466'
+
+
+
+select ASSET_NUMBER,RETIREMENT_TYPE_CODE,COST,COST_RETIRED,NBV_RETIRED,GAIN_LOSS_AMOUNT,DATE_RETIRED,STATUS ,date_effective Enter_Date
+from apps.FA_RETIREMENTS_V  where BOOK_TYPE_CODE='BMC_TAX_BOOK'
+and DATE_RETIRED>=to_date('2004-07-01','YYYY-MM-DD')
+and DATE_RETIRED<=to_date('2004-08-31','YYYY-MM-DD')
+and status='PROCESSED'
+order by ASSET_NUMBER,DATE_RETIRED
+
+
+
+
+--------???List Book's Asset Retire Info which has only once Retirement Trans in Period
+
+
+select ASSET_NUMBER,RETIREMENT_TYPE_CODE,COST,COST_RETIRED,NBV_RETIRED,GAIN_LOSS_AMOUNT,DATE_RETIRED,STATUS 
+from apps.FA_RETIREMENTS_V  where BOOK_TYPE_CODE='BMC_FA_BOOK'
+and date_effective>=to_date('2005-01-01','YYYY-MM-DD')
+and date_effective<=to_date('2005-03-31','YYYY-MM-DD')
+
+
+
+
+
+---------???List Book's Asset has more then once Retirement Trans in Period
+
+
+select a.BOOK_TYPE_CODE,a.ASSET_ID,a.ASSET_NUMBER,a.RETIREMENT_TYPE_CODE,a.COST,a.COST_RETIRED,a.NBV_RETIRED,a.GAIN_LOSS_AMOUNT,a.DATE_RETIRED,a.STATUS 
+,b.DATE_PLACED_IN_SERVICE,b.DEPRN_START_DATE,b.DEPRN_METHOD_CODE,b.LIFE_IN_MONTHS,b.SALVAGE_VALUE,TAG_NUMBER  Scala_FA_Num
+from apps.FA_RETIREMENTS_V a, apps.FA_BOOKS_V b ,apps.FA_ADDITIONS_V c
+where a.BOOK_TYPE_CODE=b.BOOK_TYPE_CODE
+and b.ASSET_ID=c.ASSET_ID
+and a.ASSET_ID=b.ASSET_ID
+and a.DATE_RETIRED>=to_date('2005-1-1','yyyy-mm-dd')
+and a.DATE_RETIRED<=to_date('2005-12-31','yyyy-mm-dd')
+--and c.ASSET_NUMBER='12001391'
+
+
+
+select ASSET_NUMBER,RETIREMENT_TYPE_CODE,COST,COST_RETIRED,NBV_RETIRED,GAIN_LOSS_AMOUNT,DATE_RETIRED,STATUS 
+from apps.FA_RETIREMENTS_V  where BOOK_TYPE_CODE='BMC_TAX_BOOK'
+and date_effective>=to_date('2004-02-01','YYYY-MM-DD')
+and date_effective<=to_date('2005-03-31','YYYY-MM-DD')
+and ASSET_NUMBER in
+(
+select ASSET_NUMBER
+from apps.FA_RETIREMENTS_V  where BOOK_TYPE_CODE='BMC_TAX_BOOK'
+and date_effective>=to_date('2004-02-01','YYYY-MM-DD')
+and date_effective<=to_date('2005-03-31','YYYY-MM-DD')
+group by ASSET_NUMBER
+having count(*)>1
+)
+
+
+
+
+
+-------List Period Trans Type
+
+select distinct TRANSACTION_TYPE from apps.FA_TRANSACTION_HISTORY_TRX_V 
+where BOOK_TYPE_CODE='BMC_FA_BOOK' 
+--TRANSACTION_TYPE='Reinstatement'
+and period_entered in ('JAN-05','FEB-05','MAR-05')
+
+
+
+---------List Retire Trans
+
+
+ select a.ASSET_NUMBER,a.ASSET_NUMBER_DESC 
+,a.SEGMENT1||'.'||a.SEGMENT2||'.'||a.SEGMENT3 as Category
+,a.COMMENTS,b.ATTRIBUTE1 as FlexField_Remark,PERIOD_ENTERED,TRANSACTION_DATE_ENTERED,TRANSACTION_TYPE
+from apps.FA_TRANSACTION_HISTORY_TRX_V a ,apps.FA_ADDITIONS_V b
+where TRANSACTION_TYPE='Full Retirement' 
+and b.ASSET_ID=a.ASSET_ID
+--and PERIOD_ENTERED='FEB-04' 
+and BOOK_TYPE_CODE='BMC_FA_BOOK' 
+and a.ASSET_NUMBER='12001391'
+
+
+----------Not include full retired FA
+SELECT fav.asset_number,fav.ASSET_KEY_CCID ,bt.ASSET_KEY_CCID
+,    GLC.SEGMENT2 as FA_CC,bt.COST_CENTER tmp_CC
+,    GLC.SEGMENT3 as FA_Acc,GLC2.SEGMENT3 tmp_Acc
+,    GLC.SEGMENT4 as FA_Prd,bt.PRODUCT_CODE tmp_Prd
+,    GLC.SEGMENT5 as FA_Prj,bt.PROJECT_CODE tmp_Prj
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as FA_Cat2,bt.ASSET_CATEGORY_SEGMENT2 tmp_Cat2
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as FA_Cat3,bt.ASSET_CATEGORY_SEGMENT3 tmp_Cat3,
+em.FULL_NAME FA_EMPLOYEE_Name,bt.EMPLOYER_NAME tmp_EMPLOYER_NAME,
+lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3 FA_Location,bt.LOCATION_CODE tmp_Location,
+fav.asset_id
+FROM APPS.FA_ADDITIONS_V fav
+,     apps.FA_CATEGORIES_VL  a
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+,     apps.GL_CODE_COMBINATIONS GLC
+,     apps.GL_CODE_COMBINATIONS GLC2
+,apps.BMC_FA_BATCH_MASS_CHANGE_T BT
+,apps.PER_PEOPLE_V7 em
+,apps.FA_LOCATIONS lc
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+AND GLC2.CODE_COMBINATION_ID=bt.CODE_COMBINATION_ID
+and fav.asset_id=bt.asset_id
+and em.PERSON_ID(+)=fah.ASSIGNED_TO
+and FAH.LOCATION_ID=lc.LOCATION_ID
+and fah.DATE_INEFFECTIVE is  null
+and not exists
+   (
+      select fa1.asset_id
+      from fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+   and fa1.asset_id=fav.asset_id
+      and transaction_type_code='FULL RETIREMENT' 
+      )
+and (
+GLC.SEGMENT2<>bt.COST_CENTER
+or FAH.CODE_COMBINATION_ID<>bt.CODE_COMBINATION_ID
+or GLC.SEGMENT3<>GLC2.SEGMENT3
+or GLC.SEGMENT4<>bt.PRODUCT_CODE
+or GLC.SEGMENT5<>bt.PROJECT_CODE
+or SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2)<>bt.ASSET_CATEGORY_SEGMENT2
+or SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2)<>bt.ASSET_CATEGORY_SEGMENT3
+or  bt.Attribute1 is not null
+or  bt.Attribute2 is not null
+or  bt.Attribute3 is not null
+or  bt.Attribute4 is not null
+or  bt.Attribute8 is not null--LINE_NO 
+or  bt.LINE_NO is not null 
+or fah.ASSIGNED_TO<>bt.EMPLOYER_ID--
+   or (fah.ASSIGNED_TO is null and bt.EMPLOYER_ID is not null)
+   or (fah.ASSIGNED_TO is not null and bt.EMPLOYER_ID is null)
+or em.FULL_NAME<>bt.EMPLOYER_NAME
+   or (em.FULL_NAME is null and bt.EMPLOYER_NAME is not null)
+   or (em.FULL_NAME is not null and bt.EMPLOYER_NAME is null)
+or FAH.LOCATION_ID<>bt.LOCATION_ID
+or lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3<>bt.LOCATION_CODE
+--or fav.ASSET_KEY_CCID<>bt.ASSET_KEY_CCID  
+)
+
+
+
+---------(has Retired Flag) List in Both side 
+SELECT fav.asset_number,fah.ASSIGNED_TO,bt.EMPLOYER_ID
+,    GLC.SEGMENT2 as FA_CC,bt.COST_CENTER tmp_CC
+,    GLC.SEGMENT3 as FA_Acc,GLC2.SEGMENT3 tmp_Acc
+,    GLC.SEGMENT4 as FA_Prd,bt.PRODUCT_CODE tmp_Prd
+,    GLC.SEGMENT5 as FA_Prj,bt.PROJECT_CODE tmp_Prj
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as FA_Cat2,bt.ASSET_CATEGORY_SEGMENT2 tmp_Cat2
+,    SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as FA_Cat3,bt.ASSET_CATEGORY_SEGMENT3 tmp_Cat3,
+fav.Attribute1 FA_Remark,bt.Attribute1 tmp_Remark,
+fav.Attribute2 FA_IT_Asset_Name,bt.Attribute2 tmp_IT_Asset_Name,
+fav.Attribute3 FA_Property_Type,bt.Attribute3 tmp_Property_Type,
+fav.Attribute4 FA_Warranty,bt.Attribute4 tmp_Warranty,
+fav.Attribute8 FA_Line_No,bt.LINE_NO tmp_line_No,bt.Attribute8 tmp_Line_No_att8,
+em.FULL_NAME FA_EMPLOYEE_Name,bt.EMPLOYER_NAME tmp_EMPLOYER_NAME,
+lc.SEGMENT1||'.'||lc.SEGMENT2||'.'||lc.SEGMENT3 FA_Location,bt.LOCATION_CODE tmp_Location,
+(
+      select decode(transaction_type_code,'FULL RETIREMENT','FULL RETIRED','Not_FullRetired')
+      from fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from fa_transaction_headers
+    where book_type_code='BMC_FA_BOOK'
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+   and fa1.asset_id=fav.asset_id
+   AND fa1.book_type_code='BMC_FA_BOOK'
+     -- and transaction_type_code='PARTIAL RETIREMENT' 
+      ) transaction_type_code
+FROM APPS.FA_ADDITIONS_V fav
+,     apps.FA_CATEGORIES_VL  a
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+,     apps.GL_CODE_COMBINATIONS GLC
+,     apps.GL_CODE_COMBINATIONS GLC2
+,apps.BMC_FA_BATCH_MASS_CHANGE_T BT
+,apps.PER_PEOPLE_V7 em
+,apps.FA_LOCATIONS lc
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+AND GLC2.CODE_COMBINATION_ID=bt.CODE_COMBINATION_ID
+and fav.asset_id=bt.asset_id
+and em.PERSON_ID(+)=fah.ASSIGNED_TO
+and FAH.LOCATION_ID=lc.LOCATION_ID
+and fah.DATE_INEFFECTIVE is  null

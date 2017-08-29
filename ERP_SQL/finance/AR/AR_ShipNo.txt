@@ -1,0 +1,50 @@
+
+select to_char(c.TRX_NUMBER) as Invoice_Number,to_char(a.LINE_NUMBER),g.segment3 as Rev_Acc,a.REVENUE_AMOUNT
+,a.LINE_TYPE ,a.SALES_ORDER,a.INTERFACE_LINE_ATTRIBUTE3 as Ship
+,b.AMOUNT,b.ACCTD_AMOUNT as CNY_AMT,b.GL_DATE,a.QUANTITY_INVOICED,a.QUANTITY_ORDERED,a.UNIT_SELLING_PRICE,c.PURCHASE_ORDER
+from apps.ra_customer_trx_lines_all a,apps.RA_CUST_TRX_LINE_GL_DIST_all b,apps.ra_customer_trx_all c
+,apps.GL_CODE_combinations g
+where c.CUSTOMER_TRX_ID=b.CUSTOMER_TRX_ID
+and a.CUSTOMER_TRX_LINE_ID=b.CUSTOMER_TRX_LINE_ID
+and a.LINE_TYPE='LINE'
+and b.ACCOUNT_CLASS='REV'
+and b.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and b.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and b.GL_DATE<=to_date('2004-03-30','yyyy-mm-dd')  
+and (g.segment3 in ('5101010101','5101010102','5101030101','5101030102'))
+
+
+select to_char(c.TRX_NUMBER) as Invoice_Number,a.LINE_NUMBER,g.segment3 as Rev_Acc,a.REVENUE_AMOUNT,a.LINE_TYPE ,a.SALES_ORDER,a.INTERFACE_LINE_ATTRIBUTE3 as Ship
+,b.AMOUNT,b.ACCTD_AMOUNT as CNY_AMT,b.GL_DATE
+from apps.ra_customer_trx_lines_all a,apps.RA_CUST_TRX_LINE_GL_DIST_all b,apps.ra_customer_trx_all c
+,apps.GL_CODE_combinations g
+where c.CUSTOMER_TRX_ID=b.CUSTOMER_TRX_ID
+and a.CUSTOMER_TRX_LINE_ID=b.CUSTOMER_TRX_LINE_ID
+and a.LINE_TYPE='LINE'
+and b.ACCOUNT_CLASS='REV'
+and b.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and b.GL_DATE>=to_date('2004-01-27','yyyy-mm-dd') and b.GL_DATE<=to_date('2004-02-29','yyyy-mm-dd')  
+
+and c.TRX_NUMBER='10253'
+
+and a.CUSTOMER_TRX_ID=2752
+
+
+
+
+-----------This not right
+select to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Rev_Acc,e.ACCOUNT_CLASS,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,e.GL_POSTED_DATE
+,b.TRX_DATE as Inv_Date  
+,b.INTERFACE_HEADER_ATTRIBUTE1 as SO_number,b.INTERFACE_HEADER_ATTRIBUTE3 as ShipNo
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.GL_CODE_combinations g
+where b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and e.GL_DATE>=to_date('2004-01-27','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-02-29','yyyy-mm-dd')  
+--and b.CUSTOMER_TRX_ID=2752
+and e.ACCOUNT_CLASS='REV'
+and (g.segment3 in ('5101010101','5101010102','5101030101','5101030102'))
+--and b.TRX_DATE<=to_date('2004-02-29','yyyy-mm-dd') and b.TRX_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+order by g.segment3,b.TRX_DATE,b.TRX_NUMBER--,d.LINE_NUMBER
+

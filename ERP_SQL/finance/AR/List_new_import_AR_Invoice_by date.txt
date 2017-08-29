@@ -1,0 +1,20 @@
+
+
+----------AR invoice list by created date
+
+select creation_date,CREATED_BY,LAST_UPDATE_DATE,trx_number,trx_date,exchange_date,program_update_date,ship_date_actual,
+complete_flag
+from apps.ra_customer_trx_all where --trunc(CREATION_DATE)>to_date('2005-1-17','yyyy-mm-dd')
+creation_date>to_date('20050117 16:00:59','YYYYMMDD HH24:MI:SS')
+
+
+----------User name / ID
+select * from apps.FND_USER where user_id=2248
+
+
+
+
+select * from apps.ra_customer_trx_all where --trunc(CREATION_DATE)>to_date('2005-1-17','yyyy-mm-dd')
+creation_date>to_date('20050117 16:00:59','YYYYMMDD HH24:MI:SS')
+
+

@@ -1,0 +1,72 @@
+
+-----------WIP Trans Accounts for Job Order
+
+select d.WIP_ENTITY_NAME Job_Order,a.base_transaction_value value,a.primary_quantity Qty,
+decode(a.accounting_line_type,1,'Inv valuation',2,'Account',4,'Resource absorption',7,'WIP valuation',8,'WIP variance',a.accounting_line_type) accounting_line_type,
+b.segment3 Acc,b.segment2 CC,b.segment4 PRD, b.segment5 PRJ,
+a.transaction_date, 
+a.rate_or_amount Rate_Amt,
+e.MEANING TRANSACTION_TYPE,c.TRANSACTION_TYPE Type_ID
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_ENTITIES d, -- ( or use apps.WIP_DISCRETE_JOBS_V)
+apps.MFG_LOOKUPS e
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and d.WIP_ENTITY_NAME='050301-D-112R2A'
+
+
+----------Material Transactions for an Job Order 
+select   mmt.transaction_date,-- mmt.CREATED_BY,usr.user_name,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name,
+	 	 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	 	 mmt.TRANSACTION_QUANTITY as Qty,mta.primary_quantity Booked_Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 a.wip_entity_name job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION,
+		 MGD.SEGMENT1 Alias_SOURCE,
+		 MMT.TRANSACTION_REFERENCE Trans_Reference,
+		 a.material_account Job_Class_Mtl_Account_CCID,
+		 gcc2.segment3 Job_Class_Mtl_Account,
+		 a.class_code Job_Class,
+		 a.status_type_Disp Job_Status
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, apps.gl_code_combinations      gcc2,
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.WIP_DISCRETE_JOBS_V a         --apps.wip_entities a
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    a.wip_entity_id=mmt.transaction_source_id
+and    a.material_account= gcc2.code_combination_id
+and    mst.transaction_source_type_name like 'Job%'
+and a.wip_entity_name='050301-D-112R2A'
+
+
+

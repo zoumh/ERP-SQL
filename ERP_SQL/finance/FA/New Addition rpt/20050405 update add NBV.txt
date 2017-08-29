@@ -1,0 +1,50 @@
+
+select to_char(fab.CREATION_DATE,'YYYY-MM-DD hh24:mi:ss')||';'||
+fb.DATE_PLACED_IN_SERVICE||';'||fab.tag_number||';'||fab.serial_number||';'||
+fab.ASSET_NUMBER||';'||fl.segment1||'.'||fl.segment2||'.'||fl.segment3||';'||fak.segment1||';'||fak.segment2||';'||replace(fab.ATTRIBUTE_CATEGORY_CODE,'.',';')||';'||
+fai.INVOICE_NUMBER||';'||fai.PO_NUMBER||';'||fb.COST||';'||fb.ORIGINAL_COST||';'||to_number(fb.COST-nvl(fdd2.NAV,0))||';f'||gcc.SEGMENT3||';'||gcc.segment2||';'||glp.gl_date||';'||fb.DEPRECIATE_FLAG||';'||fab.ATTRIBUTE1||';'||fat.DESCRIPTION
+/*select fab.CREATION_DATE,fth.TRANSACTION_DATE_ENTERED,fth.DATE_EFFECTIVE,fab.ASSET_ID,fab.tag_number,fab.serial_number,
+fab.ASSET_NUMBER,fak.segment1 project,fak.segment2 product,fab.ATTRIBUTE_CATEGORY_CODE,
+fai.INVOICE_NUMBER,fai.PO_NUMBER,fb.COST,fb.ORIGINAL_COST,fat.DESCRIPTION,
+gcc.SEGMENT3 Account,gcc.segment2 "Cost Center",glp.gl_date,fb.DEPRECIATE_FLAG,fab.ATTRIBUTE1 Remark*/
+from apps.fa_additions_b fab,apps.fa_asset_keywords fak,apps.fa_asset_invoices fai,apps.gl_code_combinations gcc,
+apps.fa_books fb,apps.fa_transaction_headers fth,apps.fa_additions_tl fat,apps.fa_distribution_history fdh,apps.fa_locations fl,
+(select fdd.asset_id,
+to_char(add_months(MIN(to_date(fdp.PERIOD_NAME,'MON-YY')),1),'MON-YY')||' to '||
+      to_char(max(to_date(fdp.PERIOD_NAME,'MON-YY')),'MON-YY') GL_DATE
+      from apps.fa_deprn_detail fdd,apps.fa_deprn_periods fdp 
+      where fdd.BOOK_TYPE_CODE='BMC_FA_BOOK'
+      and fdd.PERIOD_COUNTER=fdp.PERIOD_COUNTER
+      and fdp.BOOK_TYPE_CODE='BMC_FA_BOOK' 
+      --and fdd.deprn_run_date=fdd1.max_date
+      --and to_char(fdd.deprn_run_date,'YYYYMMDDHH24MISS')=fdd1.max_date
+      group by fdd.asset_id
+      ) glp,
+      (select distinct fdd.asset_id ,deprn_reserve NAV
+       from apps.fa_deprn_detail fdd, (select asset_id id,max(distribution_id) did,max(deprn_run_date) drd
+                from apps.fa_deprn_detail 
+                where BOOK_TYPE_CODE='BMC_FA_BOOK' 
+                and DEPRN_SOURCE_CODE='D'
+                     group by asset_id ) fdd1
+       where fdd.asset_id=fdd1.id
+             and fdd.BOOK_TYPE_CODE='BMC_FA_BOOK' 
+             and fdd.DEPRN_SOURCE_CODE='D'
+             and distribution_id=fdd1.did
+             and deprn_run_date=fdd1.drd
+       ) fdd2
+where fab.asset_key_ccid=fak.code_combination_id(+)
+   and fab.ASSET_ID=fai.ASSET_ID(+)
+      and fab.asset_id=fb.asset_id
+      and fab.ASSET_ID=fat.ASSET_ID
+      and fab.ASSET_ID=glp.asset_id
+      and fab.ASSET_ID=fdh.ASSET_ID
+      and fab.asset_id=fdd2.asset_id(+) 
+      and fat.LANGUAGE='US'
+      --and fab.ASSET_ID=fth.ASSET_ID
+      and fb.BOOK_TYPE_CODE='BMC_FA_BOOK'
+      and fb.TRANSACTION_HEADER_ID_IN=fth.TRANSACTION_HEADER_ID
+      and fb.transaction_header_id_out is null
+      and fdh.CODE_COMBINATION_ID=gcc.CODE_COMBINATION_ID(+)
+   and fdh.location_id=fl.location_id
+      and fdh.TRANSACTION_HEADER_ID_OUT is null
+	  

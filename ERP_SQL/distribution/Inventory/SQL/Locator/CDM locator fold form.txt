@@ -1,0 +1,9 @@
+
+--------at Inventory - setup -lookups , set User/WH/Locator which could be open this form to change hold status
+
+---------lookups
+select a.LOOKUP_TYPE,b.MEANING,a.LOOKUP_CODE User_ID,a.MEANING WH,a.DESCRIPTION Locator,a.START_DATE_ACTIVE,a.END_DATE_ACTIVE,a.ENABLED_FLAG 
+from apps.FND_LOOKUP_VALUES_VL a,apps.FND_LOOKUP_TYPES_VL b 
+where a.LOOKUP_TYPE=b.LOOKUP_TYPE
+and a.LOOKUP_TYPE='BMC WH LOCATOR'
+

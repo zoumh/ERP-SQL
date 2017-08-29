@@ -1,0 +1,63 @@
+
+
+
+----------Account's Budget Balance Detail lines by Acc,CC
+
+select b.SEGMENT3 as Account,b.SEGMENT2 as CC,
+(a.begin_balance_dr-a.begin_balance_cr) as POB, (a.PERIOD_NET_DR-a.PERIOD_NET_CR) as PTD,
+(a.begin_balance_dr-a.begin_balance_cr+a.PERIOD_NET_DR-a.PERIOD_NET_CR) as YTD,
+a.begin_balance_dr,a.begin_balance_cr,a.PERIOD_NET_DR,a.PERIOD_NET_CR,c.Budget_Name,c.Status
+from apps.GL_Balances a,apps.GL_CODE_combinations b,apps.GL_BUDGET_VERSIONS c  
+where a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.ACTUAL_FLAG='B' 
+and b.DETAIL_POSTING_ALLOWED_FLAG='Y' 
+and a.CURRENCY_CODE='CNY'
+and c.BUDGET_VERSION_ID=a.BUDGET_VERSION_ID
+and a.PERIOD_NAME='MAY-05'
+and b.segment3='41050101' and b.segment2 in ('4080','4070' )
+and c.Budget_Name='TEST2005'
+order by b.segment2,b.segment3
+
+
+--------------Account's Budget Journal History
+
+select b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME Journal_Name,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,LINE_DESCRIPTION--LINE_REFERENCE_4 ,LINE_REFERENCE_5, 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account,a.segment2 as CC--,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME in ('MAY-05'))
+and (a.segment3='41050101' and a.segment2 in ('4080','4070' )) and ACTUAL_FLAG='B'
+
+
+
+select * from apps.GL_JE_JOURNAL_LINES_V b where ACTUAL_FLAG='B' and PERIOD_NAME in ('MAY-05')
+
+
+
+---------UnLoaded / Un-imported Budget Journals
+select * from apps.GL_BUDGET_INTERFACE
+
+
+--------Budget Org
+select * from apps.GL_BUDGET_ENTITIES
+
+
+--------Budget Names
+select * from apps.GL_BUDGET_VERSIONS
+
+--------Budget Ranges
+apps.GL_BUDGET_PERIOD_RANGES
+
+-------Budget Ranges with Org_Name
+select c.Name Budget_Org,b.segment2 CC,b.segment3 Account_Num ,a.CURRENCY_CODE,a.AMOUNT_TYPE,a.ENTRY_CODE,a.CREATION_DATE
+from apps.GL_BUDGET_ASSIGNMENTS_V a,apps.GL_CODE_combinations b,apps.GL_BUDGET_ENTITIES c
+where b.CODE_COMBINATION_ID=a.CODE_COMBINATION_ID
+and a.BUDGET_ENTITY_ID=c.BUDGET_ENTITY_ID
+--order by a.CREATION_DATE desc
+and b.segment2 ='9160'
+
+
+
+
+

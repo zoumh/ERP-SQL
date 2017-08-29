@@ -1,0 +1,98 @@
+
+select d.invoice_num, d.batch_id, to_char(c.unit_price, 99999.9999)
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a, apps.PO_DISTRIBUTIONS_ALL b, apps.po_lines_all c, apps.AP_INVOICES_ALL d
+where a.po_distribution_id=b.po_distribution_id and a.invoice_id=d.invoice_id and b.po_line_id=c.po_line_id
+and d.invoice_num
+
+
+
+
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id) tag,
+b.segment1 item, a.revision, a.subinventory_name, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator, e.cost_group, 
+a.system_quantity, a.count_quantity, to_char(actual_cost,999999999.9999) cost
+--,g.BASE_AMOUNT,g.QUANTITY_INVOICED,g.BASE_AMOUNT/c.QUANTITY_INVOICED as Price
+,g.UNIT_PRICE*nvl(j.RATE,1) as CNY_Price
+,j.CURRENCY_CODE
+,g.UNIT_PRICE
+,nvl(j.RATE,1) as Rate
+,j.SEGMENT1 as PO,g.LINE_NUM
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e
+,(select ITEM_ID,max(PO_LINE_ID) as PO_LINE_ID from apps.PO_lines_all group by ITEM_ID having count(*)=1) h
+,(select ITEM_ID,PO_HEADER_ID,PO_LINE_ID,UNIT_PRICE,LINE_NUM from apps.PO_lines_all) g
+,apps.PO_headers_all j
+where a.physical_inventory_id =87
+and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+and a.locator_id=c.inventory_location_id and c.organization_id=83 
+and a.cost_group_id=e.cost_group_id 
+and (a.count_quantity<>0 or a.system_quantity<>0)
+and g.ITEM_ID=b.inventory_item_id
+and h.PO_LINE_ID=g.PO_LINE_ID
+and j.PO_HEADER_ID=g.PO_HEADER_ID
+order by tag
+
+
+select CLOSED_CODE from  apps.PO_lines_all where po_line_id=15497
+
+
+select d.INVOICE_NUM,c.DISTRIBUTION_LINE_NUMBER as Invoice_Dist_Line
+,c.AMOUNT
+,f.SEGMENT1 as PO,e.LINE_NUM as PO_Line
+,a.LINE_NUM as Recept_Line,a.QUANTITY_SHIPPED,a.QUANTITY_RECEIVED
+,b.TRANSACTION_DATE,b.QUANTITY,b.TRANSACTION_TYPE,c.DIST_MATCH_TYPE
+,c.BASE_AMOUNT,c.QUANTITY_INVOICED
+,d.INVOICE_CURRENCY_CODE
+from apps.rcv_shipment_lines a
+,apps.rcv_transactions b
+,APPS.AP_INVOICE_DISTRIBUTIONS_ALL c
+,apps.AP_INVOICES_ALL d
+,apps.PO_lines_all e
+,apps.PO_headers_all f
+where a.SHIPMENT_LINE_ID=b.SHIPMENT_LINE_ID
+and c.RCV_TRANSACTION_ID=b.TRANSACTION_ID
+and d.INVOICE_ID=c.INVOICE_ID
+--and a.PO_LINE_ID=1838 
+and e.PO_HEADER_ID=f.PO_HEADER_ID
+and e.PO_LINE_ID=a.PO_LINE_ID
+and f.SEGMENT1='145' 	-- PO
+and e.LINE_NUM=195   		--PO line number
+and a.LINE_NUM=18  		--Shipment number
+
+
+select * from APPS.AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_ID=17299
+
+select * from apps.AP_INVOICES_ALL where INVOICE_NUM='SIS/23003424'
+INVOICE_ID=17299
+
+select * from apps.mtl_system_items where organization_id=83 and DESCRIPTION='PBA/KYPD/2LYR/(ML)'
+
+select b.DISTRIBUTION_LINE_NUMBER,a.DESCRIPTION,a.segment1,a.INVENTORY_ITEM_ID
+,AMOUNT,BASE_AMOUNT,QUANTITY_INVOICED,UNIT_PRICE
+,EXCHANGE_RATE
+,PO_DISTRIBUTION_ID
+,INVOICE_DISTRIBUTION_ID
+,RCV_TRANSACTION_ID
+ from apps.mtl_system_items a,APPS.AP_INVOICE_DISTRIBUTIONS_ALL b where a.organization_id=83
+and a.DESCRIPTION=b.DESCRIPTION
+and b.INVOICE_ID=17299
+
+
+select * from apps.rcv_transactions where TRANSACTION_ID=20388
+
+select * from apps.PO_DISTRIBUTIONS_ALL
+
+
+
+
+
+
+
+select BATCH_NAME,HEADER_NAME as Journal,LINE_CODE_COMBINATION_ID,LINE_PERIOD_NAME,LINE_DESCRIPTION,CURRENCY_CONVERSION_TYPE,CURRENCY_CONVERSION_RATE,CURRENCY_CODE,LINE_ENTERED_DR,LINE_ENTERED_CR,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR
+,(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0))/(nvl(LINE_ENTERED_DR,0)-nvl(LINE_ENTERED_CR,0)) as Rate 
+,(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0))/(nvl(LINE_ENTERED_DR,0)-nvl(LINE_ENTERED_CR,0))-8.277 as Rate2 
+,(nvl(LINE_ENTERED_DR,0)-nvl(LINE_ENTERED_CR,0))*((nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0))/(nvl(LINE_ENTERED_DR,0)-nvl(LINE_ENTERED_CR,0))-8.2767) as Diff
+,LINE_REFERENCE_1,LINE_REFERENCE_2,LINE_REFERENCE_4,CREATION_DATE,BATCH_DESCRIPTION,JE_SOURCE,b.segment3,b.segment2,b.segment4,b.segment5
+ from apps.GL_JE_JOURNAL_LINES_V a,apps.GL_CODE_combinations b 
+where a.LINE_CODE_COMBINATION_ID =b.CODE_COMBINATION_ID 
+and (LINE_ENTERED_DR<>0 or LINE_ENTERED_CR<>0)
+and LINE_ENTERED_DR=238719.5

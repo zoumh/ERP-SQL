@@ -1,0 +1,21 @@
+
+
+---------------Find LPN has more record then the onhand table
+
+select   lpn.license_plate_number,
+         lpn.subinventory_code, lpn.locator_id, 
+         lpnc.inventory_item_id ,lpnc.quantity
+from     apps.wms_license_plate_numbers lpn,
+         apps.wms_lpn_contents lpnc
+where    lpn.lpn_context=1
+and      lpn.subinventory_code='SD'
+and      lpn.lpn_id=lpnc.parent_lpn_id
+and  not exists (select 1 
+                from     apps.mtl_onhand_quantities_detail moq
+                where    moq.subinventory_code='SD' 
+                and      moq.inventory_item_id = lpnc.inventory_item_id
+                and      moq.subinventory_code= lpn.subinventory_code
+                and      moq.locator_id = lpn.locator_id) 
+
+
+

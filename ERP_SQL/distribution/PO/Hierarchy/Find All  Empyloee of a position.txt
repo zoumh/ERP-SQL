@@ -1,0 +1,31 @@
+
+
+--------Find All User/Empyloee of a position (PURCHASE REQUESTOR)
+SELECT b.person_id,a.USER_Name Login_ID,a.description Login_Name,b.full_name 
+Employee_Name,b.employee_number,
+c.D_POSITION_ID,c.D_JOB_ID 
+FROM apps.FND_USER a,apps.PER_PEOPLE_V7 b,apps.PER_ASSIGNMENTS_V7 c
+WHERE a.EMPLOYEE_ID=b.person_id
+and b.person_id=c.person_id
+and D_POSITION_ID in ('DIRECTOR IN E (PRJM)','DIRECTOR IN P (SI)',
+'DIRECTOR IN E (MECHANIC)','DIRECTOR IN E (ELECTRIC)','MANAGER IN P (REPAIR)')
+
+
+
+SELECT b.person_id,a.USER_Name Login_ID,a.description Login_Name,
+b.full_name Employee_Name,b.employee_number,
+c.D_POSITION_ID,c.D_JOB_ID 
+FROM apps.FND_USER a,apps.PER_PEOPLE_V7 b,apps.PER_ASSIGNMENTS_V7 c
+WHERE a.EMPLOYEE_ID=b.person_id
+and b.person_id=c.person_id
+and D_POSITION_ID='PURCHASE REQUESTOR'
+and b.employee_number in ('265','28953254','28953015','28990475')
+
+
+---------Check Employee laster date
+select PERSON_ID,LAST_UPDATE_DATE,EMPLOYEE_NUMBER,FULL_NAME,EFFECTIVE_START_DATE,EFFECTIVE_END_DATE,ATTRIBUTE1 BANK_ACCOUNT_NO
+from apps.PER_PEOPLE_V7 where EMPLOYEE_NUMBER in ('28945495','28952413')
+--PERSON_ID=13695
+
+
+select  LAST_UPDATE_DATE,ASSIGNMENT_NUMBER from apps.PER_ASSIGNMENTS_V7 where PERSON_ID in (947,4440)

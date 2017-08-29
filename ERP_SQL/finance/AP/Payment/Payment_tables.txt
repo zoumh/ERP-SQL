@@ -1,0 +1,54 @@
+
+
+
+
+select * from apps.ap_inv_selection_criteria_all where checkrun_name= 'EH041104USD'
+
+
+------After select , this table would have invoices in this table
+select * from apps.ap_selected_invoices_all where checkrun_name= 'EH041104USD'
+
+
+
+-----After build, this table will have checks information for this batch
+select * from apps.ap_selected_invoice_checks_all where checkrun_name= 'EH041104USD'
+
+
+
+--------To check Which Payment Batch has selected the Invoice
+
+select invoice_id,checkrun_id from ap_payment_schedules_all
+where invoice_id in (83378,83379)
+
+
+
+----all payment view
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('127');
+END;
+
+select BANK_NAME,BANK_ACCOUNT_NUM,  CHECK_NUMBER, CHECKRUN_NAME ,AMOUNT,BANK_CURRENCY_CODE,CURRENT_VENDOR_NAME,VENDOR_NUMBER,CREATION_DATE,CHECK_STATUS        
+from AP_CHECKS_V where CHECK_STATUS='Negotiable'
+
+
+----all payment table
+
+select * from apps.AP_CHECKS_all
+
+select count(*) from  apps.AP_CHECKS_all ----total payemnt lines
+
+AP_CHECKS_ALL stores information about payments issued to
+suppliers or refunds received from suppliers. You need one row for
+each payment you issue to a supplier or refund received from a supplier. 
+Oracle stores a dummy value for CHECK_STOCK_ID for refunds,
+thus, CHECK_STOCK_ID should not be treated as a foreign key to AP_CHECK_STOCKS_ALL 
+in the case of refunds
+
+AP_CHECKS_all.PAYMENT_TYPE_FLAG : 
+A   	Batch
+M 	Manual
+Q 	Quick
+R 	Refund
+
+
+

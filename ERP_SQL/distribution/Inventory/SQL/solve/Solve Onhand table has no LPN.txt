@@ -1,0 +1,22 @@
+
+
+------If onhand_detail has no LPN_ID, then this Qty can't be transact.
+	
+      --To solve it, unpack it ( by clear the LPN_ID, set containerized_flag=2)
+	then issue them 
+
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl
+where   --LPN_ID=110763
+INVENTORY_ITEM_ID IN ('2019','2516') and --LPN_ID=468131 and
+SUBINVENTORY_CODE='SB' 
+AND LOCATOR_ID IN ('1613','11740')
+
+
+update apps.MTL_ONHAND_QUANTITIES_DETAIl set
+containerized_flag=2,lpn_id=null
+where 
+INVENTORY_ITEM_ID IN ('2019','2516') and --LPN_ID=468131 and
+SUBINVENTORY_CODE='SB' 
+AND LOCATOR_ID IN ('1613','11740')
+

@@ -1,0 +1,38 @@
+
+Find out AP Payment Batch / Document Number from the invoice number
+
+
+1. find out invoice_id by invoice_num
+
+select * from apps.ap_invoices_all where INVOICE_NUM='SIS/24001839'
+
+
+
+2. find out  / Document Number by Payment Batch name
+
+
+select * from apps.ap_selected_invoices_all where checkrun_name='test11'
+
+select * from apps.ap_inv_selection_criteria_all where checkrun_name='test11' 
+
+select * from apps.ap_selected_invoice_checks_all where checkrun_name='test11' 
+
+
+
+
+--------Or use this to Find out AP Payment Batch / Document Number from the invoice number
+
+select a.INVOICE_NUM,a.invoice_amount,a.amount_paid,b.checkrun_name,b.payment_num,
+b.amount_remaining,check_number
+from apps.ap_invoices_all a,apps.ap_selected_invoices_all b
+where a.INVOICE_NUM='SIS/24001839'
+and a.invoice_id=b.invoice_id
+
+
+
+
+
+
+
+
+

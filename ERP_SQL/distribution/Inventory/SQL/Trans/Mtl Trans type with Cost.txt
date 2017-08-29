@@ -1,0 +1,29 @@
+
+
+---------Mtl Trans, with Cost , TransType
+
+select   mmt.ACTUAL_COST,mmt.transaction_date, mmt.transaction_id,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.organization_id Organization ,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+--and    trunc(mmt.transaction_date) >= to_date('20070808','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) < to_date('20070812','YYYYMMDD')
+and mtt.transaction_type_name not in ('Sales Order Pick','Container Pack','Subinventory Transfer')
+--and mmt.TRANSACTION_QUANTITY>0
+and msi.segment1='DPY 101 3009/170'
+order by trunc(mmt.transaction_date),mmt.transaction_id
+
+
+

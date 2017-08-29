@@ -1,0 +1,386 @@
+
+---------GL summary for OCt 12320201 , source=Inv
+
+select b.JE_SOURCE,b.JE_CATEGORY,a.segment3,
+--Sum(LINE_ACCOUNTED_DR),sum(LINE_ACCOUNTED_CR),
+--Sum(LINE_ACCOUNTED_DR)-sum(LINE_ACCOUNTED_CR) Amt--,b.PERIOD_NAME--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+Sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt
+--,b.JE_SOURCE--,JE_CATEGORY--,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME = 'FEB-08')
+and (a.segment3='12320201') and ACTUAL_FLAG='A'
+--and b.JE_CATEGORY='MTL'
+group by b.JE_CATEGORY,b.JE_SOURCE,a.segment3
+
+
+
+---------Inv PPV & Acc=12320201
+select sum(BASE_TRANSACTION_VALUE)
+from apps.mtl_transaction_accounts mta,apps.GL_CODE_combinations b ,
+apps.mtl_material_transactions  mmt
+where 
+(mta.accounting_line_type = 6
+OR b.segment3='12320201' )
+and mta.reference_account=b.CODE_COMBINATION_ID
+and mta.TRANSACTION_DATE>=to_date('2007-10-1','yyyy-mm-dd')
+and mta.TRANSACTION_DATE<to_date('2007-11-1','yyyy-mm-dd')
+and mmt.TRANSACTION_ID=mta.TRANSACTION_ID
+--and mmt.ORGANIZATION_ID=mta.ORGANIZATION_ID
+and b.segment3='12320201'
+
+-----------My SQL (with PO,Receipt) PPV value (mta.BASE_TRANSACTION_VALUE) reconcile to GL
+select   mmt.ORGANIZATION_ID,
+round(((nvl(mmt.CURRENCY_CONVERSION_RATE,1)*nvl(PO_UNIT_PRICE,0)-nvl(mmt.ACTUAL_COST,0))*mmt.TRANSACTION_QUANTITY),2)  Caculate_PPV,
+mta.BASE_TRANSACTION_VALUE mta_ppv,
+round(((nvl(mmt.CURRENCY_CONVERSION_RATE,1)*nvl(PO_UNIT_PRICE,0)-nvl(mmt.ACTUAL_COST,0))*mmt.TRANSACTION_QUANTITY),2)-mta.BASE_TRANSACTION_VALUE diff,
+mmt.TRANSACTION_QUANTITY Qty,
+PO_UNIT_PRICE,mmt.ACTUAL_COST,rcv.CURRENCY_CONVERSION_RATE rcv_rate,mmt.CURRENCY_CONVERSION_RATE mmtrate,
+rcv.CURRENCY_CODE Curr,poh.segment1 PO,sh.RECEIPT_NUM,
+rcv.TRANSACTION_TYPE,mmt.TRANSACTION_DATE,mmt.TRANSACTION_ID
+from apps.mtl_transaction_accounts mta,apps.GL_CODE_combinations b,
+apps.mtl_material_transactions  mmt,apps.rcv_transactions rcv
+,apps.PO_HEADERS_ALL poh,apps.rcv_shipment_headers sh,apps.PO_LINES_ALL pol
+where
+(mta.accounting_line_type = 6
+OR b.segment3='12320201' )
+and mta.reference_account=b.CODE_COMBINATION_ID
+and mta.TRANSACTION_DATE>=to_date('2008-2-1','yyyy-mm-dd')
+and mta.TRANSACTION_DATE<to_date('2008-3-1','yyyy-mm-dd')
+and mmt.TRANSACTION_ID=mta.TRANSACTION_ID
+and mmt.ORGANIZATION_ID=mta.ORGANIZATION_ID
+and b.segment3='12320201'
+and mmt.rcv_transaction_id=rcv.transaction_id
+and mmt.ORGANIZATION_ID=rcv.ORGANIZATION_ID
+--and rcv.TRANSACTION_TYPE in ('DELIVER','RETURN TO RECEIVING')
+ and rcv.PO_HEADER_ID=poh.PO_HEADER_ID
+and rcv.SHIPMENT_HEADER_ID =sh.SHIPMENT_HEADER_ID
+and rcv.PO_HEADER_ID=pol.PO_HEADER_ID
+and rcv.PO_line_ID=pol.PO_line_ID
+--and mmt.TRANSACTION_ID=66685446
+--and abs(round(((nvl(mmt.CURRENCY_CONVERSION_RATE,1)*nvl(PO_UNIT_PRICE,0)-nvl(mmt.ACTUAL_COST,0))*mmt.TRANSACTION_QUANTITY),2)-mta.BASE_TRANSACTION_VALUE)>0.01
+
+
+Hi Maggie,
+ 
+下面是我们的简单SQL,能和GL对上
+---------Inv PPV & Acc=12320201
+select sum(BASE_TRANSACTION_VALUE)
+from apps.mtl_transaction_accounts mta,apps.GL_CODE_combinations b ,
+apps.mtl_material_transactions  mmt
+where 
+(mta.accounting_line_type = 6
+OR b.segment3='12320201' )
+and mta.reference_account=b.CODE_COMBINATION_ID
+and mta.TRANSACTION_DATE>=to_date('2008-2-1','yyyy-mm-dd')
+and mta.TRANSACTION_DATE<to_date('2008-3-1','yyyy-mm-dd')
+and mmt.TRANSACTION_ID=mta.TRANSACTION_ID
+--and mmt.ORGANIZATION_ID=mta.ORGANIZATION_ID
+and b.segment3='12320201'
+ 
+ 
+(这个report的输出很难准确汇出总数)
+ 
+能找个人帮忙run出个总数吗? (2008-Feb)
+或先给弄成excel格式的.
+ 
+
+
+select * from apps.mtl_material_transactions where TRANSACTION_ID=66685391
+
+select * from apps.mtl_transaction_accounts where TRANSACTION_ID=66685391
+
+select * from apps.rcv_transactions where TRANSACTION_ID=2968055
+
+transaction_source_id=163519 (PO_Header_id)
+-171.6
+rcv_transaction_id=2968055
+source_line_id=2968055
+
+
+select sum(BASE_TRANSACTION_VALUE)
+from apps.mtl_transaction_accounts mta,apps.GL_CODE_combinations b,
+apps.mtl_material_transactions  mmt,apps.rcv_transactions rcv
+,apps.PO_HEADERS_ALL poh,apps.rcv_shipment_headers sh,apps.PO_LINES_ALL pol
+where
+(mta.accounting_line_type = 6
+OR b.segment3='12320201' )
+and mta.reference_account=b.CODE_COMBINATION_ID
+and mta.TRANSACTION_DATE>=to_date('2008-2-1','yyyy-mm-dd')
+and mta.TRANSACTION_DATE<to_date('2008-3-1','yyyy-mm-dd')
+and mmt.TRANSACTION_ID=mta.TRANSACTION_ID
+and mmt.ORGANIZATION_ID=mta.ORGANIZATION_ID
+and b.segment3='12320201'
+and mmt.rcv_transaction_id=rcv.transaction_id
+and mmt.ORGANIZATION_ID=rcv.ORGANIZATION_ID
+--and rcv.TRANSACTION_TYPE in ('DELIVER','RETURN TO RECEIVING')
+ and rcv.PO_HEADER_ID=poh.PO_HEADER_ID
+and rcv.SHIPMENT_HEADER_ID =sh.SHIPMENT_HEADER_ID
+and rcv.PO_HEADER_ID=pol.PO_HEADER_ID
+and rcv.PO_line_ID=pol.PO_line_ID
+
+
+
+select  poh.segment1 PO,sh.RECEIPT_NUM,mmt.TRANSACTION_QUANTITY Qty,
+rcv.CURRENCY_CODE,PO_UNIT_PRICE,rcv.CURRENCY_CONVERSION_RATE,
+mta.TRANSACTION_VALUE,
+rcv.TRANSACTION_TYPE,mmt.TRANSACTION_DATE
+from apps.mtl_transaction_accounts mta,apps.GL_CODE_combinations b,
+apps.mtl_material_transactions  mmt,apps.rcv_transactions rcv,apps.PO_HEADERS_ALL poh,
+apps.rcv_shipment_headers sh,apps.PO_LINES_ALL pol
+where
+(mta.accounting_line_type = 6
+OR b.segment3='12320201' )
+and mta.reference_account=b.CODE_COMBINATION_ID
+and mta.TRANSACTION_DATE>=to_date('2008-2-1','yyyy-mm-dd')
+and mta.TRANSACTION_DATE<to_date('2008-3-1','yyyy-mm-dd')
+and mmt.TRANSACTION_ID=mta.TRANSACTION_ID
+and mmt.ORGANIZATION_ID=mta.ORGANIZATION_ID
+and b.segment3='12320201'
+and mmt.rcv_transaction_id=rcv.transaction_id
+and rcv.PO_HEADER_ID=poh.PO_HEADER_ID
+and rcv.SHIPMENT_HEADER_ID =sh.SHIPMENT_HEADER_ID
+and rcv.PO_HEADER_ID=pol.PO_HEADER_ID
+
+
+
+-----------BMC Purchase price variance report (in AP)
+
+-------
+SELECT   &P_FLEX_CAT                               C_FLEX_CAT
+,        &P_FLEX_ITEM                              C_FLEX_ITEM
+,        msi.description                           Description
+,        pov.vendor_name                           Vendor
+,        decode(poh.type_lookup_code,
+                'BLANKET',
+                poh.segment1||' - '||por.release_num,
+                'PLANNED',
+                poh.segment1||' - '||por.release_num,
+                poh.segment1)                      PO_Number_Release
+,        poh.currency_code                         Currency
+,        papf.full_name                             Buyer
+,        pol.line_num                              Line            
+,        rsh.shipment_num                          Shipment
+,        rct.transaction_date                      Receipt_Date
+,        rsh.receipt_num                    Receipt_Number
+,        round(mmt.primary_quantity,:P_qty_precision)
+                                                   Quantity_Received
+,        rct.primary_unit_of_measure                       Unit
+,        rct.po_unit_price  * (rct.source_doc_quantity / rct.primary_quantity )                       Unit_Price
+/* as rct.unit_price is in source document uom I am converting it to primary_uom*/
+,        rct.transaction_id                        RCT_ID
+,       round(nvl(rct.currency_conversion_rate,1)
+         * nvl(rct.po_unit_price* (rct.source_doc_quantity / rct.primary_quantity),0),:c_ext_precision)                PO_Functional_Price
+,        round((rct.po_unit_price *   (rct.source_doc_quantity / rct.primary_quantity ) *
+          nvl(rct.currency_conversion_rate,1))-
+          (nvl(mta.base_transaction_value,0)/nvl(mmt.primary_quantity,1))  , :c_ext_precision )
+                                                             STD_UNIT_COST
+FROM     po_distributions           pod
+,        po_line_locations          pll
+,        po_lines                   pol
+,        po_headers                 poh
+,        po_releases                por
+,        mtl_material_transactions  mmt
+,        mtl_transaction_accounts   mta
+,        mtl_parameters               mtp
+,        rcv_shipment_headers       rsh
+,        rcv_transactions           rct 
+,        po_vendors                 pov
+,        mtl_system_items           msi
+,        mtl_categories             mca
+,        hr_locations_no_join               hrl
+,       per_all_people_f             papf
+WHERE mmt.rcv_transaction_id  = rct.transaction_id
+AND      mmt.organization_id  = rct.organization_id
+AND      mmt.transaction_id    = mta.transaction_id
+AND       mtp.organization_id = rct.organization_id
+AND      (mta.accounting_line_type = 6
+OR         mta.reference_account = mtp.purchase_price_var_account)
+AND      rct.shipment_header_id     = rsh.shipment_header_id
+AND      rct.po_line_id             = pol.po_line_id
+AND      rct.po_header_id           = poh.po_header_id 
+AND      rct.po_line_location_id    = pll.line_location_id
+AND      pod.line_location_id       = pll.line_location_id
+AND      pod.destination_type_code  in ('INVENTORY','SHOP FLOOR')
+AND      pll.po_release_id          = por.po_release_id(+)
+AND      pol.item_id                = msi.inventory_item_id(+)
+AND      msi.organization_id  = :organization_id
+AND      pol.category_id            = mca.category_id
+AND      rsh.vendor_id              = poh.vendor_id
+AND      poh.vendor_id              = pov.vendor_id
+AND      papf.person_id            = poh.agent_id
+AND PAPF.BUSINESS_GROUP_ID = (SELECT NVL(MAX(FSP.BUSINESS_GROUP_ID),0) 
+FROM FINANCIALS_SYSTEM_PARAMETERS FSP) 
+AND  PAPF.EMPLOYEE_NUMBER IS NOT NULL 
+AND TRUNC(SYSDATE) BETWEEN PAPF.EFFECTIVE_START_DATE AND PAPF.EFFECTIVE_END_DATE
+AND DECODE(HR_SECURITY.VIEW_ALL ,'Y' , 'TRUE', 
+HR_SECURITY.SHOW_RECORD('PER_ALL_PEOPLE_F',PAPF.PERSON_ID, PAPF.PERSON_TYPE_ID,
+PAPF.EMPLOYEE_NUMBER,PAPF.APPLICANT_NUMBER )) = 'TRUE' 
+AND DECODE(HR_GENERAL.GET_XBG_PROFILE,'Y', PAPF.BUSINESS_GROUP_ID ,
+HR_GENERAL.GET_BUSINESS_GROUP_ID) = PAPF.BUSINESS_GROUP_ID
+AND      pod.deliver_to_location_id = hrl.location_id(+) 
+AND      nvl(pov.vendor_name,'A')            BETWEEN 
+                     nvl(:P_vendor_from, nvl(pov.vendor_name,'A') )
+                                    AND
+                     nvl(:P_vendor_to, nvl(pov.vendor_name,'A'))
+&P_TX_DATE_WHERE
+AND      &P_WHERE_CAT
+AND       rct.organization_id = nvl(:P_org_id,rct.organization_id)
+UNION
+SELECT   &P_FLEX_CAT                               C_FLEX_CAT
+,        &P_FLEX_ITEM                              C_FLEX_ITEM
+,        msi.description                           Description
+,        pov.vendor_name                           Vendor
+,        decode(poh.type_lookup_code,
+                'BLANKET',
+                poh.segment1||' - '||por.release_num,
+                'PLANNED',
+                poh.segment1||' - '||por.release_num,
+                poh.segment1)                      PO_Number_Release
+,        poh.currency_code                         Currency
+,        papf.full_name                             Buyer
+,        pol.line_num                              Line            
+,        rsh.shipment_num                          Shipment
+,        rct.transaction_date                      Receipt_Date
+,        rsh.receipt_num                    Receipt_Number
+,        round(decode(rct.transaction_type,
+                                    'RETURN TO RECEIVING', rct.primary_quantity * -1,
+                                                                                     rct.primary_quantity), :P_qty_precision)
+                                                   Quantity_Received
+,        rct.primary_unit_of_measure                       Unit
+,        rct.po_unit_price  * (rct.source_doc_quantity / rct.primary_quantity)                       Unit_Price
+/* as rct.unit_price is in source document uom I am converting it to primary_uom*/
+,        rct.transaction_id                        RCT_ID
+,        nvl(rct.currency_conversion_rate,1)
+         * nvl(rct.po_unit_price* (rct.source_doc_quantity / rct.primary_quantity) ,0)                PO_Functional_Price
+,        round ( &select_wip, :c_ext_precision )
+                                                             STD_UNIT_COST
+FROM     po_distributions           pod
+,        po_line_locations          pll
+,        po_lines                   pol
+,        po_headers                 poh
+,        po_releases                por
+,        rcv_transactions           rct 
+,        rcv_shipment_headers       rsh
+,        po_vendors                 pov
+,        mtl_system_items           msi
+,        mtl_categories             mca
+,        hr_locations_no_join               hrl
+,        per_all_people_f           papf
+&from_wip
+WHERE rct.destination_type_code = 'SHOP FLOOR'
+AND      rct.shipment_header_id     = rsh.shipment_header_id
+AND      rct.po_line_id             = pol.po_line_id
+AND      rct.po_header_id           = poh.po_header_id
+AND      rct.po_line_location_id    = pll.line_location_id
+AND      pod.line_location_id       = pll.line_location_id
+AND     pod.po_distribution_id   = rct.po_distribution_id
+AND      pod.destination_type_code  in ('INVENTORY','SHOP FLOOR')
+AND      pll.po_release_id          = por.po_release_id(+)
+AND      pol.item_id                = msi.inventory_item_id(+)
+AND     msi.organization_id  = :organization_id
+AND      pol.category_id            = mca.category_id
+AND      rsh.vendor_id              = poh.vendor_id
+AND      poh.vendor_id              = pov.vendor_id
+AND      papf.person_id            = poh.agent_id
+AND PAPF.BUSINESS_GROUP_ID = (SELECT NVL(MAX(FSP.BUSINESS_GROUP_ID),0) 
+FROM FINANCIALS_SYSTEM_PARAMETERS FSP) 
+AND  PAPF.EMPLOYEE_NUMBER IS NOT NULL 
+AND TRUNC(SYSDATE) BETWEEN PAPF.EFFECTIVE_START_DATE AND PAPF.EFFECTIVE_END_DATE
+AND DECODE(HR_SECURITY.VIEW_ALL ,'Y' , 'TRUE', 
+HR_SECURITY.SHOW_RECORD('PER_ALL_PEOPLE_F',PAPF.PERSON_ID, PAPF.PERSON_TYPE_ID,
+PAPF.EMPLOYEE_NUMBER,PAPF.APPLICANT_NUMBER )) = 'TRUE' 
+AND DECODE(HR_GENERAL.GET_XBG_PROFILE,'Y', PAPF.BUSINESS_GROUP_ID ,
+HR_GENERAL.GET_BUSINESS_GROUP_ID) = PAPF.BUSINESS_GROUP_ID
+AND      pod.deliver_to_location_id = hrl.location_id(+) 
+AND      nvl(pov.vendor_name,'A')            BETWEEN 
+                     nvl(:P_vendor_from, nvl(pov.vendor_name,'A') )
+                                    AND
+                     nvl(:P_vendor_to, nvl(pov.vendor_name,'A'))
+&P_TX_DATE_WHERE
+AND      &P_WHERE_CAT
+&where_wip
+AND       rct.organization_id = nvl(:P_org_id,rct.organization_id)
+-- MC BUG# 2245477 . added a union all clause to get OPM data when Common Receiving(CR) is installed.
+UNION ALL
+SELECT   &P_FLEX_CAT                               C_FLEX_CAT
+,        &P_FLEX_ITEM                              C_FLEX_ITEM
+,        msi.description                           Description
+,        pov.vendor_name                           Vendor
+,        decode(poh.type_lookup_code,
+                'BLANKET',
+                poh.segment1||' - '||por.release_num,
+                'PLANNED',
+                poh.segment1||' - '||por.release_num,
+                poh.segment1)                      PO_Number_Release
+,        poh.currency_code                         Currency
+,        papf.full_name                             Buyer
+,        pol.line_num                              Line            
+,        rsh.shipment_num                          Shipment
+,        rct.transaction_date                      Receipt_Date
+,        rsh.receipt_num                    Receipt_Number
+,        round(rct.primary_quantity,:P_qty_precision) Quantity_Received
+,        rct.primary_unit_of_measure                       Unit
+,        rct.po_unit_price  * (rct.source_doc_quantity / rct.primary_quantity )                        Unit_Price
+/* as rct.unit_price is in source document uom I am converting it to primary_uom*/
+,        rct.transaction_id                        RCT_ID
+,       round(nvl(rct.currency_conversion_rate,1)
+         * nvl(rct.po_unit_price* (rct.source_doc_quantity /  rct.primary_quantity),0),:c_ext_precision)                PO_Functional_Price
+,        round(gmf_cmcommon.unit_cost(iim.item_id,iwm.whse_code,iwm.orgn_code,rct.transaction_date), :c_ext_precision)
+    STD_UNIT_COST
+FROM     po_distributions           pod
+,        po_line_locations          pll
+,        po_lines                   pol
+,        po_headers                 poh
+,        po_releases                por
+,        rcv_shipment_headers       rsh
+,        rcv_transactions           rct 
+,        po_vendors                 pov
+,        mtl_system_items           msi
+,        mtl_categories             mca
+,        hr_locations_no_join       hrl
+,        per_all_people_f            papf
+,        ic_item_mst                   iim
+,        ic_whse_mst                 iwm
+,        mtl_parameters		    mpa
+WHERE 
+       &P_CR_INSTALLED  
+       rct.shipment_header_id     = rsh.shipment_header_id
+AND      rct.po_line_id             = pol.po_line_id
+AND      rct.po_header_id           = poh.po_header_id 
+AND      rct.po_line_location_id    = pll.line_location_id
+AND      rct.transaction_type = 'DELIVER'
+AND      pod.line_location_id       = pll.line_location_id
+AND      pod.destination_type_code  in ('INVENTORY','SHOP FLOOR')
+AND      pll.po_release_id          = por.po_release_id(+)
+AND      pol.item_id                = msi.inventory_item_id(+)
+AND      msi.organization_id        = :organization_id
+AND      pol.category_id            = mca.category_id
+AND      rsh.vendor_id              = poh.vendor_id
+AND      poh.vendor_id              = pov.vendor_id
+AND      papf.person_id            = poh.agent_id
+AND PAPF.BUSINESS_GROUP_ID = (SELECT NVL(MAX(FSP.BUSINESS_GROUP_ID),0) 
+FROM FINANCIALS_SYSTEM_PARAMETERS FSP) 
+AND  PAPF.EMPLOYEE_NUMBER IS NOT NULL 
+AND TRUNC(SYSDATE) BETWEEN PAPF.EFFECTIVE_START_DATE AND PAPF.EFFECTIVE_END_DATE
+AND DECODE(HR_SECURITY.VIEW_ALL ,'Y' , 'TRUE', 
+HR_SECURITY.SHOW_RECORD('PER_ALL_PEOPLE_F',PAPF.PERSON_ID, PAPF.PERSON_TYPE_ID,
+PAPF.EMPLOYEE_NUMBER,PAPF.APPLICANT_NUMBER )) = 'TRUE' 
+AND DECODE(HR_GENERAL.GET_XBG_PROFILE,'Y', PAPF.BUSINESS_GROUP_ID ,
+HR_GENERAL.GET_BUSINESS_GROUP_ID) = PAPF.BUSINESS_GROUP_ID
+AND      pod.deliver_to_location_id = hrl.location_id(+) 
+AND      nvl(pov.vendor_name,'A')            BETWEEN 
+                     nvl(:P_vendor_from, nvl(pov.vendor_name,'A') )
+                                    AND
+                     nvl(:P_vendor_to, nvl(pov.vendor_name,'A'))
+&P_TX_DATE_WHERE
+AND      &P_WHERE_CAT
+AND       rct.organization_id = nvl(:P_org_id,rct.organization_id)
+AND       rct.organization_id = mpa.organization_id
+AND      mpa.process_enabled_flag = 'Y'
+AND      iim.item_no  =  msi.segment1
+AND      iwm.mtl_organization_id =  rct.organization_id
+--ORDER BY &orderby_clause
+--ORDER BY decode(:P_Orderby,'VENDOR',pov.vendor_name,'BUYER',papf.full_name,'ITEM',:P_ORDERBY_ITEM,:P_ORDERBY_CAT)
+
+

@@ -1,0 +1,42 @@
+
+
+BOM PO received Qty by Date,Vendor,Item,Category,Buyer,PO,Price,Curr
+
+CREATE OR REPLACE VIEW BMC_PO_REC_BY_VENDOR_ITEM_CURR
+AS 
+select b.segment1 PO,d.segment1 Item,a.transaction_date,g.segment1 Model,
+c.UNIT_PRICE,b.CURRENCY_CODE Curr,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1a.quantity,a.quantity)) Qty,
+f.organization_code,VDR.VENDOR_NAME as Supplier,VENDOR_SITE_CODE Vendor_Site,h.FULL_NAME
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b,apps.PO_VENDORS VDR,
+apps.mtl_system_items d, apps.PO_VENDOR_SITES_ALL e,APPS.mtl_parameters f,apps.mtl_item_categories_v g,
+apps.PER_PEOPLE_V7 h
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and a.organization_id127
+and VDR.VENDOR_ID=b.VENDOR_ID
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id=b.org_id
+and c.org_id=127
+and DESTINATION_TYPE_CODE='RECEIVING'
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.po_line_id=c.po_line_id
+--and a.transaction_date=to_date('2007-01-01','YYYY-MM-DD')
+--and a.transaction_date=to_date('2007-01-03','YYYY-MM-DD')
+and d.organization_id=a.organization_id
+and d.inventory_item_id=c.item_id
+and b.VENDOR_SITE_ID=e.VENDOR_SITE_ID
+and b.org_id=e.org_id 
+and a.organization_id=f.organization_id
+and g.category_set_id=1
+and a.organization_id=g.organization_id
+and d.inventory_item_id=g.inventory_item_id
+and b.AGENT_ID=h.PERSON_ID (+)
+--and b.CURRENCY_CODE in ('JPY','EUR')
+group by b.segment1,d.segment1,a.transaction_date,g.segment1,h.FULL_NAME,
+c.UNIT_PRICE,b.CURRENCY_CODE,f.organization_code,VDR.VENDOR_NAME,VENDOR_SITE_CODE
+order by b.segment1,d.segment1
+
+
+
+

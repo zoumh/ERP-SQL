@@ -1,0 +1,65 @@
+
+
+---------------PO, line_Type, Qty ,Item (weather have or not) for an receive Org
+
+select g.LINE_TYPE,
+b.segment1 PO,c.LINE_NUM Line,d.segment1 Item,c.ITEM_DESCRIPTION,a.QUANTITY,a.transaction_type
+--sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) CNY_Value
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b, 
+(select segment1,inventory_item_id from apps.mtl_system_items where organization_id=:org) d,
+APPS.mtl_parameters f,apps.PO_line_types g
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and a.organization_id=:org
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id=b.org_id
+and c.org_id =127
+--and d.organization_id=130
+and DESTINATION_TYPE_CODE='RECEIVING'
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.po_line_id=c.po_line_id
+and a.transaction_date>=to_date('2007-11-26','YYYY-MM-DD')
+and a.transaction_date<to_date('2007-12-1','YYYY-MM-DD')
+and d.inventory_item_id (+) =c.item_id 
+and a.organization_id=f.organization_id
+and g.LINE_TYPE_ID=c.LINE_TYPE_ID
+--and d.segment1 in ('LZT 108 8661.R1A','LZT 108 8661.R2A')
+--group by a.CURRENCY_CODE--c.line_type_id
+--group by g.LINE_TYPE
+
+
+
+------------Non-BOM PO receive date (Account >4xxx, or <4xxx, not include 12xx)
+select g.LINE_TYPE,h.ORGANIZATION_CODE,i.segment2 CostCenter,i.segment3 Account_No,
+b.segment1 PO,c.LINE_NUM Line,e.SHIPMENT_NUM Ship_Line,f.DISTRIBUTION_NUM Dist_Line,
+d.segment1 Item,c.ITEM_DESCRIPTION,decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) QUANTITY,
+a.transaction_type,a.CREATION_DATE receive_date,
+a.PO_UNIT_PRICE*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) amount,
+a.CURRENCY_CODE
+--sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) CNY_Value
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b, 
+(select segment1,inventory_item_id,organization_id from apps.mtl_system_items where organization_id=127) d,
+APPS.mtl_parameters h,apps.PO_line_types g,
+apps.PO_LINE_LOCATIONS_ALL e,apps.PO_DISTRIBUTIONS_all f,apps.GL_code_combinations i
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.po_line_id=c.po_line_id
+and a.PO_LINE_LOCATION_ID=e.LINE_LOCATION_ID
+and a.PO_DISTRIBUTION_ID=f.PO_DISTRIBUTION_ID
+and a.source_document_code='PO'
+and a.organization_id= SHIP_TO_ORGANIZATION_ID
+and a.ORGANIZATION_ID=h.ORGANIZATION_ID
+and c.org_id=b.org_id
+and d.inventory_item_id (+) =c.item_id 
+and g.LINE_TYPE_ID=c.LINE_TYPE_ID
+and f.code_combination_id=i.CODE_COMBINATION_ID
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and a.DESTINATION_TYPE_CODE='RECEIVING'
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.transaction_date>=to_date('2009-1-1','YYYY-MM-DD')
+--and a.transaction_date<to_date('2009-5-1','YYYY-MM-DD')
+and ((i.segment3<'4' and i.segment3 not like '12%')
+      or i.segment3>'4')
+
+
+
+

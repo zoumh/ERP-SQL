@@ -1,0 +1,51 @@
+
+
+I suspect some data corruption
+1.The PO shows R1B
+2.The mtl_supply shows R1A
+MRP considers the supply only from mtl_supply.It does not look at PO table directly.Since the mtl_supply has got the record of R1A that is getting reflected in MRP results.
+That's why I am just asking you to reapprove the PO.
+If you reapprove the PO the old record will get deleted and new record will get inserted into mtl_supply.So you will get corre ct mrp results.
+
+
+
+---------If PO line Item diff with mtl_supply , then the Open PO will not be recognized as MRP Demand
+
+select * from mtl_supply where po_header_id = (select po_header_id from po_headers_all where segment1 = 1025455);
+
+
+
+select b.segment1 PO,c.LINE_NUM,sum(d.QUANTITY ) Qty,sum(d.QUANTITY_RECEIVED ) Rec_Qty,
+e.segment1 Supply_Item,f.segment1 PO_Item 
+--,c.closed_code ,c.CLOSED_FLAG
+from apps.mtl_supply a,apps.po_headers_all b,apps.po_lines_all c,apps.po_line_locations_all d,
+apps.mtl_system_items e,apps.mtl_system_items f
+where a.po_header_id=b.po_header_id
+and a.po_line_id =c.po_line_id 
+and a.po_line_id =d.po_line_id
+and a.po_header_id=d.po_header_id
+and a.PO_LINE_LOCATION_ID =d.LINE_LOCATION_ID  
+and c.item_id<>a.item_id
+and c.org_id=b.org_id
+and c.org_id>=127
+and (c.closed_code ='OPEN' or c.closed_code is null)
+and b.AUTHORIZATION_STATUS ='APPROVED'
+and e.INVENTORY_ITEM_ID=a.item_id
+and f.INVENTORY_ITEM_ID=c.item_id
+and f.ORGANIZATION_ID=c.org_id
+and e.ORGANIZATION_ID=a.to_ORGANIZATION_ID
+group by b.segment1,c.LINE_NUM,a.PO_LINE_LOCATION_ID,e.segment1,f.segment1
+having sum(d.QUANTITY )<>sum(d.QUANTITY_RECEIVED )
+
+
+select * from apps.PO_HEADERS_ALL where segment1='1048900'
+
+select * from apps.PO_LINES_ALL where po_header_id=150717 and LINE_NUM=5
+
+select * from apps.po_Line_locations_all where po_header_id=150717 and po_line_id=311400
+
+select * from apps.PO_DISTRIBUTIONS_ALL where po_header_id=150717 and po_line_id=311400 and line_location_id=460916
+
+select * from apps.mtl_supply where po_header_id=150717 and po_line_id=311400 and PO_line_location_id=460916
+and po_distribution_id=449743
+

@@ -1,0 +1,59 @@
+
+------ Define report
+
+select name,report_title,row_set,column_set,content_set,row_order,description 
+from apps.RG_REPORTS_V where name='CC expense by Div.'
+
+
+---------All report include this Row Set 
+
+select name,report_title,row_set,column_set,content_set,row_order,description 
+from apps.RG_REPORTS_V 
+--where column_set='Dr Cr PTD YTD'
+where row_set='expense(A vs F)all lines'
+
+
+
+---------All report include this Column Set 
+
+select name,report_title,row_set,column_set,content_set,row_order,description 
+from apps.RG_REPORTS_V 
+where column_set='Dr Cr PTD YTD'
+--where row_set='expense(A vs F)all lines'
+
+
+
+
+------FSG Reports with row_set/column_set , order by last_updated_date
+select LAST_UPDATE_DATE,LAST_UPDATED_BY,CREATION_DATE, NAME,COLUMN_SET,ROW_SET,
+--ROW_SET_ID,COLUMN_SET_ID,
+decode(APPLICATION_ID,101,'Oracle General Ledger',168,'Application Report Generator') App
+from apps.RG_REPORTS_V order by LAST_UPDATE_DATE desc
+
+
+---column set
+select LAST_UPDATE_DATE,LAST_UPDATED_BY,CREATION_DATE, AXIS_SET_ID,NAME,AXIS_SET_TYPE,
+decode(APPLICATION_ID,101,'Oracle General Ledger',168,'Application Report Generator') App
+from apps.RG_REPORT_AXIS_SETS_V where AXIS_SET_TYPE='C' order by LAST_UPDATE_DATE desc
+
+
+---row set
+select LAST_UPDATE_DATE,LAST_UPDATED_BY,CREATION_DATE, AXIS_SET_ID,NAME,AXIS_SET_TYPE,
+decode(APPLICATION_ID,101,'Oracle General Ledger',168,'Application Report Generator') App
+from apps.RG_REPORT_AXIS_SETS_V where AXIS_SET_TYPE='R' order by LAST_UPDATE_DATE desc
+
+
+---------- low level of column/row
+select LAST_UPDATE_DATE, LAST_UPDATED_BY,CREATION_DATE,AXIS_SET_ID,SEQUENCE
+from apps.RG_REPORT_AXES_V   order by LAST_UPDATE_DATE desc
+ 
+
+select LAST_UPDATE_DATE,LAST_UPDATED_BY,CREATION_DATE,AXIS_SET_ID,AXIS_SEQ,CONTEXT,
+decode(APPLICATION_ID,101,'Oracle General Ledger',168,'Application Report Generator') App
+from apps.RG_REPORT_AXIS_CONTENTS order by LAST_UPDATE_DATE desc
+
+
+select  LAST_UPDATE_DATE,LAST_UPDATED_BY,CREATION_DATE,AXIS_SET_ID,AXIS_SEQ,CALCULATION_SEQ,
+decode(APPLICATION_ID,101,'Oracle General Ledger',168,'Application Report Generator') App
+from apps.RG_REPORT_CALCULATIONS order by LAST_UPDATE_DATE desc
+

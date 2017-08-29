@@ -1,0 +1,32 @@
+
+Code Fix-AP Invoice can't be cancelled if line number more then 1000  
+
+See SR :6466782.992
+AP find an Invoice (INVOICE_NUM='118938') matched to Blanket PO, over 1000 lines, can't be cancelled 
+ 
+Cause
+Bug:2356005
+The local variable declared in the package AP_INVOICE_DISTRIBUTIONS_SET of TYPE r_key_value_arr
+IS VARRAY(1000) of NUMBER(15); which causes the issue if the number of distributions exceed 1000
+lines.
+
+
+Solution from ORacle SR number:6466782.992
+
+1) Modify the script.
+cd $GL_TOP/patch/115/sql
+vi glcauts.pls
+change
+TYPE r_key_value_arr IS VARRAY(1000) of NUMBER(15);
+to
+TYPE r_key_value_arr IS TABLE OF NUMBER(15);
+Save your work.
+2) Recompile APPS schema using the ADADMIN utility to recompile the package
+GL_CA_UTILITY_PKG, as well as any other packages that call it.
+3) Run the script against the database.
+cd $GL_TOP/patch/115/sql
+sqlplus apps/password
+SQL> @glcauts.pls
+Test the issue and advice
+
+

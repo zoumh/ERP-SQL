@@ -1,0 +1,20 @@
+
+------Per Vendor's PR not create PO yet  (for year end statistic all possible payment for a Vendor)
+
+select AUTHORIZATION_STATUS, a.segment1 PR_Num,b.line_num,c.DISTRIBUTION_NUM,b.ITEM_DESCRIPTION,b.QUANTITY,b.rate,b.unit_price,b.currency_code,
+b.currency_unit_price,b.creation_date,a.authorization_status,
+d.segment2 CC,d.segment3 Acc,d.segment4 PRD,d.segment5 PRJ
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.gl_code_combinations d 
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+--and a.authorization_status<>'CANCELLED'
+--and a.segment1='12383'
+and b.SUGGESTED_VENDOR_NAME='HISOFT SYSTEMS SHENZHEN LIMITED'
+and c.DISTRIBUTION_ID not in
+(select POD.REQ_DISTRIBUTION_ID from  apps.PO_REQ_DISTRIBUTIONS_all PORD,apps.PO_DISTRIBUTIONS_all POD
+where POD.REQ_DISTRIBUTION_ID = PORD.DISTRIBUTION_ID)
+
+
+

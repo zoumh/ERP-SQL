@@ -1,0 +1,40 @@
+
+WMS_DISPATCHED_TASKS
+
+Table that holds all the tasks that are :
+(1) Dispatched to the user (user has accepted a task)
+(2) Queued to the user (assigned to the user manually)
+(3) Loaded (user has loaded the task on to his equipment but has not dropped it off yet)
+(4) Erred 
+This table holds a pointer to the MTL_MATERIAL_TRANSACTIONS_TEMP table, via the transaction temp id. All the information necessary for the performance of a task (item, location, qty etc. ) is stored in the MTL_MATERIAL_TRANSACTIONS_TEMP table. The WMS_DISPATCHED_TASKS table holds all the information about the actual performance of the task (i.e. the user, equipment, task dispatched time, loaded time etc.) 
+
+
+
+--------WMS_TASK_STATUS
+
+WMS_DISPATCHED_TASKS.Status
+
+Code 	Meaning 		Description 
+1 	Pending 		Pending Tasks 
+2 	Queued 			Queued Tasks 
+3 	Dispatched 		Dispatched Tasks 
+4 	Loaded 			Loaded Tasks 
+5 	Error 			Errored Tasks 
+6 	Completed 		Completed Tasks 
+7 	Hold 			Tasks on Hold 
+8 	Unreleased 		Unreleased Tasks 
+9 	Active 			Active Tasks 
+10 	Suspended 		Suspended Tasks 
+
+
+
+
+--------WMS_TASK_TYPES
+Code 	Meaning 	
+1 	Pick  
+2 	Putaway  
+3 	Cycle Count  
+4 	Replenish  
+5 	Move Order Transfer  
+6 	Move Order Issue  
+7 	Staging Move 

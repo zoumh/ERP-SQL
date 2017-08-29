@@ -1,0 +1,153 @@
+
+Find out acct_period_id:
+select * from apps.org_acct_periods
+
+ The Data is classified in the following three categories.
+
+    a) Resolution required
+    b) Resolution recommended
+    c) Unprocessed shipping transactions.
+
+=========================================
+R E S O L U T I O N   R E Q U I R E D 
+=========================================
+
+********************
+UNPROCESSED MATERIAL
+********************
+     mtl_material_transactions_temp (mmtt)  
+*****************
+UNCOSTED MATERIAL
+*****************
+     mtl_material_transactions (mmt) 
+*******************
+PENDING WIP COSTING
+*******************
+     wip_cost_txn_interface (wcti)  
+*************************
+UNCOSTED WSM TRANSACTIONS 
+*************************
+     wsm_split_merge_transactions (wsmt)
+*********************
+PENDING WSM INTERFACE
+*********************
+     wsm_split_merge_txn_interface (wsmti)
+
+===============================================
+R E S O L U T I O N   R E C O M M E N D E D  
+===============================================
+******************
+PENDING RECEIVEING
+******************
+     rcv_transactions_interface (rti)
+****************
+PENDING MATERIAL
+****************
+     mtl_transactions_interface (mti)  
+************************************************************************
+PENDING SHOP FLOOR MOVE
+************************************************************************
+     wip_move_txn_interface (wmti)  
+
+=====================================================================
+U N P R O C E S S E D   S H I P P I N G   T R A N S A C T I O N S
+=====================================================================
+
+************************************************************************
+PENDING TRANSACTIONS
+************************************************************************
+     wsh_delivery_details (wdd)
+select * from apps.MTL_TRANSACTIONS_INTERFACE_V
+--------------------------------------------------------------------------------------------------
+
+select count(*) from apps.mtl_material_transactions where costed_flag in ('N','E') and acct_period_id=&acct_period_id
+
+select count(*) from apps.mtl_material_transactions_temp  where  acct_period_id=5--'5'
+
+select count(*) from apps.mtl_transactions_interface where  acct_period_id=5
+
+select count(*) from apps.WIP_COST_TXN_INTERFACE where  acct_period_id=5
+
+select count(*) from apps.WIP_MOVE_TXN_INTERFACE where  acct_period_id=5
+
+select costed_flag,acct_period_id from apps.mtl_material_transactions where costed_flag in ('N','E') 
+
+
+------------------------------------------------------------------
+
+View Pending Trans in Oracle :
+Inventory -- Transactions --Transaction Open Interface
+
+
+-------------------------------------------------------------------
+
+Find <Unprocessed Material> in the Transaction Open Interface windows --Pending Transactions :
+
+select * from apps.mtl_material_transactions_temp where transaction_uom='X'
+
+1. Sub Transfer error because of LPN no exist (error LPN) --> can delete these lines here !
+
+
+
+
+------------
+Find <Unprocessed Material> in the Transaction Open Interface windows ---Pending Transactions :
+
+select * from apps.mtl_material_transactions_temp where transaction_type_id=35
+(Delete them 'WIP component issue',  )
+
+
+select * from apps.mtl_transaction_types   where transaction_type_id=35
+(WIP component issue ---Issue components from stores to WIP)
+
+
+
+----------------Inventory (solve un-cost before close period , some un-cost transaction, GL date is in old,Acc create in later)
+
+--Pls run this SQL to find out the uncost transaction (include all Org)
+
+select * from apps.mtl_material_transactions where costed_flag='N'
+
+--and then if the transaction is too long not yet update, you may run this script to kick it off.
+
+
+update mtl_material_transactions 
+           set costed_flag = 'N',  
+           transaction_group_id = NULL 
+           where costed_flag = 'E' or costed_flag = 'N' 
+
+
+
+-----------------------
+> Unprocessed material transactions
+( MTL_MATERIAL_TRANSACTIONS_TEMP )
+- Distinct error messages ( e.g. many transactions have same error) 
+
+> Uncosted material transactions ( MTL_MATERIAL_TRANSACTIONS )
+- Distinct error messages ( e.g. many transactions have same error) 
+
+> Pending WIP costing transactions
+( WIP_COST_TRANSACTION_INTERFACE )
+- Distinct values for Process Phase and Process Status 
+
+> Uncosted WSM transactions
+( WSM_SPLIT_MERGE_TRANSACTIONS )
+- Distinct values for Status and Costed Flag ( e.g. many transactions have status pending) 
+
+> Pending WSM interface transactions ( WSM_SPLIT_MERGE_TXN_INTERFACE ) 
+
+> Rending receiving transactions ( RCV_TRANSACTIONS_INTERFACE)
+- Distinct values for Transaction Status ( e.g. many transactions error)
+- Distinct values for Processing Status and Processing Mode
+( e.g. majority of transactions is Background) 
+
+> Pending material interface transactions
+( MTL_TRANSACTIONS_INTERFACE )
+- Distinct process flags( e.g. majority of transactions is errored or ready)
+- Distinct lock flags ( e.g. most of transactions are locked) 
+
+> Pending Shop Floor Move transactions
+( WIP_MOVE_TXN_INTERFACE )
+- Distinct values for Process Phase and Process Status 
+
+> Material and WIP Batches not transfered to GL 

@@ -1,0 +1,48 @@
+
+select * from apps.RA_INTERFACE_LINES_all where sales_order='215553'
+
+
+---- to list Master Item's Invoice Flag for pending at Interface (wit Error Msg)
+select sales_order SO,MESSAGE_TEXT,INVALID_VALUE,sales_order_line line, purchase_order SE_PO,interface_line_attribute2 SO_Type,b.segment1 Item,
+b.INVOICEABLE_ITEM_FLAG,b.INVOICE_ENABLED_FLAG
+--,TRX_DATE ,GL_DATE,SHIP_DATE_ACTUAL,SALES_ORDER_DATE   
+from apps.RA_INTERFACE_LINES_all a,apps.mtl_system_items b,apps.ra_interface_errors_all c 
+where a.request_id is not null
+and a.inventory_item_id=b.inventory_item_id
+and b.organization_id=127
+and c.INTERFACE_LINE_ID(+)=a.INTERFACE_LINE_ID
+--and MESSAGE_TEXT is not null
+ 
+
+
+select a.CREATION_DATE,a.TRX_DATE,a.GL_DATE,a.SHIP_DATE_ACTUAL,a.SALES_ORDER_DATE,
+sales_order SO,sales_order_line line, purchase_order SE_PO,interface_line_attribute2 SO_Type,b.segment1 Item,
+b.INVOICEABLE_ITEM_FLAG,b.INVOICE_ENABLED_FLAG
+--,TRX_DATE ,GL_DATE,SHIP_DATE_ACTUAL,SALES_ORDER_DATE   
+from apps.RA_INTERFACE_LINES_all a,apps.mtl_system_items b 
+where  a.inventory_item_id=b.inventory_item_id
+and b.organization_id=127
+order by a.SALES_ORDER_DATE
+
+
+
+select * from apps.RA_INTERFACE_LINES_all where INTERFACE_LINE_ID=101199
+
+INTERFACE_LINE_ATTRIBUTE1
+SO No
+
+INTERFACE_LINE_ATTRIBUTE2
+SO type
+
+INTERFACE_LINE_ATTRIBUTE10
+ORG No
+
+interface_line_attribute9
+Item_Number (compact, not exactly same)
+
+description
+Item_Description
+
+
+
+

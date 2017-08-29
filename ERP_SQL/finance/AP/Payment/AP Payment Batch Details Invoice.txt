@@ -1,0 +1,36 @@
+
+
+
+
+----------Selected Invoice in a Batch
+
+select CHECKRUN_NAME,INVOICE_ID,INVOICE_NUM,INVOICE_AMOUNT,AMOUNT_REMAINING,PAYMENT_AMOUNT,PROPOSED_PAYMENT_AMOUNT,OK_TO_PAY_FLAG,PAY_SELECTED_CHECK_ID,VENDOR_NAME,VENDOR_NUM,VENDOR_SITE_CODE
+from apps.AP_SELECTED_INVOICES_ALL where CHECKRUN_NAME in ('test8')
+
+
+
+
+--------Find out Batch name if its disappear on screen
+--Can't see this paymentbatch
+
+select * from apps.AP_INV_SELECTION_CRITERIA_all where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+
+
+------ check of a Batch 
+select * from apps.AP_SELECTED_INVOICE_CHECKS_ALL where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+
+
+--------------All Payment Batch Table
+
+select * from apps.ap_inv_selection_criteria_all where checkrun_name= 'EH041104USD'
+
+select * from apps.ap_selected_invoices_all where checkrun_name= 'EH041104USD'
+
+select * from apps.ap_selected_invoice_checks_all where checkrun_name= 'EH041104USD'
+
+
+

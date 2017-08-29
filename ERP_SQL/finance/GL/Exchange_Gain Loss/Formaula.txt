@@ -1,0 +1,32 @@
+
+DIST_CODE_COMBINATION Account :
+Expense : 55029997 (
+BOM :  212000  (CCID=1004)
+
+
+
+
+Exchange Gain/Loss 
+(no include No-BOM PO and PO_Dist.DESTINATION_TYPE_CODE='INVENTORY' or PO_line.Line_Type_ID<>1020):
+
+PO match :
+
+(AP_INVOICE_DISTRIBUTIONS_ALL.DIST_MATCH_TYPE='ITEM_TO_RECEIPT')
+
+ use table :
+AP_INVOICE_DISTRIBUTIONS_ALL
+
+exchange_rate_variance (XGL)
+UNIT_PRICE (PO's price)
+QUANTITY_INVOICED (fron Inv_Dist line)
+EXCHANGE_RATE (Inv_Rate) - (PO_Rate)
+
+
+XGL=PO.UNIT_PRICE*QUANTITY_INVOICED*(Inv.EXCHANGE_RATE-PO_Dist_Rate)
+or 
+XGL=Inv_AMOUNT*(EXCHANGE_RATE-PO_Dist_Rate)
+
+
+
+DISTRIBUTION_LINE_NUMBER
+

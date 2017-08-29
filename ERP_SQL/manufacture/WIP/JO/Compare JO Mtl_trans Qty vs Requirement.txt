@@ -1,0 +1,219 @@
+
+--------below SQL,item range from temp table <BMC_COMPONENT_USERED_WIP_V> (for Qualcomm chip trace)
+
+
+
+--------WIP std Job Order's Material Qty verify  (compare mtl_trans with JO requirement)
+???? not completed
+select  a.ORGANIZATION_ID, 
+b.WIP_ENTITY_ID,b.PRIMARY_ITEM_ID Assemb_Item_ID,
+a.CONCATENATED_SEGMENTS Component_Item,sum(b.QUANTITY_COMPLETED) Complete_Qty,
+sum(a.REQUIRED_QUANTITY) Required_Qty,sum(a.QUANTITY_ISSUED) Issued_Qty 
+from apps.WIP_REQUIREMENT_OPERATIONS_V a,apps.WIP_DISCRETE_JOBS_V b,
+  (select ASSEM_ITEM Item,ORGANIZATION_ID,top_level,ASSEM_ITEM_TYPE Item_type from apps.BMC_COMPONENT_USERED_WIP_V
+   union
+   select distinct COMP_ITEM item,ORGANIZATION_ID,top_level,ITEM_TYPE from apps.BMC_COMPONENT_USERED_WIP_V where top_level =1
+  ) Item ---All level relative items 
+where b.WIP_ENTITY_ID=a.WIP_ENTITY_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and a.organization_id = item.organization_id
+and a.CONCATENATED_SEGMENTS = item.item
+and item.organization_id=130
+and b.WIP_ENTITY_NAME='090929-D-2167R3'
+group by b.WIP_ENTITY_ID,a.CONCATENATED_SEGMENTS,b.PRIMARY_ITEM_ID,a.ORGANIZATION_ID
+
+
+
+
+
+--------Std WIP Job Order's Material Qty  sum
+select mmt.ORGANIZATION_ID,
+wet.wip_entity_id,
+msi.segment1 Comp_Item, 
+sum(mmt.TRANSACTION_QUANTITY) WIP_Issue_Qty
+from
+  apps.mtl_material_transactions mmt,
+  apps.mtl_transaction_types     mtt,
+  apps.mtl_system_items_b        msi,
+  apps.WIP_DISCRETE_JOBS_V       Wet,  
+  (select ASSEM_ITEM Item,ORGANIZATION_ID,top_level,ASSEM_ITEM_TYPE Item_type from apps.BMC_COMPONENT_USERED_WIP_V
+   union
+   select distinct COMP_ITEM item,ORGANIZATION_ID,top_level,ITEM_TYPE from apps.BMC_COMPONENT_USERED_WIP_V where top_level =1
+  ) Item ---All level relative items 
+where  mtt.transaction_type_id = mmt.transaction_type_id
+and    mmt.organization_id = msi.organization_id
+and    mmt.organization_id =wet.organization_id
+and    msi.inventory_item_id = mmt.inventory_item_id
+and    wet.wip_entity_id=mmt.transaction_source_id
+and mmt.organization_id = item.organization_id
+and msi.segment1 = item.item
+and mtt.transaction_type_name in ('WIP Component Return','WIP component issue''Discrepancy for Trial Run','WIP Neg Comp Issue','WIP Neg Comp Return')
+And  mmt.transaction_date>=to_date('2009-1-1','yyyy-mm-dd')
+and  mmt.organization_id =130
+and wet.JOB_TYPE=1  --- Standard JO
+and wet.WIP_ENTITY_NAME='090929-D-2167R3'
+group by wet.WIP_ENTITY_NAME,wet.wip_entity_id,msi.segment1,mmt.ORGANIZATION_ID
+
+
+--------Std WIP  Job Order's Complete Qty  sum
+select  mmt.ORGANIZATION_ID,  
+wet.wip_entity_id,
+msi.segment1 Item,
+sum(mmt.TRANSACTION_QUANTITY) as Complete_Qty 
+from
+  apps.mtl_material_transactions mmt,
+  apps.mtl_transaction_types     mtt,
+  apps.mtl_system_items_b        msi,
+  apps.WIP_DISCRETE_JOBS_V       Wet,  
+  (select ASSEM_ITEM Item,ORGANIZATION_ID,top_level,ASSEM_ITEM_TYPE Item_type from apps.BMC_COMPONENT_USERED_WIP_V
+   union
+   select distinct COMP_ITEM item,ORGANIZATION_ID,top_level,ITEM_TYPE from apps.BMC_COMPONENT_USERED_WIP_V where top_level =1
+  ) Item ---All level relative items 
+where  mtt.transaction_type_id = mmt.transaction_type_id
+and    mmt.organization_id = msi.organization_id
+and    mmt.organization_id =wet.organization_id
+and    msi.inventory_item_id = mmt.inventory_item_id
+and    wet.wip_entity_id=mmt.transaction_source_id
+and mmt.organization_id = item.organization_id
+and msi.segment1 = item.item
+and mtt.transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')
+And  mmt.transaction_date>=to_date('2009-1-1','yyyy-mm-dd')
+and  mmt.organization_id =130
+and wet.JOB_TYPE=1  --- Standard JO
+and wet.WIP_ENTITY_NAME='090929-D-2167R3'
+group by wet.wip_entity_id,msi.segment1,mmt.ORGANIZATION_ID
+
+
+----------JO component requirement  sum
+select  a.ORGANIZATION_ID, 
+b.WIP_ENTITY_ID,b.PRIMARY_ITEM_ID Assemb_Item_ID,
+a.CONCATENATED_SEGMENTS Component_Item,sum(b.QUANTITY_COMPLETED) Complete_Qty,
+sum(a.REQUIRED_QUANTITY) Required_Qty,sum(a.QUANTITY_ISSUED) Issued_Qty 
+from apps.WIP_REQUIREMENT_OPERATIONS_V a,apps.WIP_DISCRETE_JOBS_V b,
+  (select ASSEM_ITEM Item,ORGANIZATION_ID,top_level,ASSEM_ITEM_TYPE Item_type from apps.BMC_COMPONENT_USERED_WIP_V
+   union
+   select distinct COMP_ITEM item,ORGANIZATION_ID,top_level,ITEM_TYPE from apps.BMC_COMPONENT_USERED_WIP_V where top_level =1
+  ) Item ---All level relative items 
+where b.WIP_ENTITY_ID=a.WIP_ENTITY_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and a.organization_id = item.organization_id
+and a.CONCATENATED_SEGMENTS = item.item
+and item.organization_id=130
+and b.WIP_ENTITY_NAME='090929-D-2167R3'
+group by b.WIP_ENTITY_ID,a.CONCATENATED_SEGMENTS,b.PRIMARY_ITEM_ID,a.ORGANIZATION_ID
+
+
+
+---------------------------Details
+
+--------Std WIP Job Order's Material Qty  detail 
+select  decode(mmt.ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+wet.CLASS_CODE,decode(wet.JOB_TYPE,1,'Standard',3,'Non-Standard') JO_Type, --cat.segment1 model,
+wet.WIP_ENTITY_NAME,msi2.segment1 Assembly_Item,
+msi.segment1 Comp_Item,mtt.transaction_type_name,
+(mmt.TRANSACTION_QUANTITY) as Qty,mmt.transaction_date,wet.CREATION_DATE JO_Creation_date
+from
+  apps.mtl_material_transactions mmt,
+  apps.mtl_transaction_types     mtt,
+  apps.mtl_system_items_b        msi,
+  apps.mtl_system_items_b msi2,
+  apps.WIP_DISCRETE_JOBS_V       Wet,  
+  (select ASSEM_ITEM Item,ORGANIZATION_ID,top_level,ASSEM_ITEM_TYPE Item_type from apps.BMC_COMPONENT_USERED_WIP_V
+   union
+   select distinct COMP_ITEM item,ORGANIZATION_ID,top_level,ITEM_TYPE from apps.BMC_COMPONENT_USERED_WIP_V where top_level =1
+  ) Item ---All level relative items 
+where  mtt.transaction_type_id = mmt.transaction_type_id
+and    mmt.organization_id = msi.organization_id
+and    mmt.organization_id = msi2.organization_id
+and    mmt.organization_id =wet.organization_id
+and    msi.inventory_item_id = mmt.inventory_item_id
+and    msi2.inventory_item_id = wet.PRIMARY_ITEM_ID
+and    wet.wip_entity_id=mmt.transaction_source_id
+and mmt.organization_id = item.organization_id
+and msi.segment1 = item.item
+and mtt.transaction_type_name in ('WIP Component Return','WIP component issue''Discrepancy for Trial Run','WIP Neg Comp Issue','WIP Neg Comp Return')
+And  mmt.transaction_date>=to_date('2009-1-1','yyyy-mm-dd')
+and  mmt.organization_id =130
+and wet.JOB_TYPE=1  --- Standard JO
+and wet.WIP_ENTITY_NAME='090929-D-2167R3'
+order by wet.WIP_ENTITY_NAME
+
+
+
+--------Std WIP Job Order's Complete Qty  detail 
+select  decode(mmt.ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+wet.CLASS_CODE,decode(wet.JOB_TYPE,1,'Standard',3,'Non-Standard') JO_Type, --cat.segment1 model,
+wet.WIP_ENTITY_NAME,
+msi.segment1 Item,mtt.transaction_type_name,
+(mmt.TRANSACTION_QUANTITY) as Qty,mmt.transaction_date,wet.CREATION_DATE JO_Creation_date
+from
+  apps.mtl_material_transactions mmt,
+  apps.mtl_transaction_types     mtt,
+  apps.mtl_system_items_b        msi,
+  apps.WIP_DISCRETE_JOBS_V       Wet,  
+  (select ASSEM_ITEM Item,ORGANIZATION_ID,top_level,ASSEM_ITEM_TYPE Item_type from apps.BMC_COMPONENT_USERED_WIP_V
+   union
+   select distinct COMP_ITEM item,ORGANIZATION_ID,top_level,ITEM_TYPE from apps.BMC_COMPONENT_USERED_WIP_V where top_level =1
+  ) Item ---All level relative items 
+where  mtt.transaction_type_id = mmt.transaction_type_id
+and    mmt.organization_id = msi.organization_id
+and    mmt.organization_id =wet.organization_id
+and    msi.inventory_item_id = mmt.inventory_item_id
+and    wet.wip_entity_id=mmt.transaction_source_id
+and mmt.organization_id = item.organization_id
+and msi.segment1 = item.item
+and mtt.transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')
+And  mmt.transaction_date>=to_date('2009-1-1','yyyy-mm-dd')
+and  mmt.organization_id =130
+and wet.JOB_TYPE=1  --- Standard JO
+and wet.WIP_ENTITY_NAME='090929-D-2167R3'
+order by wet.WIP_ENTITY_NAME
+
+
+----------JO component requirement detail (from Qualcomm JO_temp table)
+select decode(a.ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org, 
+b.WIP_ENTITY_NAME,
+a.CONCATENATED_SEGMENTS Component_Item,b.QUANTITY_COMPLETED,
+a.REQUIRED_QUANTITY,a.QUANTITY_ISSUED,a.QUANTITY_OPEN,a.QUANTITY_PER_ASSEMBLY,
+b.CREATION_DATE JO_Creation_date,
+a.WIP_SUPPLY_MEANING,a.ITEM_DESCRIPTION
+from apps.WIP_REQUIREMENT_OPERATIONS_V a,apps.WIP_DISCRETE_JOBS_V b,
+  (select ASSEM_ITEM Item,ORGANIZATION_ID,top_level,ASSEM_ITEM_TYPE Item_type from apps.BMC_COMPONENT_USERED_WIP_V
+   union
+   select distinct COMP_ITEM item,ORGANIZATION_ID,top_level,ITEM_TYPE from apps.BMC_COMPONENT_USERED_WIP_V where top_level =1
+  ) Item ---All level relative items 
+where b.WIP_ENTITY_ID=a.WIP_ENTITY_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and a.organization_id = item.organization_id
+and a.CONCATENATED_SEGMENTS = item.item
+and item.organization_id=130
+and b.WIP_ENTITY_NAME='090929-D-2167R3'
+order by b.wip_entity_name,a.CONCATENATED_SEGMENTS
+
+
+----------JO component requirement detail (with Assembly/Component Item_num,Item_type JO class,type,status)
+select decode(a.ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org, 
+b.WIP_ENTITY_NAME,b.CREATION_DATE JO_Creation_date,b.Class_Code,
+decode(b.STATUS_TYPE,1,'Unreleased',3,'Released',4,'Complete',5,'Complete No Charges',6,'On Hold',
+7,'Cancelled',12,'Closed',14,'Pending Close',15,'Failed Close')  JO_STATUS,
+decode(b.JOB_TYPE,1,'Standard',3,'Non-Standard') Type,msi1.segment1 Assemb_Item,msi1.ITEM_TYPE Assemb_item_type,
+a.CONCATENATED_SEGMENTS Component_Item,msi2.ITEM_TYPE Compon_item_type,
+a.REQUIRED_QUANTITY,b.QUANTITY_COMPLETED,
+a.QUANTITY_ISSUED,a.QUANTITY_PER_ASSEMBLY,a.QUANTITY_OPEN,
+a.WIP_SUPPLY_MEANING,a.ITEM_DESCRIPTION
+from apps.WIP_REQUIREMENT_OPERATIONS_V a,apps.WIP_DISCRETE_JOBS_V b,
+  apps.mtl_system_items msi1 ,apps.mtl_system_items msi2
+where b.WIP_ENTITY_ID=a.WIP_ENTITY_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and a.organization_id = msi1.organization_id
+and b.PRIMARY_ITEM_ID =msi1.INVENTORY_ITEM_ID
+and a.organization_id = msi2.organization_id
+and a.INVENTORY_ITEM_ID =msi2.INVENTORY_ITEM_ID
+and a.CONCATENATED_SEGMENTS = msi2.segment1
+and msi2.organization_id=132
+--and msi1.segment1='1220-6864.2'  ---------Assembly item
+and msi2.segment1='1221-1775.1'  ---------component item
+and msi1.ITEM_TYPE<>'ROA'
+order by b.wip_entity_name,a.CONCATENATED_SEGMENTS
+
+

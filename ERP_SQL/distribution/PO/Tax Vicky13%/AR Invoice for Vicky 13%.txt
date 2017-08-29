@@ -1,0 +1,19 @@
+
+AR Invoice for Vicky 13% , AR invoice with ship No,Item
+-----------------------------------------
+select a.CUSTOMER_TRX_LINE_ID,to_char(c.TRX_NUMBER) as Invoice_Number,a.LINE_NUMBER,g.segment3 as Rev_Acc,a.REVENUE_AMOUNT,a.LINE_TYPE ,a.SALES_ORDER,a.INTERFACE_LINE_ATTRIBUTE3 as Ship
+,b.AMOUNT,b.ACCTD_AMOUNT as CNY_AMT,b.GL_DATE,b.ACCOUNT_CLASS
+,a.QUANTITY_INVOICED,a.QUANTITY_ORDERED,a.UNIT_SELLING_PRICE,c.PURCHASE_ORDER,
+h.segment1 Item,a.description
+from apps.ra_customer_trx_lines_all a,apps.RA_CUST_TRX_LINE_GL_DIST_all b,apps.ra_customer_trx_all c
+,apps.GL_CODE_combinations g,apps.mtl_system_items h
+where c.CUSTOMER_TRX_ID=b.CUSTOMER_TRX_ID
+and a.CUSTOMER_TRX_LINE_ID=b.CUSTOMER_TRX_LINE_ID
+and a.LINE_TYPE='LINE'
+and b.ACCOUNT_CLASS='REV'
+and b.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and a.inventory_item_id=h.inventory_item_id
+and a.warehouse_id=h.organization_id
+and g.segment3='5101040101'
+
+

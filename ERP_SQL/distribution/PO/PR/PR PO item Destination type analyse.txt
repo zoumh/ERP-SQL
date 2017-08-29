@@ -1,0 +1,76 @@
+
+-------------PR Type, Destin_Type, Source Type
+select 
+e.DESTINATION_TYPE_CODE,e.SOURCE_TYPE_CODE,
+pr.segment1 PR_num,e.LINE_NUM,
+pr.TYPE_LOOKUP_CODE,(e.UNIT_PRICE*f.REQ_LINE_QUANTITY) Dist_Amt,--f.REQ_LINE_QUANTITY Dist_Qty,
+g.segment2,g.segment3,pr.ORG_ID,d.FULL_NAME PR_Requestor,d.EMPLOYEE_NUMBER
+from
+apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+(select INVENTORY_ITEM_ID from apps.mtl_system_items where ORGANIZATION_ID=127) h
+where PR.PREPARER_ID=d.PERSON_ID(+)
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+--and h.ORGANIZATION_ID=127
+and e.ITEM_ID =h.INVENTORY_ITEM_ID(+)
+--and g.segment2 like '15%'--in ('4997','4998','4999','5997','5998')
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and f.CREATION_DATE>=to_date('2009-1-1','yyyy-mm-dd') 
+and PR.SEGMENT1='45724'
+and pr.TYPE_LOOKUP_CODE='INTERNAL'
+
+
+-----------IPM master pack Item PR PO, with line type,item type & flag
+select b.CREATION_DATE,b.DESTINATION_TYPE_CODE PR_DESTINATION_TYPE,pod.DESTINATION_TYPE_CODE PO_DESTINATION_TYPE,
+msi.ITEM_TYPE,msi.INVENTORY_ASSET_FLAG,msi.COSTING_ENABLED_FLAG,
+pe.FULL_NAME Requestor,a.segment1 PR_Num,b.line_num PR_Line,potp.LINE_TYPE PR_Type,
+a.authorization_status PR_Status,msi.segment1 PR_Item,
+poh.segment1 PO_Num,pol.line_num PO_Line, potp.LINE_TYPE PO_Type,
+(c.REQ_LINE_QUANTITY) PR_Qty, (pod.QUANTITY_ORDERED) PO_Qty,
+(pod.QUANTITY_ORDERED*pol.UNIT_PRICE*nvl(poh.RATE,1)) CNY_PO_Amount,
+(pod.QUANTITY_DELIVERED) PO_Received_Qty,
+b.ITEM_DESCRIPTION PR_Item_Desc,pol.ITEM_DESCRIPTION PO_item_Desc,VDR.VENDOR_NAME
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.PO_DISTRIBUTIONS_all POD,apps.PO_HEADERS_ALL POH,apps.PO_LINES_ALL POL,apps.po_Line_locations_all pos,
+apps.PO_LINE_TYPES_tl PRTP,
+apps.PO_LINE_TYPES_tl POTP,apps.PER_PEOPLE_V7 PE,
+apps.PO_VENDORS VDR,apps.mtl_system_items_b msi
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and a.authorization_status='APPROVED'
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and poh.authorization_status='APPROVED'
+and (pol.CANCEL_FLAG<>'Y' or pol.CANCEL_FLAG is null)
+and c.DISTRIBUTION_ID  =POD.REQ_DISTRIBUTION_ID
+and poh.po_header_id=pol.po_header_id
+and poh.po_header_id=pod.po_header_id
+and pol.po_line_id=pod.po_line_id
+and poh.po_header_id=pos.po_header_id
+and pol.po_line_id=pos.po_line_id
+and pos.LINE_LOCATION_ID =pod.LINE_LOCATION_ID
+and msi.ORGANIZATION_ID=b.DESTINATION_ORGANIZATION_ID
+and msi.INVENTORY_ITEM_ID=b.item_id
+--and poh.segment1='1060307'--1031687'--1030155'
+--and (c.REQ_LINE_QUANTITY<>pod.QUANTITY_ORDERED or b.ITEM_ID <>pol.ITEM_ID)
+and (b.ITEM_ID is not null and b.DESTINATION_TYPE_CODE='EXPENSE')
+and b.CREATION_DATE >=to_date('2009-1-3','yyyy-mm-dd')
+and b.CREATION_DATE <to_date('2009-3-3','yyyy-mm-dd')
+--and a.segment1='25987'
+and potp.LINE_TYPE_ID=pol.LINE_TYPE_ID
+and prtp.LINE_TYPE_ID=b.LINE_TYPE_ID
+and b.to_person_id=pe.person_id
+and VDR.VENDOR_ID=poh.VENDOR_ID
+and potp.LINE_TYPE not in ('VP Purchasing','ARC Purchasing')
+and potp.LANGUAGE='US'
+and prtp.LANGUAGE='US'
+and msi.ITEM_TYPE <>'EXP'  ---IDM
+
+and (msi.ITEM_TYPE <>'EXP' and   
+msi.INVENTORY_ASSET_FLAG='N' and msi.COSTING_ENABLED_FLAG='N')---master Pack
+--and b.DESTINATION_TYPE_CODE<>pod.DESTINATION_TYPE_CODE

@@ -1,0 +1,235 @@
+-----------2009-Nov
+SO 281318,after release,the shipping transaction status changed to 'staged/pick confirmed' but no task was performed and no Sales Order pick transaction created 
+after backorder, the status changed to 'not applicable'.
+
+Because Item MTL_TRANSACTIONS_ENABLED_FLAG=N when book SO,make Wsh_Delivery_Details.PICKABLE_FLAG=N (SR aggree)
+Before really run SO pick, many table not created record,easy to fix:
+
+update Apps.Wsh_Delivery_Details set Released_Status='B',INV_INTERFACED_FLAG='N',PICKABLE_FLAG='Y' where  
+Source_Header_Id =992239
+
+
+SR 7777251.994
+This kinds only could cancel SO, SR can't give fix!
+
+
+
+-----BMC SOlution:
+     Order Team to cancel-delete Old SO,DBA importnew SO(with same SE PO/line).Order Team book it.
+     Old WIP Order already completed, no change JO,label no change.CIQ use SE PO,no problem. IE needs change old SO to new SO.
+
+
+
+--------test SQL
+select * from apps.OE_ORDER_HEADERS_all  where ORDER_NUMBER in ('281185','281186','281189')
+
+select * from apps.oe_order_lines_all where HEADER_ID in (992225,992226)
+
+1230-2835
+
+
+select --SOURCE_HEADER_TYPE_NAME,SOURCE_LINE_ID,SOURCE_CODE,
+SOURCE_HEADER_NUMBER,
+Released_Status ,OE_INTERFACED_FLAG,Inv_Interfaced_Flag,Pickable_Flag,DELIVERY_DETAIL_ID,SOURCE_LINE_ID  
+--select * 
+from Apps.Wsh_Delivery_Details where SOURCE_HEADER_NUMBER in ('281185','281186','281189')
+--Source_Header_Id in (992225,992226,992239) --and SOURCE_LINE_ID=1756523  and DELIVERY_DETAIL_ID =3235704
+
+update Apps.Wsh_Delivery_Details set Released_Status='B',INV_INTERFACED_FLAG='N',PICKABLE_FLAG='Y' where  
+Source_Header_Id =992239--  and SOURCE_LINE_ID=1756530  and DELIVERY_DETAIL_ID =3235721
+
+rollback
+
+commit
+
+select MTL_TRANSACTIONS_ENABLED_FLAG,STOCK_ENABLED_FLAG,INVOICEABLE_ITEM_FLAG,INVOICE_ENABLED_FLAG,
+CUSTOMER_ORDER_ENABLED_FLAG, CUSTOMER_ORDER_FLAG
+from apps.mtl_system_items where segment1='1230-2835' and ORGANIZATION_ID=130
+
+update apps.mtl_system_items set MTL_TRANSACTIONS_ENABLED_FLAG='N', STOCK_ENABLED_FLAG='N' 
+--,CUSTOMER_ORDER_ENABLED_FLAG='Y',CUSTOMER_ORDER_FLAG='N'
+where segment1='1230-2835' and ORGANIZATION_ID=130
+ 
+
+
+select --SOURCE_HEADER_TYPE_NAME,SOURCE_LINE_ID,SOURCE_CODE,
+SOURCE_HEADER_NUMBER,
+Released_Status ,OE_INTERFACED_FLAG,Inv_Interfaced_Flag,Pickable_Flag,DELIVERY_DETAIL_ID,SOURCE_LINE_ID  
+--select * 
+from Apps.Wsh_Delivery_Details where SOURCE_HEADER_NUMBER in ('281185','281186','281189')
+
+select * from apps.WSH_PICKING_BATCHES_V where ORDER_NUMBER='281186'
+
+select *--DELIVERY_ID,DELIVERY_DETAIL_ID 
+from apps.wsh_delivery_assignments where DELIVERY_DETAIL_ID =3235707
+
+select * from apps.wsh_new_deliveries where DELIVERY_ID=800347955
+
+select * from apps.wsh_delivery_legs where DELIVERY_ID=800347955
+
+----get trip name/ID for SO 309138
+select * --TRIP_NAME,TRIP_ID,DELIVERY_DETAIL_ID 
+from apps.WSH_DELIVERABLE_STOPS_V 
+where DELIVERY_DETAIL_ID =3235707
+--in (select DELIVERY_DETAIL_ID from 
+--apps.wsh_delivery_assignments where DELIVERY_ID=800347955)
+
+
+select * from apps.wsh_trips where TRIP_ID=399619
+
+----get trip_stop info for SO 309138
+
+select * --TRIP_ID,Pending_Interface_Flag,STOP_SEQUENCE_NUMBER,STATUS_CODE,STOP_LOCATION_ID,STOP_ID 
+
+from apps.Wsh_Trip_Stops Where Trip_Id=399619
+-- And Stop_Sequence_Number = 20
+
+
+
+--------------Below are 2008-Oct write:
+the shipping transaction status of so 230639 changed to 'staged/pick confirmed' although no task was performed and no material transaction. after backorder this so, the status changed to 'not applicable'.
+
+if the released status of wsh_delivery_details is 'X' or 'Y', the details required option was set to yes, so pick release can't be performed.
+
+
+update apps.wsh_delivery_details wdd set released_status='R'
+   where wdd.SOURCE_HEADER_ID=680273
+ 
+
+apps.wsh_delivery_details.RELEASED_STATUS
+
+R:	Ready to Release
+S:	Released to Warehouse
+Y:	Staged/Pick Confirmed
+B:	Backordered
+C	Interfaced
+
+
+309138
+1206-9451
+2000 pics
+
+after first fix to 'B',complet task,line status is 'Picked', shipping transaction status is 'Not Applicable', 
+moved stock to SL... , then we update the wsh_delivery_details.RELEASED_STATUS to 'Y' (means Staged/Pick Confirmed), 
+then could Quick Ship, but no material transaction created, but have invoice created
+
+
+309139
+1206-9436
+1500 pics
+
+after first fix to 'B',complet task,line status is 'Awaitting shipping', 
+shipping transaction status is 'Not Applicable', moved stock to SL...
+
+
+又增加一单,出现同样情况.
+SO:309137 PO:70850838  
+1206-9441   1500PCS
+
+Backordered,then fix to 'R',complet task,line status is 'Awaitting shipping', 
+shipping transaction status is 'Not Applicable', moved stock to SL...
+
+
+SO:309118  PO:70850797
+1206-9441 3500 pics
+
+Domestic auto pack fail, picked,but no MO
+
+
+SR Number  7130675.994 
+When to ship SO,find SO 309137 line status is 'Picked' but no SO pick material transaction created.
+Ship Transaction line status is 'Staged/Pick Confirmed',but didn't have the pick wave move order created yet.
+Can't progress shipping.We need to ship it ASAP.
+SO line 1.1 (SO only one line)
+To make ths SO shipping finished
+
+
+SR Number  7130677.994 
+When to ship SO,find SO 309138 line status be closed but no material transaction come out.
+
+
+SR Number   7130679.994 
+When to ship SO,find SO 309139 has created SO pick material transaction but line status is 'Awaiting Shipping'
+Line -addition line information -Deliveries -Delivery Status=Open , Pick Status=Not Applicable
+
+
+-------------Data fix from Walks after clone tested (consultant)
+select * from apps.OE_ORDER_HEADERS_all  where ORDER_NUMBER in ('309138','309139','309137','309118')
+
+--=== 01 Backup whs_details
+Create Table  BMC_wsh_delivery_details_20081015 As 
+ Select * From  apps.wsh_delivery_details wsh
+     where  SOURCE_HEADER_ID in (777629,777652,777653,777654) 
+
+Create Table  BMC_Wsh_Trip_Stops_1015 As 
+     Select * From  apps.Wsh_Trip_Stops 
+    Where Trip_Id In (Select t.Trip_Id From apps.Wsh_Trips t Where t.Name In (408342)) ---And Stop_Sequence_Number = 20
+
+
+--=== 02 update the data in the system 
+
+----get Released_Status ,Inv_Interfaced_Flag,Pickable_Flag for SO 309137,309139
+select Source_Header_Id,Released_Status ,Inv_Interfaced_Flag,Pickable_Flag from Apps.Wsh_Delivery_Details where Source_Header_Id In (777652, 777654)
+
+---SO 309137,309139
+Update Apps.Wsh_Delivery_Details
+Set Released_Status = 'Y', Inv_Interfaced_Flag = 'N', Pickable_Flag = 'Y'
+Where Source_Header_Id In (777652, 777654)
+
+
+----get DELIVERY_DETAIL_ID,Released_Status ,Inv_Interfaced_Flag,Pickable_Flag for SO 309138
+select Source_Header_Id,Released_Status ,Inv_Interfaced_Flag,Pickable_Flag,DELIVERY_DETAIL_ID from Apps.Wsh_Delivery_Details where Source_Header_Id In (777653)
+
+----get trip name for SO 309138
+select TRIP_NAME,TRIP_ID,DELIVERY_DETAIL_ID from apps.WSH_DELIVERABLE_STOPS_V where DELIVERY_DETAIL_ID=2400332
+
+----get trip_stop info for SO 309138
+select TRIP_ID,Pending_Interface_Flag,STOP_SEQUENCE_NUMBER,STATUS_CODE,STOP_LOCATION_ID,STOP_ID from apps.Wsh_Trip_Stops Where Trip_Id=408342
+-- And Stop_Sequence_Number = 20
+
+---SO 309138
+Update Apps.Wsh_Delivery_Details
+Set Released_Status = 'C', Inv_Interfaced_Flag = 'N', Pickable_Flag = 'Y'
+Where Source_Header_Id In (777653)
+
+---SO 309138
+Update Wsh_Trip_Stops Ts
+Set Ts.Pending_Interface_Flag = 'Y'
+Where Ts.Trip_Id In (Select t.Trip_Id From apps.Wsh_Trips t Where t.Name In (408342)) --And Stop_Sequence_Number = 20
+
+----get Released_Status ,Inv_Interfaced_Flag,Pickable_Flag for SO 309118
+select Source_Header_Id,Released_Status ,Inv_Interfaced_Flag,Pickable_Flag from Apps.Wsh_Delivery_Details where Source_Header_Id In (777629)
+
+---SO 309118
+Update Apps.Wsh_Delivery_Details
+Set Released_Status = 'R', Inv_Interfaced_Flag = 'N', Pickable_Flag = 'Y'
+Where Source_Header_Id In (777629)
+
+--== 03 Ask user to do the operation
+-- 309137 & 309139 ship confirm
+-- 309118 pick release >> Pick >> ship confirm
+-- 309138 inventory interface trip-stop  
+
+
+--------Find un-shipped SO ,delivery_details table's pickable_flag=N'
+select a.ORDER_NUMBER,b.CANCELLED_FLAG,c.INV_INTERFACED_FLAG,
+--c.SOURCE_HEADER_NUMBER,c.SOURCE_LINE_NUMBER line_num,--b.LINE_NUMBER,
+c.SOURCE_HEADER_TYPE_NAME SO_Type,
+a.FLOW_STATUS_CODE head_status,
+b.FLOW_STATUS_CODE line_status,
+c.RELEASED_STATUS,
+c.PICKABLE_FLAG,
+b.ORDERED_ITEM,
+b.ORDERED_QUANTITY,b.SHIPPED_QUANTITY,b.CANCELLED_FLAG,b.SCHEDULE_SHIP_DATE
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lines_all b,apps.wsh_delivery_details c
+where a.HEADER_ID=b.HEADER_ID
+and a.HEADER_ID=c.SOURCE_HEADER_ID
+and b.LINE_ID=c.SOURCE_LINE_ID
+--and a.ORDER_NUMBER='309150'
+and (b.CANCELLED_FLAG='N' or b.CANCELLED_FLAG is null)
+and a.FLOW_STATUS_CODE<>'CLOSED'
+and b.FLOW_STATUS_CODE in ('AWAITING_SHIPPING','BOOKED')
+--and c.OE_INTERFACED_FLAG<>'Y'
+and c.INV_INTERFACED_FLAG<>'Y'
+and c.PICKABLE_FLAG<>'Y'
+and c.RELEASED_STATUS <>'C'

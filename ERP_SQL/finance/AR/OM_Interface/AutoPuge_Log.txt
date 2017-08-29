@@ -1,0 +1,47 @@
++---------------------------------------------------------------------------+
+Oracle Receivables: Version : 11.5.0 - Development
+
+Copyright (c) 1979, 1999, Oracle Corporation. All rights reserved.
+
+RAXDEL module: Autoinvoice Purge Program
++---------------------------------------------------------------------------+
+
+Current system time is 10-SEP-2004 09:36:03
+
++---------------------------------------------------------------------------+
+
+RA_INTERFACE_DISTRIBUTIONS: 0 row(s) deleted Current system time is 10-SEP-2004 09:36:04
+RA_INTERFACE_SALESCREDITS: 0 row(s) deleted Current system time is 10-SEP-2004 09:36:04
+RA_INTERFACE_LINES: 0 row(s) deleted Current system time is 10-SEP-2004 09:36:04
++---------------------------------------------------------------------------+
+Start of log messages from FND_FILE
++---------------------------------------------------------------------------+
++---------------------------------------------------------------------------+
+End of log messages from FND_FILE
++---------------------------------------------------------------------------+
+
+
++---------------------------------------------------------------------------+
+
+
+Executing request completion options...
+
+
+Printing output file.
+               Request ID : 1056294 	
+         Number of copies : 0 	
+                  Printer : noprint 
+
+
+
+Finished executing request completion options.
+
+
+
++---------------------------------------------------------------------------+
+Concurrent request completed successfully
+Current system time is 10-SEP-2004 09:36:04
+
++---------------------------------------------------------------------------+
+
+

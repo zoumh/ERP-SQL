@@ -1,0 +1,27 @@
+
+Column 		QuickCodes Type 		QuickCodes Table
+-------------	-----------------------		------------------
+HEADER_STATUS 	MTL_TXN_REQUEST_STATUS 		MFG_LOOKUPS
+---------------	-----------------------		------------------
+1 		Incomplete
+2 		Pending Approval
+3 		Approved
+4 		Not Approved
+5 		Closed
+6 		Canceled
+7 		Pre Approved
+8 		Partially Approved
+
+
+select * from apps.MFG_LOOKUPS where LOOKUP_TYPE ='MOVE_ORDER_TYPE'
+
+Column 		QuickCodes Type 		QuickCodes Table
+---------------	-----------------------		------------------
+MOVE_ORDER_TYPE MTL_TXN_REQUEST_TYPE 		MFG_LOOKUPS
+---------------	-----------------------		------------------
+1 		Requisition
+2 		Replenishment
+3 		Pick Wave
+4		Receipt
+5		Manufacturing Component Pick
+6		Put Away

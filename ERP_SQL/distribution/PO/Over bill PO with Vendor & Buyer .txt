@@ -1,0 +1,93 @@
+
+---------PO Over bill with Vendor & Buyer (deial at ship line)
+select d.creation_date,d.TYPE_LOOKUP_CODE PO_Type,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,
+to_char(f.SHIPMENT_NUM) PO_Ship_Num,
+d.CURRENCY_CODE,e.UNIT_PRICE PO_Price,m.FULL_NAME Buyer,v.segment1 vendor_code,
+v.PAY_GROUP_LOOKUP_CODE Pay_group,
+f.QUANTITY_BILLED,f.QUANTITY_RECEIVED,f.QUANTITY Qty_Ordered,f.QUANTITY_ACCEPTED,f.QUANTITY_CANCELLED,
+v.vendor_name
+from apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f,
+apps.po_agents_name_v m,
+apps.po_vendors v
+where e.PO_HEADER_ID=d.PO_HEADER_ID
+and f.PO_HEADER_ID=d.PO_HEADER_ID
+and f.PO_LINE_ID=e.PO_LINE_ID
+and e.org_id=d.org_id
+And d.vendor_id = v.vendor_id
+and d.agent_id=m.BUYER_ID(+)
+and f.QUANTITY_BILLED>f.QUANTITY_RECEIVED
+and d.org_id=127
+--and b.INVOICE_NUM='SEP08123007'
+and (d.segment1 ='1086395' and e.LINE_NUM=2)
+and d.creation_date>to_date('2009-1-1','yyyy-mm-dd')
+order by d.segment1,e.LINE_NUM,f.SHIPMENT_NUM
+
+
+---------Sum at PO line
+select d.creation_date,d.TYPE_LOOKUP_CODE PO_Type,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,
+d.CURRENCY_CODE,e.UNIT_PRICE PO_Price,m.FULL_NAME Buyer,v.segment1 vendor_code,
+v.PAY_GROUP_LOOKUP_CODE Pay_group,
+sum(f.QUANTITY_BILLED) Qty_billed,sum(f.QUANTITY_RECEIVED) Qty_Received,count(*),
+v.vendor_name
+from apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f,
+apps.po_agents_name_v m,
+apps.po_vendors v
+where e.PO_HEADER_ID=d.PO_HEADER_ID
+and f.PO_HEADER_ID=d.PO_HEADER_ID
+and f.PO_LINE_ID=e.PO_LINE_ID
+and e.org_id=d.org_id
+And d.vendor_id = v.vendor_id
+and d.agent_id=m.BUYER_ID(+)
+and f.QUANTITY_BILLED>f.QUANTITY_RECEIVED
+and d.org_id=127
+--and b.INVOICE_NUM='SEP08123007'
+--and (d.segment1 ='1086395' and e.LINE_NUM=2)
+--and d.creation_date>to_date('2009-1-1','yyyy-mm-dd')
+group by d.segment1,e.LINE_NUM,d.CURRENCY_CODE,e.UNIT_PRICE, d.TYPE_LOOKUP_CODE,
+m.FULL_NAME ,v.segment1,v.PAY_GROUP_LOOKUP_CODE, v.vendor_name,d.creation_date
+--having count(*)>1
+
+
+---------PO over billed (lined with AP Invoice, but Qty from SHip line, not use to sum)
+select d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,
+to_char(f.SHIPMENT_NUM) PO_Ship_Num,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+d.CURRENCY_CODE,e.UNIT_PRICE PO_Price,m.FULL_NAME Buyer,v.segment1 vendor_code,
+b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_line_num,
+b.PAY_GROUP_LOOKUP_CODE Pay_group,
+f.QUANTITY_BILLED,f.QUANTITY_RECEIVED,f.QUANTITY Qty_Ordered,f.QUANTITY_ACCEPTED,f.QUANTITY_CANCELLED,
+b.INVOICE_TYPE_LOOKUP_CODE Inv_Type,a.ACCOUNTING_DATE,v.vendor_name
+/*
+a.QUANTITY_INVOICED,a.UNIT_PRICE,a.PRICE_CORRECT_QTY ,a.INVOICE_PRICE_VARIANCE,a.REVERSAL_FLAG,
+a.VAT_CODE,a.TAX_RECOVERY_RATE,a.BASE_AMOUNT,a.AMOUNT Inv_line_amt,
+d.RATE_DATE PO_Rate_Date,c.RATE_DATE PO_Dist_Rate_date,
+a.EXCHANGE_RATE Inv_Rate,a.EXCHANGE_DATE Inv_Rate_Date,a.EXCHANGE_RATE_VARIANCE,
+*/
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f,
+apps.po_agents_name_v m,
+apps.po_vendors v
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and b.org_id=d.org_id
+And d.vendor_id = v.vendor_id
+and d.agent_id=m.BUYER_ID(+)
+and f.QUANTITY_BILLED>f.QUANTITY_RECEIVED
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and b.org_id=127
+--and b.INVOICE_NUM='SEP08123007'
+and (d.segment1 ='1086395' and e.LINE_NUM=2)
+and d.creation_date>to_date('2009-1-1','yyyy-mm-dd')
+order by d.segment1,e.LINE_NUM,f.SHIPMENT_NUM
+
+

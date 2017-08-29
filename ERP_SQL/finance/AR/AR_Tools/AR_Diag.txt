@@ -1,0 +1,32 @@
+Doc ID:  Note:201762.1 
+Subject:  AR Scripts Required for Setup and System information for AR ITARs 
+Type:  TROUBLESHOOTING 
+Status:  PUBLISHED 
+ Content Type:  TEXT/PLAIN 
+Creation Date:  01-JUL-2002 
+Last Revision Date:  13-APR-2004 
+ 
+
+Please run the ACT - Application Collections Tool script for the product AR if  you are 11i and upload the results for the TAR.  This script will include the following information:  
+1. Application Installation Details  
+2. Database Name and Created Date  
+3. Oracle Version(s)  
+4. NLS Parameter Settings 
+5. V$parameter Settings 
+6. Profile Option Values  
+7. Database Triggers  
+8. Table Indexes  
+9. Package Versions  
+10. Product Tops  
+11. Form Versions  
+12. Forms Library Versions  
+13. Reports Versions  
+14. Product Workflow File Versions         
+15. Product ODF File Versions  
+16. Product Pro*C File Versions  
+17. Contents of Listener.ora   
+
+You can download the script and instructions from:   Note 183274.1  You can download instructions on how to register this as a concurrent program  so that you can easily run and submit this for each new TAR:  Note 190142.1  
+Please also run the AR Setup Script for 11i customers.  If you have not already done so you can get the framework and instructions from:  Note 167000.1  
+This will give us information on AR setup such as system options and profile  options. 
+ There are scripts for other products included as well, which you  may be requested to run on other TAR. 

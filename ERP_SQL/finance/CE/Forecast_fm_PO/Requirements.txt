@@ -1,0 +1,33 @@
+
+
+ Qty_Left : 
+c.QUANTITY -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED as Qty_Left
+
+
+<PO date> is the date at which PO is created
+
+<Need by date> is filled by buyer, means by which date we need goods can be arrive at BMC
+
+<Promise date> most PO no use this, if use this, means which date that supplier can promise to deliver goods to BMC
+
+<Payment Date> is caculate from promise date if it has value ( Payment Date=Terms Date + promise date )
+If  promise date is empty, then Payment Date=Terms Date + Need by date
+
+
+Rules on the PO fore
+
+PO --> APPROVED
+USER_HOLD_FLAG is null 
+CLOSED_CODE<>'CLOSED'
+CANCEL_FLAG ='N'
+CURRENCY_CODE <>'CNY' and a.CURRENCY_CODE <>'USD'
+
+
+
+
+
+
+
+
+
+

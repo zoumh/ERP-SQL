@@ -1,0 +1,134 @@
+
+How to Drill From a GL account:
+
+
+1. Print the "Account analysis report" from GL
+Find out the journal Source names in this account
+
+
+
+2.From the Journal Source, go to different sub-module to print out reports:
+
+
+Ap :
+Accounts Payable Trial Balance
+(Date)
+
+
+Or use below two Rpeorts:
+POsted Invoice Report
+Posted Payment report
+
+
+Or Run AP Accounting Table:
+select a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment3 account_number
+,a.REFERENCE5 as Invoice_number,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE
+,b.ACCOUNTING_DATE,a.REFERENCE6,a.AE_LINE_TYPE_CODE,a.REFERENCE1 as Supplier
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and c.segment3='21210300'
+and (b.PERIOD_NAME='APR-04' or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04') 
+
+
+SubLedger --GL transfer record table:
+apps.xla_gl_transfer_batches_all
+
+
+AR:
+Journal Entries Report
+(CNY,Y)
+
+
+
+FA:
+Account Drill Down Report
+(Period,Book,Account)
+
+INV:
+(In Report path, print for all Org)
+Material account distribution detail
+(account, date)
+
+
+PO:
+Receiving Account distribution Report
+(Date, Org,Account--only choose account number)
+
+(Or run the APPS.RCV_RECEIVING_SUB_LEDGER SQL, consider the PO receive journals jam in GL_Interface)
+(RCV_RECEIVING_SUB_LEDGER stores information about accounting
+entries generated within the receiving business unit.)
+
+--GL Interface linked to receiving Journal,rec Trans, PO
+
+select d.segment1 PO,e.RECEIPT_NUM,f.segment3 Acc,
+a.ACCOUNTED_DR,a.ACCOUNTED_CR,TRANSACTION_ID,QUANTITY, TRANSACTION_TYPE , 
+b.ACCOUNTING_DATE ,b.TRANSACTION_DATE ,b.PERIOD_NAME,b.REFERENCE4 as PO
+,a.CURRENCY_CODE,a.CURRENCY_CONVERSION_RATE as Rate
+FROM apps.GL_interface a,APPS.RCV_RECEIVING_SUB_LEDGER b,apps.RCV_TRANSACTIONS c,
+apps.PO_HEADERS_ALL d,apps.RCV_SHIPMENT_HEADERS e,apps.GL_CODE_combinations f
+WHERE --b.creation_date=to_Date('2006-10-30','yyyy-mm-dd') and 
+a.gl_sl_link_id=b.GL_SL_LINK_ID
+and b.RCV_TRANSACTION_ID=c.TRANSACTION_ID
+and e.SHIPMENT_HEADER_ID=c.SHIPMENT_HEADER_ID
+and d.PO_HEADER_ID=c.PO_HEADER_ID
+and a.status in ('EP01')
+and  f.CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+
+
+
+GL:
+Account analysis report (sort out GL entry)  
+
+
+
+
+
+AP Accounting Table:
+
+select a.ACCOUNTED_DR,a.ACCOUNTED_CR,b.PERIOD_NAME ,c.segment3 account_number
+,a.REFERENCE5 as Invoice_number,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE
+,b.ACCOUNTING_DATE,a.REFERENCE6,a.AE_LINE_TYPE_CODE,a.REFERENCE1 as Supplier
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and c.segment3='21210300'
+and (b.PERIOD_NAME='APR-04' or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04')
+
+
+
+PO Receive GL Journal:
+
+select b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,LINE_REFERENCE_4 as PO,LINE_REFERENCE_5,LINE_DESCRIPTION as Item
+,b.JE_SOURCE,b.HEADER_DESCRIPTION,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.LINE_DESCRIPTION,b.CREATION_DATE
+from apps.GL_JE_JOURNAL_LINES_V b where b.LINE_CODE_COMBINATION_ID in 
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='120100' )
+--and b.BATCH_NAME like 'PRD Purchasing%'
+and b.JE_CATEGORY='Receiving'
+and  (b.PERIOD_NAME='APR-04' or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04')
+
+
+
+
+PO APPS.RCV_RECEIVING_SUB_LEDGER
+
+select ACCOUNTED_DR,ACCOUNTED_CR ,PERIOD_NAME,ACCOUNTING_DATE ,TRANSACTION_DATE ,PERIOD_NAME,REFERENCE4 as PO
+,CURRENCY_CODE,CURRENCY_CONVERSION_RATE as Rate
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b
+WHERE CODE_COMBINATION_ID IN (select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='120100' )
+and  (b.PERIOD_NAME='APR-04' or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04')
+
+
+PO receive journals jam in GL_Interface
+
+select sum(ACCOUNTED_DR),sum(ACCOUNTED_CR),sum(ACCOUNTED_DR)-sum(ACCOUNTED_CR) as balance from apps.GL_interface b
+where b.CODE_COMBINATION_ID in 
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='120100' )
+--and b.BATCH_NAME like 'PRD Purchasing%'
+and b.USER_JE_CATEGORY_NAME='Receiving'
+and  (b.PERIOD_NAME='APR-04' or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04')
+
+
+
+

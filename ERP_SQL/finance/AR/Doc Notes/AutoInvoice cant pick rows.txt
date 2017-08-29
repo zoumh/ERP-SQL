@@ -1,0 +1,49 @@
+﻿
+                  Subject: RAXTRX - Interface Rows not Picked up by Autoinvoice
+                   Doc ID: Note:175733.1Type: PROBLEM
+                   Last Revision Date: 02-NOV-2003Status: PUBLISHED
+
+
+
+fact: Oracle Receivables
+fact: RAXTRX - Autoinvoice Import Program
+symptom: Rows are not picked up by Autoinvoice
+symptom: Rows are stuck in the RA_INTERFACE_LINES_ALL Table
+symptom: RA_INTERFACE_LINES_ALL.REQUEST_ID is not null
+symptom: RA_INTERFACE_LINES_ALL.INTERFACE_STATUS is not equal to 'P'
+cause: If the request_id is not null then any run of Autoinvoice with a 
+different request id will ignore that line.
+
+This situation will happen if Autoinvoice has a fatal error.
+
+
+
+fix:
+
+Clear the request IDs so that Autoinvoice can pick up the line.
+
+1.  First be sure that Autoinvoice is not running.
+
+2.  Clear the request ids.
+
+		UPDATE ra_interface_lines_all
+		SET interface_line_id = null,
+		    customer_trx_id = null,
+		    request_id = null,
+		    link_to_line_id = null
+		WHERE nvl(interface_status,'x') != 'P';
+
+3.  Commit;
+
+4.  Rerun Autoinvoice and check the log.
+
+. 
+               
+
+            Bookmarks Admin Profile Feedback Sign Out Help 
+
+            Copyright © 2006, Oracle. All rights reserved. Legal Notices  and 
+            Terms of Use | Privacy Statement 
+
+
+

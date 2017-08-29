@@ -1,0 +1,19 @@
+
+select  distinct d.CREATION_DATE,d.segment1 po_no,c.segment1 item_no,a.quantity qty_ordered,
+ a.quantity_received, a.QUANTITY_BILLED,A.QUANTITY_CANCELLED,b.UNIT_PRICE,d.CURRENCY_CODE,d.RATE,b.ATTRIBUTE1,A.NEED_BY_DATE,
+ e.name,f.AGENT_name,a.SHIP_TO_ORGANIZATION_ID,a.CLOSED_CODE,e.VENDOR_NAME,d.AUTHORIZATION_STATUS
+from apps.po_line_locations_all a,apps.po_lines_all b, apps.mtl_system_items c ,apps.po_headers_all d,
+APPS.HR_ALL_ORGANIZATION_UNITS e,apps.PO_AGENTS_V f,apps.po_vendors e
+where 
+a.quantity_received<(a.quantity-A.QUANTITY_CANCELLED)
+--or a.QUANTITY_BILLED<(a.quantity_received-A.QUANTITY_CANCELLED))
+and c.inventory_item_id=b.item_id 
+and c.organization_id=b.org_id 
+and a.PO_LINE_ID=b.PO_LINE_ID
+and b.po_header_id=d.po_header_id 
+AND TYPE_LOOKUP_CODE ='STANDARD'
+and To_char(d.CREATION_DATE,'YYYY-MM-DD')<='2005-03-31'
+and e.ORGANIZATION_ID=a.SHIP_TO_ORGANIZATION_ID
+and d.AGENT_ID=f.AGENT_ID
+and a.SHIP_TO_ORGANIZATION_ID=83
+and d.VENDOR_ID=e.VENDOR_ID(+)

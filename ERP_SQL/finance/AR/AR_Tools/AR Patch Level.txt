@@ -1,0 +1,3 @@
+
+
+Accounts Receivable Patch Level = 11i.AR.L

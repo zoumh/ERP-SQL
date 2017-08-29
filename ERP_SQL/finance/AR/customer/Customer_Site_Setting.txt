@@ -1,0 +1,63 @@
+select * from  apps.HZ_CUST_SITE_USES_all where CUST_ACCT_SITE_ID in
+(select CUST_ACCT_SITE_ID from  apps.HZ_CUST_ACCT_SITES_ALL where CUST_ACCOUNT_ID=
+		(select CUSTOMER_ID from apps.AR_CUSTOMERS_V where customer_number='1010')
+)
+
+
+-------------List Ship to Customer setting (with EDI_Location)
+
+select convert(a.CUSTOMER_NAME,'ZHS16GBK') as Name,a.CUSTOMER_NUMBER--,b.SITE_USE_ID,b.LOCATION
+,b.SITE_USE_CODE,b.LOCATION as Ship_Location,b.TAX_CODE,b.BILL_TO_SITE_USE_ID Bill_To_Site,c.ECE_TP_LOCATION_CODE EDI_Location
+from apps.AR_CUSTOMERS_V  a
+, (select TAX_CODE,SITE_USE_CODE,CUST_ACCT_SITE_ID,BILL_TO_SITE_USE_ID,LOCATION from apps.HZ_CUST_SITE_USES_all where SITE_USE_CODE='SHIP_TO') b
+,apps.HZ_CUST_ACCT_SITES_ALL  c
+where a.CUSTOMER_ID=c.CUST_ACCOUNT_ID
+and c.CUST_ACCT_SITE_ID=b.CUST_ACCT_SITE_ID--(+)
+and CUSTOMER_NUMBER='1000'--'1000'
+
+
+-------------List Bill to Customer setting (with EDI_Location)
+
+select convert(a.CUSTOMER_NAME,'ZHS16GBK') as Name,a.CUSTOMER_NUMBER--,b.SITE_USE_ID,b.LOCATION
+,f.SITE_USE_CODE,f.LOCATION as Bill_Location
+,d.segment3 as Receivable_Acc,c.ECE_TP_LOCATION_CODE EDI_Location
+from apps.AR_CUSTOMERS_V  a
+,apps.HZ_CUST_ACCT_SITES_ALL  c
+,apps.GL_CODE_combinations d
+, (select nvl(GL_ID_REC,1759) as GL_ID_REC,SITE_USE_CODE,CUST_ACCT_SITE_ID,LOCATION from apps.HZ_CUST_SITE_USES_all where SITE_USE_CODE='BILL_TO') f
+where a.CUSTOMER_ID=c.CUST_ACCOUNT_ID
+and f.GL_ID_REC=d.CODE_COMBINATION_ID
+and CUSTOMER_NUMBER='3925'--'1000'
+and c.CUST_ACCT_SITE_ID=f.CUST_ACCT_SITE_ID--(+)
+
+
+
+
+-----------Find Customer Ship_To Tax Code / Bill_To Rec_Acc (For Customer File's Finance Info check)
+
+-----Add Org & Status, Finialize all kinds of Sites
+
+CREATE OR REPLACE VIEW BMC_AR_CUSROMER_CHK
+AS 
+select c.ORG_ID,a.CUSTOMER_NAME,LOC.ADDRESS1||' '||LOC.CITY||' '||LOC.POSTAL_CODE||' '||LOC.COUNTRY Address,
+a.CUSTOMER_NUMBER,PARTY_SITE.PARTY_SITE_NUMBER Site_Number
+,b.SITE_USE_CODE ,b.LOCATION Site_ID,b.TAX_CODE,e.LOCATION Bill_To_Site
+,segment3 as Receivable_Acc,a.STATUS,b.PRIMARY_FLAG,LOC.COUNTRY,LOC.ADDRESS1
+from apps.AR_CUSTOMERS_V  a
+,apps.HZ_CUST_SITE_USES_all b
+,apps.HZ_CUST_ACCT_SITES_ALL  c
+,apps.GL_CODE_combinations d
+,apps.HZ_CUST_SITE_USES_all e,
+apps.HZ_PARTY_SITES PARTY_SITE, 
+apps.HZ_LOCATIONS LOC 
+where a.CUSTOMER_ID=c.CUST_ACCOUNT_ID
+and c.CUST_ACCT_SITE_ID=b.CUST_ACCT_SITE_ID
+and b.GL_ID_REC=d.CODE_COMBINATION_ID(+)
+and b.ORG_ID=c.ORG_ID
+and b.ORG_ID=e.ORG_ID(+)
+and b.BILL_TO_SITE_USE_ID=e.site_use_id(+)
+AND c.PARTY_SITE_ID = PARTY_SITE.PARTY_SITE_ID 
+AND LOC.LOCATION_ID = PARTY_SITE.LOCATION_ID 
+--and a.CUSTOMER_NUMBER='3126'
+--and b.TAX_CODE is null
+order by c.ORG_ID,a.CUSTOMER_NAME,PARTY_SITE.PARTY_SITE_NUMBER

@@ -1,0 +1,20 @@
+
+
+-----------JO not in ('Cancelled','Closed'),ITEM_TYPE in ('DPY','KRH'),class_code in ('Assembling','Packing')
+
+select  
+a.wip_entity_name Job_Order,a.class_code,decode(a.job_type,1,'Std',3,'Non-Std') JOB_Type,b.segment1 Assembly,
+a.BOM_REVISION Rev,b.ITEM_TYPE,a.status_type_disp,c.CONCATENATED_SEGMENTS Component,
+c.REQUIRED_QUANTITY,c.QUANTITY_ISSUED, c.QUANTITY_OPEN,c.QUANTITY_PER_ASSEMBLY,(select d.ORDER_NUMBER from apps.OE_ORDER_HEADERS_all d where d.HEADER_ID=a.ATTRIBUTE1 and d.org_id=127) SO
+from apps.WIP_DISCRETE_JOBS_V a,apps.mtl_system_items_b b,apps.WIP_REQUIREMENT_OPERATIONS_V c 
+where a.ORGANIZATION_ID =b.ORGANIZATION_ID
+and a.PRIMARY_ITEM_ID=b.INVENTORY_ITEM_ID 
+and a.ORGANIZATION_ID=130
+and b.ITEM_TYPE in ('DPY','KRH')
+and a.status_type_disp not in ('Cancelled','Closed')
+and a.class_code in ('Assembling','Packing')
+and a.wip_entity_id=c.wip_entity_id
+and a.ORGANIZATION_ID =c.ORGANIZATION_ID
+--and a.wip_entity_name='0070397362/1'
+
+

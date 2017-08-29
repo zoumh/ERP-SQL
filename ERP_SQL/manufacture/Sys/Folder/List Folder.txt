@@ -1,0 +1,20 @@
+
+-------List system current Folder
+
+select a.name Folder,a.object Obj,b.description Created_By,b.user_name Creatd_ID,a.public_flag,a.autoquery_flag,a.creation_date,a.last_updated_by
+from apps.fnd_folders a,apps.fnd_user b where a.created_by=b.user_id
+
+
+
+-----------Update Folder's where_clause
+
+select * from apps.fnd_folders where created_by=5308
+
+select created_by,name,where_clause from apps.fnd_folders where created_by=5308
+
+update apps.fnd_folders set where_clause='(RELEASE_TYPE=''BLANKET'')' where 
+created_by=5308 and name='PO Summary Distribution for WH'
+
+commit
+
+rollback

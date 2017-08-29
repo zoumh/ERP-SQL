@@ -1,0 +1,34 @@
+
+
+----Find all Responsibilities using a menu
+
+select c.RESPONSIBILITY_NAME RESPONSIBILITY,a.MENU_NAME menu_name from apps.FND_MENUS a,apps.FND_RESPONSIBILITY b,apps.FND_RESPONSIBILITY_TL c 
+where a.MENU_ID=b.MENU_ID
+and b.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and a.MENU_NAME='BMC FY05 PURCHASE QUERY'
+and c.LANGUAGE='US'
+
+
+------
+
+
+select a.function_id,a.prompt,c.MENU_NAME,b.FUNCTION_NAME,a.description  from apps.FND_MENU_ENTRIES_VL a,apps.FND_FORM_FUNCTIONS b,apps.FND_MENUS c
+where a.function_id=b.FUNCTION_ID and a.MENU_ID=c.MENU_ID 
+--and b.FUNCTION_NAME='Mobile Put Away'
+and b.FUNCTION_NAME='WMS_PUTAWAY'
+--and a.prompt='Put away'
+
+and a.function_id=9517
+
+
+select * from apps.FND_RESPONSIBILITY_VL where menu_id in (77532,72364)
+
+
+
+apps.FND_MENUS
+
+apps.FND_FORM
+
+apps.FND_MENU_ENTRIES_VL
+
+apps.FND_FORM_FUNCTIONS

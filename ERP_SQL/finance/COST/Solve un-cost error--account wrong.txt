@@ -1,0 +1,37 @@
+
+
+select * from apps.mtl_material_transactions where costed_flag in ( 'E') --='N'
+
+
+select transaction_id,mtt.TRANSACTION_TYPE_NAME ,a.CREATION_DATE,a.LAST_UPDATE_DATE, 
+a.ORGANIZATION_ID,request_id ,transaction_group_id,costed_flag,error_code,error_explanation, 
+a.INVENTORY_ITEM_ID,a.SUBINVENTORY_CODE,a.TRANSFER_SUBINVENTORY,
+a.TRANSACTION_QUANTITY,a.LOCATOR_ID,a.TRANSACTION_DATE
+from apps.mtl_material_transactions a,apps.MTL_TRANSACTION_TYPES MTT
+where a.costed_flag in ('E') and a.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+--and trunc(a.CREATION_DATE)<>to_date('2005-08-01','yyyy-mm-dd')
+and a.ORGANIZATION_ID<>83
+order by a.ORGANIZATION_ID,a.CREATION_DATE 
+
+
+select * from apps.mtl_material_transactions where costed_flag in ('E') --='N'
+
+select DISTRIBUTION_ACCOUNT_ID	from apps.mtl_material_transactions --where costed_flag in ('E') --='N'
+where transaction_type_id=42 and CREATION_DATE>=to_date('2005-07-25','yyyy-mm-dd')
+
+
+select * from apps.gl_code_combinations where code_combination_id=1530
+
+
+select DISTRIBUTION_ACCOUNT_ID from apps.mtl_material_transactions where transaction_id=13915347
+
+
+update mtl_material_transactions
+set costed_flag = 'N',
+request_id = NULL,
+transaction_group_id = NULL,
+error_code = NULL,
+error_explanation = NULL,
+DISTRIBUTION_ACCOUNT_ID=1530
+where transaction_id=13915347
+costed_flag ='N' 

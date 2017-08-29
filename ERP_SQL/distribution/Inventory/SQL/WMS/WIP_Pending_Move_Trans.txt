@@ -1,0 +1,40 @@
+
+found there were three Pending Transactions exited in Shop Floor Move, and 
+went to Pending Move Transaction, found three Move transaction still running
+
+
+
+select * from apps.WIP_ENTITIES where wip_entity_name = '70262184/21'
+
+
+
+select * from apps.WIP_DISCRETE_JOBS where wip_entity_id = &wip_entity_id
+
+select * from apps.wip_operation_resources where wip_entity_id = &wip_entity_id
+
+select * from apps.WIP_MOVE_TRANSACTIONS where wip_entity_id = &wip_entity_id
+
+select * from apps.WIP_OPERATIONS where wip_entity_id = &wip_entity_id
+
+select * from apps.WIP_TRANSACTIONS where wip_entity_id = &wip_entity_id
+
+select * from apps.WIP_TRANSACTION_ACCOUNTS where wip_entity_id = &wip_entity_id
+
+select * from apps.mtl_material_transactions_temp where transaction_source_id = &wip_entity_id
+
+select * from apps.mtl_material_transactions where transaction_source_id = &wip_entity_id
+
+select * from apps.mtl_transaction_accounts where transaction_source_id = &wip_entity_id
+
+select * from apps.wip_scrap_values where transaction_id in 
+(select transaction_id from apps.mtl_material_transactions where transaction_source_type_id=5 and transaction_action_id=30 and transaction_type_id = 90 
+and transaction_source_id=&wip_entity_id)
+
+select * from apps.wip_requirement_operations where wip_entity_id =&wip_entity_id
+
+select * from apps.wip_period_balances where wip_entity_id = &wip_entity_id;
+
+select * from apps.wip_cost_txn_interface where wip_entity_id =&wip_entity_id;
+
+select * from apps.wip_move_txn_interface where wip_entity_id =&wip_entity_id
+

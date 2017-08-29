@@ -1,0 +1,20 @@
+
+
+------------JO who's routing is empty ,so can't complete
+select wip_entity_name,b.segment1 Assembly,a.CREATION_DATE,
+decode(status_Type,1,'Unreleased',3,'Released',4,'Complete',
+5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',
+11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+routing_revision,routing_revision_date
+from apps.WIP_DISCRETE_JOBS_V a,apps.mtl_system_items_b b 
+where a.ORGANIZATION_ID =b.ORGANIZATION_ID
+and a.PRIMARY_ITEM_ID=b.INVENTORY_ITEM_ID 
+and a.ORGANIZATION_ID=130
+and routing_revision is null
+and status_Type in (1,3) ---Unreleased,Released
+
+
+
+COMMON_ROUTING_SEQUENCE_ID
+routing_revision
+routing_revision_date

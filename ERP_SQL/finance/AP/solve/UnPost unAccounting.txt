@@ -1,0 +1,121 @@
+SR Number  7003884.994
+
+
+SOLUTION / ACTION PLAN
+=======================
+To implement the solution, please execute the following steps:
+
+1. Download ftp://ftp.oracle.com/support/hidden/patchsets/AP/scripts/unpost11i.zip
+
+2. If the original run is in the GL interface then we need to remove it.
+
+a. Backup the GL_Interface
+
+create table SR_7003884_994_gli as
+select *
+from gl_interface
+where group_id in (
+select group_id
+from xla_gl_transfer_batches_all
+where gl_transfer_run_id = 10534 )
+and user_je_source_name = 'Payables';
+
+
+b. Check the count
+
+select count(*) from SR_7003884_994_gli;
+
+-- if there are 0 rows then you either have the wrong run ID or
+-- the run has already been posted to the GL. In either case
+-- the process should be stopped here and you should not continue.
+-- If the count is greater than 0 then you can continue.
+
+c. Delete the rows
+
+set feedback on
+delete gl_interface
+where group_id in (
+select a.group_id
+from SR_7003884_994_gli a)
+and user_je_source_name = 'Payables';
+
+-- This should delete the same number of rows as the check above.
+-- If not then stop and 
+
+rollback;
+
+-- If the count is the same as the check above then 
+
+commit;
+
+3. Run Unpost11i.sql
+
+Run ID: 10534
+
+4. Download undoatg.zip from ftp://ftp.oracle.com/support/hidden/patchsets/AP/scripts/undoatg.zip
+If you already have a copy of this script from a previous SR verify that you have version
+undoatgh 1.8 or higher. If not download a new copy. The version can be found on the first
+line of the undoatgh.sql script.
+
+5. Stop all users from using concurrent or on-line accounting until this process is finished.
+
+6. Create a table of the events to undo.
+
+create table SR_7003884_994_aae
+as select *
+from ap_accounting_events_all
+where accounting_event_id in (449913, 449915, 449917, 449920, 449922, 449924, 449925, 449928
+)
+and source_id in (397314, 397316, 397318, 397320, 397321, 397323, 397326, 397328);
+
+create table SR_7003884_994_ai
+as select *
+from ap_invoices_all
+where invoice_id in (397314, 397316, 397318, 397320, 397321, 397323, 397326, 397328);
+
+
+create table SR_7003884_994_aid
+as select *
+from ap_invoice_distributions_all
+where invoice_id in (397314, 397316, 397318, 397320, 397321, 397323, 397326, 397328);
+
+7. Undo the Events and report for later GL manipulation
+
+Run UndoAtgh.sql
+Enter Org ID: 127
+Enter option 1 for Display Selected Event Details 
+Enter option 1 to display AP Accounting Data
+Enter option 3 for Accounting Events in an Existing Table 
+Enter table name = SR_7003884_994_aae
+Undo the Events Now: Y
+Enter N to Sweep to Currently Open Period
+Enter N to not delete events IDs (You will only get this prompt on 11i.AP.K and above)
+
+COMMIT; <<< the script does not self-commit
+
+8. Update the data
+
+update ap_invoices_all
+set exchange_rate = NULL,
+exchange_date = NULL,
+exchange_rate_type = NULL
+where invoice_id in (select a.invoice_id
+from SR_7003884_994_ai a);
+
+--this will update 8 rows
+
+update ap_invoice_distributions_all
+set exchange_rate = NULL,
+exchange_date = NULL,
+exchange_rate_type = NULL,
+base_amount = NULL
+where invoice_id in (select a.invoice_id
+from SR_7003884_994_aid a);
+
+--this will update 24 rows
+
+commit;
+
+9. Run the Payables Accounting process and verify the results.
+
+10. Allow users to run the accounting process again.

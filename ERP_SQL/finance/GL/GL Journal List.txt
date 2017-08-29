@@ -1,0 +1,30 @@
+
+----------All source GL Journal
+SELECT 
+  b.BATCH_NAME,
+  b.HEADER_NAME JOURNAL_NAME,
+  a.segment3  Account_No,
+  LINE_ACCOUNTED_DR,
+  LINE_ACCOUNTED_CR,
+  b.CURRENCY_CODE,
+  b.LINE_ENTERED_DR,
+  b.LINE_ENTERED_CR,
+  b.LINE_DESCRIPTION,
+  b.JE_SOURCE,
+  c.USER_JE_CATEGORY_NAME JE_Category,
+  a.segment2 as CC,
+  a.SEGMENT4 as PRD,
+  a.segment5 as PRJ,
+  b.PERIOD_NAME,
+  b.LINE_EFFECTIVE_DATE
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b ,
+  apps.GL_CODE_combinations a,apps.GL_JE_CATEGORIES c
+WHERE 
+  b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID  
+  and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+  and b.PERIOD_NAME='SEP-09'  --and a.segment3='120100';
+  and b.PERIOD_YEAR=2009
+  and b.HEADER_STATUS ='P'
+  and b.ACTUAL_FLAG='A'  
+    

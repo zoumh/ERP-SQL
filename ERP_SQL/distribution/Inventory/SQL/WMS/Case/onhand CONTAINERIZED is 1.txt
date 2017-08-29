@@ -1,0 +1,63 @@
+
+SR Number  5335691.992 
+
+
+Material Workbench can't see Item level,Packed but can't see LPN number
+(onhand CONTAINERIZED_FLAG =1,has LPN)
+
+At material workbench,find a locator (DA.5.4.1 at SD WH) Qty is Different at 
+Locator level (Qty=3300) & Item Level (Qty=3000). 
+ it's CONTAINERIZED_FLAG 
+=1 while other lines = 2.And more,we find this line's LPN_ID has a value.
+we check the LPN table,LPN_Context=11,no record at LPN_Context table 
+
+
+
+select * from Apps.Mtl_System_Items_b where segment1='KRC 114 1734.R3M'
+
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl 
+where LOCATOR_ID=30109 and INVENTORY_ITEM_ID =89471
+
+select * from apps.wms_license_plate_numbers  WHERE  lpn_id=1218535
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_id=1218535
+
+
+
+
+
+
+---------------Solution may be
+
+update apps.MTL_ONHAND_QUANTITIES_DETAIl set containerized_flag=2 where lpn_id=1217565
+
+update apps.MTL_ONHAND_QUANTITIES_DETAIl set lpn_id=null where lpn_id=1217565
+
+delete from apps.wms_license_plate_numbers where lpn_id=1217565
+
+delete from apps.wms_lpn_contents where parent_lpn_id=1217565
+
+
+
+--------Another case:
+select INVENTORY_ITEM_ID ,INVENTORY_LOCATION_ID  
+from apps.mtl_item_locations c
+where c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 in ('R.16.12.2')
+and organization_id>127
+
+KRC 114 1752.R1C
+
+select * from apps.mtl_system_items where segment1='KRC 114 1752.R1C'
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl 
+where LOCATOR_ID in (30109) and INVENTORY_ITEM_ID =89243
+
+select * from apps.wms_license_plate_numbers WHERE  lpn_id=1227852
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_id =1227852
+
+
+
+
+

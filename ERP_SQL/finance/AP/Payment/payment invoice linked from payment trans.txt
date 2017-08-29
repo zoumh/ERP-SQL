@@ -1,0 +1,42 @@
+
+---------payment invoice linked from payment trans
+select a.INVOICE_NUM,a.AMOUNT_PAID,a.ATTRIBUTE15,
+--,sum(b.amountdecode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+ (b.amount) as Paid_Amt,a.INVOICE_CURRENCY_CODE,vdr.VENDOR_NAME,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,        apps.PO_VENDORS VDR
+,        apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE 'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and ((VDR.PAY_GROUP_LOOKUP_CODE 'EM' and (VDR.PAY_GROUP_LOOKUP_CODE 'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date=to_date('2007-6-1','yyyy-mm-dd')
+and b.accounting_dateto_date('2007-7-1','yyyy-mm-dd')
+and (b.REVERSAL_FLAG'Y' or b.REVERSAL_FLAG is null)
+--and a.INVOICE_DATE =to_date('2005-01-01','yyyy-mm-dd') -- new add at Nov-04
+order by a.INVOICE_CURRENCY_CODE,to_number(VDR.SEGMENT1)
+
+
+---------- Invoice , Check_num,Vendor ,Check_Category (refund or pay)
+select a.INVOICE_NUM,b.ACCOUNTING_DATE,apc.AMOUNT,
+b.amount Paid_Amt,CHECK_NUMBER,apc.CHECKRUN_NAME,
+apc.CURRENCY_CODE,
+STATUS_LOOKUP_CODE,apc.DOC_CATEGORY_CODE,
+b.REVERSAL_FLAG,
+VDR.VENDOR_NAME,
+VDR.SEGMENT1 as Vendor_Num
+from apps.ap_invoice_payments_all b
+,   apps.AP_INVOICES_ALL a
+,   apps.PO_VENDORS VDR
+,   apps.AP_CHECKS_all apc
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and b.accounting_date>=to_date('2006-09-01','yyyy-mm-dd')
+and b.accounting_date<to_date('2007-09-01','yyyy-mm-dd')
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+and a.INVOICE_NUM='06-DUS-060'
+and b.CHECK_ID=apc.check_id
+

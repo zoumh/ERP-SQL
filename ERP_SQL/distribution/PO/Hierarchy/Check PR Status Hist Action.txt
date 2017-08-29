@@ -1,0 +1,56 @@
+
+
+
+
+
+-------------------------PO Full Approval status & Hierasrchy structure
+select PO.SEGMENT1 PO_Num,c.FULL_NAME To_Whom,b.sequence_num Appro_Seq,b.status,d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,apps.PO_APPROVAL_LIST_LINES b,apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_HEADERS_ALL PO
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PO.PO_HEADER_ID=a.document_id
+and PO.SEGMENT1='1012666'
+
+
+-------------------------PR Full Approval status & Hierasrchy structure
+
+select PR.SEGMENT1 PR_Num,c.FULL_NAME To_Whom,b.sequence_num Appro_Seq,b.status,d.FULL_NAME Approved_By,b.response_date Approv_Date,
+b.requires_reapproval_flag Req_ReApprov,b.approver_type,b.creation_date line_Created,
+a.document_type,a.document_subtype,a.wf_item_type,a.creation_date Head_Created,b.mandatory_flag
+from apps.PO_APPROVAL_LIST_HEADERS a,apps.PO_APPROVAL_LIST_LINES b,apps.PER_PEOPLE_V7 c,apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR
+where a.approval_list_header_id=b.approval_list_header_id
+and b.approver_id=c.PERSON_ID
+and b.responder_id=d.PERSON_ID(+)
+and PR.REQUISITION_HEADER_ID=a.document_id
+and PR.SEGMENT1='5523'
+
+
+
+-----------
+SELECT PR.SEGMENT1 Req_or_PO_Number,
+HI.OBJECT_TYPE_CODE Doc_Type,PR.AUTHORIZATION_STATUS,
+--HI.ACTION_CODE,
+PE.FULL_NAME To_Whom,
+PR.NOTE_TO_AUTHORIZER,
+PR.DESCRIPTION DESC_OR_COMMENTS,
+PE.EMPLOYEE_NUMBER,pr.creation_date Date_Time,trunc(pr.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PR.REQUISITION_HEADER_ID Hearder_ID,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY          HI,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.PER_PEOPLE_V7              PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+--AND PR.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+--and HI.ACTION_CODE is null
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.PREPARER_ID=PE2.PERSON_ID
+and PR.SEGMENT1=''
+
+AND PE.EMPLOYEE_NUMBER IN ('22966145', '22701003','249','28946107','952209','23032632','23000946','234','22860519')
+

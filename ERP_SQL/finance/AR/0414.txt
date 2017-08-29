@@ -1,0 +1,234 @@
+
+
+
+
+
+SELECT * FROM ap_system_parameters
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('81');
+END;
+
+
+
+select * from apps.PO_HEADERS_INQ_V  where PO_NUM='1000248'
+
+
+
+select k.description as Type,c.LINE_LOCATION_ID,c.SHIPMENT_NUM,a.PO_HEADER_ID
+--,j.SHIPMENT_LINE_ID
+,b.ATTRIBUTE1 as Bond
+,a.segment1 as PO,b.LINE_NUM,VDR.SEGMENT1 as Supplier_Num
+,c.QUANTITY_RECEIVED ,c.QUANTITY_BILLED,c.QUANTITY_CANCELLED
+--,j.LINE_NUM as ShipLine,j.PROGRAM_UPDATE_DATE--,j.LAST_UPDATE_DATE,
+--,j.QUANTITY_RECEIVED as Qty_Ship_Receive
+--,((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)*h.ITEM_COST) as CNY_Amount
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+--,apps.RCV_SHIPMENT_lines j
+,apps.PO_LINE_types_tl k
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and k.LINE_TYPE_ID=b.LINE_TYPE_ID
+--and j.PO_LINE_LOCATION_ID=c.LINE_LOCATION_ID
+--and j.po_line_id=b.po_line_id
+--and j.SOURCE_DOCUMENT_CODE='PO'
+--and j.DESTINATION_TYPE_CODE='RECEIVING'
+and to_number(VDR.SEGMENT1 )=12
+and a.segment1='TP28852'--1000248'
+and k.description not like 'Non%'
+and k.LANGUAGE='US'
+order by to_number(VDR.SEGMENT1 )
+
+
+SELECT * FROM apps.RCV_SHIPMENT_lines where po_line_location_id=780--po_header_id=7489--.00
+
+
+
+select distinct(convert(description,'ZHS16GBK')) from apps.PO_LINE_types_tl a,apps.PO_LINEs_all b where a.LINE_TYPE_ID=b.LINE_TYPE_ID
+select * from apps.PO_LINE_types_tl
+
+
+select a.segment1 as PO,b.LINE_NUM,VDR.SEGMENT1 as Supplier_Num
+,c.QUANTITY_RECEIVED ,c.QUANTITY_BILLED,c.QUANTITY_CANCELLED
+,j.Rec_DATE
+,((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED)*h.ITEM_COST) as UNBill_Amount_CNY
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+,(select  max(to_date(PROGRAM_UPDATE_DATE)) as Rec_Date ,PO_LINE_LOCATION_ID from apps.RCV_SHIPMENT_lines 
+where DESTINATION_TYPE_CODE='RECEIVING' and SOURCE_DOCUMENT_CODE='PO'
+group by PO_LINE_LOCATION_ID) j
+,apps.PO_LINE_types_tl k
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and j.PO_LINE_LOCATION_ID=c.LINE_LOCATION_ID
+--and to_number(VDR.SEGMENT1 )=12
+--and a.segment1='1001480'
+and k.LINE_TYPE_ID=b.LINE_TYPE_ID
+and k.description not like 'Non%'
+and k.LANGUAGE='US'
+and j.Rec_Date<=to_date('2004-3-31','yyyy-mm-dd')
+--group by
+order by to_number(VDR.SEGMENT1 )
+
+
+
+
+
+0------------
+
+
+
+
+
+select c.LINE_LOCATION_ID,j.SHIPMENT_LINE_ID
+,a.segment1 as PO,b.LINE_NUM,c.SHIPMENT_NUM,VDR.SEGMENT1 as Supplier_Num
+,c.QUANTITY_RECEIVED ,c.QUANTITY_BILLED,c.QUANTITY_CANCELLED
+,j.LINE_NUM,j.PROGRAM_UPDATE_DATE,j.LAST_UPDATE_DATE
+,((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)*h.ITEM_COST) as CNY_Amount
+,c.CREATION_DATE,c.LAST_UPDATE_DATE,a.CREATION_DATE
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+,apps.RCV_SHIPMENT_lines j
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+--and (c.QUANTITY_ACCEPTED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)>0 
+and (c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)>0 
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+--and c.LAST_UPDATE_DATE>=to_date('2004-02-1','yyyy-mm-dd')
+--and c.LAST_UPDATE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+and j.PROGRAM_UPDATE_DATE>=to_date('2004-02-1','yyyy-mm-dd')
+and j.PROGRAM_UPDATE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+and b.ATTRIBUTE1 like 'Bon%'
+and j.PO_LINE_LOCATION_ID=c.LINE_LOCATION_ID
+and j.SOURCE_DOCUMENT_CODE='PO'
+and j.DESTINATION_TYPE_CODE='RECEIVING'
+and to_number(VDR.SEGMENT1 )=12
+order by to_number(VDR.SEGMENT1 )
+
+
+
+select c.LINE_LOCATION_ID,c.SHIPMENT_NUM,a.PO_HEADER_ID
+,j.SHIPMENT_LINE_ID
+,b.ATTRIBUTE1 as Bond
+,a.segment1 as PO,b.LINE_NUM,VDR.SEGMENT1 as Supplier_Num
+,c.QUANTITY_RECEIVED ,c.QUANTITY_BILLED,c.QUANTITY_CANCELLED
+,j.LINE_NUM as ShipLine,j.PROGRAM_UPDATE_DATE--,j.LAST_UPDATE_DATE,
+,j.QUANTITY_RECEIVED as Qty_Ship_Receive
+--,((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)*h.ITEM_COST) as CNY_Amount
+--,c.CREATION_DATE,c.LAST_UPDATE_DATE,a.CREATION_DATE
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+,apps.RCV_SHIPMENT_lines j
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+--and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+--and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+--and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+--and (c.QUANTITY_ACCEPTED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)>0 
+--and (c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)>0 
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+--and c.LAST_UPDATE_DATE>=to_date('2004-02-1','yyyy-mm-dd')
+--and c.LAST_UPDATE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+--and j.PROGRAM_UPDATE_DATE>=to_date('2004-01-1','yyyy-mm-dd')
+--and j.PROGRAM_UPDATE_DATE<=to_date('2004-03-29','yyyy-mm-dd')
+--and b.ATTRIBUTE1 like 'Bon%'
+and j.PO_LINE_LOCATION_ID=c.LINE_LOCATION_ID
+and j.po_line_id=b.po_line_id
+and j.SOURCE_DOCUMENT_CODE='PO'
+and j.DESTINATION_TYPE_CODE='RECEIVING'
+and to_number(VDR.SEGMENT1 )=12
+and a.segment1='1000248'
+order by to_number(VDR.SEGMENT1 )
+
+
+
+select c.LINE_LOCATION_ID,c.SHIPMENT_NUM,a.PO_HEADER_ID
+--,j.SHIPMENT_LINE_ID
+,b.ATTRIBUTE1 as Bond
+,a.segment1 as PO,b.LINE_NUM,VDR.SEGMENT1 as Supplier_Num
+,c.QUANTITY_RECEIVED ,c.QUANTITY_BILLED,c.QUANTITY_CANCELLED
+--,j.LINE_NUM as ShipLine,j.PROGRAM_UPDATE_DATE--,j.LAST_UPDATE_DATE,
+--,j.QUANTITY_RECEIVED as Qty_Ship_Receive
+--,((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)*h.ITEM_COST) as CNY_Amount
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+--,apps.RCV_SHIPMENT_lines j
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+--and j.PO_LINE_LOCATION_ID=c.LINE_LOCATION_ID
+--and j.po_line_id=b.po_line_id
+--and j.SOURCE_DOCUMENT_CODE='PO'
+--and j.DESTINATION_TYPE_CODE='RECEIVING'
+and to_number(VDR.SEGMENT1 )=12
+and a.segment1='1000248'
+order by to_number(VDR.SEGMENT1 )
+
+
+select distinct(convert(description,'ZHS16GBK')) from apps.PO_LINE_types_tl 
+
+
+

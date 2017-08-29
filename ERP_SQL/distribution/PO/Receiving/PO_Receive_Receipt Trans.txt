@@ -1,0 +1,283 @@
+
+---Non LPN
+select e.segment1 PO,
+DESTINATION_TYPE_CODE, SOURCE_DOCUMENT_CODE,
+c.LINE_NUM, a.transaction_type,a.creation_date Receive_Date,a.quantity Receive_Qty,
+a.transaction_id,d.segment1 Item,c.Item_Description,a.transaction_date,a.ORGANIZATION_ID
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_HEADERS_ALL e
+where 
+a.source_document_code='PO' and 
+c.item_id=d.inventory_item_id
+and d.organization_id=a.ORGANIZATION_ID
+and c.org_id=e.org_id
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+and e.po_header_id=a.po_header_id
+and a.po_header_id=a.po_header_id
+and e.po_header_id=c.po_header_id
+and d.segment1='ROA 128 1153.R8B'
+order by e.segment1,c.LINE_NUM
+
+----------Receive of a PO line (LPN)
+
+select a.INSPECTION_STATUS_CODE,--a.INTERFACE_SOURCE_CODE,a.ORGANIZATION_ID,  
+c.LINE_NUM, 
+a.transaction_type,a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_HEADERS_ALL e
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+--and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=a.ORGANIZATION_ID
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+and e.po_header_id=a.po_header_id
+and e.po_header_id=c.po_header_id
+and e.segment1='1022833'
+--and b.license_plate_number='L00050945-N'
+and c.LINE_NUM in ('24','25')
+
+
+
+--------Receive Value Summary
+select a.transaction_type,ORGANIZATION_ID,
+sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) Value 
+from apps.rcv_transactions a
+where a.source_document_code='PO'
+and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and DESTINATION_TYPE_CODE='RECEIVING'
+group by ORGANIZATION_ID ,a.transaction_type
+
+
+---------Receive Trans Qty
+select a.creation_date ,decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity) Qty,
+a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,
+(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) Value, 
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h
+where 
+a.source_document_code='PO'
+--and c.segment1='1015700'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and a.DESTINATION_TYPE_CODE='RECEIVING'
+
+
+--------Put away Value Summary
+select a.transaction_type,ORGANIZATION_ID,
+sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO RECEIVING',-1*a.quantity,a.quantity)) Value 
+from apps.rcv_transactions a
+where a.source_document_code='PO'
+and a.transaction_type in ('RETURN TO RECEIVING','DELIVER')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and DESTINATION_TYPE_CODE='INVENTORY'
+group by ORGANIZATION_ID ,a.transaction_type
+
+
+--------Put away detail Value
+select a.creation_date ,decode(a.transaction_type,'RETURN TO RECEIVING',-1*a.quantity,a.quantity) Qty
+,a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,
+(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO RECEIVING',-1*a.quantity,a.quantity)) Value, 
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h
+where 
+a.source_document_code='PO'
+--and c.segment1='1015700'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and a.transaction_type in ('RETURN TO RECEIVING','DELIVER')
+and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+and a.DESTINATION_TYPE_CODE='INVENTORY'
+
+
+----------Receive Trans with PO Receipt num
+
+select a.creation_date ,a.quantity ,a.transaction_type,
+--b.license_plate_number LPN,a.parent_Transaction_id,a.LPN_ID,a.TRANSFER_LPN_ID ,
+c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM ,g.SHIPMENT_HEADER_ID 
+from apps.rcv_transactions a,-- apps.wms_license_plate_numbers b,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h
+where 
+a.source_document_code='PO'
+--and c.segment1='1015700'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and g.SHIPMENT_HEADER_ID =253552
+
+
+
+---------Receive/Delivery transactions for a PO (May miss some Type of Correct Trans line)
+select a.creation_date ,a.quantity ,a.transaction_type,
+--b.license_plate_number LPN,a.parent_Transaction_id,a.LPN_ID,a.TRANSFER_LPN_ID ,
+c.SEGMENT1 PO,d.LINE_NUM,e.SHIPMENT_NUM,
+f.DISTRIBUTION_NUM dis_num,g.RECEIPT_NUM ,g.SHIPMENT_HEADER_ID 
+from apps.rcv_transactions a,-- apps.wms_license_plate_numbers b,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,apps.po_Line_locations_all e,apps.PO_DISTRIBUTIONS_ALL f,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h
+where 
+--a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+--and a.transaction_type='DELIVER'
+--and 
+a.source_document_code='PO'
+and c.segment1='1019179'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and e.PO_LINE_ID =d.PO_LINE_ID 
+and a.PO_LINE_LOCATION_ID =e.LINE_LOCATION_ID
+and f.LINE_LOCATION_ID =e.LINE_LOCATION_ID
+and a.PO_DISTRIBUTION_ID =f.PO_DISTRIBUTION_ID
+and d.LINE_NUM=9
+order by d.LINE_NUM,e.SHIPMENT_NUM,f.DISTRIBUTION_NUM
+
+
+
+--------mtl trans
+
+select   mmt.transaction_date, b.SEGMENT1 as PO,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.OE_ORDER_HEADERS_ALL		 oeh,apps.PO_HEADERS_ALL b
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+and    trunc(mmt.transaction_date) >= to_date('20040701','YYYYMMDD') 
+and gcc.segment3='121105'
+and mmt.transaction_type_id=18  --PO receive transaction
+and mmt.TRANSACTION_SOURCE_ID=b.PO_HEADER_ID
+--and mmt.TRANSACTION_ID in (6750942,6750949,6750956,6750963,6750970)
+and b.SEGMENT1=='1014707'  ---PO number
+
+
+
+
+
+select b.SEGMENT1 as PO,  d.SEGMENT3 as Account from   apps.MTL_MATERIAL_TRANSACTIONS a,apps.PO_HEADERS_ALL b ,apps.PO_DISTRIBUTIONS_ALL c,
+apps.GL_CODE_COMBINATIONS d
+where      --trunc(transaction_date) = to_date('20040724','YYYYMMDD') 
+   transaction_type_id=18 
+  and a.TRANSACTION_SOURCE_ID=b.PO_HEADER_ID and a.TRANSACTION_SOURCE_ID=18172
+  and c.PO_HEADER_ID=b.PO_HEADER_ID
+  and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+
+
+
+
+-------BOM PO Receive Trans by Receive Date
+select a.segment1 PO_Num,f.TRANSACTION_TYPE,
+to_char(b.line_num) line_num,to_char(c.shipment_num) Ship_num,
+c.quantity Order_ShipQty,c.quantity_cancelled Ship_Canced,
+(c.quantity-c.quantity_cancelled)*b.unit_price Order_Amnt,b.unit_price,nvl(a.rate,1) Rate,
+a.currency_code Curr,to_char(c.SHIP_TO_LOCATION_ID) Ship_To,
+f.QUANTITY Received_Qty,f.PO_unit_price,f.currency_code,f.currency_conversion_rate Rec_Rate,(*decode(f.transaction_type,'RETURN TO VENDOR',-1*f.quantity,f.quantity) * f.PO_unit_price)*f.currency_conversion_rate Rec_Amt_CNY,
+f.destination_type_code Rec_Destin,
+Item_Description,b.cancel_flag Line_Cancel,c.creation_date,c.quantity ShipLine_Qty,
+c.quantity_received ShipLine_Received
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.po_Line_locations_all c,
+--,apps.PO_DISTRIBUTIONS_ALL d,apps.gl_code_combinations e,
+apps.rcv_transactions f
+where 
+a.po_header_id=b.po_header_id
+and a.po_header_id=c.po_header_id
+and b.po_line_id=c.po_line_id
+--and d.line_location_id=c.line_location_id
+--and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and (b.line_type_id<>1020 )----Not N-BOM PO Line
+--and a.segment1='0000056577'--0000056941'--'1010075'--'0000056941'
+and f.po_header_id=a.po_header_id
+and f.po_line_id=b.po_line_id
+and f.po_line_location_id=c.line_location_id
+--and d.po_distribution_id=f.po_distribution_id(+)
+and f.TRANSACTION_TYPE not like 'DEL%' 
+and f.TRANSACTION_DATE<to_date('2005-03-01','YYYY-MM-DD')
+and f.TRANSACTION_DATE>to_date('2005-01-01','YYYY-MM-DD')
+order by a.segment1||'-'||b.line_num||'-'||c.shipment_num 
+
+
+------------BOM PO Receive Trans with Item by Receive Date 
+
+select VDR.VENDOR_NAME as Supplier,b.segment1 PO,a.transaction_type,a.quantity,c.LINE_NUM,
+a.PO_UNIT_PRICE,c.UNIT_PRICE,b.RATE,a.CURRENCY_CODE,  
+(a.PO_UNIT_PRICE*nvl(b.RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity))  CNY_Value,d.segment1 Item 
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b,apps.PO_VENDORS VDR,
+apps.mtl_system_items d 
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and a.organization_id>=127
+and VDR.VENDOR_ID=b.VENDOR_ID
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id=b.org_id
+and c.org_id>=127
+and DESTINATION_TYPE_CODE='RECEIVING'
+and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.po_line_id=c.po_line_id
+and a.transaction_date>=to_date('2006-01-01','YYYY-MM-DD')
+and a.transaction_date<=to_date('2006-03-31','YYYY-MM-DD')
+and d.organization_id=a.ORGANIZATION_ID
+and c.item_id=d.inventory_item_id
+and VDR.VENDOR_NAME in ('BEIJING JIA ZHENG PULP MOULDING PACKAGING PRODUCTS CO., LTD.','BEIJING JING HUA PRINTING GENERAL FACTORY','BEIJING XIAOSONG HENGTONG CULTURAL INFORMATION CO.,LTD.  ')

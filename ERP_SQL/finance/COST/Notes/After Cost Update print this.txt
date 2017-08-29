@@ -1,0 +1,5 @@
+
+
+Historical Inventory Standard Cost Adjustment Report - Warehouse Management
+
+--- to list cost element changed by Item

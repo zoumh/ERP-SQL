@@ -1,0 +1,29 @@
+
+
+
+
+-----------Onhands of all MRP_Netable WH (for MRP,WIP JO Issue)
+SELECT  b.subinventory_code WH,  
+        SUM(b.primary_transaction_quantity) Quantities,
+        a.segment1 Item_Number,
+        b.Revision,
+        d.organization_code Org_Name,
+        decode(c.AVAILABILITY_TYPE,1,'MRP not Net',2,'MRP Netable','else') MRP_Netable
+FROM    apps.MTL_SYSTEM_ITEMS_B a,
+        apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+        apps.MTL_SECONDARY_INVENTORIES_FK_V c,
+        APPS.mtl_parameters d
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+--	  AND a.inventory_item_status_code='Active'
+	  AND a.organization_id>127
+	  AND a.organization_id=b.organization_id
+	  AND a.organization_id=c.organization_id
+	  and a.organization_id=d.organization_id
+      and c.SECONDARY_INVENTORY_NAME=b.SUBINVENTORY_CODE
+      and c.AVAILABILITY_TYPE=2 --MRP netable
+	and a.segment1=''
+GROUP BY d.organization_code, a.segment1 ,
+	   b.revision,
+	   b.subinventory_code ,c.AVAILABILITY_TYPE
+
+

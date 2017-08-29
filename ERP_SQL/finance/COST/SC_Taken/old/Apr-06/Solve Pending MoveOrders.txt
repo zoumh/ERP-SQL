@@ -1,0 +1,43 @@
+
+----------Pending Trans, Type
+
+select a.CREATION_DATE,a.TRANSACTION_DATE,b.CREATION_DATE ,TRX_SOURCE_LINE_ID,  d.REQUEST_NUMBER,c.ORGANIZATION_ID,c.segment1 Item,a.TRANSACTION_QUANTITY,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type,
+a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,a.INVENTORY_ITEM_ID,d.header_id
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where 
+--d.REQUEST_NUMBER='HZMV01' and 
+--c.segment1='KRH 101 316/3.R6A' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+a.TRX_SOURCE_LINE_ID=b.TXN_SOURCE_LINE_ID (+) and 
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+order by TRANSACTION_DATE desc
+
+select * from apps.mtl_material_transactions_temp where TRX_SOURCE_LINE_ID=2766871-- in (83705,1912997,1912996,1912998,1922526,1922527,2324032,438089,2532282,2532281,2702687)
+
+delete from apps.mtl_material_transactions_temp where TRX_SOURCE_LINE_ID=2766871
+
+commit
+
+------ 5,'Closed',6,'Canceled' Move Order still has Pending
+Select d.Request_Number, d.Header_Status, c.Segment1 Item, a.Transaction_Quantity, a.Transaction_Header_Id,
+			 a.Transaction_Temp_Id, a.Trx_Source_Line_Id, a.Organization_Id, a.Inventory_Item_Id, d.Header_Id, b.Line_Status,
+			 e.Transaction_Type_Name Trans_Type
+From   Apps.Mtl_Material_Transactions_Temp a, Apps.Mtl_Txn_Request_Lines b, Apps.Mtl_System_Items c,
+			 Apps.Mtl_Txn_Request_Headers d, Apps.Mtl_Transaction_Types e
+Where  d.Header_Status In (5, 6) And
+			--b.line_status In (5,6) And
+			 c.Organization_Id = 130 And
+			 d.Header_Id = b.Header_Id And
+			--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+			 a.Trx_Source_Line_Id = b.Txn_Source_Line_Id And
+			 b.Inventory_Item_Id = c.Inventory_Item_Id And
+			 a.Transaction_Type_Id = e.Transaction_Type_Id And
+			 a.Organization_Id = c.Organization_Id

@@ -1,0 +1,66 @@
+
+---------Clear Move Order task before SC taken
+
+
+-----------delete MO allocation if were closed or cancelled
+Select *
+--Delete 
+From   Apps.Mtl_Material_Transactions_Temp a
+Where  a.TRANSACTION_TYPE_ID=64 and 
+Exists (Select 1
+From   Apps.Mtl_Txn_Request_Lines_v b,apps.MTL_TXN_REQUEST_headers d
+Where  d.header_id=b.header_id and
+b.Organization_id=d.Organization_id and
+a.MOVE_ORDER_LINE_ID= b.Line_Id And
+a.Trx_Source_Line_Id = b.Line_Id And
+a.TRANSACTION_SOURCE_ID=d.header_id and 
+b.Organization_id=a.Organization_id and
+(b.line_status in (5,6) or d.Header_Status In (5, 6))
+)
+
+
+
+
+Select *
+--Delete 
+From   Apps.Mtl_Material_Transactions_Temp t
+Where  Organization_Id = 130 and TRANSACTION_TYPE_ID=64 --(Move Order)
+And t.Transaction_Temp_Id In (Select Transaction_Temp_Id
+From   Apps.Mtl_Material_Transactions_Temp a
+Where  Exists (Select 1
+From   Apps.Mtl_Txn_Request_Lines_v b
+Where  a.Trx_Source_Line_Id = b.Line_Id And
+b.Request_Number In ('467772','468621','468625','469012','469507','470823','471048','471562','473071','474302','479670','486717')))
+order by CREATION_DATE  desc
+
+
+
+
+----------List Closed Move Order transfer allocation
+select d.REQUEST_NUMBER,b.LINE_NUMBER,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',7,'Pre Approved',8,'Partially Approved') line_status,
+a.CREATION_DATE,a.TRANSACTION_DATE,a.SUBINVENTORY_CODE From_WH,a.TRANSFER_SUBINVENTORY To_WH,
+c.segment1 Item,a.TRANSACTION_QUANTITY,a.SOURCE_CODE,a.SOURCE_LINE_ID,a.TRX_SOURCE_LINE_ID,
+a.TRANSACTION_HEADER_ID,a.TRANSACTION_SOURCE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,b.line_id,
+e.transaction_type_name Trans_type,a.TRANSACTION_TYPE_ID
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where 
+--d.REQUEST_NUMBER='291224' and 
+--c.segment1='SXA 109 4522/4' and 
+--c.ORGANIZATION_ID=83 and 
+d.header_id=b.header_id and
+--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+a.TRX_SOURCE_LINE_ID=b.TXN_SOURCE_LINE_ID and 
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id And
+a.Organization_Id = c.Organization_Id
+and (b.line_status in (5,6) or d.Header_Status In (5, 6))
+and a.CREATION_DATE>=to_date('2008-6-21','yyyy-mm-dd')
+and a.TRANSACTION_TYPE_ID=64
+order by a.TRANSACTION_DATE desc
+
+
+

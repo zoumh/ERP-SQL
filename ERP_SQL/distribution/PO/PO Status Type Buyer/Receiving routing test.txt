@@ -1,0 +1,29 @@
+
+
+----------------PO tables  
+select * from apps.po_headers_all where segment1='1077251'
+
+select * from apps.po_lines_all where PO_HEADER_ID=190016
+
+select * from apps.po_line_locations_all where PO_HEADER_ID=190016 and PO_LINE_ID=508698
+
+
+-----------PO shipment line's RECEIVING_ROUTING_ID
+select RECEIVING_ROUTING_ID from apps.po_line_locations_all where PO_HEADER_ID=190016 and PO_LINE_ID=508698
+
+1  Standard Receipt
+2  Inspection Required
+3  Direct Delivery
+
+PO shipment line's RECEIVING_ROUTING_ID is come from Ship_to_org's Item's RECEIVING_ROUTING_ID
+
+
+
+select RECEIVING_ROUTING_ID from apps.mtl_system_items where segment1='1205-6581.4' and organization_id=127--130
+
+decode(a.RECEIVING_ROUTING_ID,1,'Std',2,'Inspect',3,'Direct','NA') RECEIVING_ROUTING
+
+
+
+
+

@@ -1,0 +1,18 @@
+
+---- For AP accounts to check Invoice Rate before Transfer GL 
+
+CREATE OR REPLACE VIEW APPS.BMC_AP_CHECK_RATE_PRE_TRANSFER
+AS
+select a.CURRENCY_CODE Curr,CURRENCY_CONVERSION_RATE Rate,a.REFERENCE5 as Invoice_number
+,a.ENTERED_DR,a.ENTERED_CR,a.ACCOUNTED_DR,a.ACCOUNTED_CR
+,b.PERIOD_NAME ,c.segment3 account_number
+,REFERENCE6 line_Type,b.AE_CATEGORY
+,b.ACCOUNTING_DATE,b.GL_TRANSFER_FLAG,a.AE_LINE_TYPE_CODE,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (GL_TRANSFER_FLAG is null or GL_TRANSFER_FLAG<>'Y')
+--and c.segment3='21210300'
+--and (b.PERIOD_NAME='APR-04') 
+
+

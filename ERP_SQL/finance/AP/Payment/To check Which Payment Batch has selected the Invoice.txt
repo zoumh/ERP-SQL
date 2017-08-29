@@ -1,0 +1,5 @@
+
+----To check Which Payment Batch has selected the Invoice
+
+select invoice_id,checkrun_id from ap_payment_schedules_all
+where invoice_id in (83378,83379)

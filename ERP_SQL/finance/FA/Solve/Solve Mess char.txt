@@ -1,0 +1,21 @@
+
+----------Have mess char in FA_ADDITIONS_B.attribute1 or FA_ADDITIONS_TL.DESCRIPTION , then Server connection will disconnect
+
+select * from apps.FA_ADDITIONS_B where ASSET_NUMBER='14000427'
+
+select * from apps.FA_ADDITIONS_TL where ASSET_ID=100033405
+
+update apps.FA_ADDITIONS_B set attribute1=null where ASSET_NUMBER='14000427'
+
+update apps.FA_ADDITIONS_TL set DESCRIPTION=null where ASSET_ID=100033405
+
+
+----Find out BMC FA Backup Tables :
+select * from all_objects where object_name like 'BMC%FA%BAK%' AND OBJECT_TYPE='TABLE'
+
+----BAckup table:
+insert into BMC_FA_ADDITIONS_B_BAK select * from apps.FA_ADDITIONS_B whereASSET_NUMBER='14000420'
+
+insert into apps.BMC_FA_ADDITIONS_TL_BAK select * from apps.FA_ADDITIONS_TL where ASSET_ID=100033412
+
+

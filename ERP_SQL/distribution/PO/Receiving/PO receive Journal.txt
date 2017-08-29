@@ -1,0 +1,84 @@
+
+------------Link PO receive Trans with Journal at Item level
+
+select a.TRANSACTION_ID,b.segment1 PO,c.LINE_NUM Line,d.segment1 Item,a.transaction_date,
+c.UNIT_PRICE,b.CURRENCY_CODE Curr,a.transaction_type,a.quantity,
+g.ACCOUNTED_DR,g.ACCOUNTED_CR,h.segment3 Account
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b,apps.PO_VENDORS VDR,
+apps.mtl_system_items d, apps.PO_VENDOR_SITES_ALL e,APPS.mtl_parameters f,
+APPS.RCV_RECEIVING_SUB_LEDGER g,apps.GL_CODE_combinations h
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and a.organization_id>127
+and VDR.VENDOR_ID=b.VENDOR_ID
+--and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id=b.org_id
+and c.org_id>=127
+--and DESTINATION_TYPE_CODE='RECEIVING'
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.po_line_id=c.po_line_id
+and d.organization_id=a.organization_id
+and d.inventory_item_id=c.item_id
+and b.VENDOR_SITE_ID=e.VENDOR_SITE_ID
+and b.org_id=e.org_id 
+and a.organization_id=f.organization_id
+and g.RCV_TRANSACTION_ID=a.TRANSACTION_ID
+and g.CODE_COMBINATION_ID=h.CODE_COMBINATION_ID  
+and d.segment1 in ('SXK 109 6127.R3')
+and b.segment1='1034459'
+
+
+----------one PO's receiving journal
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,b.reference4 PO_Num,b.source_doc_quantity Qty,
+(b.ACCOUNTED_DR) Dr_Amt_CNY,(b.ACCOUNTED_CR) Cr_Amt_CNY,
+gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account,
+(b.ENTERED_DR) Dr_Amt,(b.ENTERED_CR) Cr_Amt ,b.CURRENCY_CODE,b.CURRENCY_CONVERSION_DATE Rate,b.period_name,
+b.chart_of_accounts_id,b.code_combination_id,b.je_batch_name,b.je_header_name
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_VENDORS VDR,
+apps.PO_VENDOR_SITES_all aps,
+apps.PO_HEADERS_ALL POH,
+apps.gl_code_combinations gcc
+WHERE b.REFERENCE4=POH.segment1
+and VDR.VENDOR_ID=POH.VENDOR_ID
+and aps.VENDOR_SITE_ID=poh.VENDOR_SITE_ID
+and gcc.code_combination_id =b.code_combination_id 
+and b.reference4='1014707'
+
+
+
+----------one Period's PO receiving journal
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,b.reference4 PO_Num,b.source_doc_quantity Qty,
+(b.ACCOUNTED_DR) Dr_Amt_CNY,(b.ACCOUNTED_CR) Cr_Amt_CNY,
+gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account,
+(b.ENTERED_DR) Dr_Amt,(b.ENTERED_CR) Cr_Amt ,b.CURRENCY_CODE,b.CURRENCY_CONVERSION_DATE Rate,b.period_name,
+b.chart_of_accounts_id,b.code_combination_id,b.je_batch_name,b.je_header_name
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_VENDORS VDR,
+apps.PO_VENDOR_SITES_all aps,
+apps.PO_HEADERS_ALL POH,
+apps.gl_code_combinations gcc
+WHERE b.REFERENCE4=POH.segment1
+and VDR.VENDOR_ID=POH.VENDOR_ID
+and aps.VENDOR_SITE_ID=poh.VENDOR_SITE_ID
+and gcc.code_combination_id =b.code_combination_id 
+and  (b.PERIOD_NAME='APR-04' or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04')
+
+
+-----------Sum by account
+
+
+select b.PERIOD_NAME,
+sum(b.ACCOUNTED_DR) Dr_Amt_CNY,sum(b.ACCOUNTED_CR) Cr_Amt_CNY,
+gcc.segment3 account
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.gl_code_combinations gcc
+WHERE  gcc.code_combination_id =b.code_combination_id 
+--and  (b.PERIOD_NAME='JAN-06')-- or b.PERIOD_NAME='FEB-04' or b.PERIOD_NAME='MAR-04')
+group by gcc.segment3,b.PERIOD_NAME
+
+

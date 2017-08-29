@@ -1,0 +1,77 @@
+
+
+
+SELECT fav.asset_number,fav.asset_id,FAH.TRANSACTION_UNITS,fah.units_assigned
+,	fav.description,fab.BOOK_TYPE_CODE
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),1,2) as MajCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as MinCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as StatusCat,a.DESCRIPTION as Cate_Desc
+,	fab.DATE_PLACED_IN_SERVICE
+,	fab.COST
+,	fab.LIFE_IN_MONTHS
+,	fab.SALVAGE_VALUE
+,	fab.DEPRECIATE_FLAG,fab.PRORATE_CONVENTION_CODE
+,	fab.RECOVERABLE_COST
+,	GLC.SEGMENT2 as Exp_CC_At_Asset
+,	GLC.SEGMENT3 as Exp_Acc_At_Asset
+,	b.DEPRN_EXPENSE_ACCT Exp_Acc_At_Cate,b.ASSET_CLEARING_ACCT,b.ASSET_COST_ACCT,b.DEPRN_RESERVE_ACCT
+FROM APPS.FA_ADDITIONS_V fav
+,    apps.FA_BOOKS_V fab
+,	 apps.GL_CODE_COMBINATIONS GLC
+,	 apps.FA_DISTRIBUTION_HISTORY FAH
+--,(select TRANSACTION_UNITS,units_assigned,BOOK_TYPE_CODE,ASSET_ID,CODE_COMBINATION_ID 
+--from apps.FA_DISTRIBUTION_HISTORY where rowID in (select max(rowid) from apps.FA_DISTRIBUTION_HISTORY group by asset_id)) fah
+,apps.FA_CATEGORY_BOOKS b
+,apps.FA_CATEGORIES_VL a
+WHERE fav.asset_id=fab.asset_id 
+--AND fab.BOOK_TYPE_CODE='BMC_FA_BOOK' 
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+AND FAB.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.ASSET_ID=fav.asset_id
+--and GLC.SEGMENT3 in ('55020301','55020310')
+and FAH.TRANSACTION_UNITS is null
+--and fav.asset_number like '9%'
+--and SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),1,2) in ('01','04')
+--and SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2)='01'--'06'
+--and SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) in ('01','13')
+and a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+and b.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+and fav.asset_category_id=b.CATEGORY_ID
+and b.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and b.DEPRN_EXPENSE_ACCT<>GLC.SEGMENT3
+
+
+
+-------------Find FA Assigned Expense Account-CC not validate
+ 
+select fav.asset_number,fav.asset_id,fab.COST,fab.DATE_PLACED_IN_SERVICE
+,    GLC.SEGMENT2 as Exp_CC_At_Asset
+,    GLC.SEGMENT3 as Exp_Acc_At_Asset
+,SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),1,2) as MajCat
+,SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as MinCat
+,SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as StatusCat,
+FAH.TRANSACTION_UNITS,fah.units_assigned,fav.description
+from APPS.FA_ADDITIONS_V fav,apps.FA_DISTRIBUTION_HISTORY FAH,apps.GL_CODE_COMBINATIONS GLC,
+apps.FA_BOOKS_V fab
+where GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fav.asset_id=fab.asset_id 
+AND FAB.BOOK_TYPE_CODE='BMC_FA_BOOK'
+--AND FAH.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.ASSET_ID=fav.asset_id
+--and fav.asset_number='13000013'
+and fah.transaction_units is null
+and fah.code_combination_id in
+(select CODE_COMBINATION_ID 
+from apps.gl_code_combinations a,apps.fnd_user b
+where a.LAST_UPDATED_BY=user_id and 
+((a.segment2 >  '0000' and a.segment2<='1999' and a.segment3>='41050000' and a.segment3<='41059999') 
+or 
+(a.segment2 >= '2000' and a.segment2<='ZZZZ' and a.segment3>='55020101' and a.segment3<='550399ZZ') 
+) 
+and summary_flag ='N'
+and enabled_flag='Y'
+and chart_of_accounts_id=50241
+
+
+

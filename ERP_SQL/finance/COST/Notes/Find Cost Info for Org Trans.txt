@@ -1,0 +1,16 @@
+
+
+
+
+select mp.primary_cost_method, mmt.organization_id, mmt.error_code
+from apps.mtl_material_transactions mmt,apps.mtl_parameters mp
+where mmt.transaction_id = &trans_id
+and mmt.organization_id = mp.organization_id
+
+
+select mp.primary_cost_method, mmt.transfer_organization_id,
+mmt.transaction_action_id, mmt.transaction_type_id 
+from apps.mtl_material_transactions mmt, apps.mtl_parameters mp
+where mmt.transaction_id = &trans_id and
+mp.organization_id = NVL( mmt.transfer_organization_id, 
+mmt.organization_id );

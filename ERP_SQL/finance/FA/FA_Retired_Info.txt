@@ -1,0 +1,104 @@
+
+
+-----List Retire Reason & method
+
+select a.BOOK_TYPE_CODE,a.ASSET_ID,a.ASSET_NUMBER,a.RETIREMENT_TYPE_CODE,a.COST,a.COST_RETIRED,a.NBV_RETIRED,a.GAIN_LOSS_AMOUNT,a.DATE_RETIRED,a.STATUS 
+,b.DATE_PLACED_IN_SERVICE,b.DEPRN_START_DATE,b.DEPRN_METHOD_CODE,b.LIFE_IN_MONTHS,b.SALVAGE_VALUE
+from apps.FA_RETIREMENTS_V a, apps.FA_BOOKS_V b 
+where a.BOOK_TYPE_CODE=b.BOOK_TYPE_CODE
+and a.ASSET_ID=b.ASSET_ID
+--and ASSET_NUMBER='12000045'
+
+
+
+
+--------List Book's Asset Retire Info in Period (no matter how many REINSTATEMENT has been done)
+
+select a.BOOK_TYPE_CODE,a.ASSET_ID,a.ASSET_NUMBER,a.RETIREMENT_TYPE_CODE,a.COST,a.COST_RETIRED,a.NBV_RETIRED,a.GAIN_LOSS_AMOUNT,a.DATE_RETIRED,a.STATUS 
+,b.DATE_PLACED_IN_SERVICE,b.DEPRN_START_DATE,b.DEPRN_METHOD_CODE,b.LIFE_IN_MONTHS,b.SALVAGE_VALUE,TAG_NUMBER  Scala_FA_Num
+from apps.FA_RETIREMENTS_V a, apps.FA_BOOKS_V b ,apps.FA_ADDITIONS_V c
+where a.BOOK_TYPE_CODE=b.BOOK_TYPE_CODE
+and b.ASSET_ID=c.ASSET_ID
+and a.ASSET_ID=b.ASSET_ID
+and a.DATE_RETIRED>=to_date('2005-1-1','yyyy-mm-dd')
+and a.DATE_RETIRED<=to_date('2005-12-31','yyyy-mm-dd')
+--and c.ASSET_NUMBER='12001391'
+
+
+
+select ASSET_NUMBER,RETIREMENT_TYPE_CODE,COST,COST_RETIRED,NBV_RETIRED,GAIN_LOSS_AMOUNT,DATE_RETIRED,STATUS ,date_effective Enter_Date
+from apps.FA_RETIREMENTS_V  where BOOK_TYPE_CODE='BMC_TAX_BOOK'
+and DATE_RETIRED>=to_date('2004-07-01','YYYY-MM-DD')
+and DATE_RETIRED<=to_date('2004-08-31','YYYY-MM-DD')
+and status='PROCESSED'
+order by ASSET_NUMBER,DATE_RETIRED
+
+
+
+
+--------List Book's Asset Retire Info which has only once Retirement Trans in Period
+
+
+select ASSET_NUMBER,RETIREMENT_TYPE_CODE,COST,COST_RETIRED,NBV_RETIRED,GAIN_LOSS_AMOUNT,DATE_RETIRED,STATUS 
+from apps.FA_RETIREMENTS_V  where BOOK_TYPE_CODE='BMC_FA_BOOK'
+and date_effective>=to_date('2005-01-01','YYYY-MM-DD')
+and date_effective<=to_date('2005-03-31','YYYY-MM-DD')
+
+
+
+
+
+---------List Book's Asset has more then once Retirement Trans in Period
+
+
+select a.BOOK_TYPE_CODE,a.ASSET_ID,a.ASSET_NUMBER,a.RETIREMENT_TYPE_CODE,a.COST,a.COST_RETIRED,a.NBV_RETIRED,a.GAIN_LOSS_AMOUNT,a.DATE_RETIRED,a.STATUS 
+,b.DATE_PLACED_IN_SERVICE,b.DEPRN_START_DATE,b.DEPRN_METHOD_CODE,b.LIFE_IN_MONTHS,b.SALVAGE_VALUE,TAG_NUMBER  Scala_FA_Num
+from apps.FA_RETIREMENTS_V a, apps.FA_BOOKS_V b ,apps.FA_ADDITIONS_V c
+where a.BOOK_TYPE_CODE=b.BOOK_TYPE_CODE
+and b.ASSET_ID=c.ASSET_ID
+and a.ASSET_ID=b.ASSET_ID
+and a.DATE_RETIRED>=to_date('2005-1-1','yyyy-mm-dd')
+and a.DATE_RETIRED<=to_date('2005-12-31','yyyy-mm-dd')
+--and c.ASSET_NUMBER='12001391'
+
+
+
+select ASSET_NUMBER,RETIREMENT_TYPE_CODE,COST,COST_RETIRED,NBV_RETIRED,GAIN_LOSS_AMOUNT,DATE_RETIRED,STATUS 
+from apps.FA_RETIREMENTS_V  where BOOK_TYPE_CODE='BMC_TAX_BOOK'
+and date_effective>=to_date('2004-02-01','YYYY-MM-DD')
+and date_effective<=to_date('2005-03-31','YYYY-MM-DD')
+and ASSET_NUMBER in
+(
+select ASSET_NUMBER
+from apps.FA_RETIREMENTS_V  where BOOK_TYPE_CODE='BMC_TAX_BOOK'
+and date_effective>=to_date('2004-02-01','YYYY-MM-DD')
+and date_effective<=to_date('2005-03-31','YYYY-MM-DD')
+group by ASSET_NUMBER
+having count(*)>1
+)
+
+
+
+
+
+-------List Period Trans Type
+
+select distinct TRANSACTION_TYPE from apps.FA_TRANSACTION_HISTORY_TRX_V 
+where BOOK_TYPE_CODE='BMC_FA_BOOK' 
+--TRANSACTION_TYPE='Reinstatement'
+and period_entered in ('JAN-05','FEB-05','MAR-05')
+
+
+
+---------List Retire Trans
+
+
+ select a.ASSET_NUMBER,a.ASSET_NUMBER_DESC 
+,a.SEGMENT1||'.'||a.SEGMENT2||'.'||a.SEGMENT3 as Category
+,a.COMMENTS,b.ATTRIBUTE1 as FlexField_Remark,PERIOD_ENTERED,TRANSACTION_DATE_ENTERED,TRANSACTION_TYPE
+from apps.FA_TRANSACTION_HISTORY_TRX_V a ,apps.FA_ADDITIONS_V b
+where TRANSACTION_TYPE='Full Retirement' 
+and b.ASSET_ID=a.ASSET_ID
+--and PERIOD_ENTERED='FEB-04' 
+and BOOK_TYPE_CODE='BMC_FA_BOOK' 
+and a.ASSET_NUMBER='12001391'

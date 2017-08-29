@@ -1,0 +1,89 @@
+
+
+
+----------1. From Edwards,To solve Pending Ship Trans flag at Inv-Period screen
+
+
+1. 1. Pending Materials---INV>Transaction>Transaction Open Interface
+2. Interface Trip Stop -SRS 
+
+Find out stop_id
+
+      SELECT wnd.NAME
+              ,wdd.delivery_detail_id
+              ,wts.stop_id
+              ,wdd.released_status
+              ,wdd.source_code
+              ,wnd.status_code
+              ,wdd.inv_interfaced_flag
+              ,wts.pending_interface_flag
+          FROM apps.wsh_delivery_details wdd, apps.wsh_delivery_assignments wda,
+               apps.wsh_new_deliveries wnd, apps.wsh_delivery_legs wdl, apps.wsh_trip_stops wts
+         WHERE wdd.source_code = 'OE'
+           AND wdd.released_status = 'C'
+           AND wdd.inv_interfaced_flag in ('N' ,'P')
+           AND wdd.organization_id = 130
+           AND wda.delivery_detail_id = wdd.delivery_detail_id
+           AND wnd.delivery_id = wda.delivery_id
+           AND wnd.status_code in ('CL','IT')
+           AND wdl.delivery_id = wnd.delivery_id
+           --AND TO_CHAR(trunc(wts.actual_departure_date),'DD-MON-YYYY') between '01-JAN-2006' and '30-JAN-2006'
+           AND wdl.pick_up_stop_id = wts.stop_id
+        ORDER BY wnd.NAME;         
+         
+         UPDATE wsh_delivery_details wdd
+    SET wdd.inv_interfaced_flag = 'Y'
+  WHERE wdd.delivery_detail_id in(523128)
+  
+  UPDATE wsh_trip_stops wts
+   SET wts.pending_interface_flag = NULL
+ WHERE wts.stop_id in (190945)
+
+
+
+
+----------- Way 2 , From Tar
+Development has given a script to modify the delivery detail line, pick up stop and to delete the transaction in MTI. Please run the following script in the Test instance first. Check the results, if satisfactory then migrate the fix to Production :
+
+
+select  inv_interfaced_flag ,
+last_update_date ,
+last_updated_by  
+from apps.wsh_delivery_details
+where delivery_detail_id = 547532 
+and inv_interfaced_flag = 'P';
+
+select pending_interface_flag 
+from apps.wsh_trip_stops
+where stop_id = 195957 
+and trip_id = 152572 ;
+
+select * from apps.mtl_transactions_interface
+where picking_line_id = 547532
+and source_line_id = 359312 
+and error_code is not null;
+
+
+
+
+update wsh_delivery_details
+set inv_interfaced_flag = 'Y',
+last_update_date = sysdate,
+last_updated_by = -12
+where delivery_detail_id = 547532 
+and inv_interfaced_flag = 'P';
+
+update wsh_trip_stops
+set pending_interface_flag = null
+where stop_id = 195957 
+and trip_id = 152572 ;
+
+delete from mtl_transactions_interface
+where picking_line_id = 547532
+and source_line_id = 359312 
+and error_code is not null;
+
+commit;
+
+
+  

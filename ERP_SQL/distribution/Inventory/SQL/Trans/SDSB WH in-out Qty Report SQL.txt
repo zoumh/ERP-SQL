@@ -1,0 +1,82 @@
+
+----------------------WH (SB SD) Transaction (in/out) --- reconcile with onhand change by Date
+(PO receipt transaction's date is yyyy-mm-dd 00:00:00 , so only could seperate by day)
+
+--------------from CR
+select msi.segment1 item,sum(mmt.TRANSACTION_QUANTITY) qty
+  from MTL_MATERIAL_TRANSACTIONS MMT
+       , MTL_TRANSACTION_TYPES MTT
+       , MTL_SYSTEM_ITEMS MSI
+       , RCV_TRANSACTIONS RT
+       , MTL_TXN_SOURCE_TYPES MTST
+ where MMT.TRANSACTION_TYPE_ID = MTT.TRANSACTION_TYPE_ID 
+   AND MSI.INVENTORY_ITEM_ID = MMT.INVENTORY_ITEM_ID    
+   AND RT.TRANSACTION_ID(+) = MMT.RCV_TRANSACTION_ID
+   AND MMT.SUBINVENTORY_CODE IS NOT NULL
+   AND MMT.ORGANIZATION_ID = :P_ORGANIZATION_ID
+   AND MMT.ORGANIZATION_ID = MSI.ORGANIZATION_ID
+   AND nvl( MMT.SUBINVENTORY_CODE,'BB') <> nvl(MMT.TRANSFER_SUBINVENTORY,'AA')
+   AND MTST.TRANSACTION_SOURCE_TYPE_ID = MMT.TRANSACTION_SOURCE_TYPE_ID
+   AND MMT.TRANSACTION_DATE >= to_date('&start_date','YYYYMMDD')
+   AND MMT.TRANSACTION_DATE <= to_date('&end_date','YYYYMMDD')
+   and (MMT.SUBINVENTORY_CODE='&Subinventory' or mmt.TRANSFER_SUBINVENTORY='&Subinventory')
+   and mmt.SUBINVENTORY_CODE='&Subinventory'
+   and TO_CHAR(MMT.TRANSACTION_DATE,'YYYYMMDD HH24:MI:SS')!='&end_date'||' 00:00:00'
+   group by msi.segment1 having (sum(mmt.TRANSACTION_QUANTITY)!=0)
+
+----could run by applquery
+select msi.segment1 item,sum(mmt.TRANSACTION_QUANTITY) qty
+  from apps.MTL_MATERIAL_TRANSACTIONS MMT
+       , apps.MTL_TRANSACTION_TYPES MTT
+       , apps.MTL_SYSTEM_ITEMS MSI
+       , apps.RCV_TRANSACTIONS RT
+       , apps.MTL_TXN_SOURCE_TYPES MTST
+ where MMT.TRANSACTION_TYPE_ID = MTT.TRANSACTION_TYPE_ID 
+   AND MSI.INVENTORY_ITEM_ID = MMT.INVENTORY_ITEM_ID    
+   AND RT.TRANSACTION_ID(+) = MMT.RCV_TRANSACTION_ID
+   AND MMT.SUBINVENTORY_CODE IS NOT NULL
+   AND MMT.ORGANIZATION_ID = :P_ORGANIZATION_ID
+   AND MMT.ORGANIZATION_ID = MSI.ORGANIZATION_ID
+   AND nvl( MMT.SUBINVENTORY_CODE,'BB') <> nvl(MMT.TRANSFER_SUBINVENTORY,'AA')
+   AND MTST.TRANSACTION_SOURCE_TYPE_ID = MMT.TRANSACTION_SOURCE_TYPE_ID
+   AND MMT.TRANSACTION_DATE >= to_date('&start_date','YYYYMMDD')
+   AND MMT.TRANSACTION_DATE <= to_date('&end_date','YYYYMMDD')
+   and (MMT.SUBINVENTORY_CODE='&Subinventory' or mmt.TRANSFER_SUBINVENTORY='&Subinventory')
+   and mmt.SUBINVENTORY_CODE='&Subinventory'
+   and TO_CHAR(MMT.TRANSACTION_DATE,'YYYYMMDD HH24:MI:SS')!='&end_date'||' 00:00:00'
+   group by msi.segment1 having (sum(mmt.TRANSACTION_QUANTITY)!=0)
+
+
+--------update to actual parameter ??(checked 20071018 is correct)
+-----in/out
+select msi.segment1 item,sum(mmt.TRANSACTION_QUANTITY) qty
+  from apps.MTL_MATERIAL_TRANSACTIONS MMT
+       , apps.MTL_TRANSACTION_TYPES MTT
+       , apps.MTL_SYSTEM_ITEMS MSI
+       , apps.RCV_TRANSACTIONS RT
+       , apps.MTL_TXN_SOURCE_TYPES MTST
+ where MMT.TRANSACTION_TYPE_ID = MTT.TRANSACTION_TYPE_ID 
+   AND MSI.INVENTORY_ITEM_ID = MMT.INVENTORY_ITEM_ID    
+   AND RT.TRANSACTION_ID(+) = MMT.RCV_TRANSACTION_ID
+   --AND MMT.SUBINVENTORY_CODE IS NOT NULL
+   AND MMT.ORGANIZATION_ID = :P_ORGANIZATION_ID
+   AND MMT.ORGANIZATION_ID = MSI.ORGANIZATION_ID
+   AND nvl( MMT.SUBINVENTORY_CODE,'BB') <> nvl(MMT.TRANSFER_SUBINVENTORY,'AA')
+   AND MTST.TRANSACTION_SOURCE_TYPE_ID = MMT.TRANSACTION_SOURCE_TYPE_ID
+   AND MMT.TRANSACTION_DATE >= to_date('20071018','YYYYMMDD')
+   AND MMT.TRANSACTION_DATE <= to_date('20071019','YYYYMMDD')
+   and (MMT.SUBINVENTORY_CODE='SD' or mmt.TRANSFER_SUBINVENTORY='SD')
+   and mmt.SUBINVENTORY_CODE='SD'
+   and TO_CHAR(MMT.TRANSACTION_DATE,'YYYYMMDD HH24:MI:SS')!='20071019'||' 00:00:00'
+   and mtt.TRANSACTION_TYPE_NAME not in (
+     'Sales Order Pick',
+     'Internal Order Pick',
+     'Average cost update',
+     'Standard cost update',
+     'Container Unpack',
+     'Container Split',
+     'Container Pack',
+     'WIP Lot Split',
+     'Cost Group Transfer')
+   group by msi.segment1 --having (sum(mmt.TRANSACTION_QUANTITY)!=0)
+

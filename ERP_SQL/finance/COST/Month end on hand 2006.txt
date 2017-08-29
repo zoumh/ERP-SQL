@@ -1,0 +1,158 @@
+
+
+
+
+select organization_id,organization_code,primary_cost_method,lpn_prefix,lpn_suffix,lpn_starting_number,wms_enabled_flg from APPS.mtl_parameters
+
+
+------onhand with account, rev,Org,Account (Could list Expense WH)
+
+SELECT a.organization_id,h.NAME Org_Name, b.segment1 Item, a.REVISION,SUM(a.transaction_quantity) onhand , 
+TO_NUMBER(d.item_cost,999999.99999) cost, 
+SUM(a.transaction_quantity*d.item_cost) AS Amt,
+DECODE(g.asset_inventory,1,'Inv','Exp') Expense_Or_Not, 
+ a.subinventory_code, c.cost_group,e.segment2 CC,e.segment3 Accounts 
+FROM apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f, 
+apps.MTL_SECONDARY_INVENTORIES_FK_V g,apps.HR_ORGANIZATION_UNITS_V h 
+WHERE a.organization_id=b.organization_id 
+AND c.organization_id=d.organization_id 
+AND a.organization_id=c.organization_id 
+AND a.organization_id=f.organization_id 
+AND a.organization_id=g.organization_id 
+AND a.organization_id=h.organization_id 
+AND g.SECONDARY_INVENTORY_NAME=a.subinventory_code 
+and a.organization_id>127
+AND a.inventory_item_id=b.inventory_item_id AND a.inventory_item_id=d.inventory_item_id 
+AND a.cost_group_id=c.cost_group_id AND d.cost_type_id=1 
+AND c.COST_GROUP_ID=f.COST_GROUP_ID 
+AND f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID 
+GROUP BY a.organization_id,h.NAME,g.asset_inventory,b.segment1,a.REVISION, a.subinventory_code, c.cost_group, TO_NUMBER(d.item_cost,999999.99999),e.segment2,e.segment3 
+ORDER BY a.organization_id,a.subinventory_code, b.segment1,a.REVISION;
+
+
+
+------onhand with account, rev,Org,Account (include Expense WH)
+
+select a.organization_id,b.segment1 Item, a.REVISION,sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group,e.segment2 CC,e.segment3 Accounts
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.organization_id>127
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+group by a.organization_id,b.segment1,a.REVISION, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999),e.segment2,e.segment3 
+order by a.organization_id,a.subinventory_code, b.segment1,a.REVISION
+
+
+
+---------PRJ onhand
+
+select a.ORGANIZATION_ID Org_ID,
+b.SEGMENT1 Item,b.DESCRIPTION,a.LAYER_QUANTITY,a.ITEM_COST Average_Cost,nvl(a.ITEM_COST,0) *nvl(a.LAYER_QUANTITY,0) Amount,
+b.ENABLED_FLAG Item_Enable,b.INVENTORY_ITEM_STATUS_CODE Item_Status,a.COST_GROUP_ID
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+
+
+
+-----------------multy Org prd/vp/csC/cs/aRC/rc onhand amount with cg/account
+
+
+select a.organization_id,b.segment1 Item, sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group,e.segment2||'.'||e.segment3 Accounts
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+--and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+group by a.organization_id,b.segment1, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999),e.segment2||'.'||e.segment3 
+order by a.organization_id,a.subinventory_code, b.segment1
+
+
+
+
+------Onhand with category (f.category_set_id=1) (PRD)
+
+select b.segment1, sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code WH, c.cost_group
+,f.segment1 family_class, f.segment2 sub_class
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d, apps.mtl_item_categories_v f 
+where a.organization_id=83 and b.organization_id=83 and c.organization_id=83 and d.organization_id=83
+and f.organization_id=a.organization_id
+and a.inventory_item_id=f.inventory_item_id
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and f.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and f.category_set_id=1
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+--and category_set_id = 1100000001 
+--and structure_id=101 
+--and b.segment1='A/12000030010075'
+group by b.segment1, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999) 
+,f.segment1, f.segment2 
+order by a.subinventory_code, b.segment1,f.segment1
+
+
+
+select   mmt.transaction_date, b.SEGMENT1 as PO,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.OE_ORDER_HEADERS_ALL		 oeh,apps.PO_HEADERS_ALL b
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+--and    trunc(mmt.transaction_date) >= to_date('20040701','YYYYMMDD') 
+--and gcc.segment3='121105'
+--and mmt.transaction_type_id=18  --PO receive transaction
+and mmt.TRANSACTION_SOURCE_ID=b.PO_HEADER_ID
+and    mmt.transaction_date >= to_date('20040901 00:00:00','YYYYMMDD HH24:MI:SS') 
+and    mmt.transaction_date <= to_date('20040930 23:59:59','YYYYMMDD HH24:MI:SS') 

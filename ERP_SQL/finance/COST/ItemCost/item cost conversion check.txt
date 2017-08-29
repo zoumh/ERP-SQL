@@ -1,0 +1,47 @@
+
+--------------BMC NEW OU conv CHECK
+
+select msii.segment1 old_item_code 
+     ,msii.DESCRIPTION old_item_desc 
+      ,msii.item_type old_item_type 
+     ,msii.planning_make_buy_code old_make_or_buy 
+  ,map.old_revision 
+     ,msii.organization_id old_org_id 
+      ,t.item_cost           old_item_cost    
+	  ,t.BASED_ON_ROLLUP  old_BASED_ON_ROLLUP
+	  ,t.MATERIAL_COST old_MATERIAL_COST
+	  ,t.RESOURCE_COST  old_RESOURCE_COST
+     ,nitem.segment1       new_item_number 
+  ,nitem.DESCRIPTION    new_description 
+     ,nitem.planning_make_buy_code  new_make_or_buy 
+  ,nitem.item_type               new_item_type 
+  ,map.new_revision 
+     ,nitem.organization_id  new_org_id 
+  ,nt.item_cost           new_item_cost    
+  ,nt.BASED_ON_ROLLUP   new_BASED_ON_ROLLUP 
+  ,nt.MATERIAL_COST   new_MATERIAL_COST
+  ,nt.RESOURCE_COST  new_RESOURCE_COST
+from cst_item_cost_type_v        t 
+     , mtl_system_items_b          msii 
+	 ,cst_item_cost_details      wt
+     ,conv_item_mapping            map 
+     , mtl_system_items_b          nitem 
+     , cst_item_cost_type_v       nt 
+where msii.inventory_item_id = t.inventory_item_id 
+and msii.organization_id = t.organization_id 
+and map.old_organization_id = msii.organization_id 
+and map.old_inventory_id = msii.inventory_item_id 
+and nitem.organization_id = map.new_organization_id 
+and nitem.inventory_item_id = map.new_inventory_item_id 
+and nitem.inventory_item_id = nt.inventory_item_id 
+and nitem.organization_id = nt.organization_id 
+and wt.INVENTORY_ITEM_ID=t.INVENTORY_ITEM_ID
+and wt.ORGANIZATION_ID=t.organization_id
+--and ood.organization_code = 'PRJ' 
+and msii.enabled_flag = 'Y' 
+and wt.level_type = 1 
+and wt.cost_element_id = 1 
+and wt.cost_type_id <> 3 
+and msii.inventory_item_status_code <> 'Inactive' 
+and msii.organization_id in (84,129)
+

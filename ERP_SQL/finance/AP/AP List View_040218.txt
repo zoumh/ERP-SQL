@@ -1,0 +1,53 @@
+/* Add one column apa.VENDOR_ID  , based upon previous View ---BMC_AP_List_V2   */
+
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_AP_List_V2
+AS
+select VDR.VENDOR_NAME as Supplier
+,	   apb.BATCH_NAME as InvBatch
+,	   apa.INVOICE_NUM
+,	   apa.ATTRIBUTE1 as Inv_Trans_Num
+,	   apa.INVOICE_AMOUNT as Invoice_Amt
+,	   apa.GL_DATE
+,	   apa.INVOICE_DATE
+,	   apa.INVOICE_TYPE_LOOKUP_CODE as InvType
+,	   AP_INVOICES_PKG.GET_PO_NUMBER( apa.INVOICE_ID) PO_NUMBER
+,	   apc.ATTRIBUTE1 as Pay_Trans_Num
+,	   apc.CHECKRUN_NAME as PayBatch
+,	   apa.AMOUNT_PAID as Paid_Amount
+,	   apa.WFAPPROVAL_STATUS as InvApproval
+,	   apa.DESCRIPTION
+,	   apa.PAY_GROUP_LOOKUP_CODE as PayGroup
+,	   TRM.DUE_DAYS as TermsDate
+,	   TRM.DUE_DAYS+apa.INVOICE_DATE as DueDate
+,	   apa.INVOICE_CURRENCY_CODE as Inv
+,	   apa.PAYMENT_CURRENCY_CODE as Pay
+,	   apa.PAYMENT_STATUS_FLAG as PayStatus
+,	   apa.SET_OF_BOOKS_ID as SOB
+,	   apa.TERMS_ID
+,	   apa.VENDOR_ID
+,	   apa.VENDOR_SITE_ID
+,	   app.CREATION_DATE as PayDate
+from  	  AP_INVOICES_ALL apa 
+,	  AP_INVOICE_PAYMENTS_ALL app
+,	  PO_VENDORS VDR
+,	  AP_TERMS_LINES TRM
+,	  AP_checks_all apc
+,	  AP_BATCHES_ALL apb
+where apa.INVOICE_ID=app.INVOICE_ID(+)
+and   apa.SET_OF_BOOKS_ID='1'
+and   app.SET_OF_BOOKS_ID(+)='1'
+and   VDR.VENDOR_ID=apa.VENDOR_ID
+and   TRM.TERM_ID=apa.TERMS_ID 
+and   apa.BATCH_ID=apb.BATCH_ID
+and   app.CHECK_ID=apc.CHECK_ID(+)
+
+
+
+
+
+select VENDOR_ID,VENDOR_NAME,VENDOR_NAME_ALT,VENDOR_TYPE_LOOKUP_CODE from PO_VENDORS where VENDOR_TYPE_LOOKUP_CODE not like 'EM%'
+
+
+
+

@@ -1,0 +1,113 @@
+
+
+Mark out the Fully customization users (These user won't count lic)
+   (only use customization responsibility like: 
+	BMC FA for PE Change
+	BMC Cycle counting
+   )
+
+
+SQL
+-----User list of pure BMC Customization responsibility
+select aa.UserID,aa.BMC_CMD_count,bb.total_count,aa.dept,aa.CC from
+(select b.user_name UserID,count(*) BMC_CMD_count,b.fax Dept,b.EMAIL_ADDRESS CC
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+and f.RESPONSIBILITY_NAME in ('BMC FA Cycle Counting','BMC FA for PE Change')
+group by b.user_name,b.fax,b.EMAIL_ADDRESS 
+) aa,
+(select b.user_name UserID,count(*) total_count
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+--and f.RESPONSIBILITY_NAME in ('BMC FA Cycle Counting','BMC FA for PE Change')
+group by b.user_name
+) bb
+where aa.UserID=bb.UserID(+)
+and aa.BMC_CMD_count=bb.total_count
+
+
+-----Users Detail Responsibilities of pure BMC Customization responsibility
+select b.user_name UserID,b.description User_Name,b.fax Dept,b.EMAIL_ADDRESS CC,
+f.RESPONSIBILITY_NAME RESPONSIBILITY,
+a.end_date resp_End_date,b.end_date user_end_Date
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+--and f.RESPONSIBILITY_NAME not in ('BMC FA Cycle Counting','BMC FA for PE Change')
+and b.user_name in 
+(select aa.UserID  from
+(select b.user_name UserID,count(*) BMC_CMD_count,b.fax Dept,b.EMAIL_ADDRESS CC
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+and f.RESPONSIBILITY_NAME in ('BMC FA Cycle Counting','BMC FA for PE Change')
+group by b.user_name,b.fax,b.EMAIL_ADDRESS 
+) aa,
+(select b.user_name UserID,count(*) total_count
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+--and f.RESPONSIBILITY_NAME in ('BMC FA Cycle Counting','BMC FA for PE Change')
+group by b.user_name
+) bb
+where aa.UserID=bb.UserID(+)
+and aa.BMC_CMD_count=bb.total_count
+)
+order by b.fax,b.user_name

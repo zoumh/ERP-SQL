@@ -1,0 +1,25 @@
+
+----Use Trans_ID link Mtl_onhand & Mtl_Trans table
+
+select MTT.TRANSACTION_TYPE_NAME,MMT.organization_id,
+MMT.SUBINVENTORY_CODE, 
+transaction_date, 
+MSI.SEGMENT1 item_number, 
+mmt.transaction_id, 
+nvl(transaction_cost,actual_cost) cost, 
+MMT.transaction_quantity quantity, 
+MMT.TRANSACTION_REFERENCE, 
+transaction_quantity*nvl(transaction_cost,actual_cost) amount, 
+mtt.DESCRIPTION as Type_Description
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI 
+WHERE  --MMT.organization_id=83 
+MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.organization_id
+and mmt.TRANSACTION_ID in ('9124914','9124915')
+
+
+

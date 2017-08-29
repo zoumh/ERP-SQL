@@ -1,0 +1,114 @@
+
+
+------------Std Cost Org Onhand Value (Org,Rev,Account,CostGroup,Asset/Exp)
+
+select a.organization_id,h.NAME Org_Name, b.segment1 Item, a.REVISION,sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,
+sum(a.transaction_quantity)*decode(g.asset_inventory,1,to_number(d.item_cost,999999.99999),0) as Amt
+, a.subinventory_code, c.cost_group,e.segment2||'.'||e.segment3 Accounts
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f,
+apps.MTL_SECONDARY_INVENTORIES_FK_V g,apps.HR_ORGANIZATION_UNITS_V h
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.organization_id=g.organization_id
+and a.organization_id=h.organization_id
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code
+--and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+group by a.organization_id,h.NAME,g.asset_inventory,b.segment1,a.REVISION, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999),e.segment2||'.'||e.segment3 
+order by a.organization_id,a.subinventory_code, b.segment1,a.REVISION
+
+
+
+-----------------onhand check summary
+
+select a.organization_id,g.organization_code,sum(a.transaction_quantity) onhand ,
+sum(a.transaction_quantity*to_number(d.item_cost,999999.99999)) as Amt
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f,APPS.mtl_parameters g
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+--and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+and a.subinventory_code<>'RWK'
+and g.organization_id=b.organization_id
+group by a.organization_id,g.organization_code
+order by a.organization_id,g.organization_code
+
+
+
+
+-----------------multy Org prd/vp/csC/cs/aRC/rc onhand amount with cg/account
+
+
+select a.organization_id,b.segment1 Item, sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group,e.segment2||'.'||e.segment3 Accounts
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+--and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+group by a.organization_id,b.segment1, a.subinventory_code, c.cost_group, 
+to_number(d.item_cost,999999.99999),e.segment2||'.'||e.segment3 
+order by a.organization_id,a.subinventory_code, b.segment1
+
+
+------------with Revision
+
+select a.organization_id,b.segment1 Item, a.REVISION,sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group,e.segment2||'.'||e.segment3 Accounts
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+--and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+group by a.organization_id,b.segment1,a.REVISION, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999),e.segment2||'.'||e.segment3 
+order by a.organization_id,a.subinventory_code, b.segment1,a.REVISION
+
+
+------------PRJ/IP Value (FIFO) (from layer_Qty table,not from onhand info,Verified with std 'Layer Inventory Value Report')
+select a.ORGANIZATION_ID Org_ID,
+b.SEGMENT1 Item,b.DESCRIPTION,a.LAYER_QUANTITY,a.ITEM_COST Average_Cost,nvl(a.ITEM_COST,0) *nvl(a.LAYER_QUANTITY,0) Amount,
+b.ENABLED_FLAG Item_Enable,b.INVENTORY_ITEM_STATUS_CODE Item_Status,a.COST_GROUP_ID
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and LAYER_QUANTITY<>0
+and a.INVENTORY_ITEM_ID=132 ---IP
+
+
+----sum of IP FIFO value (no locator info,from layer_Qty table,not from onhand info)
+select a.ORGANIZATION_ID, 
+sum(a.ITEM_COST *a.LAYER_QUANTITY) Amount
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and LAYER_QUANTITY<>0
+and a.INVENTORY_ITEM_ID=132 ---IP
+group by a.ORGANIZATION_ID
+

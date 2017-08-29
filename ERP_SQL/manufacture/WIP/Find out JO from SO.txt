@@ -1,0 +1,25 @@
+
+
+-------------Find out JO from SO (with Class,line,PO)
+
+select b.ORDER_NUMBER,c.LINE_NUMBER,a.class_code,b.CUST_PO_NUMBER,a.wip_entity_name,START_QUANTITY,QUANTITY_COMPLETED,QUANTITY_REMAINING,c.LINE_NUMBER ,ORDERED_QUANTITY 
+from apps.WIP_DISCRETE_JOBS_v a,apps.OE_ORDER_HEADERS_all b,apps.OE_ORDER_lineS_all c
+where c.header_id=b.header_id
+and b.header_id=a.attribute1
+and c.line_id=a.attribute2
+--and a.wip_entity_name='0070455666/1'
+and b.ORDER_NUMBER in ('145908','145936')
+--and b.CUST_PO_NUMBER like ('%70545203%')
+
+
+
+------------Find out SO ID
+
+select attribute1,attribute2,wip_entity_name,wip_entity_id from apps.WIP_DISCRETE_JOBS_v
+where wip_entity_name in ('B168291/1','166106','166107')
+
+434096
+651616
+
+update apps.WIP_DISCRETE_JOBS set attribute1=null,attribute2=null
+where wip_entity_id in (613312,613313,613314)

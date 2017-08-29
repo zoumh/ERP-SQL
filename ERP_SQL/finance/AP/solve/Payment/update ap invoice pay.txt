@@ -1,0 +1,34 @@
+
+
+
+
+select invoice_id,payment_status_flag,amount_remaining,org_id from apps.ap_payment_schedules_all where invoice_id in 
+(select INVOICE_ID from apps.ap_invoices_all where INVOICE_NUM in ('NT-AP20041231-206','NT-AP20050331-77','NT-AP20050531-156','NT-AP20050531-158','NT-AP20050731-229','NT-AP20050731-251')
+and org_id=81)
+
+
+
+select INVOICE_NUM,INVOICE_ID,org_id,amount_paid,INVOICE_AMOUNT,payment_status_flag  from apps.ap_invoices_all where INVOICE_NUM in ('NT-AP20041231-206','NT-AP20050331-77','NT-AP20050531-156','NT-AP20050531-158','NT-AP20050630-196','NT-AP20050731-229','NT-AP20050731-251')
+and org_id=81
+
+
+
+
+
+
+update ap_payment_schedules_all
+set payment_status_flag='Y',amount_remaining=0
+where invoice_id in (select INVOICE_ID from apps.ap_invoices_all where INVOICE_NUM in ('NT-AP20041231-206','NT-AP20050331-77','NT-AP20050531-156','NT-AP20050531-158','NT-AP20050731-229','NT-AP20050731-251')
+and org_id=81) and org_id=81
+
+commit
+
+
+
+
+update ap_invoices_all 
+set amount_paid=INVOICE_AMOUNT ,payment_status_flag='Y'
+where invoice_id in (select INVOICE_ID from apps.ap_invoices_all where INVOICE_NUM in ('NT-AP20041231-206','NT-AP20050331-77','NT-AP20050531-156','NT-AP20050531-158','NT-AP20050731-229','NT-AP20050731-251')
+and org_id=81) and org_id=81
+
+

@@ -1,0 +1,16 @@
+
+--GL Interface linked to receiving Journal,rcv_Trans, PO
+
+select d.segment1 PO,e.RECEIPT_NUM,f.segment3 Acc,
+a.ACCOUNTED_DR,a.ACCOUNTED_CR,TRANSACTION_ID,QUANTITY, TRANSACTION_TYPE , 
+b.ACCOUNTING_DATE ,b.TRANSACTION_DATE ,b.PERIOD_NAME,b.REFERENCE4 as PO
+,a.CURRENCY_CODE,a.CURRENCY_CONVERSION_RATE as Rate
+FROM apps.GL_interface a,APPS.RCV_RECEIVING_SUB_LEDGER b,apps.RCV_TRANSACTIONS c,
+apps.PO_HEADERS_ALL d,apps.RCV_SHIPMENT_HEADERS e,apps.GL_CODE_combinations f
+WHERE --b.creation_date=to_Date('2006-10-30','yyyy-mm-dd') and 
+a.gl_sl_link_id=b.GL_SL_LINK_ID
+and b.RCV_TRANSACTION_ID=c.TRANSACTION_ID
+and e.SHIPMENT_HEADER_ID=c.SHIPMENT_HEADER_ID
+and d.PO_HEADER_ID=c.PO_HEADER_ID
+and a.status in ('EP01')
+and  f.CODE_COMBINATION_ID =a.CODE_COMBINATION_ID

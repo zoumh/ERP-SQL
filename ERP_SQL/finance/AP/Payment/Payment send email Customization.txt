@@ -1,0 +1,19 @@
+
+
+Special function: Mail Payment Info to supplier
+
+For batch payment, could create email for sending out to supplier
+
+
+-----not yet send email
+select * from apps.BMC_MPAY_V where CHECKRUN_NAME='KS080811CNY'--CREATED_BY=9335
+
+
+-----has been send out email (After click the OK button, record moved from apps.BMC_MPAY_V to this table)
+select * from apps.BMC_MPAY_HISTORY where CHECKRUN_NAME='KS080811CNY'--CREATED_BY=9335
+
+
+
+select * from apps.fnd_user where  USER_NAME='28990358'
+
+

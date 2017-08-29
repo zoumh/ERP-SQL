@@ -1,0 +1,5 @@
+
+
+
+select patch_level from apps.fnd_product_installations where application_id = 200
+

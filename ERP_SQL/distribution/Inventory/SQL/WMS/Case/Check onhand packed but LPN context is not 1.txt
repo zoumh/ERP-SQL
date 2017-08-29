@@ -1,0 +1,35 @@
+
+------Check onhand is packed, but LPN_context is not 1 
+
+select a.ORGANIZATION_ID,LICENSE_PLATE_NUMBER,d.segment1 Item,c.SUBINVENTORY_CODE,
+e.segment2||'.'||e.segment3||'.'||e.segment4||'.'||e.segment5 Locator,
+c.TRANSACTION_QUANTITY Onhand_Qty,b.QUANTITY LPN_Qty     
+from 
+apps.wms_license_plate_numbers a, 
+apps.wms_lpn_contents b,
+apps.MTL_ONHAND_QUANTITIES_DETAIl c,
+apps.mtl_system_items d,
+apps.mtl_item_locations e
+where a.lpn_id=b.parent_lpn_id
+and a.lpn_id=c.lpn_id
+and a.ORGANIZATION_ID =b.ORGANIZATION_ID
+and a.ORGANIZATION_ID =c.ORGANIZATION_ID
+and a.ORGANIZATION_ID =d.ORGANIZATION_ID
+and a.ORGANIZATION_ID =e.ORGANIZATION_ID
+and c.INVENTORY_ITEM_ID =b.INVENTORY_ITEM_ID
+and c.INVENTORY_ITEM_ID =d.INVENTORY_ITEM_ID
+and c.LOCATOR_ID=e.INVENTORY_LOCATION_ID
+and c.CONTAINERIZED_FLAG =1
+and a.LPN_CONTEXT not in (1,11)
+
+
+
+----------Solve:
+need to check onhand/Transaction carefully
+
+1) Using <Transaction Quantity Historical Summary> report 
+2) Ask user to check the actual Stock
+
+to Identify the correct Qty
+
+                      

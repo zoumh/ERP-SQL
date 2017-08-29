@@ -1,0 +1,41 @@
+
+1. Find out the PHYSICAL_INVENTORY_ID
+
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2004-12-20','YYYY-MM-DD')
+  and trunc(FREEZE_DATE)<= to_date('2004-12-31','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+
+
+---------discover report
+
+SELECT   (SELECT f.tag_number
+               FROM apps.mtl_physical_inventory_tags f
+              WHERE a.adjustment_id = f.adjustment_id AND ROWNUM = 1) tag,
+            b.segment1 item, a.revision, a.subinventory_name, e.cost_group,
+            a.system_quantity, a.count_quantity,
+            TO_CHAR (actual_cost, 999999999.9999) COST,
+            a.system_quantity * actual_cost system_amt,
+            a.count_quantity * actual_cost count_amt,
+            (a.adjustment_quantity) * actual_cost AS adjust_amt,
+            (a.adjustment_quantity) AS adjust_qty,
+            a.physical_inventory_id phy_id, f.segment1 category1,
+            f.segment2 category2,
+            b.ITEM_TYPE item_type,
+            b.DESCRIPTION description
+       FROM apps.mtl_physical_adjustments a,
+            apps.mtl_system_items b,
+            apps.cst_cost_groups e,
+            apps.mtl_item_categories_v f
+      WHERE a.inventory_item_id = b.inventory_item_id
+        AND a.organization_id = b.organization_id
+        AND a.organization_id = e.organization_id
+        AND f.inventory_item_id = b.inventory_item_id
+        AND f.organization_id = b.organization_id
+        AND f.category_set_id = 1
+and a.physical_inventory_id =:d --145--
+        AND a.cost_group_id = e.cost_group_id
+--and (a.count_quantity-a.system_quantity)<>0
+   ORDER BY tag;
+   
+

@@ -1,0 +1,156 @@
+
+---------SO deliver_Status,line Status,Ship_Set
+select b.RELEASED_STATUS_NAME , 
+c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,e.SHIP_SET_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,
+apps.mtl_system_items_b a,
+(select distinct SHIP_SET_NUMBER,ORGANIZATION_ID,ORDER_HEADER_ID,SHIP_SET_ID from apps.WSH_PICKING_BATCHES_V) e
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and d.SHIP_SET_ID=b.SHIP_SET_ID
+and e.SHIP_SET_ID=b.SHIP_SET_ID
+and e.ORDER_HEADER_ID=c.header_id
+and e.ORGANIZATION_ID=a.ORGANIZATION_ID
+and c.ORDER_NUMBER='243124'
+and e.SHIP_SET_NUMBER='TT1'
+
+
+
+--------SO_Num, line, Delivery_num,Cosuomer Item, has Exception(Manual)
+
+select c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type,b.Source_Name,
+b.SOURCE_HEADER_ID,e.MESSAGE Exception_Messge,e.STATUS Except_Status,e.EXCEPTION_NAME ,d.ITEM_IDENTIFIER_TYPE,d.ORDERED_ITEM_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a,
+apps.wsh_exceptions e
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and b.delivery_detail_id=e.delivery_detail_id 
+--and c.ORDER_NUMBER='114516'
+and b.Type='L' -- 'C'=Container, 'L'=Delivery line
+--and b.delivery_ID =128356
+--and b.delivery_detail_id in (319924,319925)
+and e.STATUS='MANUAL'
+
+
+
+--------SO_Num, line, Delivery_num,
+
+select c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and c.ORDER_NUMBER='120883'
+and b.Type='L' -- 'C'=Container, 'L'=Delivery line
+
+
+---------SO deliver_Status,line Status
+select d.FLOW_STATUS_CODE,b.RELEASED_STATUS_NAME , 
+ c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and c.ORDER_NUMBER='303278'
+and b.RELEASED_STATUS_NAME='Shipped'
+and d.FLOW_STATUS_CODE='AWAITING_SHIPPING'
+
+
+----------mtl_material_transactions of SO_Ship,Delivery,LPN
+select e.LICENSE_PLATE_NUMBER CONTENT_LPN,
+c.ORDER_NUMBER,b.LINE_NUMBER,a.TRANSACTION_QUANTITY, 
+d.delivery_ID Delivery_No,d.DELIVERY_DETAIL_ID Del_Detail,
+a.creation_Date
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c,
+apps.WSH_DELIVERABLES_V d,apps.wms_license_plate_numbers e
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+and d.SOURCE_HEADER_ID=c.header_id
+and d.source_line_id=b.LINE_ID
+and b.org_id=c.org_id
+and a.ORGANIZATION_ID=c.SHIP_FROM_ORG_ID
+and a.ORGANIZATION_ID=e.ORGANIZATION_ID
+and a.CONTENT_LPN_ID=e.lpn_id
+and a.SHIPMENT_NUMBER=d.delivery_ID
+and c.ORDER_NUMBER='245026'
+and b.LINE_NUMBER in (2,12)
+
+
+
+---------Statict SO LPN how long to stay in WH  (Jeff)
+
+CREATE OR REPLACE VIEW BMC_SO_Stay_in_WH
+AS 
+select 'Non-domestic' "Order Type"
+          ,a.po_number
+          ,a.po_line_number
+          ,a.item_number
+          ,a.lpn,a.quantity
+          ,to_char(a.creation_date,'yyyy-mm-dd hh24:mi') Creation_date
+          ,a.last_update_date
+          ,optmp.totalpallet
+          ,optmp.openingqty
+  from apps.bmc_auto_pk_lpn_info a,
+          (select a.po_number po_number,a.po_line_number po_line_number,count(*) TotalPallet,b.ORDERED_QUANTITY-sum(a.quantity) openingqty
+             from apps.bmc_auto_pk_lpn_info a,apps.OE_ORDER_LINES_all b
+            where a.PO_NUMBER=b.CUST_PO_NUMBER
+              and a.PO_LINE_NUMBER=b.CUSTOMER_LINE_NUMBER
+         group by a.po_number,a.po_line_number,b.ORDERED_QUANTITY) optmp
+ where a.PO_NUMBER=optmp.po_number
+   and a.PO_LINE_NUMBER=optmp.po_line_number
+   --and a.creation_date between to_date('2006-07-10:14:00','yyyy-mm-dd:hh24:mi') and to_date('2006-07-10:15:00','yyyy-mm-dd:hh24:mi')
+ union
+select 'Domestic' "Order Type"
+           ,a.po_number
+           ,a.po_line_number
+           ,a.item_number
+           ,a.se_lpn,a.quantity
+           ,to_char(a.creation_date,'yyyy-mm-dd hh24:mi') Creation_date
+           ,a.last_update_date
+           ,optmp.totalpallet
+           ,optmp.openingqty
+  from apps.BMC_AUTO_LPN_NEW a,
+           (select a.po_number po_number,a.po_line_number po_line_number,count(*) TotalPallet,b.ORDERED_QUANTITY-sum(a.quantity) openingqty
+              from apps.BMC_AUTO_LPN_NEW a,apps.OE_ORDER_LINES_all b
+             where a.PO_NUMBER=b.CUST_PO_NUMBER
+               and a.PO_LINE_NUMBER=b.CUSTOMER_LINE_NUMBER
+          group by a.po_number,a.po_line_number,b.ORDERED_QUANTITY) optmp
+ where a.PO_NUMBER=optmp.po_number
+   and a.PO_LINE_NUMBER=optmp.po_line_number
+   --and a.creation_date between to_date('2006-07-10:14:00','yyyy-mm-dd:hh24:mi') and to_date('2006-07-10:15:00','yyyy-mm-dd:hh24:mi');
+

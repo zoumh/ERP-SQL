@@ -1,0 +1,211 @@
+
+
+-------------Stock adjust amount in recent
+
+
+
+
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, MGD.SEGMENT1 SOURCE,
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=mta.organization_id and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = mmt.organization_id and msi.organization_id = 130 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    trunc(mmt.transaction_date) >= to_date('20060904','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20061217','YYYYMMDD') 
+and mtt.transaction_type_name like 'Account alias%'
+--and gcc.segment3='219107'
+and MGD.SEGMENT1 in ('Warehouse Scrap','Warehouse Taken-Material','Warehouse Taken-FG','Warehouse Taken-WSS')
+
+  
+-----sum
+  
+select   
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code,  
+         sum(mta.base_transaction_value) value
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.mtl_generic_dispositions  MGD, 
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=mta.organization_id and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = mmt.organization_id and msi.organization_id = 130 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+AND MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+) 
+and    trunc(mmt.transaction_date) >= to_date('20061101','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20061217','YYYYMMDD') 
+and mtt.transaction_type_name like 'Account alias%'
+--and gcc.segment3='219107'
+and MGD.SEGMENT1 in ('Warehouse Scrap','Warehouse Taken-Material','Warehouse Taken-FG','Warehouse Taken-WSS')
+and gcc.segment3 like '12%'
+group by mtt.transaction_type_name,mmt.subinventory_code
+  
+
+
+
+
+------------WIP Adjust JO amount
+
+
+select start_quantity,quantity_remaining,net_quantity,last_update_date,decode(status_Type,1,'Unreleased',3,'Released',4,'Complete',
+5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',
+11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+Class_Code,Material_Account,Resource_Account,material_Variance_Account,Resource_Variance_Account,Std_Cost_Adjustment_Account,
+Date_Released,Date_Completed,Date_Closed,Entity_Type,Job_Type,wip_entity_name 
+from apps.WIP_DISCRETE_JOBS_V 
+where class_code like 'Var%' --and (start_quantity<>0 or quantity_remaining<>0)
+--and start_quantity<>net_quantity
+and CREATION_DATE >= to_date('20061101','YYYYMMDD') 
+
+
+----Adj non-std JO WIP Trans (job Close Var)  
+
+select a.transaction_date, a.base_transaction_value value,
+--a.primary_quantity Qty,a.rate_or_amount Rate_Amt,
+decode(a.accounting_line_type,1,'Inv valuation',2,'Account',7,'WIP valuation',8,'WIP variance',9,'Inter Corg payables') accounting_line_type,
+b.segment3 Acc,b.segment2 CC,--c.TRANSACTION_TYPE,
+d.WIP_ENTITY_NAME Job_Order,e.MEANING Trans_Type,d.class_code
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_DISCRETE_JOBS_V d,
+apps.MFG_LOOKUPS e
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and a.transaction_date<=to_date('2006-12-17','yyyy-mm-dd')
+and a.transaction_date>=to_date('2006-11-01','yyyy-mm-dd')
+and d.class_code like 'Var%'
+order by a.transaction_date
+
+
+
+--1. to check if all non-std JO has no completion value
+select  --wet.JOB_TYPE ,wip_entity_name Job_Order,--msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Complete_Value,
+sum(mmt.TRANSACTION_QUANTITY) as Complete_Qty--,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V 	     Wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id  
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and    trunc(mmt.transaction_date) >= to_date('20061101','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20061231','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+--and wet.class_code like 'Var%'
+and wet.JOB_TYPE=3 --non-std JO
+--group by wip_entity_name,wet.JOB_TYPE
+--order by wip_entity_name
+
+
+--2. to see non-std JO total balance (mtl issue/return)
+select  --wet.JOB_TYPE,wet.class_code,wip_entity_name Job_Order,--msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,--transaction_type_name,
+sum(mmt.TRANSACTION_QUANTITY) as Qty--,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V 	     Wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id  
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+and    trunc(mmt.transaction_date) >= to_date('20061101','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20061231','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+--and wet.class_code like 'Var%'
+and wet.JOB_TYPE=3
+--group by wet.JOB_TYPE,wip_entity_name,wet.class_code
+--order by wip_entity_name
+
+
+
+
+-----------Non Std JO mtl Trans 
+select  wip_entity_name Job_Order,--msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Complete_Value,
+sum(mmt.TRANSACTION_QUANTITY) as Complete_Qty--,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V 	     Wet
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id  
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and    trunc(mmt.transaction_date) >= to_date('20061101','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20061231','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+and wet.class_code like 'Var%'
+group by wip_entity_name
+order by wip_entity_name
+
+
+

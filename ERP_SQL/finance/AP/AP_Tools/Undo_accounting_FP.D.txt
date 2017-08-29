@@ -1,0 +1,559 @@
+REM   $Header:  undoatg.sql version 2.4 [Last Modified Date  06-MAY-03 00:00:00] support
+REM +==================================================================+
+REM |                Copyright (c) 2001 Oracle Corporation
+REM |                   Redwood Shores, California, USA
+REM |                        All rights reserved.
+REM +==================================================================+
+REM |  Name
+REM |   undoatg.sql
+REM |
+REM |  Description
+REM |
+REM |  Parameters
+REM |    invoice_id     Enter the invoice_id corresponding to the accounting event to be undone
+REM |  event_id         Enter the accounting event Id to be undone
+REM |  Delete event     The default for this option is N.  After family pack D, generally the event 
+REM |                   should not be undone.  Enter Y if you want to delete the event anyway.
+REM |  History
+REM |  01-JAN-01  Created by shorgan
+REM |  06-MAR-02  Changed to use org specific views.
+REM |             Script updated rows in other transaction tables based
+REM |             on ACCOUNTING_EVENT_ID. This scenario is possible if
+REM |             client is using AX and XLA as two different rows in
+REM |             the same transaction tables or a row in two different
+REM |             transaction tables could have the same
+REM |             ACCOUNTING_EVENT_ID.
+REM | 04-SEP-02   Added code to delete from AP_LIABILITY_BALANCE table
+REM | 25-APR-03         Added code to exclude delete from ap_accounting_events_all for family pack D or higher
+REM |
+REM +==================================================================+
+
+
+REM  This script will undo the accounting for an invoice or payment based on the
+REM  Accounting_event_id.  The script will prompt you for an invoice number, check number or invoice_id.
+REM  The script will then display all of the accounting events created for this invoice.
+REM  When prompted enter the accounting_event_id you want to undo the accounting for.
+REM  When the script is complete, verify the number of rows updated or deleted.
+REM  If the correct number of rows were deleted type COMMIT; to commit the changes.
+REM  If the wrong number of rows were updated or you do not want to undo the 
+REM  accounting for this accounting event then type ROLLBACK;.  
+
+
+undefine v_invoice_id
+undefine v_doc_number
+undefine v_doc_amount
+undefine v_doc_type
+undefine v_vendor
+undefine v_details
+undefine n_org_id
+undefine p_del_events
+undefine v_version
+undefine p_del_events2
+undefine v_time
+clear columns
+
+REM ============ Get the Invoice_ID ====================
+set head off verify off linesize 110 feedback off termout on 
+set pagesize 200 serveroutput on size 1000000
+
+PROMPT
+PROMPT Select search criteria option:
+PROMPT
+Prompt Enter 1 for Invoice Number
+Prompt Enter 2 for Check Number
+Prompt Enter 3 for Invoice Id
+Accept v_doc_type number prompt 'DEFAULT=1>' DEFAULT 1
+PROMPT
+
+define v_doc_type = &v_doc_type
+
+Select decode('&v_doc_type','1','Enter the Invoice Number',
+                                  '2','Enter the Check Number',
+                                  '3','Press Enter',
+                                  'Press Ctrl + C to cancel the test and then run the test again and select option 1 - 3')
+from sys.dual
+/
+
+set head off feedback off
+
+accept v_doc_number Prompt '>' Default NULL
+
+Prompt
+
+Select decode('&v_doc_type','3','Press Enter','2','Enter the Supplier Name','1','Enter the Supplier Name')
+from sys.dual
+/
+accept v_vendor Prompt '>' Default %
+
+define v_vendor = &v_vendor
+
+Prompt
+
+select decode('&v_doc_type', '1','*****MATCHING INVOICES*****')
+from sys.dual
+where '&v_doc_type' = 1;
+
+select rpad('Invoice ID',15), rpad('Supplier Name', 25), rpad('Invoice Number',25), 
+rpad('Invoice Date',15), rpad('Invoice Amount',15),rpad('Org ID',7)
+from sys.dual 
+where '&v_doc_type' = '1';
+
+SELECT distinct rpad(ai.invoice_id,15) invoice_id,  rpad(substr(pv.vendor_name,1,25),25),
+rpad(substr(ai.invoice_num,1,25),25), rpad(ai.invoice_date,15), rpad(ai.invoice_amount,15),
+rpad(ai.org_id,7)
+FROM   ap_invoices_all ai, po_vendors pv, po_vendor_sites_all pvs
+WHERE  Upper(ai.invoice_num) like upper(nvl('&v_doc_number%',''))
+and ai.vendor_id = pv.vendor_id
+and ai.vendor_site_id = pvs.vendor_site_id
+and upper(pv.vendor_name) like upper(nvl('&v_vendor%','%'))
+and '&v_doc_type' = '1'
+order by invoice_id;
+
+select decode('&v_doc_type', '1',chr(9))
+from sys.dual
+where '&v_doc_type' = 1;
+
+select 'ERROR - Could not retrieve any Invoices for this Invoice Number and Supplier',
+chr(9),'Action - Ensure Invoice Number and Supplier is valid and try again', chr(9),
+'Press Ctrl + C to Cancel this test and try again'
+from sys.dual
+where not exists (
+SELECT 'x'
+FROM   ap_invoices_all ai, po_vendors pv, po_vendor_sites_all pvs
+WHERE  Upper(ai.invoice_num) like upper(nvl('&v_doc_number%',''))
+and ai.vendor_id = pv.vendor_id
+and ai.vendor_site_id = pvs.vendor_site_id
+and upper(pv.vendor_name) like upper(nvl('&v_vendor%','%'))
+and '&v_doc_type' = '1'
+)
+and '&v_doc_type' = '1';
+
+select decode('&v_doc_type', '2','*****MATCHING CHECK NUMBERS*****')
+from sys.dual
+where '&v_doc_type' = 2;
+
+select distinct rpad('Invoice ID',15), rpad('Check ID',15), rpad('Supplier Name', 25), rpad('Check Number',15), 
+rpad('Check Amount',15), rpad('Org ID',7)
+from sys.dual 
+where '&v_doc_type' = '2';
+
+SELECT distinct rpad(ai.invoice_id,15) invoice_id, rpad(aip.check_id,15), substr(pv.vendor_name,1,25), rpad(aca.check_number,15),
+rpad(aca.amount,15), rpad(ai.org_id,7)
+FROM   ap_invoices_all ai, po_vendors pv, po_vendor_sites_all pvs,
+ap_invoice_payments_all aip, ap_checks_all aca
+WHERE  Upper(aca.check_number) = upper(nvl('&v_doc_number',''))
+and aca.vendor_id = pv.vendor_id
+and aca.vendor_site_id = pvs.vendor_site_id
+and ai.invoice_id = aip.invoice_id
+and aca.check_id = aip.check_id
+and upper(pv.vendor_name) like upper(nvl('&v_vendor%','%'))
+and &v_doc_type = '2'
+order by invoice_id;
+
+select 'ERROR - Could not retrieve any Checks for this Check Number and Supplier'||
+chr(10)||'Action - Ensure Invoice Number and Supplier is valid and try again', chr(9),
+'Press Ctrl + C to Cancel this test and try again'
+from sys.dual
+where not exists (
+SELECT 'x'
+FROM   ap_invoices_all ai, po_vendors pv, po_vendor_sites_all pvs,
+ap_invoice_payments_all aip, ap_checks_all aca
+WHERE  Upper(aca.check_number) = upper(nvl('&v_doc_number',''))
+and aca.vendor_id = pv.vendor_id
+and aca.vendor_site_id = pvs.vendor_site_id
+and ai.invoice_id = aip.invoice_id
+and aca.check_id = aip.check_id
+and upper(pv.vendor_name) like upper(nvl('&v_vendor%','%'))
+and &v_doc_type = '2'
+)
+and '&v_doc_type' = '2';
+
+select chr(9)
+from sys.dual
+where '&v_doc_type' in (1,2);
+
+
+Prompt Enter the Invoice ID: 
+accept v_invoice_id number Prompt '>' default -99
+Prompt
+
+define v_invoice_id = &v_invoice_id
+
+set head on feedback on
+
+--Added for family pack D
+
+set term off
+
+COLUMN version NEW_VALUE v_version
+
+SELECT NVL(substr(patch_level,-1,1),'X') version
+FROM   fnd_product_installations
+WHERE  application_id = 200;
+
+COLUMN org_id NEW_VALUE p_org_id
+select nvl(max(org_id),99) org_id from ap_invoices_all where invoice_id = '&v_invoice_id';
+
+
+set term on
+
+set head off feedback off
+
+
+select chr(10)||'Delete Event (Y or N): '
+from sys.dual
+where upper('&v_version') > 'J';
+
+select chr(10)||'Press Enter'
+from sys.dual
+where upper('&v_version') < 'K';
+
+accept p_del_events prompt 'Default=N>' default N
+
+set head on feedback on
+
+exec FND_CLIENT_INFO.SET_ORG_CONTEXT(&p_org_id);
+
+set term off
+
+COLUMN del_events NEW_VALUE p_del_events2
+select to_char('Y') del_events
+from sys.dual
+where ((upper('&v_version') < 'K') OR (upper('&p_del_events') = 'Y'))
+union
+select to_char('N') del_events
+from sys.dual
+where ((upper('&v_version') > 'J') and (upper('&p_del_events') = 'N'));
+
+define p_del_events2 = &p_del_events2
+
+set term on
+
+
+--Get the Date and Time
+
+set term off
+
+COLUMN time NEW_VALUE v_time
+SELECT TO_CHAR(SYSDATE, 'HH24MISS') time
+from sys.dual;
+
+set term on
+
+
+REM ============ Spooling the output file======================================
+Define v_spoolfilename  = 'undoatg_&v_invoice_id._&v_time..txt'
+
+PROMPT
+PROMPT Running.....
+PROMPT 
+spool  &v_spoolfilename
+
+PROMPT  '--Invoice Accounting--'
+
+select aeh.accounting_event_id, aeh.set_of_books_id SOB, apae.source_id Invoice_id, SUBSTR(apae.source_table,1,10) Source, 
+SUBSTR( apae.event_type_code,1,10)  Event_type, 
+SUBSTR(apae.event_status_code,1,20) Status, aeh.gl_transfer_flag, 
+substr(aeh.description,1,10) Description
+FROM   ap_accounting_events apae, ap_ae_headers aeh
+   WHERE  aeh.accounting_event_id = apae.accounting_event_id
+AND aeh.accounting_event_id in (select accounting_event_id
+from ap_invoice_distributions where invoice_id = &v_invoice_id)
+/
+
+PROMPT  '--Payments Accounting--'
+
+select aeh.accounting_event_id, aeh.set_of_books_id SOB, apae.source_id Check_id, SUBSTR(apae.source_table,1,10) Source, 
+SUBSTR( apae.event_type_code,1,10)  Event_type, 
+SUBSTR(apae.event_status_code,1,20) Status, aeh.gl_transfer_flag,
+substr(aeh.description,1,10) Description
+FROM   ap_accounting_events apae, ap_ae_headers aeh
+   WHERE  aeh.accounting_event_id = apae.accounting_event_id
+AND aeh.accounting_event_id in (select accounting_event_id
+from ap_invoice_payments where invoice_id = &v_invoice_id)
+/   
+
+PROMPT  '--Reconciliation Accounting--'
+
+select aeh.accounting_event_id,aeh.set_of_books_id SOB, apae.source_id Check_id, SUBSTR(apae.source_table,1,10) Source, 
+SUBSTR( apae.event_type_code,1,10)  Event_type, 
+SUBSTR(apae.event_status_code,1,20) Status, aeh.gl_transfer_flag,
+substr(aeh.description,1,10) Description
+FROM   ap_accounting_events apae, ap_ae_headers aeh
+   WHERE  aeh.accounting_event_id = apae.accounting_event_id
+AND aeh.accounting_event_id in (select accounting_event_id
+from ap_PAYMENT_history where check_id in (select check_id
+from ap_invoice_payments where invoice_id  = &v_invoice_id))
+/
+
+
+--PROMPT  Before you undo the accounting please review the following:
+--PROMPT
+--PROMPT A.  Are there any related events?
+--PROMPT B.  Have any of the events been transferred to the GL?
+--PROMPT C.  If using MRC have any of the events been transferred for any of the SOB's?
+--PROMPT D.  Is upgraded Accounting data involved?  
+--PROMPT
+--Prompt If any of the above applies or you are not sure whether you should undo
+--Prompt accounting, do not proceed with this script and contact support.
+PROMPT
+PROMPT *****************************************************************************************************
+Prompt Verify that the accounting_event_id you are unaccounting appears in the list of events above
+Prompt before proceeding to undo the accounting.
+Prompt ONLY UNDO ACCOUNTING FOR ACCOUNTING_EVENT_ID'S THAT HAVE BEEN SPECIFIED TO BE UNACCOUNTED BY SUPPORT
+PROMPT *****************************************************************************************************
+PROMPT
+Prompt Enter the Accounting_event_id you want to undo accounting for: 
+accept event_id Prompt '>' default -99
+Prompt
+
+PROMPT '--DELETE FROM ap_encumbrance_lines--'
+prompt
+
+DELETE FROM ap_encumbrance_lines
+WHERE ae_header_id in (select ae_header_id   
+from ap_ae_headers                        
+where accounting_event_id = '&event_id')
+/
+--prompt
+--PROMPT '0 rows should be deleted if you are not using encumbrance accounting'
+--PROMPT 'ONE or more rows should be deleted if you are using encumbrance accounting'
+        
+PROMPT
+PROMPT '--DELETE FROM ap_ae_lines--'
+
+PROMPT
+
+DELETE FROM ap_ae_lines
+WHERE ae_header_id in (select ae_header_id   
+from ap_ae_headers                      
+where accounting_event_id = '&event_id')  
+
+/
+
+--PROMPT
+--PROMPT 'ONE OR MORE ROWS SHOULD HAVE BEEN DELETED'
+
+
+--added code for ap_liability_balance table
+
+declare
+
+l_cursor                integer;
+l_counter               integer;
+l_exception             exception;
+l_error_msg             varchar2(500);
+l_count                 NUMBER;
+SqlTxt          varchar2(5000);
+
+
+function object_test(object_test varchar2) return number is
+
+        l_object_test   number;
+
+begin
+
+l_object_test := 0;
+
+select count(*) 
+into l_object_test
+from dba_objects
+where object_name = object_test;
+
+return(l_object_test);
+
+end object_test;
+
+
+begin
+
+
+if object_test('AP_LIABILITY_BALANCE') > 0 THEN
+
+sqlTxt := 'DELETE FROM ap_liability_balance '||
+'WHERE ae_header_id in (select ae_header_id  '||
+'from ap_ae_headers                      '||
+'where accounting_event_id = '''||&event_id||''')';  
+
+execute immediate sqltxt;
+
+dbms_output.put_line(chr(10));
+
+dbms_output.put_line('--DELETE FROM AP_LIABILITY_BALANCE--');
+dbms_output.put_line(chr(10));
+dbms_output.put_line(SQL%ROWCOUNT||' Rows deleted');
+dbms_output.put_line(chr(10));
+--dbms_output.put_line('1 or more rows should be deleted if event was transferred');
+--dbms_output.put_line('0 rows should be deleted if event was not transferred');
+
+end if;
+
+end;
+
+/
+
+PROMPT
+PROMPT '--UPDATE ap_invoice_distributions--'
+
+ UPDATE ap_invoice_distributions
+ SET posted_flag = 'N', cash_posted_flag = 'N', accrual_posted_flag = 'N',
+     accounting_event_id = decode(upper('&p_del_events2'), 'Y', null, 'N', accounting_event_id)
+ WHERE accounting_event_id = '&event_id'
+
+
+/
+
+--PROMPT
+--Prompt '0 rows should be updated for a Reconciliation accounting_event_id' 
+--Prompt '0 rows should be updated for a payment accounting_event_id'
+--prompt 'One or more rows should be updated for an invoice accounting_event_id'
+
+PROMPT
+PROMPT '--UPDATE ap_invoice_payments--'
+
+UPDATE ap_invoice_payments
+ SET posted_flag = 'N', cash_posted_flag = 'N', accrual_posted_flag = 'N',
+     accounting_event_id = decode(upper('&p_del_events2'), 'Y', null, 'N', accounting_event_id)
+ WHERE accounting_event_id = '&event_id'
+
+
+/
+
+--PROMPT
+--Prompt '0 rows should be updated for an invoice accounting_event_id'
+--Prompt '0 rows should be updated for a Reconciliation accounting_event_id' 
+--prompt 'One or more rows should be updated for a payment accounting_event_id'
+
+PROMPT
+PROMPT -- UPDATE ap_payment_history --
+
+ UPDATE ap_payment_history
+ SET posted_flag = 'N', 
+     accounting_event_id = decode(upper('&p_del_events2'), 'Y', null, 'N', accounting_event_id)
+ WHERE accounting_event_id = '&event_id'
+
+/
+
+--PROMPT
+--Prompt '0 rows should be updated for an invoice accounting_event_id'
+--prompt '0 rows should be updated for a payment accounting_event_id'
+--Prompt 'One row should be updated for a Reconciliation accounting_event_id' 
+
+PROMPT
+PROMPT '--DELETE FROM ap_ae_headers--'
+
+ DELETE FROM ap_ae_headers
+ WHERE accounting_event_id = '&event_id'
+
+/
+
+--PROMPT
+--PROMPT 'ONE OR MORE ROWS SHOULD BE DELETED'
+
+PROMPT
+PROMPT '--DELETE FROM ap_accounting_events--'
+PROMPT
+
+delete from ap_accounting_events
+where accounting_event_id = '&event_id'
+--below line added for family pack D
+and upper('&p_del_events2') = 'Y'
+
+/
+
+--added for family pack D
+
+begin
+
+if upper('&p_del_events2') = 'N' then
+
+update ap_accounting_events_all
+set event_status_code = 'CREATED'
+where accounting_event_id = '&event_id';
+
+dbms_output.put_line(chr(10));
+dbms_output.put_line('--UPDATE Accounting event status--');
+dbms_output.put_line(chr(10));
+dbms_output.put_line(SQL%ROWCOUNT||' Rows updated');
+dbms_output.put_line(chr(10));
+
+end if;
+
+end;
+
+/
+
+
+
+
+--PROMPT
+--Prompt 'One row should be deleted (Unless Family Pack D or higher, then no rows deleted)'
+
+prompt
+PROMPT ***********************************************************************************************
+Prompt Verify that you have unaccounted the correct accounting_event_id.  The accounting_event_id you
+Prompt unaccounted should not appear in the list below.
+PROMPT ***********************************************************************************************
+Prompt
+
+
+PROMPT  --Invoice Accounting--
+
+select aeh.accounting_event_id, aeh.set_of_books_id SOB, apae.source_id Invoice_id, SUBSTR(apae.source_table,1,10) Source, 
+SUBSTR( apae.event_type_code,1,10)  Event_type, 
+SUBSTR(apae.event_status_code,1,10) Status, aeh.gl_transfer_flag
+FROM   ap_accounting_events apae, ap_ae_headers aeh
+   WHERE  aeh.accounting_event_id = apae.accounting_event_id
+AND aeh.accounting_event_id in (select accounting_event_id
+from ap_invoice_distributions where invoice_id = &v_invoice_id)
+/
+
+PROMPT  --Payments Accounting--
+
+select aeh.accounting_event_id, aeh.set_of_books_id SOB, apae.source_id Check_id, SUBSTR(apae.source_table,1,10) Source, 
+SUBSTR( apae.event_type_code,1,10)  Event_type, 
+SUBSTR(apae.event_status_code,1,10) Status, aeh.gl_transfer_flag
+FROM   ap_accounting_events apae, ap_ae_headers aeh
+   WHERE  aeh.accounting_event_id = apae.accounting_event_id
+AND aeh.accounting_event_id in (select accounting_event_id
+from ap_invoice_payments where invoice_id = &v_invoice_id)
+/   
+
+PROMPT  --Reconciliation Accounting--
+
+select aeh.accounting_event_id,aeh.set_of_books_id SOB, apae.source_id Check_id, SUBSTR(apae.source_table,1,10) Source, 
+SUBSTR( apae.event_type_code,1,10)  Event_type, 
+SUBSTR(apae.event_status_code,1,10) Status, aeh.gl_transfer_flag
+FROM   ap_accounting_events apae, ap_ae_headers aeh
+   WHERE  aeh.accounting_event_id = apae.accounting_event_id
+AND aeh.accounting_event_id in (select accounting_event_id
+from ap_PAYMENT_history where check_id in (select check_id
+from ap_invoice_payments where invoice_id  = &v_invoice_id))
+/
+
+prompt
+PROMPT This script does not commit the changes.  Review the spool file to verify that the
+PROMPT correct number of rows were deleted or updated.  Also, verify that you unaccounted the
+PROMPT correct accounting_event_id.  If the correct number of rows have been updated or deleted
+PROMPT and you have VERIFIED THAT YOU UNACCOUNTED THE CORRECT ACCOUNTING_EVENT_ID 
+PROMPT Type COMMIT; to commit the changes.  If the wrong number of rows were updated or you
+PROMPT do not want to undo the accounting for this accounting event then type ROLLBACK; 
+
+undefine organization_id
+undefine inv_id
+undefine event_id
+spool off
+
+prompt
+prompt Output spooled to file name &v_spoolfilename
+prompt
+
+
+
+-- rows deleted from ap_encumbrance_lines
+-- rows deleted from ap_ae_lines 
+-- rows deleted from ap_ae_headers
+-- rows updated in ap_invoice_distributions
+-- rows updated in ap_invoice_payments
+-- rows updated in ap_payment_history
+-- rows deleted from ap_accounting_events

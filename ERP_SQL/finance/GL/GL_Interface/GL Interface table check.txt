@@ -1,0 +1,34 @@
+
+---------Overview of things in interface
+1.
+select distinct status,user_je_category_name,user_je_source_name 
+from apps.GL_interface
+
+2.
+select distinct REQUEST_ID,CREATED_BY, GROUP_ID ,status,user_je_category_name,user_je_source_name from apps.GL_interface
+--where GROUP_ID =945203
+
+
+---------get details with Group_ID,request)ID
+select status,segment2||'.'||segment3 CC_Acc,CREATED_BY,
+(ACCOUNTED_DR),(ACCOUNTED_CR),CURRENCY_CODE,(ENTERED_DR) ,(ENTERED_CR),
+user_je_category_name,user_je_source_name,GROUP_ID ,REQUEST_ID
+from apps.GL_interface where GROUP_ID =945203
+
+
+
+--------Find the user name
+select USER_NAME,description from apps.fnd_user where user_id=1147
+
+
+------------
+SubLedger --GL transfer record table
+apps.xla_gl_transfer_batches_all
+
+
+------Invnetory source Org (to compare source trans)
+select status,user_je_category_name,user_je_source_name,REFERENCE5,REFERENCE22,REFERENCE21 Batch_ID,
+ACCOUNTING_DATE,DATE_CREATED,SEGMENT2 CC,SEGMENT3 Account,SEGMENT4 Prod,SEGMENT5 Prj,
+ENTERED_DR,ENTERED_CR,ACCOUNTED_DR,ACCOUNTED_CR,
+CURRENCY_CODE,GL_SL_LINK_TABLE,CREATED_BY,ACTUAL_FLAG
+from apps.GL_interface where USER_JE_SOURCE_NAME='Inventory'

@@ -1,0 +1,32 @@
+
+--------Item has both Roll up Cost & Define Cost 
+
+select msib.organization_id, 
+msib.segment1,msib.DESCRIPTION, 
+decode(msib.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+,msib.inventory_item_status_code Item_status,DEFINED_COST.DEFINE_COST,ROLLUP_COST.ROLLUP_COST
+from apps.mtl_system_items_b msib,
+(select distinct organization_id,inventory_item_id from bom.cst_item_cost_details a2 where  
+a2.rollup_source_type = 3 and a2.cost_type_id = :cost_type) c,
+(select distinct organization_id,inventory_item_id from bom.cst_item_cost_details a1 
+where  a1.rollup_source_type = 1 and a1.cost_type_id = :cost_type
+) d ,
+(select sum(a1.item_cost) define_cost,organization_id,inventory_item_id 
+from bom.cst_item_cost_details a1 where  a1.rollup_source_type = 1 and a1.cost_type_id = :cost_type
+group by organization_id ,inventory_item_id ) DEFINED_COST 
+,(select sum(a2.item_cost) ROLLUP_COST,organization_id,inventory_item_id 
+from bom.cst_item_cost_details a2 where  a2.rollup_source_type = 3 and a2.cost_type_id = :cost_type
+group by organization_id ,inventory_item_id ) ROLLUP_COST
+where msib.organization_id in (130)
+and c.organization_id = msib.organization_id 
+and c.inventory_item_id = msib.inventory_item_id 
+and d.organization_id = msib.organization_id 
+and d.inventory_item_id = msib.inventory_item_id
+and DEFINED_COST.organization_id = msib.organization_id 
+and DEFINED_COST.inventory_item_id = msib.inventory_item_id
+and DEFINED_COST.DEFINE_COST<>0
+and ROLLUP_COST.organization_id = msib.organization_id 
+and ROLLUP_COST.inventory_item_id = msib.inventory_item_id 
+and ROLLUP_COST.ROLLUP_COST<>0
+
+

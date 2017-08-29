@@ -1,0 +1,11 @@
+
+
+When save RMA receive, error :
+RVTII-030 Subroutine rvtiicreate() returned error
+
+
+
+Could change personal profile :
+RCV: Processing Mode   from on-line to Batch ot immeditately
+
+then run 'Receiving Process'

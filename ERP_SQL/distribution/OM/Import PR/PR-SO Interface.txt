@@ -1,0 +1,27 @@
+
+
+
+--Interface Table:
+
+select REQUISITION_HEADER_ID from apps.po_requisition_headers_all where segment1='13860'
+
+
+select * from Apps.OE_LINES_IFACE_ALL where Order_Source_Id = 10
+
+select * from apps.oe_headers_iface_all where order_source_id = 10
+
+
+select orig_sys_document_ref from apps.oe_headers_iface_all where order_source_id = 10
+and orig_sys_document_ref=82813 -- orig_sys_document_ref=PR_Header_ID
+
+select * from apps.oe_lines_iface_all where order_source_id = 10
+and orig_sys_document_ref=82813 -- orig_sys_document_ref=PR_Header_ID
+
+
+--------the View of above two tables
+
+select * from oe_headers_interface
+
+select * from oe_lines_interface
+
+

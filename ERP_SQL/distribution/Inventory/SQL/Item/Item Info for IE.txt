@@ -1,0 +1,34 @@
+
+
+-----------Item info for LYH (import/Export)
+
+SELECT a.ATTRIBUTE3 Bond,a.ATTRIBUTE4 Bobd_Date, c.ORGANIZATION_code,b.segment1 Model,a.segment1 Item,a.description,a.inventory_item_status_code status,
+a.Item_Type,b.segment2 Category2,b.segment3,b.segment4,
+a.purchasing_item_Flag
+from apps.mtl_system_items a,apps.mtl_item_categories_v b,APPS.mtl_parameters c
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+--and a.ORGANIZATION_ID in (131,130,132,128)
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and b.category_set_id=1
+and a.inventory_item_status_code='Active'
+and c.ORGANIZATION_code in ('VP','IP','AC')
+order by c.ORGANIZATION_code,b.segment1,a.segment1 
+
+
+
+SELECT c.ORGANIZATION_code,b.segment1 Model,a.segment1 Item,a.description,a.inventory_item_status_code status,
+a.Item_Type,b.segment2 Category2,b.segment3,b.segment4,
+a.purchasing_item_Flag
+from apps.mtl_system_items a,apps.mtl_item_categories_v b,APPS.mtl_parameters c
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID in (131,130,132,128)
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+--and b.segment1=''
+--and  a.segment1='KRE 101 1360'
+and b.category_set_id=1
+and a.inventory_item_status_code='Active'
+order by c.ORGANIZATION_code,b.segment1,a.segment1 
+
+

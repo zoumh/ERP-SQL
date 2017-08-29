@@ -1,0 +1,25 @@
+
+---------For PR line too much, PL=SQL has 12k limit, at Open Notification screen error (...txt/html)
+
+---------------------Check un-approvaled PR for a person, with total line_count
+SELECT PR.SEGMENT1 Req_or_PO_Number,
+(select count(*) from apps.po_requisition_lines_all where REQUISITION_HEADER_ID=PR.REQUISITION_HEADER_ID) line_count,
+HI.OBJECT_TYPE_CODE Doc_Type,PR.AUTHORIZATION_STATUS,
+--HI.ACTION_CODE,
+PE.FULL_NAME To_Whom,
+PR.NOTE_TO_AUTHORIZER,
+PR.DESCRIPTION DESC_OR_COMMENTS,
+PE.EMPLOYEE_NUMBER,pr.creation_date Date_Time,trunc(pr.creation_date) Create_Date,
+HI.CREATION_DATE His_CREATION_DATE,PR.REQUISITION_HEADER_ID Hearder_ID,convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer
+FROM apps.PO_ACTION_HISTORY HI,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.PER_PEOPLE_V7              PE,
+apps.PER_PEOPLE_V7      PE2
+WHERE 
+PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+AND PR.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+and HI.ACTION_CODE is null
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.PREPARER_ID=PE2.PERSON_ID
+and HI.OBJECT_TYPE_CODE='REQUISITION'
+AND PE.EMPLOYEE_NUMBER IN ('28945429')

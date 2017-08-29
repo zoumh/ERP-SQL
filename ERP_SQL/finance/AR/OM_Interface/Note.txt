@@ -1,0 +1,84 @@
+
+
+Tar 3947855.994
+
+
+Ideally run the autoinvoice purge program first. If you find that
+this does not delete the unwanted entries in tables then you
+could use the below mentioned script.
+
+Kindly use the below mentioned script if and only if the ra_interface_lines_all
+do not have any entries.
+
+You could use the below mentioned script for taking a backup 
+and deleting the errors table
+
+create backup_int_errors
+as (select * from ra_interface_errors_all)
+
+delete from ra_interface_errors_all
+
+OR
+
+Also kindly note that there is a system options called "Purge Interface tables"
+in the follwoing navigation:
+
+Receivables Setup > SystemOptions > Trans and Customers tab page.
+
+If this option is checked the processed interface lines are deleted automatically
+after each and every autoinvoice run.
+
+Kindly revert back if you need further clarity on the above issue.
+If you feel that you query has been asnwered to your satisfaction kindly close the TAR
+
+THanks and Regards,
+Praveen 
+
+----------------
+
+select * from apps.ra_interface_lines_all 
+
+if null return then
+
+select * from apps.ra_interface_errors_all
+
+delete from apps.ra_interface_errors_all
+
+
+--------------------------
+
+Please see uploaded puge autoinvoice log file.
+Looks this puge only delete from
+RA_INTERFACE_DISTRIBUTIONS,RA_INTERFACE_SALESCREDITS,RA_INTERFACE_LINES,
+but not delete from apps.ra_interface_errors_all
+
+So if we run this puge function when has lines in the RA_INTERFACE_LINES_all table, then we would lost these records, right ?
+
+--------------------------
+
+
+
+select * from apps.ra_interface_errors_all 
+
+select * from apps.ra_interface_errors
+
+CREATE OR REPLACE FORCE VIEW APPS.RA_INTERFACE_ERRORS
+(INTERFACE_LINE_ID, INTERFACE_SALESCREDIT_ID, INTERFACE_DISTRIBUTION_ID, MESSAGE_TEXT, INVALID_VALUE, 
+ LINK_TO_LINE_ID, ORG_ID)
+AS 
+SELECT "INTERFACE_LINE_ID" , "INTERFACE_SALESCREDIT_ID" , "INTERFACE_DISTRIBUTION_ID" , "MESSAGE_TEXT" , "INVALID_VALUE" , "LINK_TO_LINE_ID" , "ORG_ID" 
+FROM RA_INTERFACE_ERRORS_ALL 
+WHERE NVL(ORG_ID,NVL(TO_NUMBER(DECODE( SUBSTRB(USERENV('CLIENT_INFO'),1,1),' ',NULL, SUBSTRB(USERENV('CLIENT_INFO'),1,10))), -99)) = NVL(TO_NUMBER(DECODE( SUBSTRB(USERENV('CLIENT_INFO'),1,1),' ',NULL, SUBSTRB(USERENV('CLIENT_INFO'),1,10))),-99);
+
+
+select * from apps.ra_interface_lines_all
+where interface_line_id in (select interface_line_id from apps.ra_interface_errors_all)
+
+
+select * from apps.ra_interface_errors_all
+where interface_line_id not in
+(select interface_line_id from apps.ra_interface_lines_all)
+
+
+select * from apps.ra_interface_errors_all
+where interface_line_id is null

@@ -1,0 +1,125 @@
+
+-------------------use LPN ID as FIFO
+
+
+example :
+SE prod 
+TRANSACTION_ID=44361755
+
+
+1) Unpack LPN (wrong operation result)
+2) Picked not avaliable, have to use later LPN
+
+
+
+SELECT  to_char(e.LPN_ID) LPN_ID,b.CREATION_DATE,e.license_plate_number LPN,
+a.segment1 Item_Number,SUM(b.primary_transaction_quantity) Quantities, 
+       c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+b.subinventory_code Sub_inventory,  a.organization_id,b.INVENTORY_ITEM_ID,
+b.DATE_RECEIVED,b.ORIG_DATE_RECEIVED,e.CREATION_DATE LPN_Create,b.Revision
+FROM   apps.MTL_SYSTEM_ITEMS_B a,
+       apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+       apps.mtl_item_locations c,
+       apps.wms_license_plate_numbers e
+WHERE     b.INVENTORY_ITEM_ID=a.inventory_item_id
+      AND b.LOCATOR_ID=c.Inventory_LOCATion_ID
+      AND b.LPN_ID=e.LPN_id(+)
+      AND (b.subinventory_code='SEFG')
+      AND a.inventory_item_status_code='Active'
+--      AND a.organization_id=130
+      and a.organization_id=c.organization_id
+      and a.organization_id=b.organization_id
+      and a.organization_id=e.organization_id
+--      and a.segment1='DPY 101 1503/11'
+      and a.organization_id>127
+GROUP BY  a.segment1 ,
+       b.revision,
+       b.subinventory_code , 
+       c.segment2,c.segment3,c.segment4,c.segment5 ,
+       e.license_plate_number,e.LPN_ID,
+      b.CREATION_DATE,b.DATE_RECEIVED,b.ORIG_DATE_RECEIVED,e.CREATION_DATE,a.organization_id,b.INVENTORY_ITEM_ID
+      order by a.segment1,b.CREATION_DATE asc,e.LPN_ID
+
+
+
+
+select   mmt.transaction_date, lpn.LICENSE_PLATE_NUMBER Transfer_lpn,
+        'Transfer-LPN' LPN_Type,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.subinventory_code, 
+     mmt.TRANSACTION_QUANTITY as Qty, 
+         mmt.transaction_id, 
+         mtt.DESCRIPTION                     Type_Description, 
+         mmt.REVISION, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.wms_license_plate_numbers LPN
+where  
+        mtt.transaction_type_id = mmt.transaction_type_id 
+and     msi.inventory_item_id = mmt.inventory_item_id  
+and     mmt.organization_id = msi.organization_id 
+and     msi.segment1='DPY 101 1474/126'
+and     trunc(mmt.transaction_date) >= to_date('20070330','YYYYMMDD') 
+and     trunc(mmt.transaction_date) <= to_date('20070410','YYYYMMDD') 
+and     mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+--and mst.transaction_source_type_name='Move order'
+and   lpn.LICENSE_PLATE_NUMBER='CNCB5+DVQ139' 
+union
+select   mmt.transaction_date, lpn.LICENSE_PLATE_NUMBER Transfer_lpn,
+        'LPN' LPN_Type,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.subinventory_code, 
+     mmt.TRANSACTION_QUANTITY as Qty, 
+         mmt.transaction_id, 
+         mtt.DESCRIPTION                     Type_Description, 
+         mmt.REVISION, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.wms_license_plate_numbers LPN
+where  
+        mtt.transaction_type_id = mmt.transaction_type_id 
+and     msi.inventory_item_id = mmt.inventory_item_id  
+and     mmt.organization_id = msi.organization_id 
+and     msi.segment1='DPY 101 1474/126'
+and     trunc(mmt.transaction_date) >= to_date('20070330','YYYYMMDD') 
+and     trunc(mmt.transaction_date) <= to_date('20070410','YYYYMMDD') 
+and     mmt.LPN_ID =LPN.LPN_ID(+)
+--and mst.transaction_source_type_name='Move order'
+and   lpn.LICENSE_PLATE_NUMBER='CNCB5+DVQ139' 
+union
+select   mmt.transaction_date, lpn.LICENSE_PLATE_NUMBER Transfer_lpn,
+        'Content-LPN' LPN_Type,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+     mmt.subinventory_code, 
+     mmt.TRANSACTION_QUANTITY as Qty, 
+         mmt.transaction_id, 
+         mtt.DESCRIPTION                     Type_Description, 
+         mmt.REVISION, 
+         mmt.subinventory_code                    Source_WareHouse, 
+         mmt.transfer_subinventory             Destination_WareHouse
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.wms_license_plate_numbers LPN
+where  
+        mtt.transaction_type_id = mmt.transaction_type_id 
+and     msi.inventory_item_id = mmt.inventory_item_id  
+and     mmt.organization_id = msi.organization_id 
+and     msi.segment1='DPY 101 1474/126'
+and     trunc(mmt.transaction_date) >= to_date('20070330','YYYYMMDD') 
+and     trunc(mmt.transaction_date) <= to_date('20070410','YYYYMMDD') 
+and     mmt.CONTENT_LPN_ID =LPN.LPN_ID(+)
+--and mst.transaction_source_type_name='Move order'
+and   lpn.LICENSE_PLATE_NUMBER in ('CNCB5+DVQ12B','CNCB5+DVQ11V') 

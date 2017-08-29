@@ -1,0 +1,94 @@
+
+
+select count(*),released_Status_name from apps.WSH_DELIVERABLES_V group by released_Status_name
+
+released_Status_name:
+-------------------------------------
+COUNT(*)	RELEASED_STATUS_NAME
+262 		Backordered
+12668 		Cancelled
+419 		Not Applicable
+4023 		Ready to Release
+495 		Released to Warehouse
+752951 		Shipped
+632 		Staged/Pick Confirmed
+
+
+
+
+update apps.wsh_delivery_details wdd set released_status='R'
+   where wdd.SOURCE_HEADER_ID=680273
+ 
+apps.wsh_delivery_details.RELEASED_STATUS
+
+R:	Ready to Release
+S:	Released to Warehouse
+Y:	Staged/Pick Confirmed
+B:	Backordered
+C	Interfaced
+X       'May be wrong'
+
+
+
+
+-------View to find Delivery_ID,TRIP_ID
+select * from apps.WSH_DELIVERABLES_V where delivery_ID=800066921 --Delivery number
+
+select * --TRIP_NAME,TRIP_ID,DELIVERY_DETAIL_ID 
+from apps.WSH_DELIVERABLE_STOPS_V where DELIVERY_DETAIL_ID=2346116
+
+
+Tables:
+
+
+select * from apps.OE_ORDER_HEADERS_all where ORDER_NUMBER='309145'
+
+select * from apps.OE_ORDER_lineS_all where HEADER_ID=779698 and LINE_NUMBER='1'
+
+select * from apps.WSH_PICKING_BATCHES_V where ORDER_NUMBER='309145' --and SHIP_SET_NUMBER
+
+select *--RELEASED_STATUS,PICKABLE_FLAG
+from apps.wsh_delivery_details where SOURCE_HEADER_ID=779698 --and SOURCE_LINE_NUMBER='1.1'
+
+select * from apps.wsh_delivery_assignments where DELIVERY_DETAIL_ID =2407052
+
+select * from apps.wsh_new_deliveries where DELIVERY_ID=800230295 --SOURCE_HEADER_ID=779698 
+
+select * from apps.wsh_delivery_legs where DELIVERY_ID= 800230295
+
+----get trip name/ID for SO 309138
+select * --TRIP_NAME,TRIP_ID,DELIVERY_DETAIL_ID 
+from apps.WSH_DELIVERABLE_STOPS_V where DELIVERY_DETAIL_ID=2407052
+
+
+select * from apps.wsh_trips where TRIP_ID=399619
+
+----get trip_stop info for SO 309138
+select * --TRIP_ID,Pending_Interface_Flag,STOP_SEQUENCE_NUMBER,STATUS_CODE,STOP_LOCATION_ID,STOP_ID 
+from apps.Wsh_Trip_Stops Where Trip_Id=399619
+-- And Stop_Sequence_Number = 20
+
+
+
+--------Find un-shipped SO ,delivery_details table's pickable_flag=N'
+select a.ORDER_NUMBER,b.CANCELLED_FLAG,c.INV_INTERFACED_FLAG,
+--c.SOURCE_HEADER_NUMBER,c.SOURCE_LINE_NUMBER line_num,--b.LINE_NUMBER,
+c.SOURCE_HEADER_TYPE_NAME SO_Type,
+a.FLOW_STATUS_CODE head_status,
+b.FLOW_STATUS_CODE line_status,
+c.RELEASED_STATUS,
+c.PICKABLE_FLAG,
+b.ORDERED_ITEM,
+b.ORDERED_QUANTITY,b.SHIPPED_QUANTITY,b.CANCELLED_FLAG,b.SCHEDULE_SHIP_DATE
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lines_all b,apps.wsh_delivery_details c
+where a.HEADER_ID=b.HEADER_ID
+and a.HEADER_ID=c.SOURCE_HEADER_ID
+and b.LINE_ID=c.SOURCE_LINE_ID
+--and a.ORDER_NUMBER='309150'
+and (b.CANCELLED_FLAG='N' or b.CANCELLED_FLAG is null)
+and a.FLOW_STATUS_CODE<>'CLOSED'
+and b.FLOW_STATUS_CODE in ('AWAITING_SHIPPING','BOOKED')
+--and c.OE_INTERFACED_FLAG<>'Y'
+and c.INV_INTERFACED_FLAG<>'Y'
+and c.PICKABLE_FLAG<>'Y'
+and c.RELEASED_STATUS <>'C'

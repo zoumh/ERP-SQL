@@ -1,0 +1,138 @@
+
+
+
+--- FA Depr total amount compare with GL Journal amount (by GL JE line,GL_JE_Account)
+select gl.Account,to_char(gl.LINE_JE_LINE_NUM) JE_line_num,gl.amt GL_Amt,
+fa.amt*-1 fa_amt,gl.amt-fa.amt*-1 Diff
+from
+(SELECT a.segment3 as Account,
+  sum(LINE_ACCOUNTED_DR),
+  sum(LINE_ACCOUNTED_CR),sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt,
+  b.LINE_JE_LINE_NUM
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b ,
+  apps.GL_CODE_combinations a
+WHERE 
+b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID  
+and b.PERIOD_NAME='MAY-06'
+and b.JE_SOURCE='Assets'
+and b.JE_CATEGORY='Depreciation'
+group by b.LINE_JE_LINE_NUM,a.segment3 ) gl,
+(SELECT  sum(dd.deprn_amount) Amt,dd.DEPRN_RESERVE_JE_LINE_NUM
+FROM  
+       apps.FA_DEPRN_DETAIL      DD,apps.FA_DEPRN_PERIODS PD,
+       apps.FA_ADDITIONS         AD,apps.FA_CATEGORY_BOOKS cb,
+	   apps.FA_CATEGORIES_VL FCA
+WHERE DD.ASSET_ID = ad.ASSET_ID
+and   dd.BOOK_TYPE_CODE=pd.BOOK_TYPE_CODE
+AND   DD.DEPRN_AMOUNT   != 0
+AND   DD.ASSET_ID     = AD.ASSET_ID
+and dd.DEPRN_SOURCE_CODE<>'B'  ---first time addition
+and pd.period_counter=dd.PERIOD_COUNTER
+and pd.period_name='MAY-06'
+and ad.ASSET_CATEGORY_ID =fca.CATEGORY_ID 
+and dd.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and fca.CATEGORY_ID=cb.CATEGORY_ID
+and cb.BOOK_TYPE_CODE=dd.BOOK_TYPE_CODE
+group by dd.DEPRN_RESERVE_JE_LINE_NUM) fa
+where gl.LINE_JE_LINE_NUM=fa.DEPRN_RESERVE_JE_LINE_NUM
+
+
+---FA Depr total amount compare with GL Journal amount (by GL JE line,GL & FA_Category Account)
+select gl.Account GL_Acc,fa.DEPRN_RESERVE_ACCT fa_cate_Acc,to_char(gl.LINE_JE_LINE_NUM) JE_line_num,gl.amt GL_Amt,
+fa.amt*-1 fa_amt,gl.amt-fa.amt*-1 Diff
+from
+(SELECT a.segment3 as Account,
+  sum(LINE_ACCOUNTED_DR),
+  sum(LINE_ACCOUNTED_CR),sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt,
+  b.LINE_JE_LINE_NUM
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b ,
+  apps.GL_CODE_combinations a
+WHERE 
+b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID  
+and b.PERIOD_NAME='MAY-06'
+and b.JE_SOURCE='Assets'
+and b.JE_CATEGORY='Depreciation'
+group by b.LINE_JE_LINE_NUM,a.segment3 ) gl,
+(SELECT  sum(dd.deprn_amount) Amt,dd.DEPRN_RESERVE_JE_LINE_NUM,cb.DEPRN_RESERVE_ACCT
+FROM  
+       apps.FA_DEPRN_DETAIL      DD,apps.FA_DEPRN_PERIODS PD,
+       apps.FA_ADDITIONS         AD,apps.FA_CATEGORY_BOOKS cb,
+	   apps.FA_CATEGORIES_VL FCA
+WHERE DD.ASSET_ID = ad.ASSET_ID
+and   dd.BOOK_TYPE_CODE=pd.BOOK_TYPE_CODE
+AND   DD.DEPRN_AMOUNT   != 0
+AND   DD.ASSET_ID     = AD.ASSET_ID
+and dd.DEPRN_SOURCE_CODE<>'B'  ---first time addition
+and pd.period_counter=dd.PERIOD_COUNTER
+and pd.period_name='MAY-06'
+and ad.ASSET_CATEGORY_ID =fca.CATEGORY_ID 
+and dd.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and fca.CATEGORY_ID=cb.CATEGORY_ID
+and cb.BOOK_TYPE_CODE=dd.BOOK_TYPE_CODE
+group by dd.DEPRN_RESERVE_JE_LINE_NUM,cb.DEPRN_RESERVE_ACCT) fa
+where gl.LINE_JE_LINE_NUM=fa.DEPRN_RESERVE_JE_LINE_NUM
+
+
+
+-----Period Detail Depr by Account (from category setting) to Re-concile with GL
+SELECT  fca.SEGMENT1 Maj_Cate,fca.SEGMENT2 Min_Cate,fca.SEGMENT3 Status,
+dd.deprn_amount,dd.YTD_DEPRN,dd.DEPRN_RESERVE,dd.cost,cb.DEPRN_EXPENSE_ACCT,cb.DEPRN_RESERVE_ACCT,
+AD.ASSET_NUMBER,
+pd.period_name,dd.DEPRN_RUN_DATE,--FD.ASSET_ID,dd.PERIOD_COUNTER
+dd.BOOK_TYPE_CODE,
+dd.DEPRN_EXPENSE_JE_LINE_NUM,dd.DEPRN_RESERVE_JE_LINE_NUM
+FROM  
+       apps.FA_DEPRN_DETAIL      DD,
+       apps.FA_ADDITIONS         AD,apps.FA_CATEGORY_BOOKS cb,
+	   apps.FA_DEPRN_PERIODS PD,
+	   apps.FA_CATEGORIES_VL FCA
+WHERE DD.ASSET_ID = ad.ASSET_ID
+and   dd.BOOK_TYPE_CODE=pd.BOOK_TYPE_CODE
+AND   DD.DEPRN_AMOUNT   != 0
+AND   DD.ASSET_ID     = AD.ASSET_ID
+and dd.DEPRN_SOURCE_CODE<>'B'  ---first time addition
+and pd.period_counter=dd.PERIOD_COUNTER
+and pd.period_name='MAY-06'
+and ad.ASSET_CATEGORY_ID =fca.CATEGORY_ID 
+and dd.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and fca.CATEGORY_ID=cb.CATEGORY_ID
+and cb.BOOK_TYPE_CODE=dd.BOOK_TYPE_CODE
+
+---------FA Depr sum could reconcile with GL (sum by  GL JE_LINE_NUM & Category Account)
+
+SELECT  sum(dd.deprn_amount),cb.DEPRN_RESERVE_ACCT,dd.DEPRN_RESERVE_JE_LINE_NUM
+FROM  
+       apps.FA_DEPRN_DETAIL      DD,apps.FA_DEPRN_PERIODS PD,
+       apps.FA_ADDITIONS         AD,apps.FA_CATEGORY_BOOKS cb,
+	   apps.FA_CATEGORIES_VL FCA
+WHERE DD.ASSET_ID = ad.ASSET_ID
+and   dd.BOOK_TYPE_CODE=pd.BOOK_TYPE_CODE
+AND   DD.DEPRN_AMOUNT   != 0
+AND   DD.ASSET_ID     = AD.ASSET_ID
+and dd.DEPRN_SOURCE_CODE<>'B'  ---first time addition
+and pd.period_counter=dd.PERIOD_COUNTER
+and pd.period_name='MAY-06'
+and ad.ASSET_CATEGORY_ID =fca.CATEGORY_ID 
+and dd.BOOK_TYPE_CODE='BMC_FA_BOOK'
+and fca.CATEGORY_ID=cb.CATEGORY_ID
+and cb.BOOK_TYPE_CODE=dd.BOOK_TYPE_CODE
+group by dd.DEPRN_RESERVE_JE_LINE_NUM,cb.DEPRN_RESERVE_ACCT--,dd.DEPRN_EXPENSE_JE_LINE_NUM,dd.DEPRN_RESERVE_JE_LINE_NUM
+
+
+
+--------GL Depr Journal lines could reconcile with FA (sum by  GL JE_LINE_NUM)
+SELECT --a.segment3 as Account,
+  sum(LINE_ACCOUNTED_DR),
+  sum(LINE_ACCOUNTED_CR),sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt,
+  b.LINE_JE_LINE_NUM
+FROM 
+  apps.GL_JE_JOURNAL_LINES_V b ,
+  apps.GL_CODE_combinations a
+WHERE 
+b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID  
+and b.PERIOD_NAME='MAY-06'
+and b.JE_SOURCE='Assets'
+and b.JE_CATEGORY='Depreciation'
+group by b.LINE_JE_LINE_NUM

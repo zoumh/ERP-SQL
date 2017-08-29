@@ -1,0 +1,13 @@
+
+Path: Inventory- Onhand -Item Supply/Demand
+
+
+select * from apps.MTL_DEMAND where ORGANIZATION_ID=128 and CREATION_DATE>to_date('2008-11-1','yyyy-mm-dd')
+and INVENTORY_ITEM_ID in (157537,115588)
+
+and DEMAND_SOURCE_HEADER_ID in (806539,806540)
+
+select * from apps.MTL_SUPPLY where (To_ORGANIZATION_ID=128  or To_ORGANIZATION_ID=128) and CREATION_DATE>to_date('2008-11-1','yyyy-mm-dd')
+and ITEM_ID in (157537,115588)
+
+

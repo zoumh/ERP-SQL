@@ -1,0 +1,53 @@
+
+select * from apps.PRD_snapshot 
+where trunc(SNAPSHOT_TIME)=to_date('2004-10-2','yyyy-mm-dd')
+
+
+select * from apps.ARC_snapshot 
+where trunc(SNAPSHOT_TIME)=to_date('2004-10-2','yyyy-mm-dd')
+
+
+
+-------------------------Month end Onhand stock value --PRD (For COST Account)
+
+BMC INV SNAPSHOT (Run scheduled in Oracle  ---once for both PRD/ARC org)
+BMC COST Month End Onhand Value PRD Category (Discoverer report to list from apps.PRD_snapshot)
+
+select * from apps.PRD_snapshot
+
+--CREATE OR REPLACE VIEW APPS.BMC_CST_SC_VALUE_PRD
+--AS
+--select * from apps.PRD_snapshot
+
+
+Oracle report name : <BMC_PRD_ONHAND_QTY> <BMC_ACC_ONHAND_QTY> <BMC_ARC_ONHAND_QTY> <BMC_CSC_ONHAND_QTY> 
+
+
+-------------------------Month end Onhand stock value --ARC (For COST Account)
+
+BMC INV SNAPSHOT (Run scheduled in Oracle ---once for both PRD/ARC org)
+BMC COST Month End Onhand Value ARC Category (Discoverer report to list from apps.PRD_snapshot)
+
+
+--CREATE OR REPLACE VIEW APPS.BMC_CST_SC_VALUE_ARC
+--AS
+select * from apps.ARC_snapshot
+
+
+
+
+
+
+
+=============================================
+
+---------------Discoverer Report(schedule in Discoverer Desktop edition)
+
+Report Name:
+BMC COST Month End Onhand Value PRD_Discover2
+BMC COST Month End Onhand Value ARC_Discover2
+
+
+View:
+BMC_CST_Month_End_Onhand_PRD
+BMC_CST_Month_End_Onhand_ARC

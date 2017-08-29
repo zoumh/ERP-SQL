@@ -1,0 +1,20 @@
+
+
+--------------Project Borrow KRH, Non-Standard Discre Job Order Qty
+
+select b.WIP_entity_name Job_Order,a.Concatenated_segments Item,Item_Description,
+d.segment2 CC,d.segment3 Account_No,SUBSTR(b.description,INSTR(b.description,',',1,1)+1,10) Project,
+Required_quantity,
+quantity_issued Qty_Borrow,
+b.creation_date,
+quantity_issued Qty_outatanding,
+SUBSTR(b.description,1,INSTR(b.description,',',1,1)-1) Owner,c.user_Name Created_By,c.description By_User_Name,
+status_type_disp status,b.class_code --,MPS_Required_quantity,a.WIP_ENTITY_ID,a.ORGANIZATION_ID
+from apps.wip_requirement_operations_v a,apps.wip_discrete_jobs_v b,apps.FND_USER c,
+apps.gl_code_combinations d
+where a.WIP_ENTITY_ID=b.WIP_ENTITY_ID
+and b.created_by=c.user_id
+and b.MATERIAL_ACCOUNT=d.code_combination_id
+--and b.status_type=3 --release
+and b.job_type=3---Asset non-standard
+and b.wip_entity_name ='BR4151AAA050303'

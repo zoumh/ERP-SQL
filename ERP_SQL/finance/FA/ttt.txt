@@ -1,0 +1,268 @@
+Columns
+Name Datatype Length Mandatory Comments 
+BOOK_TYPE_CODE VARCHAR2 (15) Yes Book name 
+ASSET_ID NUMBER (15) Yes Asset identification number 
+DATE_PLACED_IN_SERVICE DATE 
+ Yes Date the asset was placed in service 
+DATE_EFFECTIVE DATE 
+ Yes Date the row was entered 
+DEPRN_START_DATE DATE 
+ Yes Date the asset started to depreciate 
+DEPRN_METHOD_CODE VARCHAR2 (12) Yes Name of the depreciation method for the asset 
+LIFE_IN_MONTHS NUMBER (4) 
+ Life of the asset in total months 
+RATE_ADJUSTMENT_FACTOR NUMBER 
+ Yes Percent of remaining depreciation after a revaluation or an amortized change, or 1 
+ADJUSTED_COST NUMBER 
+ Yes Recoverable cost less depreciation reserve. Reset when you perform an amortized adjustment or revaluation 
+COST NUMBER 
+ Yes Current cost of the asset 
+ORIGINAL_COST NUMBER 
+ Yes Original cost of the asset 
+SALVAGE_VALUE NUMBER 
+ Yes Asset salvage value 
+PRORATE_CONVENTION_CODE VARCHAR2 (10) Yes Depreciation prorate convention 
+PRORATE_DATE DATE 
+ Yes Date used to prorate depreciation 
+COST_CHANGE_FLAG VARCHAR2 (3) Yes Indicates whether there is an adjustment pending for the asset. The depreciation program recalculates depreciation reserve from the beginning of the asset's life if this flag is set to YES 
+ADJUSTMENT_REQUIRED_STATUS VARCHAR2 (4) Yes Indicates asset requires an adjustment to depreciation expense for a retroactive transaction 
+CAPITALIZE_FLAG VARCHAR2 (3) Yes Indicates whether the asset is a capitalized asset 
+RETIREMENT_PENDING_FLAG VARCHAR2 (3) Yes Indicates whether the asset has a retirement pending 
+DEPRECIATE_FLAG VARCHAR2 (3) Yes Indicates whether the asset is depreciating 
+LAST_UPDATE_DATE DATE 
+ Yes Standard Who column 
+LAST_UPDATED_BY NUMBER (15) Yes Standard Who column 
+DATE_INEFFECTIVE DATE 
+ 
+ Date which the row became ineffective 
+TRANSACTION_HEADER_ID_IN NUMBER (15) Yes Identifies the transaction that made this row effective 
+TRANSACTION_HEADER_ID_OUT NUMBER (15) 
+ Identifies the transaction that made this row ineffective 
+ITC_AMOUNT_ID NUMBER (15) 
+ Identifies the ITC rate 
+ITC_AMOUNT NUMBER 
+ 
+ Amount of ITC 
+RETIREMENT_ID NUMBER (15) 
+ Identifies the retirement transaction if the asset has been retired 
+TAX_REQUEST_ID NUMBER (15) 
+ Concurrent request number for mass copy program 
+ITC_BASIS NUMBER 
+ 
+ Cost basis for calculating ITC 
+BASIC_RATE NUMBER 
+ 
+ Base rate used to calculate depreciation amount for flat-rate methods 
+ADJUSTED_RATE NUMBER 
+ 
+ Actual rate used to calculate depreciation for flat-rate methods 
+BONUS_RULE VARCHAR2 (30) 
+ Identifies the bonus rule to use in calculating depreciation for the flat-rate methods 
+CEILING_NAME VARCHAR2 (30) 
+ Identifies a depreciation ceiling to use in calculating depreciation 
+RECOVERABLE_COST NUMBER 
+ Yes Cost minus salvage value, or depreciation ceiling, whichever is lower 
+LAST_UPDATE_LOGIN NUMBER (15) 
+ Standard Who column 
+ADJUSTED_CAPACITY NUMBER 
+ 
+ Capacity of a units of production asset. Reset to the remaining capacity when you perform an amortized capacity adjustment 
+FULLY_RSVD_REVALS_COUNTER NUMBER (5) 
+ Number of times the asset has been revalued as fully reserved 
+IDLED_FLAG VARCHAR2 (3) 
+ Reserved for future use 
+PERIOD_COUNTER_CAPITALIZED NUMBER (15) 
+ Period that the asset was capitalized 
+PERIOD_COUNTER_FULLY_RESERVED NUMBER (15) 
+ Period that the asset became fully reserved 
+PERIOD_COUNTER_FULLY_RETIRED NUMBER (15) 
+ Period in which the asset was fully retired 
+PRODUCTION_CAPACITY NUMBER 
+ 
+ Capacity of a units of production asset 
+REVAL_AMORTIZATION_BASIS NUMBER 
+ 
+ Revaluation reserve used in calculating amortization of revaluation reserve. Updated only when the asset is revalued or has an amortized adjustment 
+REVAL_CEILING NUMBER 
+ 
+ Upper limit for revaluing asset cost 
+UNIT_OF_MEASURE VARCHAR2 (25) 
+ Unit of measure of a units of production asset 
+UNREVALUED_COST NUMBER 
+ Yes Cost without regard to any revaluations 
+ANNUAL_DEPRN_ROUNDING_FLAG VARCHAR2 (5) 
+ Indicates whether Oracle Assets should subtract year-to-date depreciation from the annual depreciation amount to get the depreciation amount for the last period of the fiscal year 
+PERCENT_SALVAGE_VALUE NUMBER 
+ 
+ Salvage value percentage amount 
+ALLOWED_DEPRN_LIMIT NUMBER 
+ 
+ The default depreciation limit as a percentage of cost. 
+ALLOWED_DEPRN_LIMIT_AMOUNT NUMBER 
+ 
+ Cost without regard to any revaluations 
+PERIOD_COUNTER_LIFE_COMPLETE NUMBER (15) 
+ The period the asset's useful life is fully reserved 
+ADJUSTED_RECOVERABLE_COST NUMBER 
+ 
+ Adjusted recoverable cost with special depreciation limits taken into account 
+ANNUAL_ROUNDING_FLAG VARCHAR2 (5) 
+ Reserved for future use 
+GLOBAL_ATTRIBUTE1 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE2 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE3 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE4 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE5 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE6 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE7 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE8 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE9 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE10 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE11 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE12 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE13 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE14 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE15 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE16 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE17 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE18 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE19 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE20 VARCHAR2 (150) 
+ Reserved for country-specific functionality 
+GLOBAL_ATTRIBUTE_CATEGORY VARCHAR2 (30) 
+ Reserved for country-specific functionality 
+EOFY_ADJ_COST NUMBER 
+ 
+ Adjusted cost at the end of fiscal year 
+EOFY_FORMULA_FACTOR NUMBER 
+ 
+ Formula factor at the end of the fiscal year 
+SHORT_FISCAL_YEAR_FLAG VARCHAR2 (3) 
+ Indicates if asset is added in a short fiscal year 
+CONVERSION_DATE DATE 
+ 
+ Date short tax year asset added to the acquiring company 
+ORIGINAL_DEPRN_START_DATE DATE 
+ 
+ Date short tax year asset began depreciating in the acquired company's books 
+REMAINING_LIFE1 NUMBER (4) 
+ Remaining life of the asset as of the conversion date, prorate date or fiscal year start date 
+REMAINING_LIFE2 NUMBER (4) 
+ Remaining life of the asset as of the fiscal year start date 
+OLD_ADJUSTED_COST NUMBER 
+ 
+ The old cost of a formula-based NBV-based asset before an adjustment 
+FORMULA_FACTOR NUMBER 
+ 
+ Factor used to adjust the depreciation rate for formula-based NBV-based assets 
+GROUP_ASSET_ID NUMBER (15) 
+ Reserved for system use. Do not use. 
+
+Query Text
+Cut, paste (and edit) the following text to query this object:
+
+SELECT BOOK_TYPE_CODE
+,      ASSET_ID
+,      DATE_PLACED_IN_SERVICE
+,      DATE_EFFECTIVE
+,      DEPRN_START_DATE
+,      DEPRN_METHOD_CODE
+,      LIFE_IN_MONTHS
+,      RATE_ADJUSTMENT_FACTOR
+,      ADJUSTED_COST
+,      COST
+,      ORIGINAL_COST
+,      SALVAGE_VALUE
+,      PRORATE_CONVENTION_CODE
+,      PRORATE_DATE
+,      COST_CHANGE_FLAG
+,      ADJUSTMENT_REQUIRED_STATUS
+,      CAPITALIZE_FLAG
+,      RETIREMENT_PENDING_FLAG
+,      DEPRECIATE_FLAG
+,      LAST_UPDATE_DATE
+,      LAST_UPDATED_BY
+,      DATE_INEFFECTIVE
+,      TRANSACTION_HEADER_ID_IN
+,      TRANSACTION_HEADER_ID_OUT
+,      ITC_AMOUNT_ID
+,      ITC_AMOUNT
+,      RETIREMENT_ID
+,      TAX_REQUEST_ID
+,      ITC_BASIS
+,      BASIC_RATE
+,      ADJUSTED_RATE
+,      BONUS_RULE
+,      CEILING_NAME
+,      RECOVERABLE_COST
+,      LAST_UPDATE_LOGIN
+,      ADJUSTED_CAPACITY
+,      FULLY_RSVD_REVALS_COUNTER
+,      IDLED_FLAG
+,      PERIOD_COUNTER_CAPITALIZED
+,      PERIOD_COUNTER_FULLY_RESERVED
+,      PERIOD_COUNTER_FULLY_RETIRED
+,      PRODUCTION_CAPACITY
+,      REVAL_AMORTIZATION_BASIS
+,      REVAL_CEILING
+,      UNIT_OF_MEASURE
+,      UNREVALUED_COST
+,      ANNUAL_DEPRN_ROUNDING_FLAG
+,      PERCENT_SALVAGE_VALUE
+,      ALLOWED_DEPRN_LIMIT
+,      ALLOWED_DEPRN_LIMIT_AMOUNT
+,      PERIOD_COUNTER_LIFE_COMPLETE
+,      ADJUSTED_RECOVERABLE_COST
+,      ANNUAL_ROUNDING_FLAG
+,      GLOBAL_ATTRIBUTE1
+,      GLOBAL_ATTRIBUTE2
+,      GLOBAL_ATTRIBUTE3
+,      GLOBAL_ATTRIBUTE4
+,      GLOBAL_ATTRIBUTE5
+,      GLOBAL_ATTRIBUTE6
+,      GLOBAL_ATTRIBUTE7
+,      GLOBAL_ATTRIBUTE8
+,      GLOBAL_ATTRIBUTE9
+,      GLOBAL_ATTRIBUTE10
+,      GLOBAL_ATTRIBUTE11
+,      GLOBAL_ATTRIBUTE12
+,      GLOBAL_ATTRIBUTE13
+,      GLOBAL_ATTRIBUTE14
+,      GLOBAL_ATTRIBUTE15
+,      GLOBAL_ATTRIBUTE16
+,      GLOBAL_ATTRIBUTE17
+,      GLOBAL_ATTRIBUTE18
+,      GLOBAL_ATTRIBUTE19
+,      GLOBAL_ATTRIBUTE20
+,      GLOBAL_ATTRIBUTE_CATEGORY
+,      EOFY_ADJ_COST
+,      EOFY_FORMULA_FACTOR
+,      SHORT_FISCAL_YEAR_FLAG
+,      CONVERSION_DATE
+,      ORIGINAL_DEPRN_START_DATE
+,      REMAINING_LIFE1
+,      REMAINING_LIFE2
+,      OLD_ADJUSTED_COST
+,      FORMULA_FACTOR
+,      GROUP_ASSET_ID
+FROM FA.FA_BOOKS;
+

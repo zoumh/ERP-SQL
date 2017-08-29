@@ -1,0 +1,11 @@
+
+Refer to Note 148388.1 for more info on how to generate aplist
+
+Generate aplist with the following parameters:
+
+Print NULL Columns (Y or N) = Y
+Show Spaces (Y or N) = Y
+Details Layout: Portrait or Landscape (P or L) = L
+GL Details (Y or N) = Y
+Max number of rows returned (0 - 500) = 500
+

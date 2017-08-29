@@ -1,0 +1,53 @@
+
+
+
+
+select   mmt.transaction_date, mmt.transaction_id,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.organization_id Organization ,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+and    trunc(mmt.transaction_date) >= to_date('20060110','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060531','YYYYMMDD')
+and mtt.transaction_type_name in ('WIP Move Order Issue','ARC Move Order Issue','SEM Move Order Issue')
+and mmt.TRANSACTION_QUANTITY>0
+order by trunc(mmt.transaction_date),mmt.transaction_id
+
+
+
+
+----
+select   mmt.transaction_date, mmt.transaction_id,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = 83 and msi.organization_id = 83 
+and    trunc(mmt.transaction_date) >= to_date('20050101','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20050531','YYYYMMDD')
+and mmt.subinventory_code='SF'
+and mtt.transaction_type_name='PO Receipt'
+and mmt.TRANSACTION_QUANTITY>0
+order by trunc(mmt.transaction_date),mmt.transaction_id
+

@@ -1,0 +1,43 @@
+
+
+
+
+select CREATION_DATE,LAST_UPDATE_DATE,INTERFACE_LINE_ID,INTERFACE_LINE_ATTRIBUTE1 Order_No,INTERFACE_LINE_ATTRIBUTE2 Type,
+DESCRIPTION,CURRENCY_CODE,AMOUNT,LINE_NUMBER,SALES_ORDER_LINE,QUANTITY,UNIT_SELLING_PRICE
+,TAX_CODE,SHIP_DATE_ACTUAL
+ from apps.RA_INTERFACE_LINES_all
+
+-------- With Order info (Ship_to,type,Tax)
+select oh.ORDER_NUMBER,oh.SHIP_TO_LOCATION,ol.TAX_code,
+INTERFACE_LINE_ID,INTERFACE_LINE_ATTRIBUTE1 Order_No,INTERFACE_LINE_ATTRIBUTE2 Type,
+DESCRIPTION,CURRENCY_CODE,AMOUNT,a.LINE_NUMBER,SALES_ORDER_LINE,QUANTITY,a.UNIT_SELLING_PRICE
+,a.TAX_CODE,SHIP_DATE_ACTUAL ,a.CREATION_DATE,a.LAST_UPDATE_DATE
+from apps.RA_INTERFACE_LINES_all a,apps.OE_ORDER_HEADERS_V oh,apps.oe_order_lines_all ol
+where a.INTERFACE_LINE_ATTRIBUTE1=oh.ORDER_NUMBER
+and oh.header_id =   ol.header_id
+and a.LINE_NUMBER=ol.LINE_NUMBER
+--and oh.ORDER_NUMBER='4011091'
+--and ol.TAX_code='Output-0%'
+
+
+---- to list Master Item's Invoice Flag for pending at Interface (wit Error Msg)
+select sales_order SO,MESSAGE_TEXT,INVALID_VALUE,sales_order_line line, purchase_order SE_PO,interface_line_attribute2 SO_Type,b.segment1 Item,
+b.INVOICEABLE_ITEM_FLAG,b.INVOICE_ENABLED_FLAG
+--,TRX_DATE ,GL_DATE,SHIP_DATE_ACTUAL,SALES_ORDER_DATE   
+from apps.RA_INTERFACE_LINES_all a,apps.mtl_system_items b,apps.ra_interface_errors_all c 
+where (a.request_id is not null or a.INTERFACE_LINE_ID is not null)
+and a.inventory_item_id=b.inventory_item_id
+and b.organization_id=127
+and c.INTERFACE_LINE_ID(+)=a.INTERFACE_LINE_ID
+--and MESSAGE_TEXT is not null
+ 
+
+---- to list Master Item's Invoice Flag for pending at Interface
+select sales_order SO,sales_order_line line, purchase_order SE_PO,interface_line_attribute2 SO_Type,b.segment1 Item,
+b.INVOICEABLE_ITEM_FLAG,b.INVOICE_ENABLED_FLAG
+--,TRX_DATE ,GL_DATE,SHIP_DATE_ACTUAL,SALES_ORDER_DATE   
+from apps.RA_INTERFACE_LINES_all a,apps.mtl_system_items b 
+where (a.request_id is not null or a.INTERFACE_LINE_ID is not null)
+and a.inventory_item_id=b.inventory_item_id
+and b.organization_id=127
+

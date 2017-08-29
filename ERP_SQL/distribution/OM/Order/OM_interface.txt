@@ -1,0 +1,57 @@
+
+OM interface check for auto invoice:
+
+OM-Order Organizer -- > all orders , by Ship date in current period, check the 'Status'= 'Fullfilled'
+
+
+select to_char(b.ORDER_NUMBER) OR_Num,
+to_Char(a.LINE_NUMBER) Line_Num
+,a.FLOW_STATUS_CODE
+,a.ORDERED_ITEM,c.segment1 Sys_Item
+,a.SHIPPED_QUANTITY
+,a.ORDERED_QUANTITY
+,a.SHIPPING_QUANTITY,a.UNIT_SELLING_PRICE,a.UNIT_SELLING_PRICE*a.SHIPPING_QUANTITY*8.28 Amount
+,a.CREATION_DATE
+,a.LAST_UPDATE_DATE,
+a.ACTUAL_SHIPMENT_DATE,a.FULFILLMENT_DATE,
+a.TAX_DATE,a.PRICING_DATE,a.SCHEDULE_SHIP_DATE,a.SCHEDULE_ARRIVAL_DATE,a.ACTUAL_ARRIVAL_DATE,a.SCHEDULE_STATUS_CODE
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.mtl_system_items_b c
+where a.HEADER_ID=b.HEADER_ID
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.ship_from_org_id=c.organization_id
+and a.FLOW_STATUS_CODE='FULFILLED'
+
+
+select count(*)
+from apps.OE_ORDER_lineS_all where FLOW_STATUS_CODE='FULFILLED'
+
+
+OE_ORDER_HEADERS_V
+
+oe_transaction_types_tl
+
+
+
+
+
+----- check out REQUEST_ID not null, to make them null to be able to import into AR
+----Harris
+
+select *
+from apps.ra_interface_lines_all
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+select INTERFACE_LINE_ATTRIBUTE1,interface_line_id,customer_trx_id,request_id, link_to_line_id
+from apps.ra_interface_lines_all
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+UPDATE ra_interface_lines_all
+SET interface_line_id = null,
+		    customer_trx_id = null,
+		    request_id = null,
+		    link_to_line_id = null
+WHERE nvl(interface_status,'x') != 'P' and REQUEST_ID is not null;
+
+
+
+

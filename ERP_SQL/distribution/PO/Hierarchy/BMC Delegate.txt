@@ -1,0 +1,29 @@
+
+
+---BMC Delegate table (Form)
+select * from WF_ROUTING_RULES
+
+
+---BMC Delegate History table
+select * from  apps.BMC_WF_ROUTING_RULES_HISTORY order by CREATION_DATE desc
+
+(ROLE/ACTION_ARGUMENT link to  fnd_user.user_name)
+
+select to_char(a.RULE_ID) RULE_ID,a.CREATION_DATE,a.LAST_UPDATE_DATE,
+a.ROLE Delegate_From_ID,d.description Delegate_From_name,
+a.BEGIN_DATE,a.END_DATE,a.ACTION_ARGUMENT Resign_To_ID,e.description Resign_To_Name,
+a.ACTION_TYPE,b.user_name Created_By,b.description Created_By_Name,
+b.user_name LAST_UPDATED_BY,b.description LAST_UPDATED_BY_Name,a.ACTION
+from  apps.BMC_WF_ROUTING_RULES_HISTORY a,apps.fnd_user b, apps.fnd_user c,
+apps.fnd_user d,apps.fnd_user e
+where 1=1 
+and a.CREATED_BY=b.user_id
+and a.LAST_UPDATED_BY=c.user_id
+and a.ROLE=d.user_name
+and a.ACTION_ARGUMENT=e.user_name
+order by a.LAST_UPDATE_DATE desc
+
+
+
+---??? Oracle tabel?
+select * from OTA.OTA_DELEGATE_BOOKINGS

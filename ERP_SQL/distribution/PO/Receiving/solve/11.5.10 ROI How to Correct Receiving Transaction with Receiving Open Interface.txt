@@ -1,0 +1,620 @@
+11.5.10 ROI How to Correct Receiving Transaction with Receiving Open Interface 
+Type  HOWTO 
+Status  PUBLISHED 
+ Content Type  TEXTX-HTML 
+Creation Date  27-SEP-2005 
+Last Revision Date  05-DEC-2005 
+ 
+
+In this Document
+  Goal
+  Solution
+  References
+
+
+
+--------------------------------------------------------------------------------
+
+
+
+Applies to 
+Oracle Inventory Management - Version 11.5.10
+Microsoft Windows 2000
+Linux Intel (64-bit)
+Solaris Operating System (x86)
+HP-UX PA-RISC (32-bit)
+Microsoft Windows XP (64-bit Itanium)
+Microsoft Windows XP
+AIX5L Based Systems (64-bit)
+Red Hat Enterprise Linux Advanced Server Itanium
+SUSE  UnitedLinux x86-64
+Red Hat Enterprise Linux Advanced Server x86-64 (AMD Opetron Architecture)
+Linux x86-64
+Solaris Operating System (SPARC 64-bit)
+AIX Based Systems (32-bit)
+AIX 4.3 Based Systems (64-bit)
+Solaris Operating System (SPARC 32-bit)
+Linux x86
+HP-UX PA-RISC (64-bit)
+HP Tru64 UNIX
+Microsoft Windows (32-bit)
+RVCTP - Receiving Transaction Processor 
+Goal
+New functionality of 11.5.10 is ROI supports for Standard Purchase Order
+            . CORRECT to DELIVER to Inventory transactions
+            . CORRECT to RECEIVE  transactions
+
+How to Correct Receiving Transaction against Standard Purchase Order using ROI 
+Solution
+Following SAMPLE scripts are intended 
+
+A) to Correct a Deliver to Inventory Transaction for a standard Purchase Order with Inventory destination type through the Receiving Open Interface (ROI)
+
+B) to Correct a Receive Transaction  for a standard Purchase Order with Inventory destination type through the Receiving Open Interface (ROI)  
+
+In order to be most comprehensive, each script has been tested for a Lot and Serial Controlled Item.
+
+Each script will insert 1 record into the tables RCV_TRANSACTIONS_INTERFACE,
+MTL_TRANSACTIONS_LOTS_INTERFACE  and MTL_SERIAL_NUMBERS_INTERFACE.
+
+If the item is only a standard item, only the record into RCV_TRANSACTIONS_INTERFACE table has to be created. 
+
+
+          ------------------------SETUP------------------------
+
+1) Standard Purchase Order number # 6752 has been entered
+for Inventory Item = Lot-Serial-Controlled-1
+Shipment Receiving Routing = Standard Receipt
+Destination Type Code = Inventory 
+
+
+2) Item  Lot-Serial-Controlled-1 is a lot and serial controlled Item
+SQL Select mp.organization_id Org_Id, mp.organization_code Org_Code, 
+msi.inventory_item_id, msi.segment1, decode(to_char(msi.lot_control_code),
+  '2','Y',
+  '1','N') LOT_CONTROL,
+decode(to_char(msi.serial_number_control_code),
+  '1','None',
+  '2','Predefined',
+  '5','Dynamic at INV receipt',
+  '6','Dynamic at SO issue') SERIAL_CONTROL
+  from mtl_system_items_b msi,mtl_parameters mp
+where msi.segment1 like '&item' and msi.organization_id=mp.organization_id; 
+
+It returns LOT_CONTROL='Y' and SERIAL_CONTROL='Dynamic at INV receipt'
+inventory_item_id=169845 for item=Lot-Serial-Controlled-1 
+
+
+3) Receipt number  # 7746 for a quantity=10 has been entered (Receive and Deliver Transactions)
+The deliver transaction for a quantity=10 on PO 6752 for 
+item=Lot-Serial-Controlled-1 is entered
+on Lot Number=S246
+and Serial Number from SN0001 to SN0010 
+
+
+4) Run the following script so to find the necessary information to insert 
+into the RCV_TRANSACTIONS_INTERFACE table 
+
+SQL Select RSH.RECEIPT_NUM ,
+        PH.SEGMENT1 PO_NUMBER,
+        RT.TRANSACTION_ID ,
+        RT.TRANSACTION_TYPE ,
+        RT.TRANSACTION_DATE ,
+        RT.QUANTITY ,
+        RT.UNIT_OF_MEASURE ,
+        RT.SHIPMENT_HEADER_ID ,
+        RT.SHIPMENT_LINE_ID ,
+        RT.SOURCE_DOCUMENT_CODE ,
+        RT.DESTINATION_TYPE_CODE ,
+        RT.EMPLOYEE_ID ,
+        RT.PARENT_TRANSACTION_ID ,
+        RT.PO_HEADER_ID ,
+        RT.PO_LINE_ID ,
+        PL.LINE_NUM ,
+        PL.ITEM_ID ,
+        PL.ITEM_DESCRIPTION ,
+        PL.UNIT_PRICE ,
+        RT.PO_LINE_LOCATION_ID ,
+        RT.PO_DISTRIBUTION_ID ,
+        RT.ROUTING_HEADER_ID,
+        RT.ROUTING_STEP_ID ,
+        RT.DELIVER_TO_PERSON_ID ,
+        RT.DELIVER_TO_LOCATION_ID ,
+        RT.VENDOR_ID ,
+        RT.VENDOR_SITE_ID ,
+        RT.ORGANIZATION_ID ,
+        RT.SUBINVENTORY ,
+        RT.LOCATOR_ID ,
+        RT.LOCATION_ID,
+        RSH.SHIP_TO_ORG_ID
+From      
+        RCV_TRANSACTIONS RT,
+        RCV_SHIPMENT_HEADERS RSH,
+        PO_HEADERS_ALL PH,
+        PO_LINES_ALL PL
+Where 
+        RSH.RECEIPT_NUM = '&RECEIPT_NUMBER'
+        AND PH.SEGMENT1 like '&PO_NUMBER'
+        AND PH.PO_HEADER_ID = PL.PO_HEADER_ID
+        AND RT.PO_HEADER_ID = PH.PO_HEADER_ID
+        AND RT.SHIPMENT_HEADER_ID = RSH.SHIPMENT_HEADER_ID; 
+
+It returns 2 records for RECEIPT_NUM=7746 and PO_NUMBER=6752  
+
+For TRANSACTION_TYPE=RECEIVE
+    TRANSACTION_ID=302978
+    DESTINATION_TYPE_CODE=RECEIVING
+    PARENT_TRANSACTION_ID=-1
+    QUANTITY=10
+    UNIT_OF_MEASURE=Each
+    SHIPMENT_HEADER_ID=250536
+    SHIPMENT_LINE_ID=261490
+    SOURCE_DOCUMENT_CODE=PO
+    EMPLOYEE_ID=13706
+    PARENT_TRANSACTION_ID=302978
+    PO_HEADER_ID=36665
+    PO_LINE_ID=42138
+    ITEM_ID=169845
+    PO_LINE_LOCATION_ID=76782
+    DELIVER_TO_PERSON_ID=null
+    DELIVER_TO_LOCATION_ID=null
+    VENDOR_ID=7927
+    VENDOR_SITE_ID=4724
+    ORG_ID=204
+    SUBINVENTORY=null
+    LOCATOR_ID=null
+    LOCATION_ID=204
+    SHIP_TO_ORG_ID=204 
+
+For TRANSACTION_TYPE=DELIVER
+    TRANSACTION_ID=302979
+    DESTINATION_TYPE_CODE=INVENTORY
+    PARENT_TRANSACTION_ID=302978
+    QUANTITY=10
+    UNIT_OF_MEASURE=Each
+    SHIPMENT_HEADER_ID=250536
+    SHIPMENT_LINE_ID=261490
+    SOURCE_DOCUMENT_CODE=PO
+    EMPLOYEE_ID=13706
+    PARENT_TRANSACTION_ID=302978
+    PO_HEADER_ID=36665
+    PO_LINE_ID=42138
+    ITEM_ID=169845
+    PO_LINE_LOCATION_ID=76782
+    DELIVER_TO_PERSON_ID=13706
+    DELIVER_TO_LOCATION_ID=204
+    VENDOR_ID=7927
+    VENDOR_SITE_ID=4724
+    ORG_ID=204
+    SUBINVENTORY=Stores
+    LOCATOR_ID=null
+    LOCATION_ID=204
+    SHIP_TO_ORG_ID=204
+
+
+5)  Run the following scripts to identify the LotSerial Information
+related to the DELIVER transaction RCV_TRANSACTIONS.TRANSACTION_ID=302979  
+
+SQL Select LOT_TRANSACTION_TYPE,LOT_NUM,QUANTITY 
+from RCV_LOT_TRANSACTIONS
+where source_transaction_id=&RTtransaction_id; 
+
+SQL Select SERIAL_TRANSACTION_TYPE,SERIAL_NUM,SHIPMENT_LINE_ID,TRANSACTION_ID,
+LOT_NUM
+from RCV_SERIAL_TRANSACTIONS 
+where source_transaction_id=&RTtransaction_id; 
+
+This script returns 10 records,one for each serial number between SN0001 and SN0010
+For instance for SERIAL_NUM=SN0005 and SERIAL_NUM=SN0006
+SERIAL_TRANSACTION_TYPE=TRANSACTION
+SHIPMENT_LINE_ID=261490
+SOURCE_TRANSACTION_ID=302979
+TRANSACTION_ID=302979
+LOT_NUM=S246
+
+
+A) CORRECT to DELIVER to INVENTORY Transaction for PURCHASE ORDER Example
+
+1) Insert via ROI a CORRECT record to the DELIVER to INVENTORY Transaction 
+(RCV_TRANSACTIONS.TRANSACTION_ID=302979)
+so to correct the quantity delivered from 10 to a quantity delivered of 8,
+correcting SERIAL_NUM=SN0005 and SERIAL_NUM=SN0006 for LOT_NUM=S246
+
+Insert 
+. 1 record in RCV_TRANSACTIONS_INTERFACE table with TRANSACTION_TYPE='CORRECT'
+for a negative quantity =-2 indicating PARENT_TRANSACTION_ID=302979
+and DESTINATION_TYPE_CODE='INVENTORY'
+RECEIPT_SOURCE_CODE='VENDOR' and SOURCE_DOCUMENT_CODE='PO'
+. 1 record in MTL_TRANSACTIONS_LOTS_INTERFACE for a positive quantity=2
+on lot number S246
+. 1 record in MTL_TRANSACTIONS_SERIAL_INTERFACE, indicating
+FM_SERIAL_NUMBER='SN0005'and TO_SERIAL_NUMBER='SN0006'
+
+
+SQL INSERT INTO RCV_TRANSACTIONS_INTERFACE
+      (INTERFACE_TRANSACTION_ID,
+       GROUP_ID,
+       LAST_UPDATE_DATE,
+       LAST_UPDATED_BY,
+       CREATION_DATE,
+       CREATED_BY,
+       LAST_UPDATE_LOGIN,
+       TRANSACTION_TYPE,
+       TRANSACTION_DATE,
+       PROCESSING_STATUS_CODE,
+       PROCESSING_MODE_CODE,
+       TRANSACTION_STATUS_CODE,
+       QUANTITY,
+       UNIT_OF_MEASURE,
+       ITEM_ID,
+       EMPLOYEE_ID,
+       SHIPMENT_HEADER_ID,
+       SHIPMENT_LINE_ID,
+       RECEIPT_SOURCE_CODE,
+       VENDOR_ID,
+       FROM_ORGANIZATION_ID,
+       FROM_SUBINVENTORY,
+       FROM_LOCATOR_ID,
+       SOURCE_DOCUMENT_CODE,
+       PARENT_TRANSACTION_ID,
+       PO_HEADER_ID,
+       PO_LINE_ID,
+       PO_LINE_LOCATION_ID,
+       PO_DISTRIBUTION_ID,
+       DESTINATION_TYPE_CODE,
+       DELIVER_TO_PERSON_ID,
+       LOCATION_ID,
+       DELIVER_TO_LOCATION_ID,
+       VALIDATION_FLAG
+      )
+      VALUES
+      (rcv_transactions_interface_s.nextval, --INTERFACE_TRANSACTION_ID
+       rcv_interface_groups_s.nextval,       --GROUP_ID
+       SYSDATE,                   --LAST_UPDATE_DATE
+       0,                         --LAST_UPDATE_BY
+       SYSDATE,                   --CREATION_DATE
+       0,                         --CREATED_BY
+       0,                         --LAST_UPDATE_LOGIN
+       'CORRECT',                 --TRANSACTION_TYPE
+       SYSDATE,                   --TRANSACTION_DATE
+       'PENDING',                 --PROCESSING_STATUS_CODE
+       'BATCH',                   --PROCESSING_MODE_CODE
+       'PENDING',                 --TRANSACTION_STATUS_CODE
+       -2,                        --QUANTITY
+       'Each',                    --UNIT_OF_MEASURE
+       169845,                    --ITEM_ID
+       13706,                     --EMPLOYEE_ID
+       250536,                    --SHIPMENT_HEADER_ID
+       261490,                    --SHIPMENT_LINE_ID
+       'VENDOR',                  --RECEIPT_SOURCE_CODE
+       7927,                      --VENDOR_ID
+       204,                       --FROM_ORGANIZATION_ID
+       'Stores',                  --FROM_SUBINVENTORY
+       null,                      --FROM_LOCATOR_ID
+       'PO',                      --SOURCE_DOCUMENT_CODE
+       302979,                    --PARENT_TRANSACTION_ID
+       36665,                     --PO_HEADER_ID
+       42138,                     --PO_LINE_ID
+       76782,                     --PO_LINE_LOCATION_ID
+       78674,                     --PO_DISTRIBUTION_ID
+       'INVENTORY',               --DESTINATION_TYPE_CODE
+       13706,                     --DELIVER_TO_PERSON_ID
+       204,                       --LOCATION_ID
+       204,                       --DELIVER_TO_LOCATION_ID
+       'Y' --Validation_flag
+      );  
+
+INSERT INTO MTL_TRANSACTION_LOTS_INTERFACE
+            ( TRANSACTION_INTERFACE_ID,
+            LAST_UPDATE_DATE,
+            LAST_UPDATED_BY,
+            CREATION_DATE,
+            CREATED_BY,
+            LAST_UPDATE_LOGIN,
+            LOT_NUMBER,
+            TRANSACTION_QUANTITY,
+            PRIMARY_QUANTITY,
+            SERIAL_TRANSACTION_TEMP_ID,
+            PRODUCT_CODE,
+            PRODUCT_TRANSACTION_ID
+            )
+            VALUES
+            ( MTL_MATERIAL_TRANSACTIONS_S.NEXTVAL,--TRANSACTION_INTERFACE_ID
+            SYSDATE, --LAST_UPDATE_DATE
+            0,       --LAST_UPDATED_BY
+            SYSDATE, --CREATION_DATE
+            0,       --CREATED_BY
+            0,       --LAST_UPDATE_LOGIN
+            'S246',  --LOT_NUMBER
+            2,       --TRANSACTION_QUANTITY
+            2,       --PRIMARY_QUANTITY
+            MTL_MATERIAL_TRANSACTIONS_S.NEXTVAL, --SERIAL_TRANSACTION_TEMP_ID
+            'RCV',   --PRODUCT_CODE
+            RCV_TRANSACTIONS_INTERFACE_S.CURRVAL  --PRODUCT_TRANSACTION_ID
+            ); 
+
+INSERT INTO MTL_SERIAL_NUMBERS_INTERFACE 
+            ( TRANSACTION_INTERFACE_ID,
+            LAST_UPDATE_DATE,
+            LAST_UPDATED_BY,
+            CREATION_DATE,
+            CREATED_BY,
+            LAST_UPDATE_LOGIN,
+            FM_SERIAL_NUMBER,
+            TO_SERIAL_NUMBER,
+            PRODUCT_CODE,
+            PRODUCT_TRANSACTION_ID) 
+            VALUES 
+            (MTL_MATERIAL_TRANSACTIONS_S.CURRVAL,--TRANSACTION_INTERFACE_ID
+            SYSDATE,  --LAST_UPDATE_DATE
+            0,        --LAST_UPDATED_BY
+            SYSDATE,  --CREATION_DATE
+            0,        --CREATED_BY
+            0,        --LAST_UPDATE_LOGIN
+            'SN0005', --FM_SERIAL_NUMBER
+            'SN0006', --TO_SERIAL_NUMBER
+            'RCV',    --PRODUCT_CODE
+            RCV_TRANSACTIONS_INTERFACE_S.CURRVAL  --PRODUCT_TRANSACTION_ID
+            );
+Commit; 
+
+
+2) Run the following scripts to check data have been correctly inserted 
+
+SQL Select  from RCV_TRANSACTIONS_INTERFACE where PO_HEADER_ID=36665 
+INTERFACE_TRANSACTION_ID=232850
+GROUP_ID=25057
+TRANSACTION_TYPE=CORRECT
+QUANTITY=-2
+PARENT_TRANSACTION_ID=302979
+DESTINATION_TYPE_CODE=INVENTORY
+RECEIPT_SOURCE_CODE=VENDOR
+SOURCE_DOCUMENT_CODE=PO
+
+SQL Select  from MTL_TRANSACTION_LOTS_INTERFACE 
+where PRODUCT_TRANSACTION_ID=&interface_txn_id;
+TRANSACTION_INTERFACE_ID=11300777
+LOT_NUMBER=S246
+TRANSACTION_QUANTITY=2
+PRIMARY_QUANTITY=2
+SERIAL_TRANSACTION_TEMP_ID=11300777
+PRODUCT_TRANSACTION_ID=232850 
+
+SQL Select  from MTL_SERIAL_NUMBERS_INTERFACE 
+where PRODUCT_TRANSACTION_ID=&interface_txn_id;
+TRANSACTION_INTERFACE_ID=11300777
+PRODUCT_TRANSACTION_ID=232850
+FM_SERIAL_NUMBER=SN0005
+TO_SERIAL_NUMBER=SN0006
+
+
+3) In Purchasing Responsibility, Run the Receiving Transaction Processor 
+for the specific Group ID (GROUP_ID=25057) 
+
+
+4) Navigate to Receiving  Receiving Transactions Summary form
+For PO 6752 , Receipt Number 7746 has Receive, Deliver and Correct to Inventory
+transactions.  
+
+SQL Select  from RCV_TRANSACTIONS where PO_HEADER_ID=36665
+It returns 3 records 
+
+For TRANSACTION_TYPE=RECEIVE
+    TRANSACTION_ID=302978
+    DESTINATION_TYPE_CODE=RECEIVING
+    PARENT_TRANSACTION_ID=-1
+    QUANTITY=10 
+
+For TRANSACTION_TYPE=DELIVER
+    TRANSACTION_ID=302979
+    DESTINATION_TYPE_CODE=INVENTORY
+    PARENT_TRANSACTION_ID=302978
+    QUANTITY=10 
+
+For TRANSACTION_TYPE=CORRECT
+    TRANSACTION_ID=302982
+    DESTINATION_TYPE_CODE=INVENTORY
+    PARENT_TRANSACTION_ID=302979
+    QUANTITY=-2
+    FROM_SUBINVENTORY=Stores 
+
+
+5) Navigate to Purchase OrdersPurchase Orders Summary
+At shipment and distribution level, for the PO Number 6752
+Quantity Received=10
+Quantity Delivered=8 
+
+
+
+B) CORRECT to RECEIVE Transaction for PURCHASE ORDER Example
+
+6) Insert via ROI a CORRECT record to the RECEIVE Transaction 
+(RCV_TRANSACTIONS.TRANSACTION_ID=302978)
+so to correct the quantity received from 10 to a quantity received of 8,
+correcting SERIAL_NUM=SN0005 and SERIAL_NUM=SN0006 for LOT_NUM=S246
+
+Insert 
+. 1 record in RCV_TRANSACTIONS_INTERFACE table with TRANSACTION_TYPE='CORRECT'
+for a negative quantity = -2 indicating PARENT_TRANSACTION_ID=302978
+and DESTINATION_TYPE_CODE='RECEIVING'
+RECEIPT_SOURCE_CODE='VENDOR' and SOURCE_DOCUMENT_CODE='PO'
+. 1 record in MTL_TRANSACTIONS_LOTS_INTERFACE for a positive quantity=2
+on lot number S246
+. 1 record in MTL_TRANSACTIONS_SERIAL_INTERFACE, indicating
+FM_SERIAL_NUMBER='SN0005'and TO_SERIAL_NUMBER='SN0006'
+
+
+SQL INSERT INTO RCV_TRANSACTIONS_INTERFACE
+      (INTERFACE_TRANSACTION_ID,
+       GROUP_ID,
+       LAST_UPDATE_DATE,
+       LAST_UPDATED_BY,
+       CREATION_DATE,
+       CREATED_BY,
+       LAST_UPDATE_LOGIN,
+       TRANSACTION_TYPE,
+       TRANSACTION_DATE,
+       PROCESSING_STATUS_CODE,
+       PROCESSING_MODE_CODE,
+       TRANSACTION_STATUS_CODE,
+       QUANTITY,
+       UNIT_OF_MEASURE,
+       ITEM_ID,
+       EMPLOYEE_ID,
+       SHIPMENT_HEADER_ID,
+       SHIPMENT_LINE_ID,
+       RECEIPT_SOURCE_CODE,
+       VENDOR_ID,
+       FROM_ORGANIZATION_ID,
+       SOURCE_DOCUMENT_CODE,
+       PARENT_TRANSACTION_ID,
+       PO_HEADER_ID,
+       PO_LINE_ID,
+       PO_LINE_LOCATION_ID,
+       PO_DISTRIBUTION_ID,
+       DESTINATION_TYPE_CODE,
+       LOCATION_ID,
+       VALIDATION_FLAG
+      )
+      VALUES
+      (rcv_transactions_interface_s.nextval, --INTERFACE_TRANSACTION_ID
+       rcv_interface_groups_s.nextval,       --GROUP_ID
+       SYSDATE,                   --LAST_UPDATE_DATE
+       0,                         --LAST_UPDATE_BY
+       SYSDATE,                   --CREATION_DATE
+       0,                         --CREATED_BY
+       0,                         --LAST_UPDATE_LOGIN
+       'CORRECT',                 --TRANSACTION_TYPE
+       SYSDATE,                   --TRANSACTION_DATE
+       'PENDING',                 --PROCESSING_STATUS_CODE
+       'BATCH',                   --PROCESSING_MODE_CODE
+       'PENDING',                 --TRANSACTION_STATUS_CODE
+       -2,                        --QUANTITY
+       'Each',                    --UNIT_OF_MEASURE
+       169845,                    --ITEM_ID
+       13706,                     --EMPLOYEE_ID
+       250536,                    --SHIPMENT_HEADER_ID
+       261490,                    --SHIPMENT_LINE_ID
+       'VENDOR',                  --RECEIPT_SOURCE_CODE
+       7927,                      --VENDOR_ID
+       204,                       --FROM_ORGANIZATION_ID
+       'PO',                      --SOURCE_DOCUMENT_CODE
+       302978,                    --PARENT_TRANSACTION_ID
+       36665,                     --PO_HEADER_ID
+       42138,                     --PO_LINE_ID
+       76782,                     --PO_LINE_LOCATION_ID
+       78674,                     --PO_DISTRIBUTION_ID
+       'RECEIVING',               --DESTINATION_TYPE_CODE
+       204,                       --LOCATION_ID
+       'Y' --Validation_flag
+      ); 
+
+INSERT INTO MTL_TRANSACTION_LOTS_INTERFACE
+            ( TRANSACTION_INTERFACE_ID,
+            LAST_UPDATE_DATE,
+            LAST_UPDATED_BY,
+            CREATION_DATE,
+            CREATED_BY,
+            LAST_UPDATE_LOGIN,
+            LOT_NUMBER,
+            TRANSACTION_QUANTITY,
+            PRIMARY_QUANTITY,
+            SERIAL_TRANSACTION_TEMP_ID,
+            PRODUCT_CODE,
+            PRODUCT_TRANSACTION_ID
+            )
+            VALUES
+            ( MTL_MATERIAL_TRANSACTIONS_S.NEXTVAL,--TRANSACTION_INTERFACE_ID
+            SYSDATE, --LAST_UPDATE_DATE
+            0,       --LAST_UPDATED_BY
+            SYSDATE, --CREATION_DATE
+            0,       --CREATED_BY
+            0,       --LAST_UPDATE_LOGIN
+            'S246',  --LOT_NUMBER
+            2,       --TRANSACTION_QUANTITY
+            2,       --PRIMARY_QUANTITY
+            MTL_MATERIAL_TRANSACTIONS_S.NEXTVAL, --SERIAL_TRANSACTION_TEMP_ID
+            'RCV',   --PRODUCT_CODE
+            RCV_TRANSACTIONS_INTERFACE_S.CURRVAL  --PRODUCT_TRANSACTION_ID
+            ); 
+
+INSERT INTO MTL_SERIAL_NUMBERS_INTERFACE 
+            ( TRANSACTION_INTERFACE_ID,
+            LAST_UPDATE_DATE,
+            LAST_UPDATED_BY,
+            CREATION_DATE,
+            CREATED_BY,
+            LAST_UPDATE_LOGIN,
+            FM_SERIAL_NUMBER,
+            TO_SERIAL_NUMBER,
+            PRODUCT_CODE,
+            PRODUCT_TRANSACTION_ID) 
+            VALUES 
+            (MTL_MATERIAL_TRANSACTIONS_S.CURRVAL,--TRANSACTION_INTERFACE_ID
+            SYSDATE,  --LAST_UPDATE_DATE
+            0,        --LAST_UPDATED_BY
+            SYSDATE,  --CREATION_DATE
+            0,        --CREATED_BY
+            0,        --LAST_UPDATE_LOGIN
+            'SN0005', --FM_SERIAL_NUMBER
+            'SN0006', --TO_SERIAL_NUMBER
+            'RCV',    --PRODUCT_CODE
+            RCV_TRANSACTIONS_INTERFACE_S.CURRVAL  --PRODUCT_TRANSACTION_ID
+            );
+     commit; 
+
+
+7) Run the following scripts to check data have been correctly inserted 
+
+SQL Select  from RCV_TRANSACTIONS_INTERFACE where PO_HEADER_ID=36665 
+INTERFACE_TRANSACTION_ID=233841
+GROUP_ID=25070
+TRANSACTION_TYPE=CORRECT
+QUANTITY=-2
+PARENT_TRANSACTION_ID=302978
+DESTINATION_TYPE_CODE=RECEIVING
+RECEIPT_SOURCE_CODE='VENDOR' 
+SOURCE_DOCUMENT_CODE='PO'
+
+SQL Select  from MTL_TRANSACTION_LOTS_INTERFACE 
+where PRODUCT_TRANSACTION_ID=&interface_txn_id;
+TRANSACTION_INTERFACE_ID=11300787
+LOT_NUMBER=S246
+TRANSACTION_QUANTITY=2
+PRIMARY_QUANTITY=2
+SERIAL_TRANSACTION_TEMP_ID=11300787
+PRODUCT_TRANSACTION_ID=233841 
+
+SQL Select  from MTL_SERIAL_NUMBERS_INTERFACE 
+where PRODUCT_TRANSACTION_ID=&interface_txn_id;
+TRANSACTION_INTERFACE_ID=11300787
+PRODUCT_TRANSACTION_ID=233841
+FM_SERIAL_NUMBER=SN0005
+TO_SERIAL_NUMBER=SN0006 
+
+
+8) In Purchasing Responsibility, Run the Receiving Transaction Processor 
+for the specific Group ID (GROUP_ID=25070) 
+
+
+9) Navigate to Receiving  Receiving Transactions Summary form
+For PO 6752 , Receipt Number 7746 has Receive, Deliver , Correct to Inventory
+and Correct to Receiving transactions
+
+SQL Select  from RCV_TRANSACTIONS where PO_HEADER_ID=36665
+It returns 4 records 
+
+New record has
+TRANSACTION_TYPE=CORRECT
+TRANSACTION_ID=302984
+DESTINATION_TYPE_CODE=RECEIVING
+PARENT_TRANSACTION_ID=302978
+QUANTITY=-2
+
+
+10) Navigate to Purchase OrdersPurchase Orders Summary
+At shipment and distribution level, for the PO Number 6752
+Quantity Received=8
+Quantity Delivered=8 
+
+

@@ -1,0 +1,115 @@
+
+
+--------AP invoice Dr Account,link AP invoice with PO-PR ,with match PO,line type,item,category, linked PR ,preparer
+(For IDM purchasing checking)
+
+SELECT --a.po_distribution_id,po.REQ_DISTRIBUTION_ID,
+po.po_date,po.PR_num,po.pr_line,po.PREPARER PR_Prepare,po.po_num ,po.po_line,po.item,po.LINE_TYPE,po.Category2,
+c.invoice_num, 
+          vdr.vendor_name supplier, vdr.vendor_id, 
+          c.invoice_amount, c.invoice_date, c.description, 
+          b.segment3 AS ACCOUNT, b.segment2 AS cost_center, 
+          a.accounting_date gl_date, --c.attribute1 AS inv_trans_num, 
+          c.invoice_currency_code AS inv_curr, 
+          a.distribution_line_number AS line, a.amount AS line_amount, 
+          NVL (a.base_amount, a.amount) AS line_amount_cny, 
+          a.QUANTITY_INVOICED line_match_qty, 
+          a.description line_description, b.segment4 prd, b.segment5 prj
+     FROM apps.ap_invoice_distributions_all a, 
+          apps.gl_code_combinations b, 
+          apps.ap_invoices_all c, 
+          apps.po_vendors vdr ,
+            (select d.REQ_DISTRIBUTION_ID,d.po_distribution_id,e.segment1 PO_Num,f.LINE_NUM PO_line,d.creation_date PO_Date,
+                pr.PREPARER,pr.PR_num,pr.pr_line,msi.item,g.LINE_TYPE,h.segment2 Category2
+                from
+                    apps.PO_DISTRIBUTIONS_ALL d,
+                    apps.PO_HEADERS_ALL e,
+                    apps.PO_LINES_ALL f,
+                    apps.PO_line_types g,
+                    apps.MTL_CATEGORIES_V h,
+                    (select segment1 Item,INVENTORY_ITEM_ID from apps.mtl_system_items_b where organization_id=127) msi,
+                    (select pe.FULL_NAME Preparer,prd.DISTRIBUTION_ID,prh.segment1 PR_num,prl.LINE_NUM PR_line
+                     from apps.po_requisition_headers_all prh,
+                          apps.po_requisition_lines_all prl,
+                          apps.PO_REQ_DISTRIBUTIONS_all prd,
+                          apps.PER_PEOPLE_V7 PE
+                     where prh.requisition_header_id=prl.requisition_header_id
+                        and prl.REQUISITION_LINE_ID=prd.REQUISITION_LINE_ID
+                        and prh.PREPARER_ID=pe.person_id
+                      ) pr                     
+                where 
+                    e.PO_HEADER_ID =d.PO_HEADER_ID 
+                    and e.PO_HEADER_ID =f.PO_HEADER_ID 
+                    and f.PO_LINE_ID =d.PO_LINE_ID
+                    and D.REQ_DISTRIBUTION_ID=pr.DISTRIBUTION_ID(+)
+                    and f.ITEM_ID= msi.INVENTORY_ITEM_ID(+)
+                    and f.LINE_TYPE_ID=g.LINE_TYPE_ID
+                    and h.CATEGORY_ID=f.CATEGORY_ID
+                    and h.structure_id=101
+                    ) PO
+    WHERE a.dist_code_combination_id = b.code_combination_id 
+      AND a.invoice_id = c.invoice_id 
+      AND vdr.vendor_id = c.vendor_id 
+and b.segment3 in ('41059903','41059909','41050706','41059908')
+and a.ACCOUNTING_DATE>=to_date('2008-01-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <to_date('2008-02-1','yyyy-mm-dd')
+and a.po_distribution_id=po.po_distribution_id(+)
+--and po.po_distribution_id is not null
+--and po.REQ_DISTRIBUTION_ID is null
+--and c.invoice_num in ('NT-AP20080131-6','816686','19917394')
+
+
+--------------Per AP invoice distribution line  (with Expense Account)
+
+select c.INVOICE_NUM,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.VENDOR_ID,
+NVL(A.BASE_AMOUNT,a.AMOUNT) AS Line_Amount_CNY
+,c.INVOICE_DATE,c.DESCRIPTION,b.segment3 as Account,b.segment2 as Cost_Center,c.GL_DATE
+,c.ATTRIBUTE1 as Inv_Trans_Num,c.INVOICE_CURRENCY_CODE as Inv_Curr,a.DISTRIBUTION_LINE_NUMBER as Line,
+a.AMOUNT as Line_Amount,c.INVOICE_AMOUNT
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and b.segment3='41059903'
+and a.ACCOUNTING_DATE >=to_date('2006-03-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <=to_date('2006-03-31','yyyy-mm-dd')
+
+
+
+
+-----------(New) AP Invoice,Balance,Rate,Approv_status by Cr Account,
+
+SELECT A.INVOICE_NUM,C.VENDOR_NAME SUPPLIER,c.SEGMENT1 Supplier_num,A.INVOICE_AMOUNT,a.AMOUNT_PAID,
+(A.INVOICE_AMOUNT-nvl(a.AMOUNT_PAID,0))*decode(A.INVOICE_CURRENCY_CODE,'CNY',1,A.EXCHANGE_RATE) as Remain_Amt_CNY,
+--A.BASE_AMOUNT FUNCTIONAL_AMOUNT,decode(A.INVOICE_CURRENCY_CODE,'CNY',A.INVOICE_AMOUNT,A.BASE_AMOUNT ) as invoiceAmt_CNY,
+A.EXCHANGE_RATE Rate,A.INVOICE_CURRENCY_CODE Curr,A.PAY_GROUP_LOOKUP_CODE PAY_GROUP,
+A.GL_DATE,a.WFAPPROVAL_STATUS Approve_status,
+B.SEGMENT1 AP_COM,B.SEGMENT2 AP_CCC,B.SEGMENT3 AP_ACC,B.SEGMENT4 AP_PRD,B.SEGMENT5 AP_PRJ,B.SEGMENT6 AP_SPA,
+A.PAYMENT_STATUS_FLAG Payment_status 
+FROM APPS.AP_INVOICES_ALL A,apps.GL_CODE_COMBINATIONS_V B,apps.po_vendors C
+WHERE A.ACCTS_PAY_CODE_COMBINATION_ID=B.CODE_COMBINATION_ID 
+AND A.VENDOR_ID=C.VENDOR_ID
+and INVOICE_AMOUNT<>0
+and (PAYMENT_STATUS_FLAG<>'Y' or PAYMENT_STATUS_FLAG is null)
+--and gl_date<to_date('2004-07-1','YYYY-MM-DD' )
+order by B.SEGMENT3
+
+
+
+---Status from APPS.AP_INVOICES_V
+
+select INVOICE_NUM,
+decode(APPROVAL_STATUS_LOOKUP_CODE,'APPROVED','Validated','NEEDS REAPPROVAL','Needs Revalidation','CANCELLED','Cancelled',APPROVAL_STATUS_LOOKUP_CODE) Status,WFAPPROVAL_STATUS
+,APPROVAL_READY_FLAG,PAYMENT_STATUS_FLAG,POSTING_FLAG,
+INVOICE_AMOUNT,BASE_AMOUNT,AMOUNT_PAID,EXCHANGE_RATE,INVOICE_CURRENCY_CODE Curr,
+B.SEGMENT3 Cr_ACCOUNT,INVOICE_TYPE,PAY_GROUP_LOOKUP_CODE Pay_Group,VENDOR_NAME,VENDOR_NUMBER,VENDOR_SITE_CODE,
+BATCH_NAME,INVOICE_DATE,TERMS_NAME,GL_DATE,PERIOD_NAME
+PO_NUMBER,RECEIPT_NUMBER,B.SEGMENT2 Cr_CostCenter,B.SEGMENT4 Cr_Prod,B.SEGMENT5 Cr_proj
+from APPS.AP_INVOICES_V a,apps.GL_CODE_COMBINATIONS_V B
+WHERE A.ACCTS_PAY_CODE_COMBINATION_ID=B.CODE_COMBINATION_ID 
+and APPROVAL_STATUS_LOOKUP_CODE<>'CANCELLED'
+and PAYMENT_STATUS_FLAG<>'Y'
+

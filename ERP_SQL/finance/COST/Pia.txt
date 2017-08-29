@@ -1,0 +1,260 @@
+
+--------Raw material's BOM PO price for Zhang Miao to make price list
+
+SELECT c.CREATION_DATE, d.segment1 PO_number,to_char(c.LINE_NUM) PO_Line_Num,
+e.SEGMENT1 as Item,C.UNIT_PRICE,
+d.CURRENCY_CODE, c.ITEM_DESCRIPTION,C.QUANTITY,f.LINE_TYPE,f.DESCRIPTION,g.SEGMENT1 Cate1,g.SEGMENT2 Cate2
+,c.ATTRIBUTE1 Flex_Bonded,c.ATTRIBUTE4 Flex_comment,d.AUTHORIZATION_STATUS PO_Status
+FROM apps.PO_LINES_ALL         C,
+	 apps.PO_HEADERS_ALL       D,
+	 apps.mtl_system_items_b   e,
+	 apps.PO_line_types f,
+	 apps.MTL_CATEGORIES_B g
+WHERE D.PO_HEADER_ID=c.PO_HEADER_ID
+and e.INVENTORY_ITEM_ID(+)=c.item_id 
+and c.LINE_TYPE_ID<>1020 --No-BOM PO line
+and (d.AUTHORIZATION_STATUS ='APPROVED')  
+and e.ORGANIZATION_ID='83'
+and f.LINE_TYPE_ID=c.LINE_TYPE_ID
+and c.CATEGORY_ID=g.CATEGORY_ID
+order by e.SEGMENT1,d.segment1,c.LINE_NUM
+
+
+
+
+----For ARC maintenance new Items (Pia, Lilan)
+
+-- Find the item with Pending cost within a period 
+--My
+select decode(b.organization_id, 83, 'PRD', 84, 'ARC', 'New Org') Org, 
+b.segment1 item, b.item_type, b.inventory_item_status_code,  
+to_number(a.pl_item_cost,999999.99999) Pending_cost_rollup, 
+to_number(a.tl_item_cost,999999.99999) Pending_cost_this_level, 
+to_number(a.material_cost,999999.99999) Pending_material_cost 
+,trunc(b.creation_date) as Create_Date
+,b.creation_date as Create_Time
+from apps.cst_item_costs a, apps.mtl_system_items b 
+where a.cost_type_id =3
+and b.organization_id != 81 and b.organization_id != 85 and b.organization_id != 86 
+and a.organization_id=b.organization_id 
+and a.inventory_item_id=b.inventory_item_id 
+--and trunc(b.creation_date) >= to_date('20040601','YYYYMMDD') 
+--and trunc(b.creation_date) <= to_date('20040615','YYYYMMDD') 
+order by b.creation_date, b.segment1
+
+---Gary
+select decode(b.organization_id, 83, 'PRD', 84, 'ARC', '???') Org, 
+b.segment1 item, b.item_type, b.inventory_item_status_code, b.creation_date, 
+to_number(a.pl_item_cost,999999.99999) Pending_cost_rollup, 
+to_number(a.tl_item_cost,999999.99999) Pending_cost_this_level, 
+to_number(a.material_cost,999999.99999) Pending_material_cost 
+from apps.cst_item_costs a, apps.mtl_system_items b 
+where a.cost_type_id =3
+and b.organization_id != 81 and b.organization_id != 85 and b.organization_id != 86 
+and a.organization_id=b.organization_id 
+and a.inventory_item_id=b.inventory_item_id 
+and b.creation_date >= to_date('20040601 00:00:00','YYYYMMDD HH24:MI:SS') 
+and b.creation_date <= to_date('20040615 23:59:59','YYYYMMDD HH24:MI:SS') 
+order by b.creation_date, b.segment1
+
+
+-- Find the item with Frozen cost within a period 
+--My
+select decode(b.organization_id, 83, 'PRD', 84, 'ARC', 'New Org') Org, 
+b.segment1 item, b.item_type, b.inventory_item_status_code, 
+to_number(a.pl_item_cost,999999.99999) Frozen_cost_rollup, 
+to_number(a.tl_item_cost,999999.99999) Frozen_cost_this_level, 
+to_number(a.material_cost,999999.99999) Frozen_material_cost 
+,trunc(b.creation_date) as Create_Date
+,b.creation_date as Create_Time
+from apps.cst_item_costs a, apps.mtl_system_items b 
+where a.cost_type_id =1 
+and b.organization_id != 81 and b.organization_id != 85 and b.organization_id != 86 
+and a.organization_id=b.organization_id 
+and a.inventory_item_id=b.inventory_item_id 
+--and trunc(b.creation_date) >= to_date('20040601','YYYYMMDD') 
+--and trunc(b.creation_date) <= to_date('20040615','YYYYMMDD') 
+order by b.creation_date, b.segment1
+
+--Gary
+select decode(b.organization_id, 83, 'PRD', 84, 'ARC', '???') Org, 
+b.segment1 item, b.item_type, b.inventory_item_status_code, b.creation_date, 
+to_number(a.pl_item_cost,999999.99999) Frozen_cost_rollup, 
+to_number(a.tl_item_cost,999999.99999) Frozen_cost_this_level, 
+to_number(a.material_cost,999999.99999) Frozen_material_cost 
+from apps.cst_item_costs a, apps.mtl_system_items b 
+where a.cost_type_id =1 
+and b.organization_id != 81 and b.organization_id != 85 and b.organization_id != 86 
+and a.organization_id=b.organization_id 
+and a.inventory_item_id=b.inventory_item_id 
+and b.creation_date >= to_date('20040601 00:00:00','YYYYMMDD HH24:MI:SS') 
+and b.creation_date <= to_date('20040615 23:59:59','YYYYMMDD HH24:MI:SS') 
+order by b.creation_date, b.segment1
+
+
+
+
+
+
+----Monthly KRH and DPY WIP and Shipment transaction
+---Add a SO number
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.OE_ORDER_HEADERS_ALL		 oeh
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+--and    trunc(mmt.transaction_date) >= to_date('20040501','YYYYMMDD') 
+
+
+---Old
+select   mmt.transaction_date, 
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,83,'PRD','Unknown') Organization 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst 
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update',
+'Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = 83 and mmt.organization_id = 83 and msi.organization_id = 83 
+--and    mmt.transaction_date >= to_date('20040401 00:00:00','YYYYMMDD HH24:MI:SS') 
+--and    mmt.transaction_date <= to_date('20040430 23:59:59','YYYYMMDD HH24:MI:SS') 
+
+
+
+
+
+-- Check BOM Component cost
+
+select c.segment1 assembly, c.item_type, d.segment1 component, c.DESCRIPTION,d.item_type as item_type2, 
+to_char(e.item_cost, 999999.9999) item_cost, to_char(e.material_cost, 999999.9999) material_cost,e.cost_type_id
+,to_char(e.RESOURCE_COST, 999999.9999) Resource_cost
+from apps.bom_bill_of_materials a, apps.bom_inventory_components b, apps.mtl_system_items c, 
+apps.mtl_system_items d, apps.cst_item_costs e
+where a.bill_sequence_id=b.bill_sequence_id and b.component_item_id=d.inventory_item_id 
+and a.assembly_item_id=c.inventory_item_id and c.organization_id=83 and d.organization_id=83 
+and a.organization_id=83 and b.component_item_id=e.inventory_item_id and e.organization_id=83 
+--and e.cost_type_id =1 (1001-- Q2)
+order by assembly, component
+
+(Old)
+select c.segment1 assembly, c.item_type, d.segment1 component, c.DESCRIPTION,d.item_type as Item_Type2, 
+to_char(e.item_cost, 999999.9999) item_cost, to_char(e.material_cost, 999999.9999) material_cost
+from apps.bom_bill_of_materials a, apps.bom_inventory_components b, apps.mtl_system_items c, 
+apps.mtl_system_items d, apps.cst_item_costs e
+where a.bill_sequence_id=b.bill_sequence_id and b.component_item_id=d.inventory_item_id 
+and a.assembly_item_id=c.inventory_item_id and c.organization_id=83 and d.organization_id=83 
+and a.organization_id=83 and b.component_item_id=e.inventory_item_id and e.organization_id=83 
+and e.cost_type_id =1 
+order by assembly, component
+
+
+For new COST Type & add Qty (BOM component/Assembly) :
+select c.segment1 assembly, c.item_type, d.segment1 component, c.DESCRIPTION,d.item_type, 
+to_char(e.item_cost, 999999.9999) item_cost, to_char(e.material_cost, 999999.9999) material_cost
+,b.COMPONENT_QUANTITY
+from apps.bom_bill_of_materials a, apps.bom_inventory_components b, apps.mtl_system_items c, 
+apps.mtl_system_items d, apps.cst_item_costs e
+where a.bill_sequence_id=b.bill_sequence_id and b.component_item_id=d.inventory_item_id 
+and a.assembly_item_id=c.inventory_item_id and c.organization_id=83 and d.organization_id=83 
+and a.organization_id=83 and b.component_item_id=e.inventory_item_id and e.organization_id=83 
+and e.cost_type_id =1001 -- 04Q2 Quotation, also 04Q2 std cost
+--and b.COMPONENT_ITEM_ID=1998
+--and c.segment1='KRH 101 020/11R2A'
+order by assembly, component
+
+-----------------------------------------------------Item Stand COST Report:
+
+e.cost_type_id =1001 -- 04Q2 Quotation, also 04Q2 std cost
+e.cost_type_id =1 , Frozen
+e.cost_type_id =3 , pending
+
+select c.ITEM_NUMBER,b.segment1 as Item, item_type, inventory_item_status_code,
+to_number(a.item_cost,999999.99999) cost, to_number(a.material_cost,999999.99999) material_cost, 
+to_number(a.resource_cost,999999.99999) resource_cost ,c.COST_TYPE,a.organization_id,c.DESCRIPTION
+from apps.cst_item_costs a, apps.mtl_system_items b 
+,apps.CST_ITEM_COST_TYPE_V c
+where 
+ a.inventory_item_id=b.inventory_item_id and b.segment1 != 'FORKLIFT' and item_type != 'CTR'
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.cost_type_id=c.cost_type_id
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=84
+--and a.cost_type_id=3
+and c.COST_TYPE='Pending'
+
+
+
+
+select segment1, item_type, inventory_item_status_code,
+to_number(item_cost,999999.99999) cost, to_number(material_cost,999999.99999) material_cost, 
+to_number(resource_cost,999999.99999) resource_cost ,decode(a.cost_type_id,1,'Frozen',1001,'04Q2') as Cost_Type
+from apps.cst_item_costs a, apps.mtl_system_items b 
+--,apps.CST_ITEM_COST_TYPE_V c
+where a.organization_id=83 and b.organization_id=83 and a.cost_type_id =1001 
+and a.inventory_item_id=b.inventory_item_id and segment1 != 'FORKLIFT' and item_type != 'CTR'
+--and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+order by segment1
+
+
+Gary's Old:
+select segment1, item_type, inventory_item_status_code,
+to_number(item_cost,999999.99999) cost, to_number(material_cost,999999.99999) material_cost, 
+to_number(resource_cost,999999.99999) resource_cost
+from apps.cst_item_costs a, apps.mtl_system_items b 
+where a.organization_id=83 and b.organization_id=83 and cost_type_id =1 
+and a.inventory_item_id=b.inventory_item_id and segment1 != 'FORKLIFT' and item_type != 'CTR'
+order by segment1

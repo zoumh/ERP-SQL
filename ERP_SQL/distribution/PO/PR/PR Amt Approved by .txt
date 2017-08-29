@@ -1,0 +1,89 @@
+
+---------PR Amount approved by 
+
+-----Detail PR amount approved by two person 
+select PR.SEGMENT1 PR_Num,e.LINE_NUM,f.DISTRIBUTION_NUM Dist, 
+(e.UNIT_PRICE*f.REQ_LINE_QUANTITY) Amt_CNY ,pr.TYPE_LOOKUP_CODE, e.ITEM_DESCRIPTION ,
+g.segment2 CC,g.segment3 Acc,pr.creation_date
+from  
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+(select distinct OBJECT_ID from apps.PO_ACTION_HISTORY 
+    where OBJECT_TYPE_CODE='REQUISITION' and ACTION_CODE='APPROVE' and EMPLOYEE_ID in (13795,12232)
+    ) HI
+where PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+and PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and (e.CANCEL_FLAG is null or e.CANCEL_FLAG<>'Y')
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and e.ORG_ID=127
+and pr.creation_date>=to_date('2009-1-1','yyyy-mm-dd')
+--and pr.creation_date<to_date('2008-9-17','yyyy-mm-dd')
+--AND PR.SEGMENT1='53199'
+order by PR.SEGMENT1 ,e.LINE_NUM,f.DISTRIBUTION_NUM
+
+
+----sum PR amount (has been approved by two Person)
+select sum(e.UNIT_PRICE*f.REQ_LINE_QUANTITY) Amt_CNY ,
+g.segment2 CC,g.segment3 Acc
+from  
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+(select distinct OBJECT_ID from apps.PO_ACTION_HISTORY 
+    where OBJECT_TYPE_CODE='REQUISITION' and ACTION_CODE='APPROVE' and EMPLOYEE_ID in (13795,12232)
+    ) HI
+where PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+and PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and (e.CANCEL_FLAG is null or e.CANCEL_FLAG<>'Y')
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and e.ORG_ID=127
+and pr.creation_date>=to_date('2009-1-1','yyyy-mm-dd')
+--and pr.creation_date<to_date('2008-9-17','yyyy-mm-dd')
+--AND PR.SEGMENT1='53199'
+group by g.segment2,g.segment3
+
+
+
+----Detail PR amount approved by a person
+select pr.AUTHORIZATION_STATUS,e.creation_date,
+PR.SEGMENT1 PR_Num,e.LINE_NUM,f.DISTRIBUTION_NUM Dist,
+e.CANCEL_FLAG,e.CURRENCY_CODE,
+PE.FULL_NAME Action_User,--hi.ACTION_DATE ,hi.NOTE NOTE ,SEQUENCE_NUM,
+pr.TYPE_LOOKUP_CODE,  (e.UNIT_PRICE*f.REQ_LINE_QUANTITY) Amt_CNY,
+e.ITEM_DESCRIPTION,pr.ORG_ID
+from  
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+(select distinct OBJECT_ID,EMPLOYEE_ID from apps.PO_ACTION_HISTORY 
+    where OBJECT_TYPE_CODE='REQUISITION' and ACTION_CODE='APPROVE'
+    ) HI,
+apps.PER_PEOPLE_V7 PE
+where PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and PR.REQUISITION_HEADER_ID=HI.OBJECT_ID
+AND PE.EMPLOYEE_NUMBER= '28952109'  --23004931
+and (e.CANCEL_FLAG is null or e.CANCEL_FLAG<>'Y')
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and e.CURRENCY_CODE<>'CNY'
+and e.ORG_ID=127
+and pr.creation_date>=to_date('2009-10-11','yyyy-mm-dd')
+--and pr.creation_date<to_date('2008-9-17','yyyy-mm-dd')
+AND PR.SEGMENT1='53199'
+order by PR.SEGMENT1

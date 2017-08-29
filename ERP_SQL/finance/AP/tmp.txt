@@ -1,0 +1,84 @@
+
+SELECT * FROM APPS.BMC_AP_LIST_test  ap_system_parameters
+
+BEGIN
+ Fnd_Client_Info.set_org_context('81');
+END;
+
+select * from AP_INVOICES_V
+
+desc AP_INVOICES_V
+AP_INVOICES_PKG.GET_PO_NUMBER( AI.INVOICE_ID) PO_NUMBER
+
+drop view BMC_AP_LIST_V2
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_AP_LIST_V1
+AS
+select VDR.VENDOR_NAME as Supplier
+,	   AP_INVOICES_PKG.GET_PO_NUMBER( apa.INVOICE_ID) PO_NUMBER
+,	   apc.ATTRIBUTE1 as PayTransNum
+,	   apc.CHECKRUN_NAME as PayBatch
+,	   apa.AMOUNT_PAID
+,	   apa.ATTRIBUTE1 as Inv_Trans_Num
+,	   apa.APPROVAL_STATUS
+,	   apb.BATCH_NAME
+,	   apa.DESCRIPTION
+,	   apa.GL_DATE
+,	   apa.INVOICE_AMOUNT
+,	   apa.INVOICE_NUM
+,	   apa.INVOICE_TYPE_LOOKUP_CODE
+,	   apa.INVOICE_RECEIVED_DATE
+,	   apa.PAY_GROUP_LOOKUP_CODE
+,	   apa.INVOICE_DATE
+,	   TRM.DUE_DAYS as TermsDate
+,	   TRM.DUE_DAYS+apa.INVOICE_DATE as DueDate
+,	   apa.INVOICE_CURRENCY_CODE as Inv
+,	   apa.PAYMENT_AMOUNT_TOTAL
+,	   apa.PAYMENT_CURRENCY_CODE as Pay
+,	   apa.PAYMENT_STATUS_FLAG
+,	   apa.SET_OF_BOOKS_ID
+,	   apa.TERMS_ID
+,	   apa.VENDOR_SITE_ID
+,	   app.CREATION_DATE as PayDate
+from  AP_INVOICES_ALL apa 
+,	  AP_INVOICE_PAYMENTS_ALL app
+,	  PO_VENDORS VDR
+,	  AP_TERMS_LINES TRM
+,	  AP_checks_all apc
+,	  AP_BATCHES_ALL apb
+where apa.INVOICE_ID=app.INVOICE_ID(+)
+and   apa.SET_OF_BOOKS_ID='1'
+and   app.SET_OF_BOOKS_ID(+)='1'
+and   VDR.VENDOR_ID=apa.VENDOR_ID
+and   TRM.TERM_ID=apa.TERMS_ID 
+and   apa.BATCH_ID=apb.BATCH_ID
+and   app.CHECK_ID=apc.CHECK_ID(+)
+
+order by 1
+
+and   to_char(apa.GL_DATE,'YYYY-MM-DD')='2004-02-13'
+
+
+ --and apa.INVOICE_NUM='Inv0001'
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_AP_LIST_test
+AS
+
+select VDR.VENDOR_NAME as Supplier
+,apa.INVOICE_ID
+,	   apa.VENDOR_ID
+,	   apa.INVOICE_AMOUNT
+,AP_INVOICES_PKG.GET_PO_NUMBER( apa.INVOICE_ID) PO_NUMBER
+,	   apa.INVOICE_NUM
+,	   apa.ATTRIBUTE1
+,apa.GL_DATE
+from  AP_INVOICES_ALL apa 
+,	  PO_VENDORS VDR
+,	  AP_checks_all apc
+,	  AP_INVOICE_PAYMENTS_ALL app
+where  VDR.VENDOR_ID=apa.VENDOR_ID and to_char(apa.GL_DATE,'YYYY-MM-DD')='2004-02-13'
+and   app.CHECK_ID=apc.CHECK_ID(+)
+and   app.SET_OF_BOOKS_ID(+)='1'
+and   apa.INVOICE_ID=app.INVOICE_ID(+)
+
+select * from AP_INVOICE_PAYMENTS_ALL where INVOICE_ID='10302'

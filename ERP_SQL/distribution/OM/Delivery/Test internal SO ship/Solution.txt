@@ -1,0 +1,111 @@
+
+Hi,Harris,
+  I think option2 is more better and easy for user to handle.
+ 
+Br/Walkers Wu
+
+
+
+As of Oracle SR 7220995.993 's reference, to complete the transaction may be lower complex/risk then to delete everywhere about the transaction...
+
+Option 1: 
+1)Fix to continue to finish the stucked transaction follow the wrong PR setting 
+  create 'Internal Order Xfer' transaction, move Stock from FGA.SL... to FGA.Internal
+  (This Transaction no effect to Accounting,only move stock with FGA)
+  (mini of update,follow normal flow,low risk)
+2)Need to cancel the PR (manually) & SO (by DB update, manual add attachment on SO for reference) 
+3)Create new correct PR - SO to ship out the stock at FGA.Internal
+4)Check Accounting & Stock/transaction is correct
+
+test PR :38665
+Internal SO:803417
+40 pics DPY 901 547/4
+
+Post to GL Batch: 21032 AC Inventory 20943555: A 2200290
+   (Journal line: 01.0000.12430401.000000.0000.000000  Dr 0 / Cr 0)
+
+
+Option 2: 
+1)Fix to continue to finish the stucked transaction using correct Accounting which the PR should be. 
+ Create correct 'Internal order issue' Transaction (Please check it to confirm)
+2)Need to update the PR (DB update Destination at line & Accounts at Distribution)  
+3)Check Accounting & Stock/transaction is correct
+
+test PR :38670
+Internal SO:803420
+80 pics DPY 901 547/4
+
+Post to GL Batch : 21034 AC Inventory 20943698: A 2200293
+
+
+test address:
+
+http://bmcap02.corpusers.net:8011/pls/TEST/OracleMyPage.home
+
+
+----------SQL Option 1
+----Find SO
+select orig_sys_document_ref PR_Num,ORDER_NUMBER,HEADER_ID,FLOW_STATUS_CODE,
+order_type_id,ORDER_SOURCE_ID 
+from apps.OE_ORDER_HEADERS_all 
+where orig_sys_document_ref in ('38669','38670')
+
+
+
+select * from apps.OE_ORDER_HEADERS_all where ORDER_NUMBER='803420'
+
+select * from apps.OE_ORDER_lineS_all where HEADER_ID=806951
+ 
+
+select INVENTORY_LOCATION_ID,ORGANIZATION_ID,SEGMENT1,SEGMENT2,SEGMENT3,SEGMENT4 from apps.mtl_item_locations where SUBINVENTORY_CODE='FGA' and ORGANIZATION_ID>127
+and SEGMENT2='Internal'
+
+
+select * from apps.MTL_TRANSACTIONS_INTERFACE  where SOURCE_HEADER_ID =806975
+
+insert into BMC_MTL_TRANSACTIONS_INTERFACE  select * from apps.MTL_TRANSACTIONS_INTERFACE where SOURCE_HEADER_ID=806976
+
+select * from BMC_MTL_TRANSACTIONS_INTERFACE
+
+
+-----Fix
+update apps.MTL_TRANSACTIONS_INTERFACE set 
+LAST_UPDATE_LOGIN=null,REQUEST_ID=null,PROGRAM_APPLICATION_ID=null,PROGRAM_ID=null,PROGRAM_UPDATE_DATE=null,
+--TRANSACTION_ACTION_ID=1,TRANSACTION_TYPE_ID=34,DISTRIBUTION_ACCOUNT_ID=43825,
+ERROR_EXPLANATION=null,SHIPPABLE_FLAG=null,ERROR_CODE=null
+,TRANSFER_SUBINVENTORY='FGA',TRANSFER_LOCATOR=45700
+REQUISITION_DISTRIBUTION_ID= , 
+where SOURCE_HEADER_ID=806975
+
+update apps.OE_ORDER_HEADERS_all set FLOW_STATUS_CODE='BOOKED' where ORDER_NUMBER='803420'
+
+update apps.OE_ORDER_lineS_all set FLOW_STATUS_CODE='SHIPPED' where HEADER_ID=806976
+
+
+----------SQL Option 2
+----Find SO
+select orig_sys_document_ref PR_Num,ORDER_NUMBER,HEADER_ID,FLOW_STATUS_CODE,
+order_type_id,ORDER_SOURCE_ID 
+from apps.OE_ORDER_HEADERS_all 
+where orig_sys_document_ref in ('38669','38670')
+
+select * from apps.po_requisition_headers_all where SEGMENT1 in ('38670','38666')
+
+select * from apps.po_requisition_lines_all where REQUISITION_HEADER_ID in (160763,160745)
+
+select REQUISITION_LINE_ID,ACCRUAL_ACCOUNT_ID,VARIANCE_ACCOUNT_ID ,CODE_COMBINATION_ID from apps.PO_REQ_DISTRIBUTIONS_ALL where REQUISITION_LINE_ID in (373357,373339)
+
+update apps.po_requisition_lines_all set DESTINATION_TYPE_CODE='EXPENSE',DESTINATION_CONTEXT='EXPENSE'
+where REQUISITION_HEADER_ID=160763
+
+update apps.PO_REQ_DISTRIBUTIONS_ALL set  ACCRUAL_ACCOUNT_ID=3780,VARIANCE_ACCOUNT_ID=43825,CODE_COMBINATION_ID=43825
+where REQUISITION_LINE_ID=373357
+
+select * from apps.OE_ORDER_HEADERS_all where ORDER_NUMBER='803420'
+
+select * from apps.MTL_TRANSACTIONS_INTERFACE  where SOURCE_HEADER_ID =806975
+
+insert into BMC_MTL_TRANSACTIONS_INTERFACE  select * from apps.MTL_TRANSACTIONS_INTERFACE where SOURCE_HEADER_ID=806976
+
+select * from BMC_MTL_TRANSACTIONS_INTERFACE
+

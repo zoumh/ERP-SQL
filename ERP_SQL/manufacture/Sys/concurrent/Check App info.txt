@@ -1,0 +1,41 @@
+
+-----List Installed, US, App,status, Patch,
+select a.application_id appid,t.LANGUAGE,
+           p.status s,
+           substr(a.application_short_name,1,10) sname,
+           substr(t.application_name,1,30) aname,p.patch_level,a.BASEPATH,
+           p.TABLESPACE,p.INDEX_TABLESPACE,p.TEMPORARY_TABLESPACE,
+           p.SIZING_FACTOR,INSTALL_GROUP_NUM,DB_STATUS
+from apps.fnd_application a, apps.fnd_product_installations p,
+     apps.fnd_application_tl t
+where  a.application_id = p.application_id
+and a.application_id = t.application_id
+and p.status in ('S','I')
+and t.LANGUAGE ='US'
+order by a.application_short_name;
+
+
+
+select a.application_id appid,
+           p.status s,
+           substr(a.application_short_name,1,10) sname,
+           substr(t.application_name,1,30) aname,p.patch_level,a.BASEPATH,
+           p.TABLESPACE,p.INDEX_TABLESPACE,p.TEMPORARY_TABLESPACE,
+           p.SIZING_FACTOR,INSTALL_GROUP_NUM,DB_STATUS
+from apps.fnd_application a, apps.fnd_product_installations p,
+     apps.fnd_application_tl t
+where  a.application_id = p.application_id
+and a.application_id = t.application_id
+order by a.application_short_name;
+
+
+
+If the status is ¡°I¡± that means it is fully installed.
+If the status is ¡°S¡± that means it is shared installed.
+
+
+------- List Bug
+select *--bug_number, creation_date, last_update_date
+from apps.ad_bugs
+
+

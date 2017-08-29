@@ -1,0 +1,35 @@
+
+
+----New Org
+select b.COMPONENT_QUANTITY,c.segment1 assembly, c.item_type Assm_Item_Type, d.segment1 component, c.DESCRIPTION Assm_Desc,
+d.item_type as Comp_item_type,to_char(e.item_cost, 999999.9999) item_cost, 
+to_char(e.material_cost, 999999.9999) material_cost,e.cost_type_id,
+to_char(e.RESOURCE_COST, 999999.9999) Resource_cost,g.segment1 Comp_cate1,g.segment2 Comp_cate2
+from apps.bom_bill_of_materials a, apps.bom_inventory_components b, apps.mtl_system_items c, 
+apps.mtl_system_items d, apps.cst_item_costs e,apps.mtl_item_categories_v f,apps.mtl_categories_b  g
+where a.bill_sequence_id=b.bill_sequence_id and b.component_item_id=d.inventory_item_id 
+and a.assembly_item_id=c.inventory_item_id and c.organization_id=130 and d.organization_id=130 
+and a.organization_id=130 and b.component_item_id=e.inventory_item_id and e.organization_id=130 and f.organization_id=130
+and d.inventory_item_id=f.inventory_item_id 
+and g.category_id=f.category_id
+and e.cost_type_id =1  --Cost Type  (1001=Q2, 3=pending, 1=Frozen)
+and c.segment1='KRH 101 477.R4A'
+order by assembly, component;
+
+
+---old Org
+select c.segment1 assembly, c.item_type Assm_Item_Type, d.segment1 component, c.DESCRIPTION Assm_Desc,
+d.item_type as Comp_item_type,to_char(e.item_cost, 999999.9999) item_cost, 
+to_char(e.material_cost, 999999.9999) material_cost,e.cost_type_id,
+to_char(e.RESOURCE_COST, 999999.9999) Resource_cost,g.segment1 Comp_cate1,g.segment2 Comp_cate2
+from apps.bom_bill_of_materials a, apps.bom_inventory_components b, apps.mtl_system_items c, 
+apps.mtl_system_items d, apps.cst_item_costs e,apps.mtl_item_categories_v f,apps.mtl_categories_b  g
+where a.bill_sequence_id=b.bill_sequence_id and b.component_item_id=d.inventory_item_id 
+and a.assembly_item_id=c.inventory_item_id and c.organization_id=83 and d.organization_id=83 
+and a.organization_id=83 and b.component_item_id=e.inventory_item_id and e.organization_id=83 and f.organization_id=83
+and d.inventory_item_id=f.inventory_item_id 
+and g.category_id=f.category_id
+and e.cost_type_id =1  --Cost Type  (1001=Q2, 3=pending, 1=Frozen)
+and c.segment1='DPY 101 2853/1R1E'
+order by assembly, component;
+

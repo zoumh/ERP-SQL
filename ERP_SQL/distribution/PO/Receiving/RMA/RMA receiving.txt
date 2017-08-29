@@ -1,0 +1,105 @@
+
+------RMA receiving transaction (with receipt number,RMA line,LPN_ID)
+SELECT rh.RECEIPT_NUM,ol.LINE_NUMBER||'.'||ol.SHIPMENT_NUMBER RMA_Line, 
+rt.transaction_type,rt.destination_type_code,rt.quantity,rt.CREATION_DATE,
+msi.segment1 Item,ol.FLOW_STATUS_CODE line_status,ol.LINE_CATEGORY_CODE line_Type,
+to_char(orh.ORDER_NUMBER) RMA_number,ot.NAME RMA_Type,
+rt.TRANSACTION_DATE,
+rt.ORGANIZATION_ID,rt.SHIPMENT_HEADER_ID,--rl.shipment_header_id,
+LPN_ID,TRANSFER_LPN_ID
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_shipment_lines   rl,apps.rcv_shipment_headers rh,
+       apps.mtl_system_items_fvl msi,apps.OE_ORDER_HEADERS_all ORH,
+       apps.oe_transaction_types_tl ot,apps.OE_ORDER_LINES_all ol
+ WHERE msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt.oe_order_header_id=orh.HEADER_ID
+   and rt.OE_ORDER_LINE_ID=ol.LINE_ID
+   and rt.oe_order_header_id=ol.HEADER_ID
+   and ot.TRANSACTION_TYPE_ID=orh.ORDER_TYPE_ID
+   and rl.SHIPMENT_HEADER_ID=rh.SHIPMENT_HEADER_ID
+   and rt.SHIPMENT_HEADER_ID=rh.SHIPMENT_HEADER_ID
+   and ot.LANGUAGE='US'
+   and rt.organization_id=ol.SHIP_from_ORG_ID
+and rt.source_document_code='RMA'
+and orh.ORDER_NUMBER='6034271'
+--and rh.RECEIPT_NUM='6034286'
+order by orh.ORDER_NUMBER ,ol.LINE_NUMBER,ol.SHIPMENT_NUMBER,rt.CREATION_DATE
+
+
+
+------RMA receiving transaction (with receipt number)
+SELECT  LPN_ID,TRANSFER_LPN_ID,rh.RECEIPT_NUM,
+orh.ORDER_NUMBER,ot.NAME RMA_Type,rt.ORGANIZATION_ID,rt.SHIPMENT_HEADER_ID,--rl.shipment_header_id,
+rt.transaction_type,rt.destination_type_code,rt.quantity,rt.TRANSACTION_DATE
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_shipment_lines   rl,apps.rcv_shipment_headers rh,
+       apps.mtl_system_items_fvl msi,apps.OE_ORDER_HEADERS_all ORH,apps.oe_transaction_types_tl ot
+ WHERE msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt.oe_order_header_id=orh.HEADER_ID
+   and ot.TRANSACTION_TYPE_ID=orh.ORDER_TYPE_ID
+   and rl.SHIPMENT_HEADER_ID=rh.SHIPMENT_HEADER_ID
+   and rt.SHIPMENT_HEADER_ID=rh.SHIPMENT_HEADER_ID
+   and ot.LANGUAGE='US'
+and rt.source_document_code='RMA'
+and orh.ORDER_NUMBER='6034286'
+and rh.RECEIPT_NUM='1550884'
+
+
+
+------RMA receiving transaction (no receipt number)
+SELECT  
+orh.ORDER_NUMBER,ot.NAME RMA_Type,rt.ORGANIZATION_ID,--rl.shipment_header_id,
+rt.transaction_type,rt.destination_type_code,rt.quantity,rt.TRANSACTION_DATE
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi,apps.OE_ORDER_HEADERS_all ORH,apps.oe_transaction_types_tl ot
+ WHERE msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt.oe_order_header_id=orh.HEADER_ID
+   and ot.TRANSACTION_TYPE_ID=orh.ORDER_TYPE_ID
+   and ot.LANGUAGE='US'
+and rt.source_document_code='RMA'
+and orh.ORDER_NUMBER='5024306'
+
+
+-------- RMA Receiving value
+SELECT --rt.OE_ORDER_HEADER_ID,
+orh.ORDER_NUMBER,ot.NAME RMA_Type,
+       NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO CUSTOMER',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO CUSTOMER',-1,0) * rt.quantity,0) Qty
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi,apps.OE_ORDER_HEADERS_all ORH,apps.oe_transaction_types_tl ot
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   and rt.oe_order_header_id=orh.HEADER_ID
+   and ot.TRANSACTION_TYPE_ID=orh.ORDER_TYPE_ID
+   and ot.LANGUAGE='US'
+   AND rl.item_id  IS NOT NULL
+rt.source_document_code='RMA'
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is null
+group by --rt.OE_ORDER_HEADER_ID ,
+orh.ORDER_NUMBER,ot.NAME,rt.transaction_type,rt3.transaction_type,rt.destination_type_code,rt.quantity
+
+

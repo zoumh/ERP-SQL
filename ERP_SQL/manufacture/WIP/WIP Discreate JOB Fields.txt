@@ -1,0 +1,34 @@
+
+
+--------Check JO status, routine_revision ,Qty
+select wip_entity_name ,last_update_date,CREATION_DATE,
+ROUTING_REVISION,ROUTING_REFERENCE_ID,ROUTING_REVISION_DATE,
+BOM_REVISION,BOM_REVISION_DATE,
+decode(status_Type,1,'Unreleased',3,
+'Released',4,'Complete',5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+Class_Code,Date_Released,Date_Completed,Date_Closed,Entity_Type,Job_Type,start_quantity,QUANTITY_COMPLETED,quantity_remaining,net_quantity
+from apps.WIP_DISCRETE_JOBS_V
+where wip_entity_name in ('0070979199/1','0070979357/1','0070979336/1','0070976397/1')
+
+
+--------------JO's SO number (DFF)
+
+select wip_entity_name,a.ORDER_NUMBER,b.LINE_NUMBER,start_quantity,quantity_remaining,net_quantity,c.last_update_date,decode(status_Type,1,'Unreleased',3,
+'Released',4,'Complete',5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+Class_Code,Material_Account,Resource_Account,material_Variance_Account,Resource_Variance_Account,Std_Cost_Adjustment_Account,Date_Released,Date_Completed,Date_Closed,Entity_Type,Job_Type--,wip_entity_name 
+from apps.WIP_DISCRETE_JOBS_V c,apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b
+where c.ATTRIBUTE1 =a.header_id
+and c.ATTRIBUTE2 =b.LINE_ID
+--and wip_entity_name ='0070407955/1'
+and a.ORDER_NUMBER='304982'
+
+
+
+select wip_entity_name,a.ORDER_NUMBER,b.LINE_NUMBER,start_quantity,quantity_remaining,net_quantity,c.last_update_date,decode(status_Type,1,'Unreleased',3,
+'Released',4,'Complete',5,'Complete - No Charges',6,'On Hold',7,'Cancelled',8,'Pending Bill Load',9,'Failed Bill Load',10,'Pending Routing Load',11,'Failed Routing Load',12,'Closed',13,'Pending - Mass Loaded',14,'Pending Close',15,'Failed Close','Not Know') Status,
+Class_Code,Material_Account,Resource_Account,material_Variance_Account,Resource_Variance_Account,Std_Cost_Adjustment_Account,Date_Released,Date_Completed,Date_Closed,Entity_Type,Job_Type--,wip_entity_name 
+from apps.WIP_DISCRETE_JOBS_V c,apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b
+where c.ATTRIBUTE1 =a.header_id
+and c.ATTRIBUTE2 =b.LINE_ID
+and wip_entity_name ='0070407955/1'
+

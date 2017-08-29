@@ -1,0 +1,160 @@
+
+------AR Invoice Full Account Entry with line, SO
+select a.NAME as Type,to_char(b.TRX_NUMBER) as Inv_Number,g.segment3 as Rev_Acc,e.ACCOUNT_CLASS,e.GL_DATE--,b.CUSTOMER_TRX_ID
+,h.inventory_item_id,h.sales_order,e.AMOUNT,b.INVOICE_CURRENCY_CODE as Curr,e.ACCTD_AMOUNT as CNY_Amount,e.GL_POSTED_DATE
+,f.STATUS as Post,b.TRX_DATE as Inv_Date  
+,b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_POSTING_CONTROL f
+,apps.GL_CODE_combinations g
+,apps.ra_customer_trx_lines_all h
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and e.POSTING_CONTROL_ID=f.POSTING_CONTROL_ID
+and e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and h.customer_trx_line_id=e.customer_trx_line_id
+and h.customer_trx_id=b.CUSTOMER_TRX_ID
+and g.segment3 ='5101030101'
+and e.GL_DATE>=to_date('2008-09-1','yyyy-mm-dd') --and e.GL_DATE<=to_date('2004-07-29','yyyy-mm-dd')  
+order by a.NAME,b.TRX_DATE,b.TRX_NUMBER--,d.LINE_NUMBER
+
+
+------------With Term !! AR Invoice Date, Terms, Due Date, GL_Date by Customer number & Invoice Date range
+
+select trx_number Invoice,trx_date Invoice_Date,d.name Term,b.term_due_date,c.gl_date,e.DESCRIPTION Type,c.amount,
+convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER,
+b.comments,b.invoice_currency_code Currency,b.attribute1,complete_flag
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all c
+,apps.AR_customers_v f
+,apps.ra_cust_trx_types_all e
+,apps.ra_terms_tl d
+where b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and b.CUSTOMER_TRX_ID=c.CUSTOMER_TRX_ID
+and b.CUST_TRX_TYPE_ID=e.CUST_TRX_TYPE_ID
+and d.term_id=b.term_id
+and d.language='US'
+and c.ACCOUNT_CLASS='REC'
+and f.CUSTOMER_NUMBER=1000
+and trx_date>=to_date('2005-02-15','yyyy-mm-dd')
+and trx_date<=to_date('2005-02-28','yyyy-mm-dd')
+
+
+
+------------------List AR Invoice line, must have a item ( & SO from SE's PO num)
+
+
+select --h.CUSTOMER_TRX_ID,a.NAME as Type,
+to_char(b.TRX_NUMBER) as Inv_Number,h.line_number,b.purchase_order,h.sales_order,h.sales_order_line,
+g.segment1 Item, h.description,h.translated_description,h.quantity_Ordered,h.quantity_Invoiced,h.UNIT_SELLING_PRICE,
+b.INVOICE_CURRENCY_CODE as Curr,h.extended_amount,h.revenue_amount,f.tax_rate,f.taxable_amount,
+b.TRX_DATE as Inv_Date, 
+h.interface_line_attribute1,h.interface_line_attribute2,h.interface_line_attribute3,
+b.COMPLETE_FLAG,b.POSTING_CONTROL_ID,b.STATUS_TRX
+from --apps.ra_cust_trx_types_all a,
+apps.ra_customer_trx_all b
+,apps.ra_customer_trx_lines_all f
+,apps.ra_customer_trx_lines_all h
+,apps.mtl_system_items_b g
+where --a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID and 
+b.CUSTOMER_TRX_ID=h.CUSTOMER_TRX_ID
+and b.CUSTOMER_TRX_ID=f.CUSTOMER_TRX_ID
+and f.LINK_TO_CUST_TRX_LINE_ID=h.CUSTOMER_TRX_LINE_ID
+and g.organization_id=83
+and g.inventory_item_id=h.inventory_item_id
+and h.line_type<>'TAX'
+and f.line_type='TAX'
+and b.purchase_order in ('70249890','70249908','70249935','70250306','70250317','70250293','70250300','70250306','70300464')
+order by b.TRX_NUMBER,h.line_number
+
+
+
+-----AR invoice Accounting with Trans Type
+
+select f.DESCRIPTION,to_char(c.TRX_NUMBER) as Invoice_Number,a.LINE_NUMBER,g.segment3 as Rev_Acc,a.REVENUE_AMOUNT,a.LINE_TYPE ,a.SALES_ORDER,a.INTERFACE_LINE_ATTRIBUTE3 as Ship
+,b.AMOUNT,b.ACCTD_AMOUNT as CNY_AMT,b.GL_DATE,b.ACCOUNT_CLASS
+,a.QUANTITY_INVOICED,a.QUANTITY_ORDERED,a.UNIT_SELLING_PRICE,c.PURCHASE_ORDER
+from apps.ra_customer_trx_lines_all a,apps.RA_CUST_TRX_LINE_GL_DIST_all b,apps.ra_customer_trx_all c
+,apps.GL_CODE_combinations g,apps.ra_cust_trx_types_all f
+where c.CUSTOMER_TRX_ID=b.CUSTOMER_TRX_ID
+and a.CUSTOMER_TRX_LINE_ID=b.CUSTOMER_TRX_LINE_ID
+and a.LINE_TYPE='LINE'
+and b.ACCOUNT_CLASS='REV'
+and b.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and f.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID
+and c.CUSTOMER_TRX_ID=2211
+
+
+
+
+
+-----------------AR Balance Invoices with Invoice Type
+
+select b.DESCRIPTION Invoice_type,
+a.AMOUNT_DUE_REMAINING as Balance,a.ACCTD_AMOUNT_DUE_REMAINING as CNY_Balance,a.AMOUNT_DUE_ORIGINAL as Inv_Amt,
+(nvl(a.AMOUNT_APPLIED,0)) as Paid_Amt
+,nvl(a.EXCHANGE_RATE,1) as Rate,a.INVOICE_CURRENCY_CODE as Curr,a.TRX_NUMBER as InvNum
+,(a.AMOUNT_CREDITED) as Credit_amt,a.INVOICE_CURRENCY_CODE 
+,convert(f.CUSTOMER_NAME,'ZHS16GBK') as Customer,f.CUSTOMER_NUMBER 
+--,a.CUSTOMER_ID,a.CUSTOMER_TRX_ID,a.CUST_TRX_TYPE_ID
+,a.GL_DATE,a.DUE_DATE,a.CREATION_DATE
+from apps.ar_payment_schedules_all a
+,apps.AR_customers_v f
+,apps.ra_cust_trx_types_all b
+where PAYMENT_SCHEDULE_ID>0 
+and  a.CUSTOMER_ID=f.CUSTOMER_ID
+and a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.DESCRIPTION like '%roto%'
+and a.AMOUNT_DUE_REMAINING<>0
+--and a.GL_DATE>=to_date('2004-03-1','yyyy-mm-dd') and a.GL_DATE<=to_date('2004-03-31','yyyy-mm-dd')  
+--group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,a.INVOICE_CURRENCY_CODE 
+
+
+
+------------------AR Rev with invoice/Customer, reconcile with GL 
+SELECT sum(e.ACCTD_AMOUNT) AS CNY_Amount,i.CUSTOMER_NUMBER
+FROM apps.ra_cust_trx_types_all a 
+,apps.ra_customer_trx_all b 
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e 
+,apps.AR_POSTING_CONTROL f 
+,apps.GL_CODE_combinations g 
+,apps.RA_BATCH_SOURCES_all h 
+,apps.ra_customer_trx_lines_all c ,
+apps.AR_customers_v i 
+WHERE a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID 
+AND b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID 
+AND e.POSTING_CONTROL_ID=f.POSTING_CONTROL_ID 
+AND e.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID 
+AND h.BATCH_SOURCE_ID=b.BATCH_SOURCE_ID 
+AND a.org_id=127 
+and a.ORG_ID=b.ORG_ID
+and a.ORG_ID=e.ORG_ID
+and a.ORG_ID=c.ORG_ID
+and a.ORG_ID=h.ORG_ID
+AND c.CUSTOMER_TRX_LINE_ID(+)=e.CUSTOMER_TRX_LINE_ID 
+and b.BILL_TO_CUSTOMER_ID=i.CUSTOMER_ID 
+and g.segment3 like '5101%'
+and e.GL_DATE>=to_date('2007-10-1','yyyy-mm-dd') and e.GL_DATE< to_date('2008-1-1','yyyy-mm-dd') 
+group by i.CUSTOMER_NUMBER
+ 
+
+----------AR Invoice (Rev Tax Amount) with SO,PO ,ship_from_Org=IP
+
+select c.PURCHASE_ORDER,a.SALES_ORDER,a.SALES_ORDER_LINE,a.INTERFACE_LINE_ATTRIBUTE2 SO_Type,
+c.TRX_NUMBER Invoice_Number,a.LINE_NUMBER,a.LINE_TYPE, 
+a.DESCRIPTION Item_Desc,a.QUANTITY_ORDERED,a.QUANTITY_INVOICED,a.UNIT_STANDARD_PRICE,
+a.EXTENDED_AMOUNT,a.REVENUE_AMOUNT,a.TAXABLE_AMOUNT
+from apps.ra_customer_trx_lines_all a,apps.ra_customer_trx_all c
+where c.CUSTOMER_TRX_ID=a.CUSTOMER_TRX_ID
+--and c.TRX_NUMBER='188635'
+and c.CREATION_DATE>=to_date('2008-1-1','yyyy-mm-dd')
+and c.INTERFACE_HEADER_ATTRIBUTE10=132 --Ship_from_Org_ID
+--and c.PURCHASE_ORDER is null
+order by c.TRX_NUMBER,a.LINE_TYPE,a.LINE_NUMBER
+
+
+
+
+

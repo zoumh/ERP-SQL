@@ -1,0 +1,37 @@
+
+-----------------JO status=completed,<2 component not issued ,for test close JO
+
+select b.WIP_ENTITY_NAME,b.CREATION_DATE,
+decode(b.STATUS_TYPE,1,'Unreleased',3,'Released',4,'Complete',5,'Complete No Charges',6,'On Hold',
+7,'Cancelled',12,'Closed',14,'Pending Close',15,'Failed Close')  STATUS
+,decode(b.JOB_TYPE,1,'Standard',3,'Non-Standard') Type,a.QUANTITY_OPEN,
+a.CONCATENATED_SEGMENTS Component_Item,a.ITEM_DESCRIPTION,
+a.REQUIRED_QUANTITY,a.QUANTITY_ISSUED,a.QUANTITY_PER_ASSEMBLY,
+a.WIP_SUPPLY_MEANING--,a.DEPARTMENT_CODE,a.MRP_NET_FLAG,a.QUANTITY_ALLOCATED,a.SUPPLY_SUBINVENTORY,a.WIP_SUPPLY_TYPE
+from apps.WIP_REQUIREMENT_OPERATIONS_V a,apps.WIP_DISCRETE_JOBS_V b,
+   (select b.WIP_ENTITY_ID,count(*),b.CREATION_DATE,
+    decode(b.STATUS_TYPE,1,'Unreleased',3,'Released',4,'Complete',5,'Complete No Charges',6,'On Hold',
+    7,'Cancelled',12,'Closed',14,'Pending Close',15,'Failed Close')  STATUS
+    from apps.WIP_REQUIREMENT_OPERATIONS_V a,apps.WIP_DISCRETE_JOBS_V b
+    where b.WIP_ENTITY_ID=a.WIP_ENTITY_ID
+    and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+    and a.ORGANIZATION_ID=130
+    and b.STATUS_TYPE=4
+    --and b.STATUS_TYPE<>7
+    and b.JOB_TYPE=1
+    and b.CREATION_DATE>to_date('2009-1-1','yyyy-mm-dd')
+    and WIP_SUPPLY_MEANING='Push'
+    and a.QUANTITY_OPEN<>0
+    group by b.WIP_ENTITY_ID,b.CREATION_DATE,decode(b.STATUS_TYPE,1,'Unreleased',3,'Released',4,'Complete',5,'Complete No Charges',6,'On Hold',
+    7,'Cancelled',12,'Closed',14,'Pending Close',15,'Failed Close') 
+    having count(*)<=2
+   ) c -----JO has few component not issued,status=completed
+where b.WIP_ENTITY_ID=a.WIP_ENTITY_ID
+and b.WIP_ENTITY_ID=c.WIP_ENTITY_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and a.ORGANIZATION_ID=130
+and b.STATUS_TYPE<>12
+and b.JOB_TYPE=1
+and  a.QUANTITY_OPEN<>0
+and b.CREATION_DATE>to_date('2009-1-1','yyyy-mm-dd')
+order by b.WIP_ENTITY_NAME

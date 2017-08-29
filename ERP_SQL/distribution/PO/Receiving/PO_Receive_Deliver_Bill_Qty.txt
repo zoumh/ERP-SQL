@@ -1,0 +1,79 @@
+
+-----PO info
+SELECT DISTINCT d.segment1 PO_number
+,e.QUANTITY_RECEIVED,e.QUANTITY_ACCEPTED,e.QUANTITY_BILLED
+,a.DESTINATION_ORGANIZATION_ID,
+c.ITEM_DESCRIPTION,e.QUANTITY_RECEIVED,e.QUANTITY_BILLED,
+d.CURRENCY_CODE,C.PO_lINE_ID, C.QUANTITY,C.UNIT_PRICE,C.QUANTITY*C.UNIT_PRICE AMOUNT,b.segment5 PROJECT
+FROM apps.PO_DISTRIBUTIONS_ALL A,
+     apps.GL_CODE_COMBINATIONS B,
+	 apps.PO_LINES_ALL         C,
+	 apps.PO_HEADERS_ALL       D,
+	 apps.po_Line_locations_all e
+WHERE A.CODE_COMBINATION_ID=B.CODE_COMBINATION_ID
+AND  b.SEGMENT5 like '99%'
+AND  C.PO_LINE_ID=A.PO_lINE_ID
+AND  D.PO_HEADER_ID=A.PO_HEADER_ID
+and  e.LINE_LOCATION_ID=a.LINE_LOCATION_ID
+and e.QUANTITY_BILLED=0--<e.QUANTITY_ACCEPTED
+
+
+--------BOM PO Receipt number,PO,Item,Rev, Vendor
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num, b.segment1 Item,d.ITEM_REVISION ,
+b.description,a.Quantity,a.transaction_date,a.creation_date,c.SEGMENT1 PO,d.LINE_NUM,e.RECEIPT_NUM,a.TRANSACTION_TYPE
+from apps.rcv_transactions a,apps.mtl_system_items b,apps.PO_HEADERS_ALL c,apps.PO_LINES_ALL d ,
+apps.RCV_SHIPMENT_HEADERS e,apps.PO_VENDORS VDR
+where --a.TRANSACTION_TYPE ='RECEIVE' and 
+a.po_header_id=c.po_header_id
+and b.organization_id=83 and a.organization_id=83
+and b.inventory_item_id=d.item_id
+and a.po_line_id=d.po_line_id
+and a.po_header_id=d.po_header_id
+and a.SHIPMENT_HEADER_ID=e.SHIPMENT_HEADER_ID
+and VDR.VENDOR_ID=c.VENDOR_ID
+and a.transaction_date>= to_date('20051001','YYYYMMDD') 
+and a.transaction_date<= to_date('20051024','YYYYMMDD')
+
+
+
+------------BOM PO Receive Trans by Receive Date
+select a.segment1 PO_Num,f.TRANSACTION_TYPE,
+to_char(b.line_num) line_num,to_char(c.shipment_num) Ship_num,
+c.quantity Order_ShipQty,c.quantity_cancelled Ship_Canced,
+(c.quantity-c.quantity_cancelled)*b.unit_price Order_Amnt,b.unit_price,nvl(a.rate,1) Rate,
+a.currency_code Curr,to_char(c.SHIP_TO_LOCATION_ID) Ship_To,
+f.QUANTITY Received_Qty,f.PO_unit_price,f.currency_code,f.currency_conversion_rate Rec_Rate,(f.QUANTITY * f.PO_unit_price)*f.currency_conversion_rate Rec_Amt_CNY,
+f.destination_type_code Rec_Destin,
+Item_Description,b.cancel_flag Line_Cancel,c.creation_date,c.quantity ShipLine_Qty,
+c.quantity_received ShipLine_Received
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.po_Line_locations_all c,
+--,apps.PO_DISTRIBUTIONS_ALL d,apps.gl_code_combinations e,
+apps.rcv_transactions f
+where 
+a.po_header_id=b.po_header_id
+and a.po_header_id=c.po_header_id
+and b.po_line_id=c.po_line_id
+--and d.line_location_id=c.line_location_id
+--and e.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and (b.line_type_id<>1020 )----Not N-BOM PO Line
+--and a.segment1='0000056577'--0000056941'--'1010075'--'0000056941'
+and f.po_header_id=a.po_header_id
+and f.po_line_id=b.po_line_id
+and f.po_line_location_id=c.line_location_id
+--and d.po_distribution_id=f.po_distribution_id(+)
+and f.TRANSACTION_TYPE not like 'DEL%' 
+and f.TRANSACTION_DATE<to_date('2005-03-01','YYYY-MM-DD')
+and f.TRANSACTION_DATE>to_date('2005-01-01','YYYY-MM-DD')
+order by a.segment1||'-'||b.line_num||'-'||c.shipment_num 
+
+
+--------------------PO -- Mtl  Delivery Trans link
+
+select d.SEGMENT3 from   apps.MTL_MATERIAL_TRANSACTIONS a,apps.PO_HEADERS_ALL b ,apps.PO_DISTRIBUTIONS_ALL c,
+apps.GL_CODE_COMBINATIONS d
+where      --trunc(transaction_date) = to_date('20040724','YYYYMMDD') 
+   transaction_type_id=18 
+  and a.TRANSACTION_SOURCE_ID=b.PO_HEADER_ID and b.SEGMENT1='1003324'
+  and c.PO_HEADER_ID=b.PO_HEADER_ID
+  and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+

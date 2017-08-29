@@ -1,0 +1,19 @@
+
+-----------QA Result by 3 model
+
+select 
+convert(a.character13,'ZHS16GBK') Prd_Name,c.SEGMENT1 Item,c.DESCRIPTION,b.segment1 PO,a.receipt_num,a.character3 Receipt_Qty, 
+a.creation_date Entry_date,a.character15 Shift,convert(a.character4,'ZHS16GBK') Comments, 
+decode(a.status,1,'Invalid','Valid') Status,a.character12 Model,a.revision,a.character2 Sample_Qty, 
+a.character6 Defect_Qty,convert(a.character9,'ZHS16GBK') Inspector,a.character11 Insp_Result, 
+convert(a.character14,'ZHS16GBK') Defect_Code,a.collection_ID Collection,a.organization_id, 
+d.VENDOR_NAME as Supplier,a.character8 Vendor_num,a.Transaction_Date 
+from apps.QA_RESULTS_V a,apps.mtl_system_items c, 
+(select distinct segment1,PO_HEADER_ID,VENDOR_ID from apps.PO_HEADERS_ALL) b,apps.PO_VENDORS d 
+where a.PO_HEADER_ID=b.PO_HEADER_ID 
+and c.INVENTORY_ITEM_ID=a.ITEM_ID 
+and c.ORGANIZATION_ID=a.ORGANIZATION_ID 
+and b.VENDOR_ID=d.VENDOR_ID 
+--and a.Transaction_Date=to_date('2005-03-03','yyyy-mm-dd') 
+and a.character12 in ('Cajsa','Clara','Carola')
+order by a.creation_date,a.character15

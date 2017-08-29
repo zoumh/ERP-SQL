@@ -1,0 +1,203 @@
+
+APPS.OE_Shipping_WF
+
+CREATE OR REPLACE PACKAGE BODY APPS.OE_Shipping_WF as
+/* $Header: OEXWSHPB.pls 115.10 2003/03/18 05:02:41 jsheik ship $ */
+
+
+PROCEDURE Inc_Items_Freeze_Required(
+    itemtype  in varchar2,
+    itemkey   in varchar2,
+    actid     in number,
+    funcmode  in varchar2,
+    resultout in out varchar2)
+IS
+l_item_type      VARCHAR2(80);
+l_ato_line_id    NUMBER;
+l_explosion_date DATE;
+--
+l_debug_level CONSTANT NUMBER := oe_debug_pub.g_debug_level;
+--
+
+BEGIN
+    IF itemtype = OE_GLOBALS.G_WFI_LIN THEN
+
+       IF l_debug_level >  0 THEN
+          OE_DEBUG_PUB.Add('G_FREEZE_II:'||G_FREEZE_II);
+       END IF;
+
+       IF G_FREEZE_II = 'PICK RELEASE' THEN
+
+          SELECT item_type_code,ato_line_id,explosion_date
+          INTO  l_item_type,l_ato_line_id,l_explosion_date
+          FROM  oe_order_lines_all
+          WHERE line_id = to_number(itemkey);
+
+          IF l_debug_level >  0 THEN
+             OE_DEBUG_PUB.Add('Item Type:'||l_item_type);
+             OE_DEBUG_PUB.Add('Exp Date:'||l_explosion_date);
+          END IF;
+
+          IF l_item_type in ('MODEL','CLASS','KIT') AND
+                   l_ato_line_id is NULL AND
+                   l_explosion_date is NULL  THEN
+
+                     resultout := 'COMPLETE:Y';
+                     IF l_debug_level >  0 THEN
+                        OE_DEBUG_PUB.Add('Result set to YES!!');
+                     END IF;
+          ELSE
+                     resultout := 'COMPLETE:N';
+                     IF l_debug_level >  0 THEN
+                        OE_DEBUG_PUB.Add('Result set to No!!');
+                     END IF;
+          END IF;
+
+       ELSE
+          resultout := 'COMPLETE:N';
+       END IF;
+
+    ELSE
+       RAISE FND_API.G_EXC_UNEXPECTED_ERROR;
+       -- item type is not a line
+    END IF;
+
+EXCEPTION
+  WHEN OTHERS THEN
+    -- The line below records this function call in the error system
+    -- in the case of an exception.
+    WF_CORE.Context('OE_WF_SHIPPING', 'Inc_items_freeze_required',
+                    itemtype, itemkey, to_char(actid), funcmode);
+    RAISE;
+
+End Inc_items_Freeze_Required;
+
+
+PROCEDURE Start_Shipping(
+    itemtype  in varchar2,
+    itemkey   in varchar2,
+    actid     in number,
+    funcmode  in varchar2,
+    resultout in out varchar2)
+IS
+l_line_id  		NUMBER;
+l_top_model_line_id     NUMBER;
+l_return_status   	VARCHAR2(30);
+l_result_out		VARCHAR2(240);
+l_msg_count		NUMBER;
+l_msg_data		VARCHAR2(2000);
+--
+l_debug_level CONSTANT NUMBER := oe_debug_pub.g_debug_level;
+--
+BEGIN
+
+  --
+  -- RUN mode - normal process execution
+  --
+	IF l_debug_level  > 0 THEN
+	    oe_debug_pub.add(  'ENTERING OE_SHIPPING_WF.START_SHIPPING '||ITEMTYPE||'/'||ITEMKEY , 1 ) ;
+	END IF;
+  if (funcmode = 'RUN') then
+
+	OE_STANDARD_WF.Set_Msg_Context(actid);
+
+        -- # 2416391, locking issue
+        SELECT line_id, top_model_line_id
+        INTO   l_line_id, l_top_model_line_id
+        FROM   oe_order_lines
+        WHERE  line_id = to_number(itemkey);
+
+        IF l_debug_level  > 0 THEN
+            oe_debug_pub.add(  'TOP MODEL LINE ID : '||L_TOP_MODEL_LINE_ID , 3 ) ;
+        END IF;
+
+        IF nvl(l_top_model_line_id,0) <> 0 THEN
+
+           IF l_debug_level  > 0 THEN
+               oe_debug_pub.add(  'BEFORE LOCKING THE TOP LINE '||TO_CHAR ( SYSDATE , 'DD-MM-YYYY HH24:MI:SS' ) , 3 ) ;
+           END IF;
+           SELECT line_id, top_model_line_id
+           INTO   l_line_id, l_top_model_line_id
+           FROM   oe_order_lines
+           WHERE  line_id = l_top_model_line_id
+           FOR UPDATE;
+           IF l_debug_level  > 0 THEN
+               oe_debug_pub.add(  'TOP LINE LOCKED AT '||TO_CHAR ( SYSDATE , 'DD-MM-YYYY HH24:MI:SS' ) , 3 ) ;
+           END IF;
+
+        ELSE
+
+           SELECT line_id
+           INTO   l_line_id
+           FROM   oe_order_lines
+           WHERE  line_id = to_number(itemkey)
+           FOR    UPDATE;
+
+        END IF;
+
+	l_line_id  	:= to_number(itemkey);
+
+	IF l_debug_level  > 0 THEN
+	    oe_debug_pub.add(  'CALLING OE_SHIPPING_INTEGRATION_PVT.PROCESS_SHIPPING_ACTIVITY '||TO_CHAR ( L_LINE_ID ) , 2 ) ;
+	END IF;
+	OE_Shipping_Integration_PVT.Process_Shipping_Activity
+			( p_api_version_number	=> 1.0
+			, p_line_id  			=> l_line_id
+			, x_result_out			=> l_result_out
+			, x_return_status		=> l_return_status
+			, x_msg_count			=> l_msg_count
+			, x_msg_data			=> l_msg_data
+			);
+
+	IF l_debug_level  > 0 THEN
+	    oe_debug_pub.add(  'RETURNED FROM OE_SHIPPING_INTEGRATION_PVT.PROCESS_SHIPPING_ACTIVITY '||L_RETURN_STATUS , 2 ) ;
+	END IF;
+	IF l_return_status <> FND_API.G_RET_STS_SUCCESS THEN
+		OE_STANDARD_WF.Save_Messages;
+		OE_STANDARD_WF.Clear_Msg_Context;
+		app_exception.raise_exception;
+     END IF;
+
+    	resultout := l_result_out;
+	OE_STANDARD_WF.Clear_Msg_Context;
+    	return;
+
+  end if; -- End for 'RUN' mode
+
+  --
+  -- CANCEL mode - activity 'compensation'
+  --
+  -- This is an event point is called with the effect of the activity must
+  -- be undone, for example when a process is reset to an earlier point
+  -- due to a loop back.
+  --
+  if (funcmode = 'CANCEL') then
+
+    -- your cancel code goes here
+    null;
+
+    -- no result needed
+    resultout := 'COMPLETE';
+    return;
+  end if;
+
+
+  --
+  -- Other execution modes may be created in the future.  Your
+  -- activity will indicate that it does not implement a mode
+  -- by returning null
+  --
+--  resultout := '';
+--  return;
+
+exception
+  when others then
+    -- The line below records this function call in the error system
+    -- in the case of an exception.
+    wf_core.context('OE_Shipping_WF', 'Shipping_Activity',
+                    itemtype, itemkey, to_char(actid), funcmode);
+    raise;
+END START_SHIPPING;
+
+END OE_Shipping_WF;
+/

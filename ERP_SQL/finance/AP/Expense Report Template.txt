@@ -1,0 +1,25 @@
+
+
+-------Expense Report Template 
+
+select a.REPORT_TYPE Template_Name,a.DESCRIPTION Header_Desc,a.inactive_date Header_Inactive_Date,b.PROMPT Exp_Item,
+b.CATEGORY_CODE Exp_Category,b.LINE_TYPE_LOOKUP_CODE Item_type,b.VAT_CODE,b.AMOUNT_INCLUDES_TAX_FLAG Include_tax, 
+b.FLEX_CONCACTENATED Accounts,b.FLEX_DESCRIPTION Account_Desc,b.end_date Line_End_Date,a.ORG_ID
+,a.CREATION_DATE Header_Create,a.LAST_UPDATE_DATE Header_Last_Update ,b.CREATION_DATE Line_Create_Date
+from apps.AP_EXPENSE_REPORTS_all a,apps.AP_EXPENSE_REPORT_PARAMS_all b
+where a.EXPENSE_REPORT_ID=b.EXPENSE_REPORT_ID
+and a.inactive_date is  null
+order by a.REPORT_TYPE,b.PROMPT
+
+
+
+select a.REPORT_TYPE Header_Name,a.DESCRIPTION Header_Desc,a.inactive_date Header_Inactive_Date,b.PROMPT Line_Name,
+b.FLEX_CONCACTENATED Accounts,b.FLEX_DESCRIPTION Account_Desc,b.end_date Line_End_Date,b.CATEGORY_CODE,a.ORG_ID
+,a.CREATION_DATE Header_Create,a.LAST_UPDATE_DATE Header_Last_Update ,b.CREATION_DATE Line_Create_Date,b.LINE_TYPE_LOOKUP_CODE Item_type
+from apps.AP_EXPENSE_REPORTS_all a,apps.AP_EXPENSE_REPORT_PARAMS_all b
+where a.EXPENSE_REPORT_ID=b.EXPENSE_REPORT_ID
+order by a.REPORT_TYPE,b.PROMPT
+
+select * from apps.AP_EXPENSE_REPORTS_all
+
+select * from apps.AP_EXPENSE_REPORT_PARAMS_all

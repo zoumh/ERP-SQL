@@ -1,0 +1,16 @@
+
+
+CREATE OR REPLACE View APPS.BMC_COST_Layer_Value
+AS
+select a.ORGANIZATION_ID Org_ID,
+b.SEGMENT1 Item,b.DESCRIPTION,a.LAYER_QUANTITY,a.ITEM_COST Average_Cost,nvl(a.ITEM_COST,0) *nvl(a.LAYER_QUANTITY,0) Amount,
+b.ENABLED_FLAG Item_Enable,b.INVENTORY_ITEM_STATUS_CODE Item_Status,a.COST_GROUP_ID
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and LAYER_QUANTITY<>0
+
+
+----Sum of IP
+select sum(LAYER_QUANTITY) Qty,sum(AMOUNT) Amt from APPS.BMC_COST_Layer_Value where org_id=132
+and LAYER_QUANTITY<>0

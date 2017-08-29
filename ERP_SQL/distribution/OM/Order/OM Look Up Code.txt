@@ -1,0 +1,43 @@
+
+-------Price List Type
+
+LIST_TYPE_CODE 	
+CHARGES 	Freight and Special ChargesList
+DEL 		Deal
+DLT 		Discount List
+PML 		Price Modifier List
+PRL 		Price List
+PRO 		Promotion
+SLT 		Surcharge List
+
+
+--------Shipping method (on SO header-others)
+select LOOKUP_CODE,MEANING,DESCRIPTION,
+ENABLED_FLAG,START_DATE_ACTIVE,END_DATE_ACTIVE ,CREATION_DATE
+from apps.FND_LOOKUP_VALUES_VL where LOOKUP_TYPE='SHIP_METHOD'
+
+
+Add new 'Shipping method' at SO header-others
+(also called 'Add Forwarder'  )
+
+add new forwarder in setup - shipping -freight carriers, cost type - freight carriers
+
+
+-Shipping method head
+select CARRIER_NAME,FREIGHT_CODE,user_name,a.CREATION_DATE from apps.WSH_CARRIERS_V a,apps.fnd_user b
+where --a.CREATED_BY
+a.LAST_UPDATED_BY=b.user_id
+order by a.CREATION_DATE
+
+--Shipping method
+select  a.SERVICE_LEVEL,a.MODE_OF_TRANSPORT,a.ENABLED_FLAG,a.SHIP_METHOD_CODE,a.SHIP_METHOD_MEANING,
+b.CARRIER_NAME,b.FREIGHT_CODE
+from apps.WSH_CARRIER_SERVICES_V a,apps.WSH_CARRIERS_V b
+where a.CARRIER_ID=b.CARRIER_ID
+
+--Shipping method Org Assign
+select * from apps.WSH_ORG_CARRIER_SITES_V
+
+
+
+

@@ -1,0 +1,122 @@
+
+
+
+
+
+------------By LPN, check Rec Trans
+select e.segment1 PO,c.LINE_NUM ,a.transaction_type,a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date,a.transfer_lpn_id
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_HEADERS_ALL e
+where 
+a.transfer_lpn_id =b.lpn_id (+)
+--and a.transfer_lpn_id=414020 
+--and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=b.organization_id
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+and a.PO_HEADER_ID=e.PO_HEADER_ID  
+--and a.PO_header_id=115778
+and e.segment1='1037798'
+and c.LINE_NUM =2
+and LICENSE_PLATE_NUMBER in ('Q00060539-B','Q00060538-B','Q00060537-B')
+
+
+
+-------------By PO, Check Rec Trans (may create Accounting) , add Buyer,plpanner
+select e.segment1 PO,c.LINE_NUM,a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date,d.PLANNER_CODE,convert(g.FULL_NAME,'ZHS16GBK')  Buyer,f.segment1 Cate1,f.segment2 Cate2,
+f.segment3 Cate3,f.segment4 Cate4,a.transfer_lpn_id
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_HEADERS_ALL e,apps.MTL_CATEGORIES_V f,apps.PER_PEOPLE_V7 g
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+--and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+--and d.organization_id=83
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+and a.PO_HEADER_ID=e.PO_HEADER_ID  
+and e.AGENT_ID=g.PERSON_ID
+and f.CATEGORY_ID=c.CATEGORY_ID
+--and a.PO_header_id=115778
+and LICENSE_PLATE_NUMBER in ('D00050239-B','D00050240-B','D00050241-B','D00050242-B','D00050243-B','D00050244-B',
+'D00050245-B','D00050246-B','D00050247-B','D00050248-B','D00050249-B','D00050250-B','D00050251-B')
+
+
+select a.creation_date,a.organization_id,VDR.VENDOR_NAME as Supplier,VDR.SEGMENT1 as Supplier_Num, b.segment1 Item,d.ITEM_REVISION ,
+b.description,a.Quantity,a.transaction_date,c.SEGMENT1 PO,d.LINE_NUM,e.RECEIPT_NUM,a.TRANSACTION_TYPE
+from apps.rcv_transactions a,apps.mtl_system_items b,apps.PO_HEADERS_ALL c,apps.PO_LINES_ALL d ,
+apps.RCV_SHIPMENT_HEADERS e,apps.PO_VENDORS VDR
+where --a.TRANSACTION_TYPE ='RECEIVE' and 
+a.po_header_id=c.po_header_id
+and b.organization_id=a.organization_id
+and b.inventory_item_id=d.item_id
+and a.po_line_id=d.po_line_id
+and a.po_header_id=d.po_header_id
+and a.SHIPMENT_HEADER_ID=e.SHIPMENT_HEADER_ID
+and VDR.VENDOR_ID=c.VENDOR_ID
+and c.SEGMENT1='1021792'
+order by a.creation_date desc
+
+
+
+-------Check Rec Journal of PO
+
+select a.ACCOUNTED_DR,a.ACCOUNTED_CR,ACCOUNTING_DATE,a.CURRENCY_CODE,a.CURRENCY_CONVERSION_RATE Rate,
+a.ENTERED_DR,a.ENTERED_CR,b.segment3 Account,a.TRANSACTION_DATE,a.reference4 PO,a.SOURCE_DOC_QUANTITY
+FROM APPS.RCV_RECEIVING_SUB_LEDGER a,apps.GL_CODE_combinations b where 
+a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID  
+and RCV_TRANSACTION_ID in
+(select a.TRANSACTION_ID 
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+--and d.organization_id=83
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and a.PO_header_id=115778
+)
+and a.reference4='1021792'
+
+
+
+
+
+select * from apps.rcv_transactions_interface  order by creation_date desc--where PO_header_id=61671 --and shipment_header_id=155398
+
+-----------Interface pending info (PO Item Qty, must no journal), with Buyer,Planner
+
+select a.creation_date ,c.segment1 PO,b.segment1 Item,a.QUANTITY,a.TO_ORGANIZATION_ID,--c.org_id,    
+a.CURRENCY_CODE,CURRENCY_CONVERSION_RATE,DESTINATION_TYPE_CODE,a.SHIPMENT_NUM,SHIPPED_DATE,     
+a.INSPECTION_STATUS_CODE,a.INTERFACE_SOURCE_CODE,a.TRANSACTION_TYPE,b.PLANNER_CODE,
+convert(e.FULL_NAME,'ZHS16GBK')  Buyer,d.segment1 Cate1,d.segment2 Cate2,d.segment3 Cate3,d.segment4 Cate4
+from apps.rcv_transactions_interface a,apps.mtl_system_items b,apps.PO_HEADERS_ALL c,apps.MTL_CATEGORIES_V d,apps.PER_PEOPLE_V7 e 
+where a.ITEM_ID=b.INVENTORY_ITEM_ID 
+and  a.TO_ORGANIZATION_ID=b.ORGANIZATION_ID 
+and  a.PO_HEADER_ID=c.PO_HEADER_ID
+and c.AGENT_ID=e.PERSON_ID
+and d.CATEGORY_ID=a.CATEGORY_ID
+and c.org_id=127 
+order by c.segment1,a.creation_date desc
+
+
+
+select a.creation_date ,c.segment1 PO,b.segment1 Item,a.QUANTITY,a.TO_ORGANIZATION_ID,--c.org_id,    
+a.CURRENCY_CODE,CURRENCY_CONVERSION_RATE,DESTINATION_TYPE_CODE,a.SHIPMENT_NUM,SHIPPED_DATE,     
+a.INSPECTION_STATUS_CODE,a.INTERFACE_SOURCE_CODE,a.TRANSACTION_TYPE    
+from apps.rcv_transactions_interface a,apps.mtl_system_items b,apps.PO_HEADERS_ALL c 
+where a.ITEM_ID=b.INVENTORY_ITEM_ID 
+and  a.TO_ORGANIZATION_ID=b.ORGANIZATION_ID 
+and  a.PO_HEADER_ID=c.PO_HEADER_ID
+and c.org_id=127 
+order by a.creation_date desc
+

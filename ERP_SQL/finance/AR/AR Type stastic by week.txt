@@ -1,0 +1,11 @@
+
+
+select a.NAME as Type,count(*),
+round((b.TRX_DATE-to_date('2008-1-1','yyyy-mm-dd'))/7+1 ) week
+from apps.ra_cust_trx_types_all a
+,apps.ra_customer_trx_all b
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID
+and b.TRX_DATE>=to_date('2008-1-1','yyyy-mm-dd')
+group by a.NAME,round((b.TRX_DATE-to_date('2008-1-1','yyyy-mm-dd'))/7+1 )
+
+

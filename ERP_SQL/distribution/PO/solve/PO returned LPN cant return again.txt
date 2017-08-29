@@ -1,0 +1,114 @@
+
+
+--------------After PO(LPN) fully returned (may be multi times return) ,
+then LPN_content.source_name =Returned to Supplier & couldn't be return
+
+----In PO Form return, could select which LPN to return , these LPN's LPN_content.source_name must be null 
+(means not fully returned)
+
+
+----------Find out the PO LPN info 
+select b.license_plate_number,e.segment1 PO,c.LINE_NUM, a.creation_date Receive_Date,
+a.quantity Receive_Qty,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date,a.transaction_type
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_headerS_ALL e
+where 
+a.transfer_lpn_id=b.lpn_id(+)
+--and a.transfer_lpn_id=414020 
+--and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=a.organization_id
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and b.license_plate_number='PC0004871'
+and e.PO_HEADER_ID=c.PO_HEADER_ID
+and e.segment1='1051425'
+--and d.segment1=''
+and c.LINE_NUM='2'
+
+
+--------Check LPN, find LPN_ID
+select lpn_ID,lpn_context from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER in 
+('R00057955-N',
+'R00057956-N',
+'R00057957-N',
+'R00057958-N',
+'R00057959-N',
+'R00057960-N',
+'R00057983-N',
+'R00057984-N',
+'R00057985-N',
+'R00057986-N',
+'R00057987-N',
+'R00058004-N')
+
+
+--------Check source_name is not empty for wms_lpn_contents table for these LPn
+select source_name,parent_lpn_id  from apps.wms_lpn_contents WHERE source_name is not null
+and parent_lpn_id in (
+select distinct a.transfer_lpn_id
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,
+apps.PO_headerS_ALL e
+where 
+a.transaction_type='DELIVER'--'RECEIVE'
+and a.source_document_code='PO'
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and b.license_plate_number='PC0004871'
+and e.PO_HEADER_ID=c.PO_HEADER_ID
+and e.segment1='1051425'
+--and d.segment1=''
+and c.LINE_NUM='2'
+and a.transfer_lpn_id is not null
+)
+
+
+-------Check these LPN's item is the correct one on onhand table
+select inventory_item_id,subinventory_code,TRANSACTION_QUANTITY,organization_id from apps.MTL_ONHAND_QUANTITIES_DETAIl where lpn_id in (
+select distinct a.transfer_lpn_id
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,
+apps.PO_headerS_ALL e
+where 
+a.transaction_type='DELIVER'--'RECEIVE'
+and a.source_document_code='PO'
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and b.license_plate_number='PC0004871'
+and e.PO_HEADER_ID=c.PO_HEADER_ID
+and e.segment1='1051425'
+--and d.segment1=''
+and c.LINE_NUM='2'
+and a.transfer_lpn_id is not null)
+
+
+
+---------Backup these lpn in  wms_lpn_contents 
+insert into BMC_BKUP_LPNCONTENT070921 select * from apps.wms_lpn_contents WHERE source_name is not null
+and parent_lpn_id in (
+select distinct a.transfer_lpn_id
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,
+apps.PO_headerS_ALL e
+where 
+a.transaction_type='DELIVER'--'RECEIVE'
+and a.source_document_code='PO'
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and b.license_plate_number='PC0004871'
+and e.PO_HEADER_ID=c.PO_HEADER_ID
+and e.segment1='1051425'
+--and d.segment1=''
+and c.LINE_NUM='2'
+and a.transfer_lpn_id is not null
+)
+
+
+--------Update LPN_content.source_name=null
+
+
+
+
+
+
+

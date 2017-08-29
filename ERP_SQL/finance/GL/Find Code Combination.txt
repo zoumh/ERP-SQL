@@ -1,0 +1,67 @@
+
+
+
+
+-------------Code COmbination of Account
+
+---At Form, summary_flag ='N'
+select * from apps.gl_code_combinations where  chart_of_accounts_id=50241 and summary_flag ='N'
+
+
+select detail_posting_allowed_flag Post_Allow,detail_budgeting_allowed_flag Bud_Allow,
+account_type,enabled_flag,summary_flag,segment1,segment2,segment3 
+from apps.gl_code_combinations 
+where segment3 like '4101%' or segment3 like '4102%'
+and chart_of_accounts_id=50241
+
+
+
+
+Find Code combination exist or not ?
+
+select * from apps.GL_CODE_combinations where segment2='1650' 
+
+
+
+
+Find the empty Acc.
+select * from GL_CODE_combinations where segment1='01' and segment2='0000' and segment3='0000' and segment4='000000' and segment5='0000' and segment6='000000'
+
+
+
+----------to Disable Cross-validate exclude existing CCID
+
+select segment1||'.'||segment2||'.'||segment3||'.' acc,
+enabled_flag,segment1,segment2,segment3,segment4,segment5,
+CODE_COMBINATION_ID,chart_of_accounts_id,detail_posting_allowed_flag Post_Allow,
+detail_budgeting_allowed_flag Bud_Allow,
+account_type,summary_flag 
+from apps.gl_code_combinations 
+where 
+((segment2 >= '0000' and segment2<='1999' and segment3>='41050000' and segment3<='41059999') 
+or 
+(segment2 >= '2000' and segment2<='ZZZZ' and segment3>='55020101' and segment3<='550399ZZ') 
+) 
+and summary_flag ='N'
+and chart_of_accounts_id=50241
+
+
+
+update apps.gl_code_combinations set enabled_flag='N' 
+where
+((segment2 >= '0000' and segment2<='1999' and segment3>='41050000' and segment3<='41059999') 
+or 
+(segment2 >= '2000' and segment2<='ZZZZ' and segment3>='55020101' and segment3<='550399ZZ') 
+) 
+and summary_flag ='N'
+and chart_of_accounts_id=50241
+
+
+commit
+
+
+
+
+
+
+

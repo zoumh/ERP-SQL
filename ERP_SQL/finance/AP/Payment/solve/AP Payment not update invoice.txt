@@ -1,0 +1,27 @@
+TAR Number  4096639.999 
+
+Please take the below suggested data-fix actions:
+.
+1) Take a backup:
+.
+create table bak_aia as select * from AP_INVOICES_ALL where INVOICE_ID = 48744 and ORG_ID = 81;
+.
+2) select * from bak_aia;
+.
+(one record retrieved.)
+.
+3)
+Update AP_INVOICES_ALL
+set AMOUNT_PAID = '500314.52',
+PAYMENT_STATUS_FLAG = 'Y'
+where INVOICE_ID = 48744 
+and ORG_ID = 81;
+.
+(This should update one record. If yes please COMMIT or else ROLLBACK.)
+.
+Note: Take the below suggested actions on TEST instance first
+.
+4) Query this invoice in the application and confirm with the results.
+
+Thanks and Regards,
+Akshay

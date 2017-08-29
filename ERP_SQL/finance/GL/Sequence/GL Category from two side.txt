@@ -1,0 +1,12 @@
+
+-------------systemadmin side
+select NAME,DESCRIPTION,TABLE_NAME,CREATION_DATE  from apps.FND_DOC_SEQUENCE_CATEGORIES 
+
+
+------------GL Side
+select * from apps.GL_JE_CATEGORIES
+
+select a.JE_CATEGORY_NAME,a.USER_JE_CATEGORY_NAME,a.CREATION_DATE,b.user_name Created_By,a.description
+from apps.GL_JE_CATEGORIES a,apps.fnd_user b
+where a.CREATED_BY=b.USER_ID
+order by a.CREATION_DATE

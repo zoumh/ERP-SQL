@@ -1,0 +1,54 @@
+
+
+MTL_CYCLE_COUNT_ENTRIES
+MTL_CYCLE_COUNT_ITEMS  
+MTL_CYCLE_COUNT_CLASSES
+
+1.
+MTL_CYCLE_COUNT_ENTRIES 
+stores the actual counts of a cycle
+count. A row in this table without a count is considered to be a count
+request. Oracle Inventory uses this information to determine and store
+cycle count adjustments, recounts, and approval requirements.
+
+When a cycle count adjustment is approved, the count status is set to
+completed and the adjustment amount field is populated. The Cycle
+Count Approval form then calls a user exit to post an entry in the
+MTL_MATERIAL_TRANSACTIONS_TEMP, from which the Oracle
+Inventory Transaction Processor picks it up and does the accounting,
+costing, and history update.
+
+
+
+APPROVAL_CONDITION  
+1 Foun Elsewhere in the System
+2 Issued to Stores
+3 Approval Required for All Adjustments.
+
+APPROVAL_TYPE  
+1 Automatic
+2 Manual
+3 Preapproved
+
+COUNT_TYPE_CODE  
+1 Scheduled
+2 Unscheduled
+3 Control
+4 Zero Count
+
+ENTRY_STATUS_CODE  
+1 Uncounted
+2 Pending Approval
+3 Recount
+4 Rejected
+5 Completed
+
+EXPORT_FLAG  
+1 Yes
+2 No
+
+SERIAL_DETAIL  
+1 Quantity and Serial Numbers
+2 Quantity Only
+
+

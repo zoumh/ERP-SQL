@@ -1,0 +1,163 @@
+
+
+
+--------Total Qty of RMA at Receiving Area
+
+----------------- RMA Receiving Value logic
+
+select ORDER_NUMBER,sum(Qty) Qty1 from 
+(
+SELECT --rt.OE_ORDER_HEADER_ID,
+orh.ORDER_NUMBER,ot.NAME RMA_Type,
+       NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO CUSTOMER',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO CUSTOMER',-1,0) * rt.quantity,0) Qty
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi,apps.OE_ORDER_HEADERS_all ORH,apps.oe_transaction_types_tl ot
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   and rt.oe_order_header_id=orh.HEADER_ID
+   and ot.TRANSACTION_TYPE_ID=orh.ORDER_TYPE_ID
+   and ot.LANGUAGE='US'
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is null
+group by --rt.OE_ORDER_HEADER_ID ,
+orh.ORDER_NUMBER,ot.NAME,rt.transaction_type,rt3.transaction_type,rt.destination_type_code,rt.quantity
+)
+group by ORDER_NUMBER
+having sum(Qty)<>0
+
+
+SELECT sum(NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO CUSTOMER',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO CUSTOMER',-1,0) * rt.quantity,0)) on_hand  
+FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is null  ---RMA Receive
+
+
+----Detail
+SELECT rt.organization_id,
+       'Receiving' subinventory_code,
+       rl.item_id inventory_item_id,
+       msi.segment1 item,
+       msi.primary_uom_code uom,
+       rt.transaction_id,
+       rt.transaction_type,
+       NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO CUSTOMER',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO CUSTOMER',-1,0) * rt.quantity,0) on_hand,
+       0 reserved
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is null
+
+
+
+---------Details of RMA Qty at Receiving Area
+
+SELECT orh.ORDER_NUMBER,ot.NAME RMA_Type,
+       rt.transaction_type,rt.quantity,rt.CREATION_DATE,rt.TRANSACTION_DATE  
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi,apps.OE_ORDER_HEADERS_all ORH,apps.oe_transaction_types_tl ot
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt.oe_order_header_id=orh.HEADER_ID
+   and ot.TRANSACTION_TYPE_ID=orh.ORDER_TYPE_ID
+   and ot.LANGUAGE='US'
+   and msi.segment1='ROA 128 1153.R8B'
+   and orh.ORDER_NUMBER in 
+(select ORDER_NUMBER from 
+(
+SELECT orh.ORDER_NUMBER,ot.NAME RMA_Type,
+       NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO CUSTOMER',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO CUSTOMER',-1,0) * rt.quantity,0) Qty
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi,apps.OE_ORDER_HEADERS_all ORH,apps.oe_transaction_types_tl ot
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   and rt.oe_order_header_id=orh.HEADER_ID
+   and ot.TRANSACTION_TYPE_ID=orh.ORDER_TYPE_ID
+   and ot.LANGUAGE='US'
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is null
+group by --rt.OE_ORDER_HEADER_ID ,
+orh.ORDER_NUMBER,ot.NAME,rt.transaction_type,rt3.transaction_type,rt.destination_type_code,rt.quantity
+)
+group by ORDER_NUMBER
+having sum(Qty)<>0
+)   

@@ -1,0 +1,243 @@
+
+----List Master Pack / IPM / IDM Item attributes 
+select a.INVENTORY_ASSET_FLAG
+,a.INVENTORY_ITEM_FLAG,
+a.COSTING_ENABLED_FLAG,
+a.BOM_ENABLED_FLAG,
+a.ITEM_TYPE,
+a.CREATION_DATE,
+a.segment1 Item,a.DESCRIPTION,
+b.segment1,b.segment2,b.segment3,b.segment4
+from apps.mtl_system_items_b a,apps.mtl_item_categories_v b 
+where a.organization_id=130 
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+--and ITEM_TYPE ='NBOM' ---IPM
+--and a.ITEM_TYPE ='EXP'  ---IDM
+and (a.ITEM_TYPE <>'EXP' and   
+a.INVENTORY_ASSET_FLAG='N' and a.COSTING_ENABLED_FLAG='N')---master Pack
+--and a.segment1 like 'RTK%'
+--and LOT_CONTROL_CODE=2  
+and a.ORGANIZATION_ID=130
+order by CREATION_DATE desc
+
+
+
+
+----------list non-bom item (IPM) with onhand
+select 
+a.segment1 Item,c.subinventory_code,SUM(c.primary_transaction_quantity) Quantities 
+from apps.mtl_system_items_b a,apps.mtl_item_categories_v b ,
+apps.MTL_ONHAND_QUANTITIES_DETAIl c
+where a.organization_id=130 
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+and ITEM_TYPE ='NBOM'
+--and a.segment1 like 'RTK%'
+and c.INVENTORY_ITEM_ID=a.inventory_item_id
+AND c.organization_id=a.organization_id
+group by a.segment1,c.subinventory_code
+
+
+
+
+----------list non-bom item with category
+select a.CREATION_DATE,a.ATTRIBUTE3 Bond_Flag,
+a.segment1 Item,a.DESCRIPTION,
+a.ITEM_TYPE,b.segment1,b.segment2,b.segment3,b.segment4,
+a.INVENTORY_ASSET_FLAG
+,a.INVENTORY_ITEM_FLAG
+from apps.mtl_system_items_b a,apps.mtl_item_categories_v b 
+where a.organization_id=130 
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+and ITEM_TYPE ='NBOM'
+--and a.segment1 like 'RTK%'
+--and LOT_CONTROL_CODE=2  
+order by CREATION_DATE desc
+
+
+-------------------Check Expense item Attribute
+select --a.CREATION_DATE,a.last_update_date,a.CREATED_BY,a.LAST_UPDATED_BY, 
+a.segment1 Item,a.DESCRIPTION,ORGANIZATION_CODE Org,
+a.ITEM_TYPE,a.INVENTORY_ITEM_STATUS_CODE Status,
+b.segment1 Cat1,b.segment2 Cat2,--b.segment3 Cat3,b.segment4 Cat4,
+a.INVENTORY_ASSET_FLAG INVENTORY_ASSET,
+a.COSTING_ENABLED_FLAG COSTING_ENABLED,
+a.INVENTORY_ITEM_FLAG INVENTORY_ITEM,
+a.MTL_TRANSACTIONS_ENABLED_FLAG TransactAble,
+a.STOCK_ENABLED_FLAG STOCK_ENABLED,
+a.PURCHASING_ITEM_FLAG PURCHASING_ITEM,
+a.PURCHASING_ENABLED_FLAG PURCHASING_ENABLED,
+decode(a.RECEIVING_ROUTING_ID,1,'Std',2,'Inspect',3,'Direct','NA') RECEIVING_ROUTING,
+a.ALLOW_ITEM_DESC_UPDATE_FLAG,
+decode(a.LOT_CONTROL_CODE,1,'No',2,'Full') LOT_CONTROL, 
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,
+a.ATTRIBUTE3 Bond_Flag,
+d.segment2 CC,d.segment3 Acc,d.segment4 Prd,d.segment5 Prj
+from apps.mtl_system_items_b a,apps.mtl_item_categories_v b,
+apps.org_organization_definitions c ,apps.gl_code_combinations d
+where --a.organization_id=130 and 
+a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.EXPENSE_ACCOUNT=d.CODE_COMBINATION_ID(+)
+and a.ITEM_TYPE ='EXP'
+and a.segment1 like 'CON002%'
+
+and a.CREATION_DATE>to_date('2007-12-24','yyyy-mm-dd')
+and a.last_update_date>to_date('2007-12-24','yyyy-mm-dd')
+
+
+
+-------------------Check Expense item Attribute (auto)
+select  
+--a.CREATION_DATE,a.last_update_date,--a.CREATED_BY,a.LAST_UPDATED_BY, 
+a.segment1 Item,a.DESCRIPTION,ORGANIZATION_CODE Org,
+a.ITEM_TYPE,a.INVENTORY_ITEM_STATUS_CODE Status,
+b.segment1 Cat1,b.segment2 Cat2,--b.segment3 Cat3,b.segment4 Cat4,
+a.INVENTORY_ASSET_FLAG INVENTORY_ASSET,
+a.COSTING_ENABLED_FLAG COSTING_ENABLED,
+a.INVENTORY_ITEM_FLAG INVENTORY_ITEM,
+a.MTL_TRANSACTIONS_ENABLED_FLAG TransactAble,
+a.STOCK_ENABLED_FLAG STOCK_ENABLED,
+a.PURCHASING_ITEM_FLAG PURCHASING_ITEM,
+a.PURCHASING_ENABLED_FLAG PURCHASING_ENABLED,
+decode(a.RECEIVING_ROUTING_ID,1,'Std',2,'Inspect',3,'Direct','NA') RECEIVING_ROUTING,
+a.ALLOW_ITEM_DESC_UPDATE_FLAG,
+decode(a.LOT_CONTROL_CODE,1,'No',2,'Full') LOT_CONTROL, 
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,
+a.ATTRIBUTE3 Bond_Flag,
+d.segment2 CC,d.segment3 Acc,d.segment4 Prd,d.segment5 Prj,
+SERIAL_NUMBER_CONTROL_CODE,SERIAL_STATUS_ENABLED
+from apps.mtl_system_items_b a,apps.mtl_item_categories_v b,
+apps.org_organization_definitions c ,apps.gl_code_combinations d
+where --a.organization_id=130 and 
+a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.EXPENSE_ACCOUNT=d.CODE_COMBINATION_ID(+)
+and a.ITEM_TYPE ='EXP'
+and a.INVENTORY_ITEM_STATUS_CODE<>'Inactive'
+and (b.segment1<>'NBOM' 
+or b.segment2 not in ('CON','ECA','TI','PEM')
+or a.INVENTORY_ITEM_STATUS_CODE<>'Expense'
+or a.INVENTORY_ASSET_FLAG<>'N'
+or a.COSTING_ENABLED_FLAG<>'N'
+or a.INVENTORY_ITEM_FLAG<>'Y'
+or a.MTL_TRANSACTIONS_ENABLED_FLAG<>'N'
+or a.STOCK_ENABLED_FLAG<>'N'
+or a.PURCHASING_ITEM_FLAG<>'Y'
+or a.PURCHASING_ENABLED_FLAG <>'Y'
+or a.RECEIVING_ROUTING_ID<>3
+or a.ALLOW_ITEM_DESC_UPDATE_FLAG<>'Y'
+or a.LOT_CONTROL_CODE<>1
+or a.planning_make_buy_code<>2
+or ((a.ATTRIBUTE3 not in ('N','M')  or a.ATTRIBUTE3 is null) and ORGANIZATION_CODE<>'BMC')
+or (d.segment2 is null or d.segment3 is null or d.segment4 is null or d.segment5 is null)
+or (b.segment2='CON' and d.segment3<>'41059903')
+or (b.segment2='ECA' and d.segment3<>'41059909')
+or (b.segment2='PEM' and d.segment3<>'41050706')
+or (b.segment2='TI' and d.segment3<>'41059908')
+or d.segment2<>'0000'
+or d.segment4<>'000000'
+or d.segment5<>'0000'
+) 
+
+
+-------------------link with org table chk category/account
+select  
+--a.CREATION_DATE,a.last_update_date,--a.CREATED_BY,a.LAST_UPDATED_BY, 
+a.segment1 Item,a.DESCRIPTION,ORGANIZATION_CODE Org,
+b.segment2 Cat2, e.f5 MFT_Category,
+d.segment3 Exp_Account, e.f6 MFT_Account
+from apps.mtl_system_items_b a,apps.mtl_item_categories_v b,
+apps.org_organization_definitions c ,apps.gl_code_combinations d,apps.xx_harris_20071229 e
+where --a.organization_id=130 and 
+a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.EXPENSE_ACCOUNT=d.CODE_COMBINATION_ID(+)
+and a.ITEM_TYPE ='EXP'
+and a.INVENTORY_ITEM_STATUS_CODE<>'Inactive'
+and c.ORGANIZATION_CODE=e.f4
+and a.segment1=e.f1
+and (b.segment2<>decode(e.f5,'TI.','TI')  or d.segment3<>e.f6)
+
+
+--------Find no maintenced in Prod (as Exp)
+
+select  * from apps.xx_harris_20071229 where upper(trim(f1)) not in 
+(select segment1 from apps.mtl_system_items_b where --ITEM_TYPE ='EXP' and 
+organization_id=127 --and segment1='Con-common'
+)
+
+
+
+-------Find prod more then org list 
+select  
+--a.CREATION_DATE,a.last_update_date,--a.CREATED_BY,a.LAST_UPDATED_BY, 
+a.segment1 Item,a.DESCRIPTION,ORGANIZATION_CODE Org,
+a.ITEM_TYPE,a.INVENTORY_ITEM_STATUS_CODE Status,
+b.segment1 Cat1,b.segment2 Cat2,--b.segment3 Cat3,b.segment4 Cat4,
+a.INVENTORY_ASSET_FLAG INVENTORY_ASSET,
+a.COSTING_ENABLED_FLAG COSTING_ENABLED,
+a.INVENTORY_ITEM_FLAG INVENTORY_ITEM,
+a.MTL_TRANSACTIONS_ENABLED_FLAG TransactAble,
+a.STOCK_ENABLED_FLAG STOCK_ENABLED,
+a.PURCHASING_ITEM_FLAG PURCHASING_ITEM,
+a.PURCHASING_ENABLED_FLAG PURCHASING_ENABLED,
+decode(a.RECEIVING_ROUTING_ID,1,'Std',2,'Inspect',3,'Direct','NA') RECEIVING_ROUTING,
+a.ALLOW_ITEM_DESC_UPDATE_FLAG,
+decode(a.LOT_CONTROL_CODE,1,'No',2,'Full') LOT_CONTROL, 
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,
+a.ATTRIBUTE3 Bond_Flag,
+d.segment2 CC,d.segment3 Acc,d.segment4 Prd,d.segment5 Prj,
+SERIAL_NUMBER_CONTROL_CODE,SERIAL_STATUS_ENABLED
+from apps.mtl_system_items_b a,apps.mtl_item_categories_v b,
+apps.org_organization_definitions c ,apps.gl_code_combinations d
+where --a.organization_id=130 and 
+a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and b.category_set_id=1
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.EXPENSE_ACCOUNT=d.CODE_COMBINATION_ID(+)
+and a.ITEM_TYPE ='EXP'
+and a.INVENTORY_ITEM_STATUS_CODE<>'Inactive'
+and a.segment1 not in
+(select upper(trim(f1)) from apps.xx_harris_20071229 )
+
+
+
+
+--------IDM PR ,line Type,Item,Category,Account, Destin Type
+select a.segment1 PR_Num, b.line_num,c.DISTRIBUTION_NUM Dist_num,LINE_TYPE,LANGUAGE,
+e.segment1 IDM_Item,b.ITEM_DESCRIPTION,b.QUANTITY,f.segment1 Categ1,f.segment2 Categ2,
+d.segment2 CC,d.segment3 Acc,b.creation_date,
+a.TYPE_LOOKUP_CODE PR_Type,
+DESTINATION_TYPE_CODE,DESTINATION_ORGANIZATION_ID,
+b.CLOSED_CODE ,QUANTITY_CANCELLED,CANCEL_DATE,b.CANCEL_FLAG line_cancel,
+b.rate,b.unit_price,b.currency_code,
+b.currency_unit_price,a.authorization_status,
+d.segment4 PRD,d.segment5 PRJ
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.gl_code_combinations d ,apps.PO_LINE_TYPES_TL pltt,apps.mtl_system_items_b e,
+apps.MTL_CATEGORIES_V f
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and e.ITEM_TYPE ='EXP'
+AND PLTT.LINE_TYPE_ID (+) = b.LINE_TYPE_ID 
+and e.INVENTORY_ITEM_ID(+)=b.item_id 
+and e.organization_id=b.DESTINATION_ORGANIZATION_ID
+and b.CATEGORY_ID=f.CATEGORY_ID
+and f.structure_id=101
+
+
+

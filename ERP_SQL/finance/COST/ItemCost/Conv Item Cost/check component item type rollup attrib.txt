@@ -1,0 +1,200 @@
+
+
+----------before cost conv, check Item type & rollup attrib when diff
+
+select distinct(map.new_item_number)      
+     ,msii.segment1 old_item_code 
+     ,msii.DESCRIPTION old_item_desc 
+     ,msii.item_type old_item_type 
+     ,msii.planning_make_buy_code old_make_or_buy
+	 ,t.BASED_ON_ROLLUP  old_BASED_ON_ROLLUP
+  	 ,map.old_revision 
+     ,msii.organization_id old_org_id 
+     ,t.item_cost old_item_cost    
+	  ,t.MATERIAL_COST old_MATERIAL_COST
+	  ,t.RESOURCE_COST  old_RESOURCE_COST 
+  	  ,nitem.DESCRIPTION    new_description 
+      ,nitem.item_type      new_item_type 
+	  ,nitem.planning_make_buy_code  new_make_or_buy,nt.BASED_ON_ROLLUP   new_BASED_ON_ROLLUP
+  	  ,map.new_revision 
+     ,nitem.organization_id  new_org_id 
+  	 ,nt.item_cost           new_item_cost    
+     ,nt.MATERIAL_COST   new_MATERIAL_COST
+     ,nt.RESOURCE_COST  new_RESOURCE_COST
+	 ,t.cost_type_id  old_cost_type,nt.cost_type_id  new_cost_type
+from cst_item_cost_type_v        t 
+     , mtl_system_items_b          msii 
+	 ,cst_item_cost_details      wt
+     ,conv_item_mapping            map 
+     , mtl_system_items_b          nitem 
+     , cst_item_cost_type_v       nt 
+where msii.inventory_item_id = t.inventory_item_id 
+and msii.organization_id = t.organization_id 
+and map.old_organization_id = msii.organization_id 
+and map.old_inventory_id = msii.inventory_item_id 
+and nitem.organization_id = map.new_organization_id 
+and nitem.inventory_item_id = map.new_inventory_item_id 
+and nitem.inventory_item_id = nt.inventory_item_id 
+and nitem.organization_id = nt.organization_id 
+and wt.INVENTORY_ITEM_ID=t.INVENTORY_ITEM_ID
+and wt.ORGANIZATION_ID=t.organization_id
+--and ood.organization_code = 'PRJ' 
+and msii.enabled_flag = 'Y' 
+and wt.level_type = 1 
+and wt.cost_element_id = 1 
+and wt.cost_type_id<>3  ----?????=1
+and ((t.cost_type_id=1 and nt.cost_type_id=3) or (t.cost_type_id=1001 and nt.cost_type_id=1001))
+and msii.inventory_item_status_code <> 'Inactive' 
+--and msii.organization_id in (83,130)
+and (msii.item_type <> nitem.item_type
+or msii.planning_make_buy_code<> nitem.planning_make_buy_code
+or t.BASED_ON_ROLLUP <> nt.BASED_ON_ROLLUP
+)
+order by msii.segment1
+
+---------------before cost conv, check Item type & rollup attrib all
+select distinct(map.new_item_number)      
+     ,msii.segment1 old_item_code 
+     ,msii.DESCRIPTION old_item_desc 
+     ,msii.item_type old_item_type 
+     ,msii.planning_make_buy_code old_make_or_buy
+	 --,t.BASED_ON_ROLLUP  old_BASED_ON_ROLLUP
+  	 ,map.old_revision 
+     ,msii.organization_id old_org_id 
+  	  ,nitem.DESCRIPTION    new_description 
+      ,nitem.item_type      new_item_type 
+	  ,nitem.planning_make_buy_code  new_make_or_buy--,nt.BASED_ON_ROLLUP   new_BASED_ON_ROLLUP
+  	  ,map.new_revision 
+     ,nitem.organization_id  new_org_id 
+from --cst_item_cost_type_v        t 
+     mtl_system_items_b          msii 
+	 ,cst_item_cost_details      wt
+     ,conv_item_mapping            map 
+     , mtl_system_items_b          nitem 
+     --, cst_item_cost_type_v       nt 
+where map.old_organization_id = msii.organization_id 
+and map.old_inventory_id = msii.inventory_item_id 
+and nitem.organization_id = map.new_organization_id 
+and nitem.inventory_item_id = map.new_inventory_item_id 
+and msii.enabled_flag = 'Y' 
+and msii.inventory_item_status_code <> 'Inactive' 
+and msii.organization_id in (83,130)
+--and (msii.item_type <> nitem.item_type
+--or msii.planning_make_buy_code<> nitem.planning_make_buy_code
+--)
+order by msii.segment1
+
+
+
+
+
+
+
+-----------------------------
+
+check component item type & rollup attribution & cost between new - old OU
+
+
+---only find out differs, linked with cost_type
+
+select distinct(map.new_item_number)      
+     ,msii.segment1 old_item_code 
+     ,msii.DESCRIPTION old_item_desc 
+     ,msii.item_type old_item_type 
+     ,msii.planning_make_buy_code old_make_or_buy
+	 ,t.BASED_ON_ROLLUP  old_BASED_ON_ROLLUP
+  	 ,map.old_revision 
+     ,msii.organization_id old_org_id 
+     ,t.item_cost old_item_cost    
+	  ,t.MATERIAL_COST old_MATERIAL_COST
+	  ,t.RESOURCE_COST  old_RESOURCE_COST 
+  	  ,nitem.DESCRIPTION    new_description 
+      ,nitem.item_type      new_item_type 
+	  ,nitem.planning_make_buy_code  new_make_or_buy,nt.BASED_ON_ROLLUP   new_BASED_ON_ROLLUP
+  	  ,map.new_revision 
+     ,nitem.organization_id  new_org_id 
+  	 ,nt.item_cost           new_item_cost    
+     ,nt.MATERIAL_COST   new_MATERIAL_COST
+     ,nt.RESOURCE_COST  new_RESOURCE_COST
+	 ,t.cost_type_id  old_cost_type,nt.cost_type_id  new_cost_type
+from cst_item_cost_type_v        t 
+     , mtl_system_items_b          msii 
+	 ,cst_item_cost_details      wt
+     ,conv_item_mapping            map 
+     , mtl_system_items_b          nitem 
+     , cst_item_cost_type_v       nt 
+where msii.inventory_item_id = t.inventory_item_id 
+and msii.organization_id = t.organization_id 
+and map.old_organization_id = msii.organization_id 
+and map.old_inventory_id = msii.inventory_item_id 
+and nitem.organization_id = map.new_organization_id 
+and nitem.inventory_item_id = map.new_inventory_item_id 
+and nitem.inventory_item_id = nt.inventory_item_id 
+and nitem.organization_id = nt.organization_id 
+and wt.INVENTORY_ITEM_ID=t.INVENTORY_ITEM_ID
+and wt.ORGANIZATION_ID=t.organization_id
+--and ood.organization_code = 'PRJ' 
+and msii.enabled_flag = 'Y' 
+and wt.level_type = 1 
+and wt.cost_element_id = 1 
+and wt.cost_type_id<>3  ----?????=1
+and ((t.cost_type_id=1 and nt.cost_type_id=3) or (t.cost_type_id=1001 and nt.cost_type_id=1001))
+and msii.inventory_item_status_code <> 'Inactive' 
+--and msii.organization_id in (83,130)
+and (msii.item_type <> nitem.item_type
+or msii.planning_make_buy_code<> nitem.planning_make_buy_code
+or t.BASED_ON_ROLLUP <> nt.BASED_ON_ROLLUP
+or nvl(t.item_cost,0) <> nvl(nt.item_cost,0)
+)
+order by msii.segment1
+
+
+----old
+
+select distinct(map.new_item_number)      
+     ,msii.segment1 old_item_code 
+     ,msii.DESCRIPTION old_item_desc 
+     ,msii.item_type old_item_type 
+     ,msii.planning_make_buy_code old_make_or_buy
+	 ,t.BASED_ON_ROLLUP  old_BASED_ON_ROLLUP
+  	 ,map.old_revision 
+     ,msii.organization_id old_org_id 
+     ,t.item_cost old_item_cost    
+	  ,t.MATERIAL_COST old_MATERIAL_COST
+	  ,t.RESOURCE_COST  old_RESOURCE_COST     
+  	  ,nitem.DESCRIPTION    new_description 
+      ,nitem.item_type      new_item_type 
+	  ,nitem.planning_make_buy_code  new_make_or_buy,nt.BASED_ON_ROLLUP   new_BASED_ON_ROLLUP
+  	  ,map.new_revision 
+     ,nitem.organization_id  new_org_id 
+  	 ,nt.item_cost           new_item_cost    
+     ,nt.MATERIAL_COST   new_MATERIAL_COST
+     ,nt.RESOURCE_COST  new_RESOURCE_COST
+from cst_item_cost_type_v        t 
+     , mtl_system_items_b          msii 
+	 ,cst_item_cost_details      wt
+     ,conv_item_mapping            map 
+     , mtl_system_items_b          nitem 
+     , cst_item_cost_type_v       nt 
+where msii.inventory_item_id = t.inventory_item_id 
+and msii.organization_id = t.organization_id 
+and map.old_organization_id = msii.organization_id 
+and map.old_inventory_id = msii.inventory_item_id 
+and nitem.organization_id = map.new_organization_id 
+and nitem.inventory_item_id = map.new_inventory_item_id 
+and nitem.inventory_item_id = nt.inventory_item_id 
+and nitem.organization_id = nt.organization_id 
+and wt.INVENTORY_ITEM_ID=t.INVENTORY_ITEM_ID
+and wt.ORGANIZATION_ID=t.organization_id
+--and ood.organization_code = 'PRJ' 
+and msii.enabled_flag = 'Y' 
+and wt.level_type = 1 
+and wt.cost_element_id = 1 
+and wt.cost_type_id<>3  ----?????=1
+and msii.inventory_item_status_code <> 'Inactive' 
+--and msii.organization_id in (83,130)
+and (msii.item_type <> nitem.item_type
+or msii.planning_make_buy_code<> nitem.planning_make_buy_code
+or t.BASED_ON_ROLLUP <> nt.BASED_ON_ROLLUP
+)
+

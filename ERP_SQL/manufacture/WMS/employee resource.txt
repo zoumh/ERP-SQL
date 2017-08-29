@@ -1,0 +1,14 @@
+
+
+
+select c.resource_code,convert(b.full_name,'ZHS16GBK') full_name,a.effective_start_date,a.effective_end_date,a.organization_id,b.employee_number 
+from apps.bom_resource_employees a,apps.PER_ALL_PEOPLE_F b,apps.BOM_RESOURCES_V c
+where a.person_id=b.person_id and a.resource_id=c.resource_id and a.organization_id=c.organization_id
+order by c.organization_id,c.resource_code
+
+
+------------Find user's all resource
+select c.resource_code,convert(b.full_name,'ZHS16GBK') full_name,a.effective_start_date,a.effective_end_date,a.organization_id,b.employee_number 
+from apps.bom_resource_employees a,apps.PER_ALL_PEOPLE_F b,apps.BOM_RESOURCES_V c
+where a.person_id=b.person_id and a.resource_id=c.resource_id and a.organization_id=c.organization_id
+and b.full_name='Zhang Dong Lin,'

@@ -1,0 +1,36 @@
+
+
+
+GL import request :934267
+
+(TAR Number  3730325.994 's last segment)
+Please check bug 3087842. 
+The status "PROCESSED" means the journal import program complete. 
+There record should remove from gl_interface table. 
+If you can reproduce this issue , you can apply patch 3087842 to fix this issue. 
+
+
+
+
+select * from apps.GL_interface where status='PROCESSED'
+
+
+Verify GL_Interface with GL_Journal_line  if 'Processed' happened
+
+-------GL_interface
+select to_char(JE_BATCH_ID) JE_BATCH_ID,to_char(JE_HEADER_ID) JE_HEADER_ID,
+sum(ACCOUNTED_DR),sum(ACCOUNTED_CR),sum(ENTERED_DR) ,CURRENCY_CODE,sum(ENTERED_CR)
+from apps.GL_interface where status='PROCESSED'
+group by JE_BATCH_ID,JE_HEADER_ID,CURRENCY_CODE 
+
+
+-------GL_Journal_line
+select to_char(JE_BATCH_ID) JE_BATCH_ID,to_char(JE_HEADER_ID) JE_HEADER_ID,
+sum(LINE_ACCOUNTED_DR),sum(LINE_ACCOUNTED_CR) ,CURRENCY_CODE ,sum(LINE_ENTERED_DR),sum(LINE_ENTERED_CR)
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a where JE_BATCH_ID in 
+(select JE_BATCH_ID from apps.GL_interface where status='PROCESSED')
+and  b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+group by JE_BATCH_ID,JE_HEADER_ID,CURRENCY_CODE 
+
+
+----Treatment --> after verify the batch are fully imported into GL, can delete these records in GL_interface

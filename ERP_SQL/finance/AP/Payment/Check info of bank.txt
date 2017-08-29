@@ -1,0 +1,26 @@
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('127');
+END;
+
+
+-------Get all paid check for a bank
+select PAYMENT_TYPE_FLAG,PAYMENT_TYPE,CHECK_DATE,to_char(CHECK_DATE,'mm') month,
+EXCHANGE_RATE,CURRENCY_CODE,AMOUNT,BASE_AMOUNT,DOC_CATEGORY_CODE,CHECK_STATUS,BANK_NAME
+from AP_CHECKS_V where CREATION_DATE > to_date('2008-01-01','yyyy-mm-dd')
+--and  CREATION_DATE <to_date('2008-9-9','yyyy-mm-dd')
+and CHECK_STATUS='Negotiable'
+and BANK_NAME like '%Dum%'
+and ORG_ID>=127
+
+----Sum
+select to_char(CHECK_DATE,'mm') month,sum(BASE_AMOUNT) Amt
+from AP_CHECKS_V where CREATION_DATE > to_date('2008-01-01','yyyy-mm-dd')
+--and  CREATION_DATE <to_date('2008-9-9','yyyy-mm-dd')
+and CHECK_STATUS='Negotiable'
+and BANK_NAME like '%Dum%'
+and ORG_ID>=127
+group by to_char(CHECK_DATE,'mm')
+
+
+ 

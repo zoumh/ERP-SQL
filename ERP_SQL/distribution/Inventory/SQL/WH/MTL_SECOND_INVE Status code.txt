@@ -1,0 +1,56 @@
+
+MTL_SECONDARY_INVENTORIES
+
+
+STATUS_CODE
+decode(status_id,1,'Inactive',21,'Active',20,'On Hold') Status_correct
+
+
+--------------------------------------------------
+ASSET_INVENTORY 
+1 Yes
+2 No
+
+
+AVAILABILITY_TYPE 
+1 Nettable inventory
+2 Nonnettable inventory
+
+
+DEPRECIABLE_FLAG 
+1 Yes
+2 No
+
+
+INVENTORY_ATP_CODE 
+1 Inventory included in atp calculation
+2 Inventory not included in atp calculation
+
+
+LOCATOR_TYPE 
+1 No locator control
+2 Prespecified locator control
+3 Dynamic entry locator control
+4 Locator control determined at subinventory level
+5 Locator control determined at item level
+
+
+QUANTITY_TRACKED 
+1 Yes
+2 No
+
+
+REQUISITION_APPROVAL_TYPE
+1 Approved
+2 Unapproved
+
+
+RESERVABLE_TYPE
+1 Yes
+2 No
+
+
+SOURCE_TYPE
+1 Inventory
+2 Supplier
+

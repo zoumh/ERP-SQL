@@ -1,0 +1,119 @@
+
+
+----------AP invoice Amt for Account in Period
+
+SELECT PO_DISTRIBUTION_ID,MATCH_STATUS_FLAG,QUANTITY_INVOICED ,
+c.INVOICE_NUM, 
+--CONVERT(VDR.VENDOR_NAME,'ZHS16GBK') AS Supplier, 
+VDR.VENDOR_NAME  Supplier, 
+vdr.VENDOR_ID,c.INVOICE_AMOUNT 
+,c.INVOICE_DATE,c.DESCRIPTION,b.segment3 AS ACCOUNT,b.segment2 AS Cost_Center,a.ACCOUNTING_DATE GL_DATE 
+,c.ATTRIBUTE1 AS Inv_Trans_Num,c.INVOICE_CURRENCY_CODE AS Inv_Curr,a.DISTRIBUTION_LINE_NUMBER AS Line,a .AMOUNT AS Line_Amount 
+,NVL(A.BASE_AMOUNT,a.AMOUNT) AS Line_Amount_CNY , 
+--CONVERT(a.description,'ZHS16GBK') line_Description 
+a.description  line_Description 
+,b.segment4 PRD,b.segment5 PRJ 
+FROM apps.AP_INVOICE_DISTRIBUTIONS_ALL a 
+,apps.GL_CODE_combinations b 
+,apps.AP_INVOICES_ALL c 
+,apps.PO_VENDORS VDR 
+WHERE a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+AND a.invoice_id=c.invoice_id 
+AND VDR.VENDOR_ID=c.VENDOR_ID 
+and b.segment3='41059903' 
+and a.ACCOUNTING_DATE>=to_date('2006-06-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <=to_date('2006-08-31','yyyy-mm-dd')
+
+
+
+----------AP invoice Amt for Account in Period, with matched PO Price,Buyer,Creator
+
+SELECT convert(PE2.FULL_NAME,'ZHS16GBK')  Buyer,d.user_name Created_By,
+d.description Created_By,g.UNIT_PRICE,nvl(f.RATE,1)*g.UNIT_PRICE CNY_Price, a.QUANTITY_INVOICED,
+--a.UNIT_PRICE-nvl(INVOICE_PRICE_VARIANCE,0) Invoice_match_trace_PO_Orice  
+a.AMOUNT Inv_line_Amt,c.INVOICE_CURRENCY_CODE AS Curr,
+NVL(A.BASE_AMOUNT,a.AMOUNT) AS Inv_Line_Amount_CNY , 
+--c.DESCRIPTION PO,
+f.segment1 PO,
+g.LINE_NUM, b.segment3 AS ACCOUNT,b.segment2 AS Cost_Center,a.ACCOUNTING_DATE GL_DATE 
+,a.DISTRIBUTION_LINE_NUMBER AS Inv_Line,a .AMOUNT AS Line_Amount 
+,a.description  line_Description, c.INVOICE_NUM
+,b.segment4 PRD,b.segment5 PRJ,VDR.VENDOR_NAME  Supplier, 
+c.INVOICE_DATE,c.ATTRIBUTE1 AS Inv_Trans_Num
+FROM apps.AP_INVOICE_DISTRIBUTIONS_ALL a 
+,apps.GL_CODE_combinations b 
+,apps.AP_INVOICES_ALL c 
+,apps.PO_VENDORS VDR 
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+,apps.PER_PEOPLE_V7 PE2
+,apps.fnd_user d
+,apps.po_lines_all g
+WHERE a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+AND a.invoice_id=c.invoice_id 
+AND VDR.VENDOR_ID=c.VENDOR_ID 
+and b.segment3='41059903' 
+and a.ACCOUNTING_DATE>=to_date('2006-06-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <=to_date('2006-08-31','yyyy-mm-dd')
+--and c.INVOICE_NUM='56199'
+and f.po_header_id=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and f.AGENT_ID=PE2.PERSON_ID(+)
+and d.user_id=f.CREATED_BY(+)
+and f.po_header_id=g.po_header_id
+and e.po_line_id=g.po_line_id
+
+
+select * from apps.AP_INVOICES_ALL where INVOICE_NUM='56199'
+
+select * from apps.AP_INVOICE_DISTRIBUTIONS_ALL where INVOICE_id=209413
+
+
+
+
+
+SELECT PO_DISTRIBUTION_ID,c.INVOICE_NUM,c.INVOICE_CURRENCY_CODE AS Inv_Curr,
+sum(a .AMOUNT) AS Line_Amount 
+,sum(NVL(A.BASE_AMOUNT,a.AMOUNT)) AS Line_Amount_CNY
+FROM apps.AP_INVOICE_DISTRIBUTIONS_ALL a 
+,apps.GL_CODE_combinations b 
+,apps.AP_INVOICES_ALL c 
+,apps.PO_VENDORS VDR 
+WHERE a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+AND a.invoice_id=c.invoice_id 
+AND VDR.VENDOR_ID=c.VENDOR_ID 
+and b.segment3='41059903' 
+and a.ACCOUNTING_DATE>=to_date('2006-06-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <=to_date('2006-08-31','yyyy-mm-dd')
+group by c.INVOICE_NUM,c.INVOICE_CURRENCY_CODE ,PO_DISTRIBUTION_ID
+
+
+
+
+SELECT c.INVOICE_CURRENCY_CODE AS Curr,
+sum(NVL(A.BASE_AMOUNT,a.AMOUNT)) AS Inv_Line_Amount_CNY , 
+c.INVOICE_NUM
+FROM apps.AP_INVOICE_DISTRIBUTIONS_ALL a 
+,apps.GL_CODE_combinations b 
+,apps.AP_INVOICES_ALL c 
+,apps.PO_VENDORS VDR 
+,apps.PO_DISTRIBUTIONS_ALL e
+,apps.PO_HEADERS_ALL f
+,apps.PER_PEOPLE_V7 PE2
+,apps.fnd_user d
+,apps.po_lines_all g
+WHERE a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+AND a.invoice_id=c.invoice_id 
+AND VDR.VENDOR_ID=c.VENDOR_ID 
+and b.segment3='41059903' 
+and a.ACCOUNTING_DATE>=to_date('2006-06-1','yyyy-mm-dd')
+and a.ACCOUNTING_DATE <=to_date('2006-08-31','yyyy-mm-dd')
+--and c.INVOICE_NUM='03998113'
+and f.po_header_id(+)=e.po_header_id
+and a.po_distribution_id=e.po_distribution_id(+)
+and f.AGENT_ID=PE2.PERSON_ID
+and d.user_id=f.CREATED_BY
+and f.po_header_id=g.po_header_id
+and e.po_line_id=g.po_line_id
+group by c.INVOICE_CURRENCY_CODE,c.INVOICE_NUM
+

@@ -1,0 +1,21 @@
+
+
+-------------AR Invoice Revenue line , with Source & type ,comments
+
+select to_char(c.TRX_NUMBER) as Invoice_Number,to_char(a.LINE_NUMBER) LINE_NUMBER ,g.segment3 as Rev_Acc,a.REVENUE_AMOUNT,
+d.NAME as Trans_Type,c.comments,e.name Source_Type,e.description Source,
+a.SALES_ORDER,
+b.AMOUNT,c.INVOICE_CURRENCY_CODE as Curr,c.EXCHANGE_RATE,b.ACCTD_AMOUNT as CNY_AMT,b.GL_DATE,a.QUANTITY_INVOICED,a.QUANTITY_ORDERED,a.UNIT_SELLING_PRICE,c.PURCHASE_ORDER
+from apps.ra_customer_trx_lines_all a,apps.RA_CUST_TRX_LINE_GL_DIST_all b,apps.ra_customer_trx_all c
+,apps.GL_CODE_combinations g,apps.ra_cust_trx_types_all d,apps.RA_BATCH_SOURCES_all e
+where c.CUSTOMER_TRX_ID=b.CUSTOMER_TRX_ID
+and a.CUSTOMER_TRX_LINE_ID=b.CUSTOMER_TRX_LINE_ID
+and a.LINE_TYPE='LINE'
+and b.ACCOUNT_CLASS='REV'
+and b.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and c.CUST_TRX_TYPE_ID=d.CUST_TRX_TYPE_ID
+and c.BATCH_SOURCE_ID=e.BATCH_SOURCE_ID
+and b.GL_DATE>=to_date('2005-01-01','yyyy-mm-dd') and b.GL_DATE<=to_date('2005-03-31','yyyy-mm-dd')  
+and (g.segment3 in ('41059903'))
+
+

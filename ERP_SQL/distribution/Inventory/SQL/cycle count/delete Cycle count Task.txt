@@ -1,0 +1,117 @@
+
+
+----------My test, solve (to change cycle count entries status to complete,will hid the tasks at control board!
+
+
+-------Tar 16827426.6 Approved Solution :
+
+update MTL_CYCLE_COUNT_ENTRIES set ENTRY_STATUS_CODE=5 where 
+inventory_item_id=72348 and ENTRY_STATUS_CODE in (1,2,4)
+
+
+
+
+---------update one item's cycle count task status
+update MTL_CYCLE_COUNT_ENTRIES set ENTRY_STATUS_CODE=5 where inventory_item_id=72348 and ENTRY_STATUS_CODE<>5
+
+
+select a.CYCLE_COUNT_ENTRY_ID,a.count_status,
+decode(ENTRY_STATUS_CODE,1,'Uncounted',2,'Pending Approval',3,'Recount',4,'Rejected',5,'Completed') status,
+decode(COUNT_TYPE_CODE,1,'Scheduled',2,'Unscheduled',3,'Control',4,'Zero Count') CT_Type,
+b.cycle_count_header_name,a.count_list_sequence Count_Seq,
+a.CREATION_DATE,c.segment1 Item,
+a.system_quantity_current system_qty,COUNT_QUANTITY_CURRENT COUNT_Qty,a.ADJUSTMENT_QUANTITY adj_Qty,
+a.subinventory WH,f.segment2||'.'||f.segment3||'.'||f.segment4||'.'||f.segment5 Locator,
+d.description Created_By,e.description last_updated_By,
+count_date_current,a.COUNT_DUE_DATE,a.LAST_UPDATE_DATE,ABC_Class_name,b.DESCRIPTION,a.item_unit_cost,a.approval_status
+,d.user_name Created_By,e.user_name last_updated_By,
+decode(APPROVAL_TYPE,1,'',2,'',3,'',APPROVAL_TYPE) Approv_Type,decode(APPROVAL_CONDITION ,1,'Foun Else',2,'Issued to Stores',3,'Req Approval',APPROVAL_TYPE) Approv_Condition
+from apps.MTL_CYCLE_COUNT_ENTRIES_V a,apps.MTL_CYCLE_COUNT_HEADERS_V b,
+apps.mtl_system_items c,apps.fnd_user d,apps.fnd_user e,apps.MTL_ITEM_LOCATIONS f
+where a.cycle_count_header_id=b.cycle_count_header_id
+and a.INVENTORY_ITEM_ID =c.INVENTORY_ITEM_ID 
+and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+and a.LOCATOR_ID=f.INVENTORY_LOCATION_ID 
+and a.CREATED_BY =d.user_id
+and a.last_updated_BY =e.user_id
+--and b.cycle_count_header_name in ('BMC SA Cycle Counting','BMC SA Cycle Counting','BMC cycle counting')
+--and trunc(a.CREATION_DATE)=to_date('2006-9-4','yyyy-mm-dd')
+and c.segment1 ='KNC 201 24.R2A'
+and a.count_status='Pending Approval'
+order by a.CREATION_DATE,b.cycle_count_header_name
+
+select * from apps.MTL_CYCLE_COUNT_ENTRIES_V where CYCLE_COUNT_ENTRY_ID=59566
+
+select * from apps.MTL_CYCLE_COUNT_ENTRIES where inventory_item_id=72348 and ENTRY_STATUS_CODE=5
+
+update MTL_CYCLE_COUNT_ENTRIES set ENTRY_STATUS_CODE=5 where inventory_item_id=72348 and ENTRY_STATUS_CODE<>5
+
+
+delete from apps.MTL_CYCLE_COUNT_ENTRIES where CYCLE_COUNT_ENTRY_ID=59566
+
+
+
+
+create table bmc_bkup_cyclecount_entries as select * from apps.MTL_CYCLE_COUNT_ENTRIES where CYCLE_COUNT_ENTRY_ID=59566
+
+commit
+
+select  * from bmc_bkup_cyclecount_entries
+
+insert into bmc_bkup_cyclecount_entries select * from apps.MTL_CYCLE_COUNT_ENTRIES where CYCLE_COUNT_ENTRY_ID=59566
+
+rollback
+
+delete from  bmc_bkup_cyclecount_entries
+
+
+
+
+
+
+-------------------------------------Tar, not solved
+
+select cycle_count_header_name,cycle_count_header_id,organization_id from mtl_cycle_count_headers
+
+commit
+
+update MTL_CYCLE_COUNT_ENTRIES
+set standard_operation_id = 2308
+where cycle_count_header_id  =21
+
+
+
+select standard_operation_id, a.cycle_count_header_id	,cycle_count_header_name,b.segment1 Item,SUBINVENTORY,ENTRY_STATUS_CODE,ADJUSTMENT_QUANTITY,
+SYSTEM_QUANTITY_FIRST
+from apps.MTL_CYCLE_COUNT_ENTRIES a,apps.mtl_system_items_b b,mtl_cycle_count_headers C
+where a. inventory_item_id=b. inventory_item_id
+and a.organization_id=b.organization_id
+AND c.cycle_count_header_id=a.cycle_count_header_id		   				
+AND B.SEGMENT1='SXA 109 6669/1.R1B'
+
+
+----------------------
+
+
+update MTL_CYCLE_COUNT_ENTRIES
+set standard_operation_id = 2308
+where cycle_count_header_id in (&cycle_count_header_id)
+and inventory_item_id = &item_id;
+
+
+select distinct inventory_item_id from mtl_system_items_b
+where segment1 like '&item_name';
+
+--------------
+
+update MTL_CYCLE_COUNT_ENTRIES
+set standard_operation_id = 2308
+where cycle_count_header_id in (&cycle_count_header_id);
+
+To get cycle_count_header_id you can use the below query 
+
+select cycle_count_header_id from mtl_cycle_count_headers
+where cycle_count_header_name like '&cycle_count_name' --Enter your cycle count name
+and organization_id = &org_id --Org id for your inventory org

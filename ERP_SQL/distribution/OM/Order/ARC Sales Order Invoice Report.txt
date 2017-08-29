@@ -1,0 +1,86 @@
+
+
+-------Some blank Ship/Inv lines are duplicate
+
+select PO_RECEIVING_DATE Order_Date,SHIP_NO, 
+INVOICE_NO,PO_NO, SO_NO, LINE_NUMBER, ORDER_TYPE,
+INVOICE_TYPE, ORDERED_ITEM,DESCRIPTION, --LINE_STATUS,
+SIGLE_PRICE, TOTAL_PRICE,QTY,ADDRESS
+from apps.bmc_dc_delivery_report
+where ORDER_TYPE='ARC- RM  Domestic Order'
+and TRUNC(PO_RECEIVING_DATE)>to_date('2004-10-1','yyyy-mm-dd')
+and TRUNC(PO_RECEIVING_DATE)<to_date('2004-10-22','yyyy-mm-dd')
+order by SO_NO, LINE_NUMBER
+
+
+
+
+
+
+select count(*) ,SO_NO, LINE_NUMBER
+from apps.bmc_dc_delivery_report
+where ORDER_TYPE='ARC- RM  Domestic Order'
+and TRUNC(PO_RECEIVING_DATE)>to_date('2004-10-1','yyyy-mm-dd')
+and TRUNC(PO_RECEIVING_DATE)<to_date('2004-10-22','yyyy-mm-dd')
+--order by SO_NO, LINE_NUMBER 
+group by SO_NO, LINE_NUMBER
+--having count(*)>1
+
+
+
+-------------Monthly ARC Internal Service report (with DPY Item,Ship to,bill to)
+
+----Header level
+----Header level
+SELECT 
+oh.ORDER_NUMBER,INVOICE_TO_ADDRESS1,SHIP_TO_ADDRESS1,
+oh.ordered_date, sum(ol.UNIT_SELLING_PRICE*ol.ordered_quantity) amt,
+oh.flow_status_code so_status,ol.flow_status_code line_status,
+d.NAME Type_Name,e.name Sales_Person
+FROM apps.oe_order_headers_all oh,
+-- apps.oe_order_lines_all         
+apps.OE_ORDER_LINES_V ol,apps.mtl_system_items_b c,apps.oe_transaction_types_tl d,apps.RA_SALESREPS_ALL e
+WHERE oh.flow_status_code <>'CANCELLED'
+AND oh.header_id =   ol.header_id
+-- AND ol.flow_status_code   IN ('AWAITING_SHIPPING','ENTERED')
+and c.INVENTORY_ITEM_ID=ol.INVENTORY_ITEM_ID
+and ol.ship_from_org_id=c.organization_id
+and d.TRANSACTION_TYPE_ID=oh.ORDER_TYPE_ID
+and d.LANGUAGE='US'
+and e.SALESREP_ID=oh.SALESREP_ID
+and d.NAME='RC-Internal Service Order'
+--and oh.ORDER_NUMBER='4553005'
+and oh.ordered_date >=to_date('2007-06-01','yyyy-mm-dd')
+and (oh.ordered_date) < to_date('2007-07-1','yyyy-mm-dd')
+group by oh.ORDER_NUMBER,oh.ordered_date,oh.flow_status_code,ol.flow_status_code 
+,d.NAME,e.name,INVOICE_TO_ADDRESS1,SHIP_TO_ADDRESS1
+
+----Line level
+
+SELECT 
+oh.ORDER_NUMBER,INVOICE_TO,SHIP_TO,
+oh.ordered_date, 
+oh.flow_status_code so_status,ol.flow_status_code line_status,
+( ol.ordered_quantity)  ordered_quantity,
+(ol.shipped_quantity)  shipped_quantity,ol.INVOICED_QUANTITY,c.segment1 Sys_Item,ol.ORDERED_ITEM,d.NAME Type_Name,
+ol.CUST_PO_NUMBER ,e.name Sales_Person
+FROM apps.oe_order_headers_all oh,
+-- apps.oe_order_lines_all         
+apps.OE_ORDER_LINES_V ol,apps.mtl_system_items_b c,apps.oe_transaction_types_tl d,apps.RA_SALESREPS_ALL e
+WHERE oh.flow_status_code <>'CANCELLED'
+AND oh.header_id =   ol.header_id
+-- AND ol.flow_status_code   IN ('AWAITING_SHIPPING','ENTERED')
+ and c.INVENTORY_ITEM_ID=ol.INVENTORY_ITEM_ID
+and ol.ship_from_org_id=c.organization_id
+and d.TRANSACTION_TYPE_ID=oh.ORDER_TYPE_ID
+and d.LANGUAGE='US'
+and e.SALESREP_ID=oh.SALESREP_ID
+and d.NAME='RC-Internal Service Order'
+--and oh.ORDER_NUMBER='4552142'
+and oh.ordered_date >=to_date('2006-6-1','yyyy-mm-dd')
+and oh.ordered_date <=to_date('2006-6-21','yyyy-mm-dd')
+order by oh.ORDER_NUMBER,
+oh.ordered_date,
+oh.flow_status_code 
+
+

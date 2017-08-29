@@ -1,0 +1,18 @@
+
+----------AP Invoice with Sequence_num,Vendor
+select api.GL_DATE,to_char(api.DOC_SEQUENCE_VALUE) Doc_number,api.DOC_CATEGORY_CODE,api.PAY_GROUP_LOOKUP_CODE Pay_Group,
+api.invoice_num,api.INVOICE_CURRENCY_CODE Curr,api.INVOICE_AMOUNT,vdr.VENDOR_NAME,aps.VENDOR_SITE_CODE
+from     apps.AP_INVOICES_ALL api
+,        apps.PO_VENDORS  VDR
+,        apps.PO_VENDOR_SITES_all aps
+where     VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+--and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+--and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW','AL','LN'))
+and api.GL_DATE>=to_date('2008-12-31','yyyy-mm-dd')
+and api.GL_DATE<to_date('2009-01-6','yyyy-mm-dd')
+--and api.WFAPPROVAL_STATUS='MANUALLY APPROVED'
+and api.DOC_SEQUENCE_VALUE like '52%'
+order by api.DOC_SEQUENCE_VALUE

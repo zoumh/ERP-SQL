@@ -1,0 +1,194 @@
+* Find out the PHYSICAL_INVENTORY_ID
+ 
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2005-08-01','YYYY-MM-DD')
+  and trunc(FREEZE_DATE)<= to_date('2005-08-31','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+ 
+---------------------------------------------------------------------------
+1
+Non-SB , With Cost & Level,sort by c.segment3,c.segment5
+ 
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+e.cost_group COST_GROUP,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN, 
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--, actual_cost
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+       and (a.subinventory_name<>'SB' )
+order by a.subinventory_name,c.segment3,c.segment5,c.segment4
+ 
+---------------------------------------------------------------------------------------
+ 
+2.
+SB,L-M-S , With Cost & Level,sort by c.segment3,c.segment5
+ 
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+e.cost_group COST_GROUP,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN, 
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--, actual_cost
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+       and (a.subinventory_name='SB' )
+       and c.segment2 IN('L','M','S') 
+and (c.segment5 not in ('11','22','33','44') or c.segment5 is null)
+--and a.ADJUSTMENT_ID=74970
+and (substr(c.segment4,1,1)<='9' or c.segment4 is null)
+order by (c.segment3),c.segment5,c.segment4
+ 
+---------------------------------------------------------------------------    
+3.
+SB,Px.x.x.x , With Cost & Level, sort by c.segment3,c.segment5 , exclude (PCB,LCD,Camera) exclude ('11','22','33','44')
+ 
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+e.cost_group COST_GROUP,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN, 
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--, actual_cost
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+       and (a.subinventory_name='SB' )
+       and (c.segment2 like 'P%' AND c.segment2!='PC')
+and c.segment5 not in ('11','22','33','44')
+and substr(c.segment4,1,1)<='9'
+order by (c.segment3),c.segment5,c.segment4
+ 
+---------------------------------------------------------------------------
+4.
+SB,c.segment5=11/22/33/44, sort by c.segment3,c.segment5,
+ 
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+e.cost_group COST_GROUP,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN, 
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--, actual_cost
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+       and (a.subinventory_name='SB' )
+and c.segment5 in ('11','22','33','44')
+order by c.segment2,c.segment3,c.segment4,c.segment5--,e.cost_group
+ 
+---------------------------------------------------------------------------
+5.SB,Dxxxx, With Cost & Level,sort by c.segment3,c.segment5
+ 
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+e.cost_group COST_GROUP,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN, 
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--, actual_cost
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+       and (a.subinventory_name='SB' )
+       and c.segment2 IN('D') 
+and (c.segment5 not in ('11','22','33','44') or c.segment5 is null)
+--and a.ADJUSTMENT_ID=74970
+and (substr(c.segment4,1,1)<='9' or c.segment4 is null)
+order by (c.segment3),c.segment5,c.segment4
+ 
+---------------------------------------------------------------------------
+6 SB,DA_DB_DC , With Cost & Level,sort by c.segment3,c.segment5
+ 
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+e.cost_group COST_GROUP,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN, 
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--, actual_cost
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+       and (a.subinventory_name='SB' )
+       and (c.segment2 LIKE 'DA%' or c.segment2 LIKE 'DB%' or c.segment2 LIKE 'DC%') 
+and (c.segment5 not in ('11','22','33','44') or c.segment5 is null)
+--and a.ADJUSTMENT_ID=74970
+and (substr(c.segment4,1,1)<='9' or c.segment4 is null)
+order by (c.segment3),c.segment5,c.segment4
+ 
+------------------------------------------------------------------------------
+7 SB,C_PC , With Cost & Level,sort by c.segment3,c.segment5
+ 
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+e.cost_group COST_GROUP,
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) LPN, 
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--, actual_cost
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+       and (a.subinventory_name='SB' )
+       and c.segment2 IN('C','PC') 
+and (c.segment5 not in ('11','22','33','44') or c.segment5 is null)
+--and a.ADJUSTMENT_ID=74970
+and (substr(c.segment4,1,1)<='9' or c.segment4 is null)
+order by (c.segment3),c.segment5,c.segment4
+ 
+-----------------------------------------------------------------------------
+* Verify All SB Tags was printed (sum above excel together & compare with below)
+ 
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1 and f.tag_number='3642') tag 
+       ,system_quantity,'' Qty1,  '' Qty2, b.segment1 item, a.revision Rev, a.subinventory_name SubInv, 
+       c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+    , e.cost_group, 
+       (select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) lpn, 
+       '' Audit_Qty
+ ,actual_cost
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+and SUBINVENTORY_NAME='SB'
+ 
+select count(*)
+from   apps.mtl_physical_adjustments a 
+where  a.physical_inventory_id =:d  and a.organization_id=83
+and SUBINVENTORY_NAME='SB'
+ 

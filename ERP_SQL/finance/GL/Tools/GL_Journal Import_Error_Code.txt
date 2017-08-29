@@ -1,0 +1,171 @@
+SOB_BMC                                           Journal Import Execution Report                              Date: 26-DEC-03 16:34
+Concurrent Request ID: 194495                                                                                  Page:               1
+
+                                                   Total   Total   Total Total Unbalanced Total Unbalanced Total Flex Total Non-Flex
+Journal Entry Source Name       Group Id Status    Lines Batches Headers          Batches          Headers     Errors         Errors
+---------------------------- ----------- ------- ------- ------- ------- ---------------- ---------------- ---------- --------------
+Inventory                             84 ERROR        13       1       3                0                0          0             13
+                                                 ------- ------- ------- ---------------- ---------------- ---------- --------------
+*** TOTALS ***                                        13       1       3                0                0          0             13
+ 
+
+=======================================================   Batches Created   ========================================================
+ 
+ 
+                                                                               Total   Total               Total               Total
+Warning Batch Name                                               Period Name   Lines Headers    Accounted Debits   Accounted Credits
+------- -------------------------------------------------------- ----------- ------- ------- ------------------- -------------------
+ 
+
+=================================================   Unbalanced Journal Entries**   =================================================
+ 
+ 
+Error                                                                            Total
+Code  Journal Entry Name                    Batch Name                           Lines Period Name     Total Debits    Total Credits
+----- ------------------------------------- ------------------------------------ ----- ----------- ---------------- ----------------
+ 
+
+=========================================================   Error Lines   ==========================================================
+ 
+ 
+                                             Accounting
+Error Code                     Source        Date        Currency      Entered Debit     Entered Credit Accounting Flexfield/CCID
+------------------------------ ------------- ----------- -------- ------------------ ------------------ ----------------------------
+EM17                           Inventory     26-DEC-03   CNY                80091.38                  0 01.0000.123201.000000.0000.0
+EM17                           Inventory     26-DEC-03   CNY                   80196                  0 01.5060.41010101.000000.0000
+EM17                           Inventory     26-DEC-03   CNY                  454772                  0 01.5060.41010101.000000.0000
+EM17                           Inventory     26-DEC-03   CNY                 1199623                  0 01.0000.550121.000000.0000.0
+EM17                           Inventory     26-DEC-03   CNY                       0             104.62 01.5060.41010105.000000.0000
+EM17                           Inventory     26-DEC-03   CNY                       0             209.24 01.5060.41010105.000000.0000
+EM17                           Inventory     26-DEC-03   CNY                       0              53448 01.0000.123204.000000.0000.0
+EM17                           Inventory     26-DEC-03   CNY                       0           80091.38 01.5060.41010204.000000.0000
+EM17                           Inventory     26-DEC-03   CNY                       0          644674.14 01.0000.121105.000000.0000.0
+EM17                           Inventory     26-DEC-03   CNY                       0            1036155 01.3001.120100.000000.0000.0
+EM17                           Inventory     26-DEC-03   USD                 4604.82                  0 01.0000.123204.000000.0000.0
+EM17                           Inventory     26-DEC-03   USD               105395.18                  0 01.0000.121105.000000.0000.0
+EM17                           Inventory     26-DEC-03   USD                       0             110000 01.3001.120100.000000.0000.0
+ 
+
+==========================================================   Error Key   ===========================================================
+ 
+Period Error Codes
+------------------
+EP01    This date is not in any open or future enterable period.
+EP02    This set of books does not have any open or future enterable periods.
+EP03    This date is not within any period in an open encumbrance year.
+EP04    This date is not a business day.
+EP05    There are no business days in this period.
+
+SOB_BMC                                           Journal Import Execution Report                              Date: 26-DEC-03 16:34
+Concurrent Request ID: 194495                                                                                  Page:               2
+                                                                                                                                    
+==========================================================   Error Key   ===========================================================
+
+Unbalanced Journal Error Codes
+------------------------------
+WU01    Warning: This journal entry is unbalanced.  It is accepted because suspense posting is allowed in this set of books.
+EU02    This journal entry is unbalanced and suspense posting is not allowed in this set of books.
+EU03    This encumbrance journal entry is unbalanced and the Reserve for Encumbrance account is not defined.
+
+Flexfield Error Codes
+---------------------
+EF01    This Accounting Flexfield is inactive for this accounting date.
+EF02    Detail posting not allowed for this Accounting Flexfield.
+EF03    Disabled Accounting Flexfield.
+EF04    This is an invalid Accounting Flexfield.  Check your cross-validation rules and segment values.
+EF05    There is no Accounting Flexfield with this Code Combination ID.
+
+Foreign Currency Error Codes
+----------------------------
+EC01    A conversion rate must be entered when using the User conversion rate type.
+EC02    There is no conversion date supplied.
+EC03    A conversion rate type or an accounted amount must be supplied when entering foreign currency journal lines.
+EC06    There is no conversion rate for this currency, conversion type, and conversion date.
+EC08    Invalid currency code.
+EC09    No currencies are enabled.
+EC10    Encumbrance journals cannot be created in a foreign currency.
+EC11    Invalid conversion rate type.
+EC12    The entered amount must equal the accounted amount in a functional or STAT currency journal line.
+EC13    Amount is too large.
+ECW1    Warning: Converted amounts could not be validated because the conversion rate type is not specified.
+
+Budget Error Codes
+------------------
+EB01    A budget version is required for budget lines.
+EB02    Journals cannot be created for a frozen budget.
+EB03    The budget year is not open.
+EB04    This budget does not exist for this set of books.
+EB05    The encumbrance_type_id column must be null for budget journals.
+EB06    A period name is required for budget journals.
+EB07    This period name is not valid.  Check calendar for valid periods.
+EB08    Average journals cannot be created for budgets.
+EB09    Originating company information cannot be specified for budgets.
+
+Encumbrance Error Codes
+-----------------------
+EE01    An encumbrance type is required for encumbrance lines.
+EE02    Invalid or disabled encumbrance type.
+EE03    Encumbrance journals cannot be created in the STAT currency.
+EE04    The BUDGET_VERSION_ID column must be null for encumbrance lines.
+EE05    Average journals cannot be created for encumbrances.
+EE06    Originating company information cannot be specified for encumbrances.
+
+Reversal Error Codes
+--------------------
+ER01    A reversal period name must be provided.
+
+SOB_BMC                                           Journal Import Execution Report                              Date: 26-DEC-03 16:34
+Concurrent Request ID: 194495                                                                                  Page:               3
+                                                                                                                                    
+==========================================================   Error Key   ===========================================================
+
+Reversal Error Codes
+--------------------
+ER02    This reversal period name is invalid.  Check your calendar for valid periods.
+ER03    A reversal date must be provided
+ER04    This reversal date is not in a valid period.
+ER05    This reversal date is not in your database date format.
+ER06    Your reversal date must be the same as or after your effective date.
+ER07    This reversal date is not a business day.
+ER08    There are no business days in your reversal period.
+ER09    Default reversal information could not be determined.
+
+Descriptive Flexfield Error Codes
+---------------------------------
+ED01    The context and attribute values do not form a valid descriptive flexfield for Journals - Journal Entry Lines.
+ED02    The context and attribute values do not form a valid descriptive flexfield for Journals - Captured Information.
+ED03    The context and attribute values do not form a valid descriptive flexfield for Value Added Tax.
+
+Miscellaneous Error Codes
+-------------------------
+EM01    Invalid journal entry category.
+EM02    There are no journal entry categories defined.
+EM03    Invalid set of books id.
+EM04    The value in the ACTUAL_FLAG must be "A" (actuals), "B" (budgets), or "E" (encumbrances).
+EM05    The encumbrance_type_id column must be null for actual journals.
+EM06    The budget_version_id column must be null for actual journals.
+EM07    A statistical amount belongs in the entered_dr(cr) column when entering a STAT currency journal line.
+EM09    There is no Transaction Code defined.
+EM10    Invalid Transaction Code.
+EM12    An Oracle error occurred when generating sequential numbering.
+EM13    The assigned sequence is inactive.
+EM14    There is a sequential numbering setup error resulting from a missing grant or synonym.
+EM17    Sequential numbering is always used and there is no assignment for this set of books and journal entry category.
+EM18    Manual document sequences cannot be used with Journal Import.
+EM19    Value Added Tax data is only valid in conjunction with actual journals.
+EM21    Budgetary Control must be enabled to import this batch.
+EM22    A conversion rate must be defined for this accounting date, your default conversion rate type, and your dual currency.
+EM23    There is no value entered for the Dual Currency Default Rate Type  profile option.
+EM24    Average journals can only be imported into consolidation sets of books.
+EM25    Invalid average journal flag.  Valid values are "Y", "N", and null.
+EM26    Invalid originating company.
+EM27    Originating company information can only be specified when intercompany balancing is enabled.
+ 
+** Batches listed under "Unbalanced Batches**" have not been imported.
+ 
+ 
+ 
+ 
+                                                    ***** End of Report *****
+
+

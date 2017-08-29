@@ -1,0 +1,68 @@
+
+
+
+select a.source_document_code,a.creation_date ,b.user_name,
+a.quantity,
+a.transaction_type,ORGANIZATION_ID,
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB
+from apps.rcv_transactions a,apps.fnd_user b
+where 
+a.transaction_type ='CORRECT'
+and  a.creation_date >= to_date('20070101','YYYYMMDD') 
+and source_document_code='RMA'
+--and ORGANIZATION_ID<>130
+and a.CREATED_BY=b.user_id
+
+
+-------- RMA Receiving
+SELECT --rt.OE_ORDER_HEADER_ID,
+orh.ORDER_NUMBER,ot.NAME RMA_Type,
+       NVL(decode(rt.transaction_type,'RECEIVE',1,
+                         'RETURN TO RECEIVING',1,'DELIVER',-1,
+                         'CORRECT',decode(rt3.transaction_type,'RETURN TO CUSTOMER',-1,1)*
+                         decode(rt.destination_type_code,'INVENTORY',-1,'RECEIVING',1,0),
+                         'RETURN TO CUSTOMER',-1,0) * rt.quantity,0) Qty
+  FROM apps.rcv_transactions     rt,
+       apps.rcv_transactions     rt3,
+       apps.rcv_shipment_lines   rl,
+       apps.mtl_system_items_fvl msi,apps.OE_ORDER_HEADERS_all ORH,apps.oe_transaction_types_tl ot
+ WHERE 1=1
+   and msi.inventory_item_id = rl.item_id
+   and msi.organization_id = rt.organization_id
+   and rt.shipment_line_id = rl.shipment_line_id
+   and rt3.transaction_id(+) = rt.parent_transaction_id
+   and rt.oe_order_header_id=orh.HEADER_ID
+   and ot.TRANSACTION_TYPE_ID=orh.ORDER_TYPE_ID
+   and ot.LANGUAGE='US'
+   AND rl.item_id  IS NOT NULL
+   and not exists ( select 1
+                      from apps.rcv_transactions rt2,
+                           apps.rcv_transactions rt1
+                     where rt2.parent_transaction_id = rt1.transaction_id
+                       and rt2.transaction_type = 'CORRECT'
+                       and rt1.transaction_type = 'ACCEPT'
+                       and rt2.transaction_id = rt.transaction_id)
+and (msi.organization_id =130 or msi.organization_id is null) 
+and (inventory_item_id=86556 or inventory_item_id is null)
+and  rt.po_line_id  is null
+group by --rt.OE_ORDER_HEADER_ID ,
+orh.ORDER_NUMBER,ot.NAME,rt.transaction_type,rt3.transaction_type,rt.destination_type_code,rt.quantity
+
+
+-----PO, Receipt Transaction
+
+select a.creation_date ,a.quantity,
+a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d
+where 
+a.source_document_code='PO'
+and c.segment1 in ('1021817','1022034')
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+--and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+--and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+order by c.segment1,d.LINE_NUM,a.creation_date

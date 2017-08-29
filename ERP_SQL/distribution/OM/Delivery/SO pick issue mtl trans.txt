@@ -1,0 +1,74 @@
+
+---------Mtl transaction of a SO (include SO Pick & SO Issue)
+select e.Transaction_type_name,c.ORDER_NUMBER,b.LINE_NUMBER||'.'||b.SHIPMENT_NUMBER line_num,
+a.TRANSACTION_QUANTITY,a.creation_Date,
+c.CUST_PO_NUMBER,
+b.ORDERED_QUANTITY,b.SHIPPED_QUANTITY,
+b.UNIT_SELLING_PRICE,c.TRANSACTIONAL_CURR_CODE,
+a.TRANSACTION_DATE,
+a.transaction_ID,b.SHIP_FROM_ORG_ID 
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c,apps.MTL_TRANSACTION_TYPES e
+where a.TRX_SOURCE_LINE_ID =b.LINE_ID
+--and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+and a.TRANSACTION_TYPE_ID=e.TRANSACTION_TYPE_ID
+and a.TRANSACTION_DATE>=to_date('2009-11-1','yyyy-mm-dd')
+and a.TRANSACTION_SOURCE_TYPE_ID in (12,2)
+and c.ORDER_NUMBER='281191'
+order by c.ORDER_NUMBER 
+
+
+
+
+-----------SO's issue mtl transaction with line
+select a.TRANSACTION_TYPE_ID,c.ORDER_NUMBER,b.LINE_NUMBER||'.'||b.SHIPMENT_NUMBER line_num,c.CUST_PO_NUMBER,
+b.ORDERED_QUANTITY,b.SHIPPED_QUANTITY,
+a.TRANSACTION_QUANTITY,b.UNIT_SELLING_PRICE,c.TRANSACTIONAL_CURR_CODE,
+a.TRANSACTION_DATE,
+a.transaction_ID,a.creation_Date,b.SHIP_FROM_ORG_ID 
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+--and a.ORGANIZATION_ID=b.SHIP_FROM_ORG_ID
+--and c.ORDER_NUMBER='41000959'
+and a.ORGANIZATION_ID=132  --IP org
+and a.TRANSACTION_DATE>=to_date('2008-1-1','yyyy-mm-dd')
+and a.TRANSACTION_DATE< to_date('2008-1-10','yyyy-mm-dd')
+and a.TRANSACTION_TYPE_ID=33
+--and a.TRANSACTION_SOURCE_TYPE_ID in (12,2) -- SO/RMA
+order by c.ORDER_NUMBER,b.LINE_NUMBER||'.'||b.SHIPMENT_NUMBER
+
+
+-----------SO's Ship mtl transaction with SO line, category,SO Type,User
+select a.creation_Date,(select segment1 from apps.mtl_item_categories_v d where d.category_set_id=1 
+and d.ORGANIZATION_ID=a.ORGANIZATION_ID and d.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID ) Model,
+c.ORDER_NUMBER,b.LINE_NUMBER||'.'||b.SHIPMENT_NUMBER line_num,d.user_name,
+c.CUST_PO_NUMBER,e.Transaction_type_name,f.NAME SO_Type, 
+b.ORDERED_QUANTITY SO_Line_Order_Qty,b.SHIPPED_QUANTITY SO_Line_Ship_Qty,
+a.TRANSACTION_QUANTITY,b.UNIT_SELLING_PRICE,c.TRANSACTIONAL_CURR_CODE,
+a.TRANSACTION_DATE,
+a.transaction_ID,b.SHIP_FROM_ORG_ID 
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c,apps.fnd_user d,
+apps.MTL_TRANSACTION_TYPES e,apps.oe_transaction_types_tl f
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+and d.user_id=a.created_by
+and a.TRANSACTION_TYPE_ID=e.TRANSACTION_TYPE_ID
+and f.TRANSACTION_TYPE_ID=c.ORDER_TYPE_ID 
+and f.LANGUAGE='US'
+--and a.ORGANIZATION_ID=b.SHIP_FROM_ORG_ID
+--and c.ORDER_NUMBER='41000959'
+--and a.ORGANIZATION_ID=132  --IP org
+and a.TRANSACTION_DATE>=to_date('2009-3-1','yyyy-mm-dd')
+--and a.TRANSACTION_DATE< to_date('2008-1-22','yyyy-mm-dd')
+--and a.TRANSACTION_TYPE_ID=33
+--and d.category_set_id=1
+and a.TRANSACTION_SOURCE_TYPE_ID in (12,2)
+and d.user_name='W05-02'
+--and a.transaction_ID in (105696729,105696711)
+order by a.creation_Date,c.ORDER_NUMBER,b.LINE_NUMBER||'.'||b.SHIPMENT_NUMBER

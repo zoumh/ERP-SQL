@@ -1,0 +1,31 @@
+
+
+
+-------Find Move Order,LPN,WH/Locator from Item
+
+select d.request_number,c.segment1 Item,a.revision,a.TRANSACTION_QUANTITY,a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,b.LINE_STATUS,e.transaction_type_name Trans_type,
+g.LPN_CONTEXT,g.LICENSE_PLATE_NUMBER,a.subinventory_code,f.segment2||'.'||f.segment3||'.'||f.segment4||'.'||f.segment5 Locator
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e,apps.mtl_item_locations f,apps.wms_license_plate_numbers g
+where 
+--d.REQUEST_NUMBER='270703' and 
+c.segment1='SXA 109 4637' and 
+c.ORGANIZATION_ID=83 and 
+d.header_id=b.header_id and
+--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+a.TRX_SOURCE_LINE_ID=b.TXN_SOURCE_LINE_ID and 
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+and f.Inventory_LOCATion_ID=a.locator_id
+and a.allocated_lpn_id=g.LPN_ID
+
+
+
+
+select lpn_ID,lpn_context from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='S0020150'
+
+select COST_GROUP_ID from apps.wms_lpn_contents WHERE parent_lpn_ID=578697
+
+select COST_GROUP_ID from apps.mtl_onhand_quantities_detail where LPN_ID=578697
+

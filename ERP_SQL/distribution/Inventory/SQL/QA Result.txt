@@ -1,0 +1,49 @@
+
+
+
+
+
+-------From PO receive screen
+
+CREATE OR REPLACE VIEW APPS.BMC_QA_Recepit_Material_Status
+AS
+select  b.segment1 Item,b.description,a.Quantity,a.transaction_date,a.creation_date,c.SEGMENT1 PO,d.LINE_NUM PO_Line,e.RECEIPT_NUM,convert(a.organization_id,'ZHS16GBK')
+from apps.rcv_transactions a,apps.mtl_system_items b,apps.PO_HEADERS_ALL c,apps.PO_LINES_ALL d ,apps.RCV_SHIPMENT_HEADERS e
+where a.po_header_id=c.po_header_id
+and b.organization_id=a.organization_id
+and b.inventory_item_id=d.item_id
+and a.po_line_id=d.po_line_id
+and a.po_header_id=d.po_header_id
+and a.SHIPMENT_HEADER_ID=e.SHIPMENT_HEADER_ID
+--and a.TRANSACTION_TYPE ='RECEIVE'
+--and a.organization_id
+--and a.transaction_date>= to_date('20050311','YYYYMMDD') 
+
+
+
+
+
+------QA result
+
+select * from apps.QA_RESULTS_V where --transaction_number=66806--qa_creation_date=to_date('2005-1-19','yyyy-mm-dd')--occurrence=66806
+creation_date>=to_date('2005-1-19','yyyy-mm-dd')
+and qa_created_by_name='28945480'
+and receipt_num in (131527,131458)
+
+
+select 
+convert(a.character13,'ZHS16GBK') Prd_Name,c.SEGMENT1 Item,c.DESCRIPTION,b.segment1 PO,a.receipt_num,a.character3 Receipt_Qty, 
+a.creation_date Entry_date,a.character15 Shift,convert(a.character4,'ZHS16GBK') Comments, 
+decode(a.status,1,'Invalid','Valid') Status,a.character12 Model,a.revision,a.character2 Sample_Qty, 
+a.character6 Defect_Qty,convert(a.character9,'ZHS16GBK') Inspector,a.character11 Insp_Result, 
+convert(a.character14,'ZHS16GBK') Defect_Code,a.collection_ID Collection,a.organization_id, 
+d.VENDOR_NAME as Supplier,a.character8 Vendor_num,a.Transaction_Date 
+from apps.QA_RESULTS_V a,apps.mtl_system_items c, 
+(select distinct segment1,PO_HEADER_ID,VENDOR_ID from apps.PO_HEADERS_ALL) b,apps.PO_VENDORS d 
+where a.PO_HEADER_ID=b.PO_HEADER_ID 
+and c.INVENTORY_ITEM_ID=a.ITEM_ID 
+and c.ORGANIZATION_ID=a.ORGANIZATION_ID 
+and b.VENDOR_ID=d.VENDOR_ID 
+--and a.Transaction_Date=to_date('2005-03-03','yyyy-mm-dd') 
+--and receipt_num=145139
+order by a.creation_date,a.character15;

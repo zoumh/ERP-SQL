@@ -1,0 +1,17 @@
+
+
+-----COST Group (with Account,last update):
+select a.COST_GROUP,
+c.segment3  MATERIAL_ACCOUNT,
+d.segment3  EXPENSE_ACCOUNT,b.LAST_UPDATE_DATE,e.user_name last_Updated_By,
+a.DESCRIPTION,a.ORGANIZATION_ID,a.COST_GROUP_TYPE,a.COST_GROUP_ID 
+from apps.cst_cost_groups a,apps.CST_COST_GROUP_ACCOUNTS b,apps.gl_code_combinations c,
+apps.gl_code_combinations d,apps.fnd_user e
+where a.ORGANIZATION_ID>127 
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.COST_GROUP_ID =b.COST_GROUP_ID 
+and b.MATERIAL_ACCOUNT=c.CODE_COMBINATION_ID
+and b.EXPENSE_ACCOUNT=d.CODE_COMBINATION_ID
+and e.user_id=b.LAST_UPDATED_BY
+order by ORGANIZATION_ID
+

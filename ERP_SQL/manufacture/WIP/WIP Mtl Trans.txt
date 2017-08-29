@@ -1,0 +1,136 @@
+
+-------WIP Completion Transaction (with JO Class,Item Category)
+select   wet.CLASS_CODE, cat.segment1 model,cat.segment2 Item_Type,
+INVENTORY_ITEM_STATUS_CODE status,mmt.organization_id,
+sum(mmt.TRANSACTION_QUANTITY) as Qty--,mmt.transaction_date,mmt.transaction_id
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.WIP_DISCRETE_JOBS_V 		 Wet,  -- ( or use apps.wip_entities)
+  apps.mtl_item_categories_v     cat
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and    msi.organization_id =mmt.organization_id 
+and    msi.inventory_item_id = cat.inventory_item_id 
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+And  mmt.transaction_date>=to_date('2008-4-21','yyyy-mm-dd')
+And  mmt.transaction_date<to_date('2008-4-30','yyyy-mm-dd')
+and INVENTORY_ITEM_STATUS_CODE='Active'
+group by wet.CLASS_CODE,INVENTORY_ITEM_STATUS_CODE,mmt.organization_id,cat.segment1,cat.segment2 
+
+
+
+---------Mtl Trans of a JO (with class)
+select  wip_entity_name Job_Order,wet.CLASS_CODE, msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V 		 Wet  -- ( or use apps.wip_entities)
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and mst.transaction_source_type_name='Job or Schedule'
+and wip_entity_name='060506-D-6714R1A-SA2'
+
+--------JO  Mtl Issue
+
+select  wip_entity_name Job_Order,wet.CLASS_CODE, msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.WIP_DISCRETE_JOBS_V       Wet  -- ( or use apps.wip_entities)
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+and mst.transaction_source_type_name='Job or Schedule'
+and mmt.CREATION_DATE>=to_date('20061217 20:00:00','YYYYMMDD HH24:MI:SS')
+and mmt.CREATION_DATE<=to_date('20061231 23:59:59','YYYYMMDD HH24:MI:SS')
+--and mmt.subinventory_code in ('SD','SB')
+--and msi.segment1 in ('KNC 201 39.R1A','BKB 193 204/1.R1B','KNC 201 37.R1C','BKB 193 200/1.R2A','SVF 930 111.R1A','SXA 109 5992.R2A','SXA 109 6924.R1A',
+--'SXK 109 7211.R1A','KNC 201 25.R3D','BKB 193 204/1.R1B','KNC 201 26.R3A','SXA 109 4884.R1B','SXA 109 6655.R1A','SXA 109 6537.R1A','SXA 109 6320.R1A')
+order by wip_entity_name
+
+
+---------WIP Trans of a JO
+
+select d.WIP_ENTITY_NAME Job_Order,c.TRANSACTION_QUANTITY  Qty,
+--??(nvl(c.usage_rate_or_amount,0)*nvl(c.standard_resource_rate,0)*nvl(c.TRANSACTION_QUANTITY,0)) Value??,
+c.usage_rate_or_amount,c.actual_resource_rate,c.standard_resource_rate,e.MEANING Trans_Type
+FROM 
+apps.WIP_TRANSACTIONs c,
+apps.WIP_ENTITIES d,
+apps.MFG_LOOKUPS e
+where c.WIP_ENTITY_ID =d.WIP_ENTITY_ID 
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and d.wip_entity_name='060506-D-6714R1A-SA2'
+--and e.MEANING='Cost update'
+
+
+---------------JO Complete Trans. with JO Class / WH/Locator
+
+
+select  wip_entity_name Job_Order,msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,
+a.segment2||'.'||a.segment3||'.'||a.segment4||'.'||a.segment5 Fr_Locator,wet.CLASS_CODE, 
+mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  --apps.wip_entities 		 Wet,  -- ( or use apps.WIP_DISCRETE_JOBS_V)
+  apps.WIP_DISCRETE_JOBS_V wet,
+  apps.mtl_item_locations a,apps.mtl_item_locations b
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and mst.transaction_source_type_name='Job or Schedule'
+and mmt.LOCATOR_ID=a.INVENTORY_LOCATION_ID
+and wet.CLASS_CODE='Assembling'
+--and wip_entity_name='060809-D-483/2R3A'
+and a.segment2||'.'||a.segment3||'.'||a.segment4||'.'||a.segment5='KRH-Comp...'
+and trunc(mmt.transaction_date)>=to_date('2006-7-1','yyyy-mm-dd')
+
+
+
+select  count(distinct wip_entity_name) Job_Order
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  --apps.wip_entities 		 Wet,  -- ( or use apps.WIP_DISCRETE_JOBS_V)
+  apps.WIP_DISCRETE_JOBS_V wet,
+  apps.mtl_item_locations a,apps.mtl_item_locations b
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = msi.organization_id 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and mst.transaction_source_type_name='Job or Schedule'
+and mmt.LOCATOR_ID=a.INVENTORY_LOCATION_ID
+and wet.CLASS_CODE='Assembling'
+--and wip_entity_name='060809-D-483/2R3A'
+and a.segment2||'.'||a.segment3||'.'||a.segment4||'.'||a.segment5<>'KRH-Comp...'
+and trunc(mmt.transaction_date)>=to_date('2006-7-1','yyyy-mm-dd')
+

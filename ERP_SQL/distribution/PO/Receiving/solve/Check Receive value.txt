@@ -1,0 +1,34 @@
+
+1.Get the output of following queries in excel sheet for the specific case PO mentioned in SR description 
+query 1: 
+SELECT * FROM po_headers_all 
+WHERE po_header_id = &po_header_id; --for PO involved in the reported RTV 
+. 
+query 2: 
+SELECT * FROM po_line_locations_all 
+WHERE po_header_id = &po_header_id; --for PO involved in the reported RTV 
+. 
+query 3: 
+SELECT * FROM po_distributions_all 
+WHERE po_header_id = &po_header_id; --for PO involved in the reported RTV 
+. 
+query 4: 
+SELECT * FROM rcv_transactions 
+WHERE po_header_id = &po_header_id; --for PO involved in the reported RTV 
+. 
+query 5: 
+SELECT * FROM rcv_receiving_sub_ledger 
+WHERE rcv_transaction_id IN 
+(SELECT transaction_id 
+FROM rcv_transactions 
+WHERE po_header_id = &po_header_id); --for PO involved in the reported RTV 
+. 
+query 6: 
+SELECT * FROM RCV_RECEIVING_VALUE_VIEW 
+WHERE to_organization_id = &org_id 
+AND item_id = &item_id; 
+. 
+query 7: 
+SELECT * FROM mtl_supply 
+WHERE to_organization_id = &org_id 
+AND item_id = &item_id; 

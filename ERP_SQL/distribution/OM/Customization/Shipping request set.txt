@@ -1,0 +1,26 @@
+
+
+For Domestic BTO
+
+Auto Packing :
+BMC Standard Ship Label 
+BMC Standard Ship Label Reprint
+BMC Packing List
+
+Ship Confirm :
+BMC FG Delivery Report
+
+
+
+
+Export Request Set: 
+Auto Packing :
+BMC Standard Ship Label
+BMC Standard Ship Label Reprint
+BMC Packing List
+ 
+Ship Confirm :
+BMC OM Proforma Invoice After Delivery Report
+BMC Packing Specification Report
+BMC FG Delivery Report
+ 

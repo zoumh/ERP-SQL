@@ -1,0 +1,86 @@
+
+
+
+
+------SO link AR Type 
+select decode(a.WAREHOUSE_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP') Org,
+b.name SO_Type, a.END_DATE_ACTIVE,c.name AR_Typ,d.segment3 COGS_Account,--
+e.segment3 REVENUE_Account,
+a.currency_code,a.conversion_type_code,
+b.LANGUAGE,a.TRANSACTION_TYPE_CODE
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b,apps.ra_cust_trx_types_all c,
+apps.gl_code_combinations d,
+apps.gl_code_combinations e
+where a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID and a.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID
+and b.LANGUAGE='US' and a.TRANSACTION_TYPE_CODE='ORDER'
+and d.CODE_COMBINATION_ID=a.COST_OF_GOODS_SOLD_ACCOUNT
+and e.CODE_COMBINATION_ID=c.GL_ID_REV
+and a.ORG_ID>81
+order by b.name
+
+
+
+
+---------- AR has no SO Type
+
+
+select REVENUE_Account,c.TYPE AR_Type
+from apps.ra_cust_trx_types_all c,
+apps.gl_code_combinations e
+where e.CODE_COMBINATION_ID=c.GL_ID_REV
+and c.CUST_TRX_TYPE_ID not in 
+(select c.CUST_TRX_TYPE_ID
+from apps.oe_transaction_types_all a,apps.oe_transaction_types_tl b,apps.ra_cust_trx_types_all c,
+apps.gl_code_combinations d,
+apps.gl_code_combinations e
+where a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID 
+and a.CUST_TRX_TYPE_ID=c.CUST_TRX_TYPE_ID
+and b.LANGUAGE='US' and a.TRANSACTION_TYPE_CODE='ORDER'
+and d.CODE_COMBINATION_ID=a.COST_OF_GOODS_SOLD_ACCOUNT
+and e.CODE_COMBINATION_ID=c.GL_ID_REV)
+and c.org_id>81
+order by c.name 
+
+
+--------AR transa type
+
+select 
+a.creation_date,a.NAME,a.DESCRIPTION,a.START_DATE, a.END_DATE, 
+a.TYPE,a.STATUS,
+a.CREATION_SIGN,
+a.TAX_CALCULATION_FLAG,
+b.SEGMENT3 as RevenueAcc,
+c.SEGMENT3 as TacAcc, 
+d.SEGMENT3 as ReceiveableAcc,
+a.GL_ID_REV,a.GL_ID_FREIGHT,
+a.GL_ID_REC,
+a.GL_ID_CLEARING,
+a.GL_ID_TAX,
+a.GL_ID_UNBILLED,
+a.GL_ID_UNEARNED,  
+a.ORG_ID 
+from apps.RA_CUST_TRX_TYPES_ALL  a,apps.GL_CODE_COMBINATIONS b
+,apps.GL_CODE_COMBINATIONS c
+,apps.GL_CODE_COMBINATIONS d
+where b.CODE_COMBINATION_ID(+)=a.GL_ID_REV 
+and c.CODE_COMBINATION_ID(+)=a.GL_ID_TAX
+and d.CODE_COMBINATION_ID(+)=a.GL_ID_REC
+and a.org_id>81   ---- important ! there are multi same CUST_TRX_TYPE_ID in RA_CUST_TRX_TYPES_ALL !!\
+--and a.CREATION_SIGN='A'
+order by a.NAME
+
+
+--------------actual used AR type Stastic for SEAB
+
+select count(*) count ,CUSTOMER_NUMBER,
+NAME AR_Type,e.DESCRIPTION
+from apps.ra_customer_trx_all b
+,apps.ra_cust_trx_types_all e
+,apps.AR_CUSTOMERS_V a
+where  b.CUST_TRX_TYPE_ID=e.CUST_TRX_TYPE_ID
+and b.CREATION_DATE>=to_date('2006-01-5','yyyy-mm-dd') 
+and b.BILL_TO_CUSTOMER_ID=a.CUSTOMER_ID
+and CUSTOMER_NUMBER='1000'
+group by e.NAME,e.description,CUSTOMER_NUMBER
+order by  count(*) desc
+

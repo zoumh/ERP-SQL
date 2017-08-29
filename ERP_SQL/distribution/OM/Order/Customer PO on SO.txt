@@ -1,0 +1,57 @@
+
+
+1. After SO shipconfirm & create AR invoice,SO line status=Closed,
+still could change the 'Customer PO number' at SO header, but it won't change 'Customer PO number' at SO line
+
+2.Find the 'Customer PO number' at AR Invoice header is come from SO line's the 'Customer PO number' !
+
+3.After SO Header closed,can't change the 'Customer PO number' at SO header
+
+
+--------PO number on SO Head / line & AR_Invoice_Head (Find from AR Invoice)
+select c.Inv_Number,c.line_number Inv_Line,c.Invoice_PO,a.ORDER_NUMBER,b.LINE_NUMBER,a.CUST_PO_NUMBER HEADER_PO,b.CUST_PO_NUMBER Line_PO,
+b.LAST_UPDATE_DATE,b.CREATION_DATE
+from apps.OE_ORDER_HEADERS_ALL a,apps.OE_ORDER_lines_all b, 
+(select 
+b.purchase_order Invoice_PO,h.sales_order,h.sales_order_line,to_char(b.TRX_NUMBER) as Inv_Number,h.line_number
+from apps.ra_cust_trx_types_all a,
+apps.ra_customer_trx_all b
+,apps.ra_customer_trx_lines_all h
+,apps.mtl_system_items_b g
+where a.CUST_TRX_TYPE_ID=b.CUST_TRX_TYPE_ID and 
+b.CUSTOMER_TRX_ID=h.CUSTOMER_TRX_ID
+and g.organization_id=127
+and g.inventory_item_id=h.inventory_item_id
+and h.line_type<>'TAX'
+and b.TRX_NUMBER in ('305517','302667','305145','305400','305150','305872','305146','302655')
+) c
+where 
+a.HEADER_ID=b.HEADER_ID
+and b.ORG_ID=a.ORG_ID
+and a.ORDER_NUMBER=c.sales_order
+and b.LINE_NUMBER=c.sales_order_line
+and b.ORG_ID=127
+--and a.ORDER_NUMBER in ('404022','41002017')
+--and c.Inv_Number in ('305517','302667','305145')
+order by a.ORDER_NUMBER,b.LINE_NUMBER
+
+
+
+--------header
+select ORDER_NUMBER,ORIG_SYS_DOCUMENT_REF,CUST_PO_NUMBER,HEADER_ID,
+SALES_DOCUMENT_TYPE_CODE from apps.OE_ORDER_HEADERS_ALL where ORDER_NUMBER in ('403445','403446')
+
+
+-------line
+select LINE_NUMBER,CUST_PO_NUMBER,ORIG_SYS_DOCUMENT_REF,ORIG_SYS_LINE_REF,ITEM_TYPE_CODE
+SOURCE_TYPE_CODE,ITEM_IDENTIFIER_TYPE,ORDER_SOURCE_ID
+ from apps.OE_ORDER_lineS_all where HEADER_ID in (781791,781801)
+
+
+
+--------After SO shipconfirm & create AR invoice,could Change/fill in Customer PO number at SO header,        OE_ORDER_HEADERS_ALL.CUST_PO_NUMBER,but this won't auto fill in  OE_ORDER_lineS_all.CUST_PO_NUMBER
+
+--------If fill in Customer PO number at SO header then create SO line, both :
+        OE_ORDER_HEADERS_ALL.CUST_PO_NUMBER
+        OE_ORDER_lineS_all.CUST_PO_NUMBER  will be automatic fill in same value!
+	But if Change Customer PO number at SO header later,OE_ORDER_lineS_all.CUST_PO_NUMBER never auto change again

@@ -1,0 +1,57 @@
+
+
+
+-------Calendar
+
+SELECT * FROM APPS.BOM_CALENDARS
+
+SELECT * FROM APPS.BOM_CALENDAR_DATES
+
+---exception on calendar
+SELECT * FROM APPS.BOM_CALENDAR_EXCEPTIONS 
+
+----exception list (exception template)
+
+select b.EXCEPTION_SET_NAME,a.EXCEPTION_DATE 
+FROM APPS.BOM_EXCEPTION_SET_DATES a,APPS.BOM_EXCEPTION_SETS b
+where a.EXCEPTION_SET_ID=b.EXCEPTION_SET_ID 
+and exception_set_name='DK'
+
+
+----------Check Calendar with Template
+
+SELECT calendar_code Country, EXCEPTION_DATE
+FROM APPS.BOM_CALENDAR_EXCEPTIONS  where calendar_code='CM'
+minus
+select b.EXCEPTION_SET_NAME Country,a.EXCEPTION_DATE 
+FROM APPS.BOM_EXCEPTION_SET_DATES a,APPS.BOM_EXCEPTION_SETS b
+where a.EXCEPTION_SET_ID=b.EXCEPTION_SET_ID 
+and exception_set_name='CM'
+
+
+
+select b.EXCEPTION_SET_NAME Country,a.EXCEPTION_DATE 
+FROM APPS.BOM_EXCEPTION_SET_DATES a,APPS.BOM_EXCEPTION_SETS b
+where a.EXCEPTION_SET_ID=b.EXCEPTION_SET_ID 
+and exception_set_name='CM'
+minus
+SELECT calendar_code Country, EXCEPTION_DATE
+FROM APPS.BOM_CALENDAR_EXCEPTIONS  where calendar_code='CM'
+
+
+
+
+--------
+
+SELECT * FROM APPS.BOM_CALENDAR_DATES where calendar_code='RO' 
+and substr(to_char(calendar_date),8,2)='05'
+order by calendar_date
+
+
+SELECT calendar_code Country,calendar_date,prior_date,next_date,
+prior_seq_num,seq_num,next_seq_num 
+FROM APPS.BOM_CALENDAR_DATES where calendar_code='RO' 
+and substr(to_char(calendar_date),8,2)='05'
+order by calendar_date
+
+

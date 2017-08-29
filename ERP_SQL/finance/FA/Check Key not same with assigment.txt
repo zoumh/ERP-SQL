@@ -1,0 +1,23 @@
+
+
+--------List all Key (prj,Prd) not same with Assigment's Prj,Prd
+
+SELECT fav.asset_number,fav.ASSET_KEY_CCID ,fav.asset_id, fak.CODE_COMBINATION_ID
+,      fak.segment1 as Key_Prj
+,      fak.segment2 as Key_Prd
+,    GLC.SEGMENT5 as Depr_Prj
+,    GLC.SEGMENT4 as Depr_Prd
+FROM apps.FA_ADDITIONS_V fav
+,    apps.FA_ASSET_KEYWORDS fak
+,     apps.GL_CODE_COMBINATIONS GLC
+,     apps.FA_DISTRIBUTION_HISTORY FAH
+WHERE fav.ASSET_KEY_CCID = fak.CODE_COMBINATION_ID(+) 
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fah.DATE_INEFFECTIVE is null
+AND FAH.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.ASSET_ID=fav.asset_id
+and (fak.segment1 is null or fak.segment2 is null 
+    or
+    fak.segment1<>GLC.SEGMENT5
+     or fak.segment2<>GLC.SEGMENT4
+)

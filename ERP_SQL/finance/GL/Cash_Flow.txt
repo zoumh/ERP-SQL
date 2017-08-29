@@ -1,0 +1,692 @@
+
+
+---------- 2004 Cash Account PTD by Batch/Journal/Category
+
+select b.PERIOD_NAME,convert(b.BATCH_NAME,'ZHS16GBK') Batch,convert(b.HEADER_NAME,'ZHS16GBK') Journal,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+and (a.segment3 like '1001%' or a.segment3 like '1002%' or  a.segment3 like '1009%')
+and ACTUAL_FLAG='A'
+--and JE_SOURCE in ('Spreadsheet','Manual')
+order by b.HEADER_NAME
+
+
+
+-------------GL Manual Journal
+
+-------------Full GL Journal
+select 
+b.PERIOD_NAME,convert(b.BATCH_NAME,'ZHS16GBK') Batch,convert(b.HEADER_NAME,'ZHS16GBK') Journal,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,a.segment3 as Account--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+,b.HEADER_ROW_ID,BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+--and a.segment3 ='170100'
+and ACTUAL_FLAG='A'
+and HEADER_ROW_ID in
+(
+select --BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID,
+HEADER_ROW_ID
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+and a.segment3 ='170100'
+and ACTUAL_FLAG='A'
+)
+order by b.HEADER_NAME
+
+
+------------Related Account journal line
+select b.PERIOD_NAME,convert(b.BATCH_NAME,'ZHS16GBK') Batch,convert(b.HEADER_NAME,'ZHS16GBK') Journal,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+and (a.segment3 like '1001%' or a.segment3 like '1002%' or  a.segment3 like '1009%')
+and ACTUAL_FLAG='A'
+and JE_SOURCE in ('Spreadsheet','Manual')
+order by b.HEADER_NAME
+
+select sum(LINE_ACCOUNTED_DR)-sum(LINE_ACCOUNTED_CR)--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+and (a.segment3 like '1001%' or a.segment3 like '1002%' or  a.segment3 like '1009%')
+and ACTUAL_FLAG='A'
+and JE_SOURCE in ('Spreadsheet','Manual')
+order by b.HEADER_NAME
+
+
+----------------- Journal's All accounts are Cash Accounts
+
+
+select LINE_JE_LINE_NUM,
+b.PERIOD_NAME,convert(b.BATCH_NAME,'ZHS16GBK') Batch,convert(b.HEADER_NAME,'ZHS16GBK') Journal,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,a.segment3 as Account--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+,b.HEADER_ROW_ID,BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+--and a.segment3 ='170100'
+and ACTUAL_FLAG='A'
+and HEADER_ROW_ID in
+(
+select aa.HEADER_ROW_ID from
+(
+select --BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID,
+HEADER_ROW_ID,count (*) num
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+and (a.segment3 like '1001%' or a.segment3 like '1002%' or  a.segment3 like '1009%')
+and ACTUAL_FLAG='A'
+group by HEADER_ROW_ID
+) aa,
+(
+select --BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID,
+HEADER_ROW_ID,count (*) num
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+and ACTUAL_FLAG='A'
+group by HEADER_ROW_ID
+) bb
+where aa.HEADER_ROW_ID=bb.HEADER_ROW_ID and aa.num=bb.num
+)
+order by b.BATCH_NAME,b.HEADER_NAME,b.LINE_JE_LINE_NUM
+
+
+
+----------------Other side Account 
+
+---(GL Source)
+
+select a.segment3 as Account,d.DESCRIPTION as Account_Desc,b.PERIOD_NAME,convert(b.BATCH_NAME,'ZHS16GBK') Batch,
+convert(b.HEADER_NAME,'ZHS16GBK') Journal,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,b.HEADER_DESCRIPTION as Journal_Desc,b.LINE_DESCRIPTION,a.segment2 as CC
+--a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a,apps.FND_FLEX_VALUES_VL d
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and d.FLEX_VALUE=a.segment3
+and d.FLEX_VALUE_SET_ID =1007641
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+and (a.segment3 not like '1001%' and a.segment3 not like '1002%' and a.segment3 not like '1009%')
+and b.ACTUAL_FLAG='A'
+and b.JE_SOURCE in ('Spreadsheet','Manual')
+and b.JE_HEADER_ID in
+(
+select bb.JE_HEADER_ID
+from apps.GL_JE_JOURNAL_LINES_V bb ,apps.GL_CODE_combinations aa 
+where bb.LINE_CODE_COMBINATION_ID =aa.CODE_COMBINATION_ID
+and  substr(to_char(bb.PERIOD_NAME),5,2)='04'
+and bb.PERIOD_NAME<>'JAN-04'
+and (aa.segment3 like '1001%' or aa.segment3 like '1002%' or  aa.segment3 like '1009%')
+and bb.ACTUAL_FLAG='A'
+and bb.JE_SOURCE in ('Spreadsheet','Manual')
+)
+order by b.BATCH_NAME,b.HEADER_NAME
+
+
+
+--------AP Payment
+
+----------AP Accounting Journals for one Invoice & payment
+
+select a.REFERENCE5 as Invoice_number,REFERENCE6 line_Type,a.AE_LINE_TYPE_CODE
+,c.segment3 account_number,d.description Acc_Desc
+,a.ACCOUNTED_DR,a.ACCOUNTED_CR
+,a.description line_Desc,b.ACCOUNTING_DATE,a.ENTERED_DR,a.ENTERED_CR
+,a.CURRENCY_CODE Curr,CURRENCY_CONVERSION_RATE Rate
+,b.PERIOD_NAME ,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier,c.segment2 CC
+,a.AE_HEADER_ID,b.AE_CATEGORY,b.GL_TRANSFER_FLAG
+--select count(*)
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.FND_FLEX_VALUES_VL d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and d.FLEX_VALUE=c.segment3
+and d.FLEX_VALUE_SET_ID =1007641
+and b.ACCOUNTING_DATE<to_date('2005-1-01','yyyy-mm-dd')
+and (a.REFERENCE5='7689' or a.AE_HEADER_ID=60742)
+
+
+
+Reconcile AP--GL
+---GL AP Source cash 
+select a.segment3 as Account,b.PERIOD_NAME,convert(b.BATCH_NAME,'ZHS16GBK') Batch,
+convert(b.HEADER_NAME,'ZHS16GBK') Journal,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,b.HEADER_DESCRIPTION as Journal_Desc,b.LINE_DESCRIPTION,a.segment2 as CC
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04' 
+and (a.segment3 like '1001%' or a.segment3 like '1002%' or  a.segment3 like '1009%')
+and ACTUAL_FLAG='A'
+and JE_SOURCE in ('Payables')--'Spreadsheet','Manual')
+order by b.HEADER_NAME
+
+
+
+----AP Payment Cash journal
+select (sum(a.ACCOUNTED_DR)-sum(a.ACCOUNTED_CR) ) bbn
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='CASH'--'LIABILITY'
+and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04' 
+
+
+----AP Payment non-Cash journal
+select (sum(a.ACCOUNTED_DR)-sum(a.ACCOUNTED_CR) ) bbn
+--select (a.ACCOUNTED_DR),(a.ACCOUNTED_CR)  ,a.AE_LINE_TYPE_CODE
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE<>'CASH'--'LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04' 
+and REFERENCE6='AP Payments'
+
+
+----AP Payment non-Cash journal ---Other (Exchange Gain Loss , rounding)
+
+---details
+select a.REFERENCE5 as Invoice_number,REFERENCE6 line_Type,a.AE_LINE_TYPE_CODE
+,c.segment3 account_number,d.description Acc_Desc
+,a.ACCOUNTED_DR,a.ACCOUNTED_CR
+,a.description line_Desc,b.ACCOUNTING_DATE,a.ENTERED_DR,a.ENTERED_CR
+,a.CURRENCY_CODE Curr,CURRENCY_CONVERSION_RATE Rate
+,b.PERIOD_NAME ,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier,c.segment2 CC
+,a.AE_HEADER_ID,b.AE_CATEGORY,b.GL_TRANSFER_FLAG
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.FND_FLEX_VALUES_VL d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE not in ('CASH','LIABILITY')
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+and d.FLEX_VALUE=c.segment3
+and d.FLEX_VALUE_SET_ID =1007641
+order by a.REFERENCE5,a.REFERENCE6,b.ACCOUNTING_DATE,a.AE_LINE_TYPE_CODE
+
+---summary
+
+select (sum(a.ACCOUNTED_DR)-sum(a.ACCOUNTED_CR) ) bbn
+--select (a.ACCOUNTED_DR),(a.ACCOUNTED_CR)  ,a.AE_LINE_TYPE_CODE
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE not in ('CASH','LIABILITY')
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04' 
+and REFERENCE6='AP Payments'
+
+
+----------------------
+
+---------Partial Paied Invoice/Supplier by the Date
+
+select a.REFERENCE5 as Invoice_number,REFERENCE6 line_Type,a.AE_LINE_TYPE_CODE
+,c.segment3 account_number,d.description Acc_Desc
+,a.ACCOUNTED_DR,a.ACCOUNTED_CR
+,a.description line_Desc,b.ACCOUNTING_DATE,a.ENTERED_DR,a.ENTERED_CR
+,a.CURRENCY_CODE Curr,CURRENCY_CONVERSION_RATE Rate
+,b.PERIOD_NAME ,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier,c.segment2 CC
+,a.AE_HEADER_ID,b.AE_CATEGORY,b.GL_TRANSFER_FLAG
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.FND_FLEX_VALUES_VL d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and d.FLEX_VALUE=c.segment3
+and d.FLEX_VALUE_SET_ID =1007641
+and a.REFERENCE1||'-'||a.REFERENCE5 in
+(select aa.REFERENCE1||'-'||aa.REFERENCE5 Reference
+from 
+(
+select (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0)) ) Lib_Inv,a.REFERENCE5,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+--and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and REFERENCE6='AP Invoices'
+group by a.REFERENCE5,a.REFERENCE1
+) aa,
+(
+select (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  ) Lib_Pay,a.REFERENCE5,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+group by a.REFERENCE5,a.REFERENCE1
+) bb
+where 
+aa.REFERENCE1=bb.REFERENCE1
+and aa.REFERENCE5=bb.REFERENCE5
+and abs(aa.Lib_Inv+bb.Lib_Pay)>0.01 
+and bb.Lib_Pay<>0
+)
+order by a.REFERENCE5,a.REFERENCE6,b.ACCOUNTING_DATE,a.AE_LINE_TYPE_CODE
+
+---or use actual Invoice/Supplier name
+select a.REFERENCE5 as Invoice_number,REFERENCE6 line_Type,a.AE_LINE_TYPE_CODE
+,c.segment3 account_number,d.description Acc_Desc
+,a.ACCOUNTED_DR,a.ACCOUNTED_CR
+,a.description line_Desc,b.ACCOUNTING_DATE,a.ENTERED_DR,a.ENTERED_CR
+,a.CURRENCY_CODE Curr,CURRENCY_CONVERSION_RATE Rate
+,b.PERIOD_NAME ,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier,c.segment2 CC
+,a.AE_HEADER_ID,b.AE_CATEGORY,b.GL_TRANSFER_FLAG
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.FND_FLEX_VALUES_VL d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and d.FLEX_VALUE=c.segment3
+and d.FLEX_VALUE_SET_ID =1007641
+and a.REFERENCE1||'-'||a.REFERENCE5 
+  in ('FLEXTRONICS INDUSTRIAL(ZHU HAI)CO., LTD.'||'-'||'SIS/24002973',
+          'ELLEGE EMBALLAGE AB'||'-'||'5387',
+		  'FLEXTRONICS INDUSTRIAL(ZHU HAI)CO., LTD.'||'-'||'SIS/24002981')
+order by a.REFERENCE5,a.REFERENCE6,b.ACCOUNTING_DATE,a.AE_LINE_TYPE_CODE
+
+
+---get partial paied Invoice/Supplier name
+select (aa.Lib_Inv+bb.Lib_Pay) Bal,aa.REFERENCE5 Invoice,convert(aa.REFERENCE1,'ZHS16GBK')  as Supplier from 
+(
+select (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0)) ) Lib_Inv,a.REFERENCE5,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+--and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and REFERENCE6='AP Invoices'
+group by a.REFERENCE5,a.REFERENCE1
+) aa,
+(
+select (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  ) Lib_Pay,a.REFERENCE5,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+group by a.REFERENCE5,a.REFERENCE1
+) bb
+where 
+aa.REFERENCE1=bb.REFERENCE1
+and aa.REFERENCE5=bb.REFERENCE5
+and abs(aa.Lib_Inv+bb.Lib_Pay)>0.01 
+and bb.Lib_Pay<>0
+
+
+
+
+-----------Full Paid Invoice Non-Lib Accounting (non-employee)
+
+-----(half year 1)
+select (sum(nvl(aa.ACCOUNTED_DR,0))-sum(nvl(aa.ACCOUNTED_CR,0))  ) bal
+
+select count(*) 
+
+
+select aa.REFERENCE5 as Invoice_number,REFERENCE6 line_Type,aa.AE_LINE_TYPE_CODE
+,aa.segment3 account_number,d.DESCRIPTION as Account_Desc
+,aa.ACCOUNTED_DR,aa.ACCOUNTED_CR,aa.DESCRIPTION Line_Desc
+,aa.ACCOUNTING_DATE,aa.ENTERED_DR,aa.ENTERED_CR
+,aa.CURRENCY_CODE Curr,aa.CURRENCY_CONVERSION_RATE Rate
+,aa.PERIOD_NAME
+,convert(aa.REFERENCE1,'ZHS16GBK')  as Supplier
+from 
+(
+select a.ACCOUNTED_DR,a.ACCOUNTED_CR,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE,a.CURRENCY_CONVERSION_RATE 
+,b.PERIOD_NAME ,c.segment3 
+,a.REFERENCE6 ,b.AE_CATEGORY
+,b.ACCOUNTING_DATE,b.GL_TRANSFER_FLAG,a.AE_LINE_TYPE_CODE,
+a.REFERENCE5,a.REFERENCE1,a.DESCRIPTION
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE<>'LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+--and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and a.REFERENCE6='AP Invoices'
+) aa,
+(
+select distinct bb.REFERENCE5,bb.REFERENCE1 from
+(
+select --(sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  ) Lib_Pay,
+a.REFERENCE5,a.REFERENCE1,a.AE_HEADER_ID
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.AP_VENDORS_V d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2004-9-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+--and c.SEGMENT3<>'21810301'
+and d.VENDOR_TYPE_LOOKUP_CODE <> 'EMPLOYEE'
+and d.VENDOR_NAME=a.REFERENCE1
+group by a.REFERENCE5,a.AE_HEADER_ID,a.REFERENCE1
+having (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  )<>0
+) bb,
+(
+select --(sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  ) Lib_Pay,
+a.AE_HEADER_ID,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.AP_VENDORS_V d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='CASH'--'LIABILITY'--''
+and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2004-9-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+and d.VENDOR_TYPE_LOOKUP_CODE <> 'EMPLOYEE'
+and d.VENDOR_NAME=a.REFERENCE1
+group by a.AE_HEADER_ID,a.REFERENCE1
+having (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  )<>0
+) cc
+where bb.AE_HEADER_ID=cc.AE_HEADER_ID
+and bb.REFERENCE1=cc.REFERENCE1
+) dd
+,apps.FND_FLEX_VALUES_VL d
+where aa.REFERENCE5=dd.REFERENCE5
+and aa.REFERENCE1=dd.REFERENCE1
+and d.FLEX_VALUE_SET_ID =1007641
+and d.FLEX_VALUE=aa.segment3
+and aa.REFERENCE1||'-'||aa.REFERENCE5 
+  not in ('FLEXTRONICS INDUSTRIAL(ZHU HAI)CO., LTD.'||'-'||'SIS/24002973',
+          'ELLEGE EMBALLAGE AB'||'-'||'5387',
+		  'FLEXTRONICS INDUSTRIAL(ZHU HAI)CO., LTD.'||'-'||'SIS/24002981')
+order by aa.REFERENCE5
+
+
+-----(half year 2)
+
+
+select (sum(nvl(aa.ACCOUNTED_DR,0))-sum(nvl(aa.ACCOUNTED_CR,0))  ) bal
+
+select count(*) 
+
+
+select aa.REFERENCE5 as Invoice_number,REFERENCE6 line_Type,aa.AE_LINE_TYPE_CODE
+,aa.segment3 account_number,d.DESCRIPTION as Account_Desc
+,aa.ACCOUNTED_DR,aa.ACCOUNTED_CR,aa.DESCRIPTION Line_Desc
+,aa.ACCOUNTING_DATE,aa.ENTERED_DR,aa.ENTERED_CR
+,aa.CURRENCY_CODE Curr,aa.CURRENCY_CONVERSION_RATE Rate
+,aa.PERIOD_NAME
+,convert(aa.REFERENCE1,'ZHS16GBK')  as Supplier
+from 
+(
+select a.ACCOUNTED_DR,a.ACCOUNTED_CR,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE,a.CURRENCY_CONVERSION_RATE 
+,b.PERIOD_NAME ,c.segment3 
+,a.REFERENCE6 ,b.AE_CATEGORY
+,b.ACCOUNTING_DATE,b.GL_TRANSFER_FLAG,a.AE_LINE_TYPE_CODE,
+a.REFERENCE5,a.REFERENCE1,a.DESCRIPTION
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+--and a.AE_LINE_TYPE_CODE<>'LIABILITY'----->full journal or not
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+--and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and a.REFERENCE6='AP Invoices'
+) aa,
+(
+select distinct bb.REFERENCE5,bb.REFERENCE1 from
+(
+select --(sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  ) Lib_Pay,
+a.REFERENCE5,a.REFERENCE1,a.AE_HEADER_ID
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.AP_VENDORS_V d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-1-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-8-31','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+--and c.SEGMENT3<>'21810301'
+and d.VENDOR_TYPE_LOOKUP_CODE <> 'EMPLOYEE'
+and d.VENDOR_NAME=a.REFERENCE1
+group by a.REFERENCE5,a.AE_HEADER_ID,a.REFERENCE1
+having (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  )<>0
+) bb,
+(
+select --(sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  ) Lib_Pay,
+a.AE_HEADER_ID,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.AP_VENDORS_V d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='CASH'--'LIABILITY'--''
+and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-1-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-8-31','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+and d.VENDOR_TYPE_LOOKUP_CODE <> 'EMPLOYEE'
+and d.VENDOR_NAME=a.REFERENCE1
+group by a.AE_HEADER_ID,a.REFERENCE1
+having (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  )<>0
+) cc
+where bb.AE_HEADER_ID=cc.AE_HEADER_ID
+and bb.REFERENCE1=cc.REFERENCE1
+) dd
+,apps.FND_FLEX_VALUES_VL d
+where aa.REFERENCE5=dd.REFERENCE5
+and aa.REFERENCE1=dd.REFERENCE1
+and d.FLEX_VALUE_SET_ID =1007641
+and d.FLEX_VALUE=aa.segment3
+and aa.REFERENCE1||'-'||aa.REFERENCE5 
+  not in ('FLEXTRONICS INDUSTRIAL(ZHU HAI)CO., LTD.'||'-'||'SIS/24002973',
+          'ELLEGE EMBALLAGE AB'||'-'||'5387',
+		  'FLEXTRONICS INDUSTRIAL(ZHU HAI)CO., LTD.'||'-'||'SIS/24002981')
+order by aa.REFERENCE5
+
+
+
+
+-----------Full Paid Invoice Non-Lib Accounting (employee)
+
+
+
+select (sum(nvl(aa.ACCOUNTED_DR,0))-sum(nvl(aa.ACCOUNTED_CR,0))  ) bal
+
+select count(*) 
+
+
+select aa.REFERENCE5 as Invoice_number,REFERENCE6 line_Type,aa.AE_LINE_TYPE_CODE
+,aa.segment3 account_number,d.DESCRIPTION as Account_Desc
+,aa.ACCOUNTED_DR,aa.ACCOUNTED_CR,aa.DESCRIPTION Line_Desc
+,aa.ACCOUNTING_DATE,aa.ENTERED_DR,aa.ENTERED_CR
+,aa.CURRENCY_CODE Curr,aa.CURRENCY_CONVERSION_RATE Rate
+,aa.PERIOD_NAME
+,convert(aa.REFERENCE1,'ZHS16GBK')  as Supplier
+from 
+(
+select a.ACCOUNTED_DR,a.ACCOUNTED_CR,a.ENTERED_DR,a.ENTERED_CR,a.CURRENCY_CODE,a.CURRENCY_CONVERSION_RATE 
+,b.PERIOD_NAME ,c.segment3 
+,a.REFERENCE6 ,b.AE_CATEGORY
+,b.ACCOUNTING_DATE,b.GL_TRANSFER_FLAG,a.AE_LINE_TYPE_CODE,
+a.REFERENCE5,a.REFERENCE1,a.DESCRIPTION
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE<>'LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-01-01','yyyy-mm-dd')
+--and b.ACCOUNTING_DATE>to_date('2004-01-26','yyyy-mm-dd')
+and a.REFERENCE6='AP Invoices'
+) aa,
+(
+select distinct bb.REFERENCE5,bb.REFERENCE1 from
+(
+select --(sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  ) Lib_Pay,
+a.REFERENCE5,a.REFERENCE1,a.AE_HEADER_ID
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.AP_VENDORS_V d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-1-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-1-26','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+--and c.SEGMENT3<>'21810301'
+and d.VENDOR_TYPE_LOOKUP_CODE = 'EMPLOYEE'
+and d.VENDOR_NAME=a.REFERENCE1
+group by a.REFERENCE5,a.AE_HEADER_ID,a.REFERENCE1
+having (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  )<>0
+) bb,
+(
+select --(sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  ) Lib_Pay,
+a.AE_HEADER_ID,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.AP_VENDORS_V d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='CASH'--'LIABILITY'--''
+and (c.segment3 like '1001%' or c.segment3 like '1002%' or  c.segment3 like '1009%')
+and b.ACCOUNTING_DATE<to_date('2005-1-01','yyyy-mm-dd')
+and b.ACCOUNTING_DATE>to_date('2004-1-26','yyyy-mm-dd')
+and REFERENCE6='AP Payments'
+and d.VENDOR_TYPE_LOOKUP_CODE = 'EMPLOYEE'
+and d.VENDOR_NAME=a.REFERENCE1
+group by a.AE_HEADER_ID,a.REFERENCE1
+having (sum(nvl(a.ACCOUNTED_DR,0))-sum(nvl(a.ACCOUNTED_CR,0))  )<>0
+) cc
+where bb.AE_HEADER_ID=cc.AE_HEADER_ID
+and bb.REFERENCE1=cc.REFERENCE1
+) dd
+,apps.FND_FLEX_VALUES_VL d
+where aa.REFERENCE5=dd.REFERENCE5
+and aa.REFERENCE1=dd.REFERENCE1
+and d.FLEX_VALUE_SET_ID =1007641
+and d.FLEX_VALUE=aa.segment3
+and aa.REFERENCE1||'-'||aa.REFERENCE5 
+  not in ('FLEXTRONICS INDUSTRIAL(ZHU HAI)CO., LTD.'||'-'||'SIS/24002973',
+          'ELLEGE EMBALLAGE AB'||'-'||'5387',
+		  'FLEXTRONICS INDUSTRIAL(ZHU HAI)CO., LTD.'||'-'||'SIS/24002981')
+order by aa.REFERENCE5
+
+
+
+
+----------------------Inquiry GL Full Journal by one of Account
+
+select 
+b.PERIOD_NAME,convert(b.BATCH_NAME,'ZHS16GBK') Batch,convert(b.HEADER_NAME,'ZHS16GBK') Journal,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,a.segment3 as Account--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+,b.HEADER_ROW_ID,BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+--and a.segment3 ='170100'
+and ACTUAL_FLAG='A'
+and HEADER_ROW_ID in
+(
+select --BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID,
+HEADER_ROW_ID
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='04'
+and b.PERIOD_NAME<>'JAN-04'
+and a.segment3 ='170100'
+and ACTUAL_FLAG='A'
+)
+order by b.HEADER_NAME
+
+
+
+----------------------Inquiry AP Full Journal by one of AP Invoice Dr Charge Account
+
+select a.REFERENCE5 as Invoice_number,REFERENCE6 line_Type,a.AE_LINE_TYPE_CODE
+,c.segment3 account_number,d.description Acc_Desc
+,a.ACCOUNTED_DR,a.ACCOUNTED_CR
+,a.description line_Desc,b.ACCOUNTING_DATE,a.ENTERED_DR,a.ENTERED_CR
+,a.CURRENCY_CODE Curr,CURRENCY_CONVERSION_RATE Rate
+,b.PERIOD_NAME ,convert(a.REFERENCE1,'ZHS16GBK')  as Supplier,c.segment2 CC
+,a.AE_HEADER_ID,b.AE_CATEGORY,b.GL_TRANSFER_FLAG
+--select count(*)
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.FND_FLEX_VALUES_VL d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and d.FLEX_VALUE=c.segment3
+and d.FLEX_VALUE_SET_ID =1007641
+and b.ACCOUNTING_DATE<to_date('2005-1-01','yyyy-mm-dd')
+and a.REFERENCE1||'-'||a.REFERENCE5 in
+(select aa.REFERENCE1||'-'||aa.REFERENCE5 Reference
+from 
+(
+select a.REFERENCE5,a.REFERENCE1
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and a.AE_LINE_TYPE_CODE='LIABILITY'--''
+--and (c.segment3 like '1501%' )
+and b.ACCOUNTING_DATE>=to_date('2004-1-27','yyyy-mm-dd')
+and b.ACCOUNTING_DATE<to_date('2004-6-01','yyyy-mm-dd')
+and REFERENCE6='AP Invoices'
+group by a.REFERENCE5,a.REFERENCE1
+) aa
+)
+order by a.REFERENCE5,a.REFERENCE6,b.ACCOUNTING_DATE,a.AE_LINE_TYPE_CODE
+
+
+
+
+
+
+
+
+

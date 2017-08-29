@@ -1,0 +1,6 @@
+
+
+-------------For BTS Flag maintenance
+
+select attribute5 BTS,inventory_item_status_code status,organization_id,Item_type,segment1,enabled_flag,description,planner_code,decode(planning_make_buy_code,1,'Make',2,'Buy') Make_Buy from apps.mtl_system_items where attribute5='BTS'
+

@@ -1,0 +1,58 @@
+
+
+
+select LPN_CONTEXT,lpn_id from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='X500837'
+--(check LPN_CONTEXT)
+
+713709
+
+select cost_group_id,TRANSACTION_QUANTITY  from apps.MTL_ONHAND_QUANTITIES_DETAIl where lpn_id=868791
+
+
+select cost_group_id,QUANTITY  from apps.wms_lpn_contents WHERE parent_lpn_id=868791
+
+
+-------Onhand has Qty but Avaliable is Zero
+	--this because the wms_lpn_contents.COST_GROUP_ID = null, 
+	  & wms_lpn_contents.PARENT_LPN_ID has value but MTL_ONHAND_QUANTITIES_DETAIl.lpn_id has no record
+
+---------If there is no LPN on the task, then check the Status of SO & Ship Trans,mostly the SO has allocated by not yet shipped!
+		(In this case, Onhand<>avaliable, avaliable=0,decreased, buy onhand not decreased)
+
+LPN content is wrong .
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl where lpn_id=489100
+
+select * from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='S0025689'   (check LPN_CONTEXT)
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_id=489100  (check CostGroup)
+
+update APPS.WMS_LICENSE_PLATE_NUMBERS set LPN_CONTEXT=1 where LICENSE_PLATE_NUMBER=''
+
+
+
+-----------------Onhand has Qty but Avaliable is Zero (SO Pick release task can't use the LPN !)
+
+1. To check the LPN_CONTEXT of this LPN
+select LPN_CONTEXT,lpn_id from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='CNCB5+DVMXR0'
+
+LPN_CONTEXT=11 (picked)
+
+2. update APPS.WMS_LICENSE_PLATE_NUMBERS set LPN_CONTEXT=1 where LICENSE_PLATE_NUMBER='CNCB5+DVMXR0'
+Change the LPN_CONTEXT=1, then can finish the task!
+
+-----------------------------------------LPN_CONTEXT
+
+
+Code	Meaning	Description	Tag	From	To	Enabled	[  ]
+1	Resides in Inventory	Resides in Inventory		30-May-00		*	
+10	Prepack for WIP	Prepack for WIP		11-Jun-01		*	
+11	Picked	Picked		31-Aug-01		*	
+2	Resides in WIP	Resides in WIP		30-May-00		*	
+3	Resides in Receiving	Resides in Receiving		30-May-00		*	
+4	Issued out of Stores	Issued out of Stores		30-May-00		*	
+5	Defined but not used	Defined but not used		30-May-00		*	
+6	Resides in Intransit	Resides in Intransit		30-May-00		*	
+7	Resides in Vendor	Resides in Vendor		30-May-00		*	
+8	Packing context	Packing context		30-May-00		*	
+9	Loaded to Dock	Loaded to Dock		3-Apr-01		*	

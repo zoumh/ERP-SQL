@@ -1,0 +1,23 @@
+
+
+--------Item new created count by Type
+select count(a.segment1) Item_count,
+a.Item_Type
+from apps.mtl_system_items a,apps.mtl_item_categories_v b,apps.PER_PEOPLE_V7 c
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID=130
+--and  a.segment1='DPY 001'
+and b.category_set_id=1
+and a.BUYER_ID=c.PERSON_ID(+)
+and a.CREATION_DATE>to_date('2007-9-10','yyyy-mm-dd')
+group by a.Item_Type
+
+
+NBOM
+ROA
+ROAM
+
+
+
+

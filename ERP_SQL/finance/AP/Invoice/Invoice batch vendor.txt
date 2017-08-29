@@ -1,0 +1,17 @@
+
+
+------For diagnostic invoice data, has batch, Vendor & Invoice_ID
+
+select  e.VENDOR_NAME,INVOICE_ID,a.CREATION_DATE,a.INVOICE_NUM, a.INVOICE_CURRENCY_CODE as Curr,
+a.EXCHANGE_RATE as HeadRate,
+a.INVOICE_DATE,a.GL_DATE
+from --APPS.AP_INVOICE_DISTRIBUTIONS_ALL b,apps.GL_CODE_combinations c,
+apps.AP_INVOICES_ALL a,apps.AP_BATCHES_ALL d,apps.PO_VENDORS e
+where  --a.INVOICE_ID=b.INVOICE_ID
+--and b.DIST_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID and 
+a.BATCH_ID=d.BATCH_ID
+and a.VENDOR_ID=e.VENDOR_ID
+and d.BATCH_NAME='LJ20090901'
+and a.EXCHANGE_RATE is not null
+order by a.CREATION_DATE
+

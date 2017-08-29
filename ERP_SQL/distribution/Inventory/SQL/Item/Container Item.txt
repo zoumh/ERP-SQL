@@ -1,0 +1,21 @@
+
+
+select a.segment1 Item,a.description,a.inventory_item_status_code status,a.Item_Type,a.LAST_UPDATE_DATE , a.CREATION_DATE ,
+b.description Created_by,
+decode(planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+from apps.mtl_system_items a,apps.fnd_user b 
+where a.CREATED_BY =b.user_id
+and a.Item_Type='CTR' --and ORGANIZATION_ID=130
+order by a.CREATION_DATE desc
+
+
+select segment1 Item,description,inventory_item_status_code status,Item_Type,LAST_UPDATE_DATE , 
+decode(planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+from apps.mtl_system_items where --inventory_item_id=4860 --and 
+Item_Type='CTR' --and ORGANIZATION_ID=130
+
+
+0.41*0.41*0.41
+
+Container
+

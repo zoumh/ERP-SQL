@@ -1,0 +1,64 @@
+
+---------Verify Item's Cost Group Qty between Ohand & Transactions & Mtl_Account_Dist
+
+------An Item Transactions Qty (Total)
+
+SELECT c.segment1 Item,sum(TRANSACTION_QUANTITY),to_char(a.ORGANIZATION_ID) ORG
+FROM apps.mtl_material_transactions a,apps.MTL_TRANSACTION_TYPES b,apps.mtl_system_items c
+WHERE a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID and a.inventory_item_id=c.inventory_item_id
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and c.segment1='DPY 101 2732/162R10L'
+group by c.segment1 ,a.ORGANIZATION_ID
+
+
+
+------An Item Transactions Qty (Detail)
+
+SELECT c.segment1 Item,TRANSACTION_QUANTITY,b.TRANSACTION_TYPE_NAME,SUBINVENTORY_CODE WH, 
+TRANSACTION_DATE,to_char(a.ORGANIZATION_ID) ORG, to_char(COST_GROUP_ID) COST_GROUP_ID,
+to_char(TRANSACTION_ID) Trans_ID, to_char(a.TRANSACTION_TYPE_ID) Trans_Type_ID
+,PRIMARY_QUANTITY,to_char(DISTRIBUTION_ACCOUNT_ID) Account_ID,ACTUAL_COST,NEW_COST
+FROM apps.mtl_material_transactions a,apps.MTL_TRANSACTION_TYPES b,apps.mtl_system_items c
+WHERE a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID and a.inventory_item_id=c.inventory_item_id
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and c.segment1='DPY 101 2732/162R10L'
+
+
+
+
+
+-----Item's ID
+select INVENTORY_ITEM_ID,ORGANIZATION_ID,SEGMENT1 from apps.mtl_system_items b
+where (b.segment1='DPY 101 2732/162R10L')
+
+
+------Cost_Group_ID
+select COST_GROUP,DESCRIPTION,ORGANIZATION_ID,COST_GROUP_TYPE,COST_GROUP_ID from apps.cst_cost_groups
+
+
+-----------Onhand Qty by Cost_Group
+
+SELECT to_char(INVENTORY_ITEM_ID) Item_ID,to_char(ORGANIZATION_ID) ORG, PRIMARY_TRANSACTION_QUANTITY Qty,
+SUBINVENTORY_CODE WH,to_char(UPDATE_TRANSACTION_ID) Trans_ID,ORIG_DATE_RECEIVED,to_char(COST_GROUP_ID) Cost_Grp_ID
+FROM apps.mtl_onhand_quantities_detail 
+WHERE inventory_item_id in ( 23612)
+
+
+---------Trans Qty by Cost_Group
+
+
+SELECT b.TRANSACTION_TYPE_NAME,to_char(INVENTORY_ITEM_ID) Item_ID,to_char(ORGANIZATION_ID) ORG, to_char(COST_GROUP_ID) COST_GROUP_ID,SUBINVENTORY_CODE WH, to_char(TRANSACTION_ID) Trans_ID, to_char(a.TRANSACTION_TYPE_ID) Trans_Type_ID
+,TRANSACTION_QUANTITY,PRIMARY_QUANTITY,TRANSACTION_DATE,to_char(DISTRIBUTION_ACCOUNT_ID) Account_ID,ACTUAL_COST,NEW_COST
+FROM apps.mtl_material_transactions a,apps.MTL_TRANSACTION_TYPES b
+WHERE a.TRANSACTION_TYPE_ID=b.TRANSACTION_TYPE_ID
+and inventory_item_id in ( 17366)
+
+
+SELECT to_char(INVENTORY_ITEM_ID) Item_ID,to_char(ORGANIZATION_ID) ORG, to_char(COST_GROUP_ID) COST_GROUP_ID,SUBINVENTORY_CODE WH, to_char(TRANSACTION_ID) Trans_ID, to_char(TRANSACTION_TYPE_ID) Trans_Type_ID
+,TRANSACTION_QUANTITY,PRIMARY_QUANTITY,TRANSACTION_DATE,to_char(DISTRIBUTION_ACCOUNT_ID) Account_ID,ACTUAL_COST,NEW_COST
+FROM apps.mtl_material_transactions
+WHERE inventory_item_id in ( 23612)
+
+
+
+

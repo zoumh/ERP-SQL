@@ -1,0 +1,64 @@
+
+
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2004-05-30','YYYY-MM-DD')
+  and trunc(FREEZE_DATE)<= to_date('2004-06-1','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+
+
+
+
+
+
+
+
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1 ) tag,
+b.segment1 item, a.revision, a.subinventory_name, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator, e.cost_group, 
+(select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id) lpn,
+a.system_quantity, a.count_quantity, to_char(actual_cost,999999999.9999) cost,
+(a.count_quantity-a.system_quantity)*actual_cost as Adjust_Amt,
+(a.count_quantity-a.system_quantity) as Qty_Diff
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e
+where a.physical_inventory_id =:d --145--
+and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+and a.locator_id=c.inventory_location_id and c.organization_id=83  and e.ORGANIZATION_ID=83
+and a.cost_group_id=e.cost_group_id 
+--and (a.count_quantity-a.system_quantity)<>0
+--order by c.segment2, to_number(c.segment3), to_number(c.segment5), to_number(c.segment4)
+
+
+
+
+------------Count value by Total Value (Physic ID , Sub-Inventory)
+
+select  
+       sum(a.system_quantity* a.actual_cost) High_Value
+	   --sum(b.system_quantity* b.actual_cost) Total
+	   --a.subinventory_name SubInv
+from   apps.mtl_physical_adjustments a --,apps.mtl_physical_adjustments b
+where  --a.physical_inventory_id=b.physical_inventory_id and 
+	   a.physical_inventory_id =:d and a.actual_cost > 50 
+       and a.organization_id=83 --and b.organization_id=83 
+union
+select  
+       round(sum(a.system_quantity* a.actual_cost),2) High_Value
+	   --sum(b.system_quantity* b.actual_cost) Total
+	   --a.subinventory_name SubInv
+from   apps.mtl_physical_adjustments a --,apps.mtl_physical_adjustments b
+where  --a.physical_inventory_id=b.physical_inventory_id and 
+	   a.physical_inventory_id =:d --and a.actual_cost > 20 
+       and a.organization_id=83 --and b.organization_id=83 
+
+
+
+
+
+
+
+
+
+
+
+
+

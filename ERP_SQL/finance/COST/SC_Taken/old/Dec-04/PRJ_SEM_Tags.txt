@@ -1,0 +1,90 @@
+
+
+
+
+1. Find out the PHYSICAL_INVENTORY_ID
+
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2004-11-20','YYYY-MM-DD')
+  and trunc(FREEZE_DATE)<= to_date('2004-12-31','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+
+
+
+---------------------------------------------------------------------------
+
+
+
+2.
+--------PRJ Tag , SBT with locator, other WH no locator
+
+
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--,	actual_cost
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c 
+where  a.physical_inventory_id =:d
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=86 and b.organization_id=86 
+       and a.locator_id=c.inventory_location_id and c.organization_id=86 
+	   and a.subinventory_name='SBT'
+union
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+'' Locator,
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--,	actual_cost
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b--, apps.mtl_item_locations c 
+where  a.physical_inventory_id =:d 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=86 and b.organization_id=86
+	   and a.subinventory_name<>'SBT'
+
+
+-----Verify total Prj Tag numbers 
+
+select count(*)
+from   apps.mtl_physical_adjustments a 
+where  a.physical_inventory_id =:d  and a.organization_id=86 
+
+
+-----Verify total Prj amount 
+
+select 
+sum(nvl(system_quantity*actual_cost,0)) total_system_value,
+sum(round(nvl(count_quantity*actual_cost,0) ,2)) total_count_value,
+sum(round(nvl(adjustment_quantity*actual_cost,0),2)) total_adjustment_value
+from apps.mtl_physical_adjustments
+where physical_inventory_id = :d
+
+
+---------------------------------------------------------------------------
+
+
+3.
+------------SECM Tags
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,'' Count_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+''Audit_Qty,
+(case when a.actual_cost>50 then 'A' else case when (a.actual_cost<=50 and a.actual_cost>20) then 'B' else 'C' end end) Remark
+--,	actual_cost
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c 
+where  a.physical_inventory_id =:d 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=85 and b.organization_id=85 
+       and a.locator_id=c.inventory_location_id and c.organization_id=85 
+order by (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1)
+
+-----Verify total SEM Tag numbers 
+
+select count(*)
+from   apps.mtl_physical_adjustments a 
+where  a.physical_inventory_id =:d  and a.organization_id=85 
+
+
+
+

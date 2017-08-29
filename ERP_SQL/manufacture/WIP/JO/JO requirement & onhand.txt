@@ -1,0 +1,59 @@
+
+
+--------------JO component requirement  with onhand Qty & WH (may be multi line per component)
+select b.WIP_ENTITY_NAME,b.CREATION_DATE,
+decode(b.STATUS_TYPE,1,'Unreleased',3,'Released',4,'Complete',5,'Complete No Charges',6,'On Hold',
+7,'Cancelled',12,'Closed',14,'Pending Close',15,'Failed Close')  STATUS
+,decode(b.JOB_TYPE,1,'Standard',3,'Non-Standard') Type,
+a.CONCATENATED_SEGMENTS Component_Item,a.ITEM_DESCRIPTION,
+a.REQUIRED_QUANTITY,a.QUANTITY_ISSUED,a.QUANTITY_OPEN,c.qty onhand,c.WH,a.QUANTITY_PER_ASSEMBLY,
+a.WIP_SUPPLY_MEANING--,a.DEPARTMENT_CODE,a.MRP_NET_FLAG,a.QUANTITY_ALLOCATED,a.SUPPLY_SUBINVENTORY,a.WIP_SUPPLY_TYPE
+from apps.WIP_REQUIREMENT_OPERATIONS_V a,apps.WIP_DISCRETE_JOBS_V b,
+(SELECT  b.INVENTORY_ITEM_ID,c.ORGANIZATION_ID,b.SUBINVENTORY_CODE WH,
+        SUM(b.primary_transaction_quantity) Qty
+FROM    apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+        apps.MTL_SECONDARY_INVENTORIES_FK_V c
+WHERE b.organization_id>127
+      AND c.organization_id=b.organization_id
+      and c.SECONDARY_INVENTORY_NAME=b.SUBINVENTORY_CODE
+      and c.AVAILABILITY_TYPE=1 --MRP netable
+--      and b.SUBINVENTORY_CODE like 'SA26'    
+--      and b.LOCATOR_ID=48600
+      and c.ORGANIZATION_ID=b.ORGANIZATION_ID 
+GROUP BY b.INVENTORY_ITEM_ID,c.ORGANIZATION_ID,b.SUBINVENTORY_CODE ) c
+where b.WIP_ENTITY_ID=a.WIP_ENTITY_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and c.ORGANIZATION_ID =a.ORGANIZATION_ID
+and b.wip_entity_name = 'hz1'
+order by a.CONCATENATED_SEGMENTS 
+
+
+
+
+--------------JO component requirement  with onhand Qty & WH (from MRP_Netable WH & in SAxx)
+select b.WIP_ENTITY_NAME,b.CREATION_DATE,
+decode(b.STATUS_TYPE,1,'Unreleased',3,'Released',4,'Complete',5,'Complete No Charges',6,'On Hold',
+7,'Cancelled',12,'Closed',14,'Pending Close',15,'Failed Close')  STATUS
+,decode(b.JOB_TYPE,1,'Standard',3,'Non-Standard') Type,
+a.CONCATENATED_SEGMENTS Component_Item,a.ITEM_DESCRIPTION,
+a.REQUIRED_QUANTITY,a.QUANTITY_ISSUED,a.QUANTITY_OPEN,c.qty Onhand_Qty,c.SUBINVENTORY_CODE,a.QUANTITY_PER_ASSEMBLY,
+a.WIP_SUPPLY_MEANING--,a.DEPARTMENT_CODE,a.MRP_NET_FLAG,a.QUANTITY_ALLOCATED,a.SUPPLY_SUBINVENTORY,a.WIP_SUPPLY_TYPE
+from apps.WIP_REQUIREMENT_OPERATIONS_V a,apps.WIP_DISCRETE_JOBS_V b,
+(SELECT  b.INVENTORY_ITEM_ID,c.ORGANIZATION_ID,b.SUBINVENTORY_CODE,
+        SUM(b.primary_transaction_quantity) Qty
+FROM    apps.MTL_ONHAND_QUANTITIES_DETAIl b,
+        apps.MTL_SECONDARY_INVENTORIES_FK_V c
+WHERE b.organization_id>127
+      AND c.organization_id=b.organization_id
+      and c.SECONDARY_INVENTORY_NAME=b.SUBINVENTORY_CODE
+      and c.AVAILABILITY_TYPE=1 --MRP netable
+      and b.SUBINVENTORY_CODE like 'SA%'
+      and c.ORGANIZATION_ID=b.ORGANIZATION_ID 
+GROUP BY b.INVENTORY_ITEM_ID,c.ORGANIZATION_ID,b.SUBINVENTORY_CODE ) c
+where b.WIP_ENTITY_ID=a.WIP_ENTITY_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID 
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and c.ORGANIZATION_ID =a.ORGANIZATION_ID
+and b.wip_entity_name = '0070519902/1'
+order by a.CONCATENATED_SEGMENTS ,c.SUBINVENTORY_CODE,c.qty 

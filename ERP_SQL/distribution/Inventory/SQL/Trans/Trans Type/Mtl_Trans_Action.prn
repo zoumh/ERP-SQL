@@ -1,0 +1,28 @@
+ACTION_ID    ACTION_CODE
+1            Issue from stores
+2            Subinventory transfer
+3            Direct organization transfer
+4            Cycle count adjustment
+5            Planning Transfer
+6            Ownership Transfer
+8            Physical inventory adjustment
+12           Intransit receipt
+21           Intransit shipment
+24           Cost update
+27           Receipt into stores
+28           Staging transfer
+29           Delivery adjustments
+30           WIP scrap transaction
+31           Assembly completion
+32           Assembly return
+33           Negative component issue
+34           Negative component return
+35           Container transaction
+40           Lot Split
+41           Lot Merge
+42           Lot Translate
+43           Lot Update Quantity
+50           Container Pack
+51           Container Unpack
+52           Container Split
+55           Cost Group Transfer

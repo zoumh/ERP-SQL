@@ -1,0 +1,21 @@
+
+
+-----Find Account's Description
+
+select * from apps.FND_FLEX_VALUES_VL  where DESCRIPTION like '%Expense-ISIT-LAN Related Services'
+
+select d.DESCRIPTION as Account_Desc,b.segment3 as Account
+from apps.GL_CODE_combinations b
+,apps.FND_FLEX_VALUES_VL d
+where d.FLEX_VALUE=b.segment3
+
+
+
+
+---check Account's Type
+select FLEX_VALUE,DESCRIPTION,HIERARCHY_LEVEL,COMPILED_VALUE_ATTRIBUTES
+,substr(to_char(COMPILED_VALUE_ATTRIBUTES),5,1) Acc_Type
+,substr(COMPILED_VALUE_ATTRIBUTES,1,1) Post
+,substr(COMPILED_VALUE_ATTRIBUTES,3,1) Bud,ENABLED_FLAG,SUMMARY_FLAG 
+from apps.FND_FLEX_VALUES_vl where FLEX_VALUE_SET_ID=1007641
+order by Flex_value

@@ -1,0 +1,42 @@
+
+
+
+
+---Check FA CC=5020
+select fav.asset_number,fav.asset_id,fab.COST,fab.DATE_PLACED_IN_SERVICE
+,    GLC.SEGMENT2 as Exp_CC_At_Asset
+,    GLC.SEGMENT3 as Exp_Acc_At_Asset
+,SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),1,2) as MajCat
+,SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as MinCat
+,SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as StatusCat,
+FAH.TRANSACTION_UNITS,fah.units_assigned,fav.description
+from APPS.FA_ADDITIONS_V fav,apps.FA_DISTRIBUTION_HISTORY FAH,apps.GL_CODE_COMBINATIONS GLC,
+apps.FA_BOOKS_V fab
+where GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fav.asset_id=fab.asset_id 
+AND FAB.BOOK_TYPE_CODE='BMC_FA_BOOK'
+--AND FAH.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.ASSET_ID=fav.asset_id
+--and fav.asset_number='13000013'
+and fah.transaction_units is null
+and glc.segment2='5020'
+
+
+
+--------FA List from temp table, CC=4999 ,Category1='01', not include fully retired FA
+select count(*),ASSET_CATEGORY_SEGMENT1 from apps.BMC_FA_BATCH_MASS_CHANGE_T bfa
+where ASSET_CATEGORY_SEGMENT1='01' and COST_CENTER='4999'
+and not exists
+   (
+      select fa1.asset_id
+      from apps.fa_transaction_headers fa1,
+      (select  asset_id,max(transaction_header_id)  thi
+      from apps.fa_transaction_headers
+      group by asset_id) fa2
+      where fa1.asset_id=fa2.asset_id
+      and fa1.TRANSACTION_HEADER_ID=fa2.thi
+   and fa1.asset_id=bfa.asset_id
+      and transaction_type_code='FULL RETIREMENT' 
+      )
+group by ASSET_CATEGORY_SEGMENT1
+

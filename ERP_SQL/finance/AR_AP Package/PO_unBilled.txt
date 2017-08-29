@@ -1,0 +1,108 @@
+
+Current PO un-Billed  CNY_AMOUNT Summary by Supplier Site:
+(this must be printed at 1st day of new period -- no new received PO, last month Invoice match completed)
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,VDR.VENDOR_NAME as Supplier,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,sum((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED)*h.ITEM_COST) as UNBill_Amount_CNY
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+,(select  max(to_date(PROGRAM_UPDATE_DATE)) as Rec_Date ,PO_LINE_LOCATION_ID from apps.RCV_SHIPMENT_lines 
+where DESTINATION_TYPE_CODE='RECEIVING' and SOURCE_DOCUMENT_CODE='PO'
+group by PO_LINE_LOCATION_ID) j
+,apps.PO_LINE_types_tl k
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and j.PO_LINE_LOCATION_ID=c.LINE_LOCATION_ID
+--and to_number(VDR.SEGMENT1 )=12
+--and a.segment1='1001480'
+and k.LINE_TYPE_ID=b.LINE_TYPE_ID
+and k.description not like 'Non%'
+and k.LANGUAGE='US'
+and j.Rec_Date<to_date('2004-05-1','yyyy-mm-dd')
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE
+
+
+
+
+Current PO un-Billed  CNY_AMOUNT Details:
+(this must be printed at 1st day of new period -- no new received PO, last month Invoice match completed)
+
+select c.LINE_LOCATION_ID,c.SHIPMENT_NUM,a.PO_HEADER_ID,k.description as Type
+,a.segment1 as PO,b.LINE_NUM,VDR.SEGMENT1 as Supplier_Num
+,c.QUANTITY_RECEIVED ,c.QUANTITY_BILLED,c.QUANTITY_CANCELLED
+,j.Rec_DATE
+,((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED)*h.ITEM_COST) as UNBill_Amount_CNY
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+,(select  max(to_date(PROGRAM_UPDATE_DATE)) as Rec_Date ,PO_LINE_LOCATION_ID from apps.RCV_SHIPMENT_lines 
+where DESTINATION_TYPE_CODE='RECEIVING' and SOURCE_DOCUMENT_CODE='PO'
+group by PO_LINE_LOCATION_ID) j
+,apps.PO_LINE_types_tl k
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and j.PO_LINE_LOCATION_ID=c.LINE_LOCATION_ID
+and to_number(VDR.SEGMENT1 )=12
+--and a.segment1='1001480'
+and k.LINE_TYPE_ID=b.LINE_TYPE_ID
+and k.description not like 'Non%'
+and k.LANGUAGE='US'
+and j.Rec_Date<=to_date('2004-04-1','yyyy-mm-dd')
+order by to_number(VDR.SEGMENT1 )
+
+
+
+
+
+(Old PO PO un-Billed  CNY_AMOUNT -- with error)
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,VDR.VENDOR_NAME as Supplier,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,sum((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)*h.ITEM_COST) as CNY_Amount
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+and (c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)>0
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and c.LAST_UPDATE_DATE>=to_date('2000-01-1','yyyy-mm-dd')
+and c.LAST_UPDATE_DATE<=to_date('2004-03-31','yyyy-mm-dd')
+and b.ATTRIBUTE1 like 'Bon%' 
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE

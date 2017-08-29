@@ -1,0 +1,38 @@
+
+-------------Actived Item should INVOICE_ENABLED_FLAG='Y',STOCK_ENABLED_FLAG='Y'
+select b.ORGANIZATION_CODE, a.segment1 Item,a.INVOICEABLE_ITEM_FLAG,a.INVOICE_ENABLED_FLAG,
+a.INVENTORY_ITEM_FLAG,a.STOCK_ENABLED_FLAG,a.MTL_TRANSACTIONS_ENABLED_FLAG,
+a.CUSTOMER_ORDER_ENABLED_FLAG,a.CUSTOMER_ORDER_FLAG,
+a.Item_Type,a.CREATION_DATE,
+a.INTERNAL_ORDER_ENABLED_FLAG,a.INTERNAL_ORDER_FLAG,a.INVENTORY_ASSET_FLAG,
+a.description,a.inventory_item_status_code status,
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+from apps.mtl_system_items a,apps.org_organization_definitions b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID=130
+and a.inventory_item_status_code='Active'
+and (INVOICEABLE_ITEM_FLAG='N' or INVOICE_ENABLED_FLAG='N' or INVENTORY_ITEM_FLAG='N' or STOCK_ENABLED_FLAG='N')
+and a.Item_Type not in ('EQ','CTR','PH','ASY','SW')
+--and a.segment1='KRC 114 1746.R5A'
+order by b.ORGANIZATION_CODE,a.CREATION_DATE
+
+
+
+-------------Item status is Pending , but Trasactable flag='Y' or Stockable flag='Y'
+select b.ORGANIZATION_CODE, a.segment1 Item,DESCRIPTION,
+MTL_TRANSACTIONS_ENABLED_FLAG TransactAble,
+STOCK_ENABLED_FLAG STOCK_ENABLED,
+INVOICEABLE_ITEM_FLAG,INVOICE_ENABLED_FLAG,
+INVENTORY_ITEM_FLAG,a.Item_Type,
+a.inventory_item_status_code status,a.creation_date,a.last_update_date,
+decode(a.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+from apps.mtl_system_items a,apps.org_organization_definitions b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and a.ORGANIZATION_ID>=127
+and a.inventory_item_status_code='Pending'
+and  (a.MTL_TRANSACTIONS_ENABLED_FLAG<>'N'
+    or a.STOCK_ENABLED_FLAG<>'N')
+order by b.ORGANIZATION_CODE,a.CREATION_DATE
+
+
+

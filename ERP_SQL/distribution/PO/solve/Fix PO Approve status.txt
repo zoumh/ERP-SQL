@@ -1,0 +1,24 @@
+
+
+
+----fix PO approve status  , Consultant (Luck's solution at incident-No 477)
+po workflow stuck in process:
+ 
+exec wf_engine.startprocess('POAPPRV','188496-664706');
+
+
+
+
+-----PR Hierarchy get changed after submit, so can't get enough authorization at top level approve
+(status=incomplete). (If want to fix it instead to resubmit it )
+
+select * from apps.PO_REQUISITION_HEADERS_ALL where segment1='46210'
+
+select * from apps.PO_APPROVAL_LIST_HEADERS where document_id=182126
+
+select * from apps.PO_ACTION_HISTORY where OBJECT_ID=182126 and OBJECT_TYPE_CODE='REQUISITION'
+
+??? not find solution 
+
+
+

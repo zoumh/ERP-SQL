@@ -1,0 +1,5 @@
+
+
+select inventory_item_id,reservation_quantity,demand_source_header_id,demand_source_name,
+supply_source_header_id ,supply_source_name,subinventory_code
+from apps.mtl_reservations where inventory_item_id=22130

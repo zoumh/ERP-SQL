@@ -1,0 +1,141 @@
+
+
+----------JE Category User Name
+select je_category_name,user_je_category_name,description,created_by from apps.GL_JE_CATEGORIES --where created_by>1
+
+
+---------------------GL journal  with full category name
+select b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME Journal
+,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,--JE_CATEGORY,
+c.USER_JE_CATEGORY_NAME,
+b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,
+apps.GL_JE_CATEGORIES c
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and  (b.PERIOD_NAME in ('DEC-07','NOV-07'))
+--and b.PERIOD_YEAR=2009
+and ACTUAL_FLAG='A'
+and HEADER_STATUS ='P'
+and (b.JE_SOURCE='Manual' or JE_CATEGORY ='Adjustment')
+
+
+
+
+--------------Account Balance for a JE_CATEGORY for periods
+select 
+Sum(LINE_ACCOUNTED_DR),sum(LINE_ACCOUNTED_CR),Sum(nvl(b.LINE_ACCOUNTED_DR,0))-sum(nvl(b.LINE_ACCOUNTED_CR,0)) Bal,b.PERIOD_NAME--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+--,b.JE_SOURCE,c.USER_JE_CATEGORY_NAME
+--,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,apps.GL_JE_CATEGORIES c
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and  (b.PERIOD_NAME in ('DEC-04','NOV-04','OCT-04','SEP-04','AUG-04','JUL-04','JUN-04','MAY-04','APR-04','MAR-04','FEB-04'))
+--and b.PERIOD_YEAR=2009
+and (a.segment3='41010101') and ACTUAL_FLAG='A'
+and c.USER_JE_CATEGORY_NAME='MTL'
+and HEADER_STATUS ='P'
+group by b.PERIOD_NAME
+
+
+------------ Sum of Account amount's source/category
+
+select 
+Sum(LINE_ACCOUNTED_DR),sum(LINE_ACCOUNTED_CR),Sum(nvl(b.LINE_ACCOUNTED_DR,0))-sum(nvl(b.LINE_ACCOUNTED_CR,0)) Bal,b.PERIOD_NAME,b.JE_SOURCE,c.USER_JE_CATEGORY_NAME
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,apps.GL_JE_CATEGORIES c
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and  (b.PERIOD_NAME in ('FEB-07'))
+--and b.PERIOD_YEAR=2009
+and (a.segment3 like '1131%') and ACTUAL_FLAG='A'
+and HEADER_STATUS ='P'
+group by b.PERIOD_NAME,b.JE_SOURCE,c.USER_JE_CATEGORY_NAME
+
+
+--------Journal details of one Source in Period
+select b.HEADER_NAME Journal_Name,b.HEADER_DESCRIPTION,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,
+b.CURRENCY_CODE,
+b.LINE_ENTERED_DR,b.LINE_ENTERED_CR,
+b.PERIOD_NAME,LINE_DESCRIPTION ,
+b.JE_SOURCE,c.USER_JE_CATEGORY_NAME,
+a.segment2 as CC,a.segment3 as Account,a.SEGMENT4 as PRD,a.segment5 as PRJ
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a,apps.GL_JE_CATEGORIES c ,apps.FND_FLEX_VALUES_VL d
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and d.FLEX_VALUE=a.segment3
+and  (b.PERIOD_NAME like '%-07')
+--and b.PERIOD_YEAR=2009
+and ACTUAL_FLAG='A'
+and HEADER_STATUS ='P'
+and b.JE_SOURCE='Spreadsheet'
+order by b.PERIOD_NUM,JE_BATCH_ID,JE_HEADER_ID,LINE_JE_LINE_NUM
+
+
+
+-------Find Journal/Source/Category by account
+select b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME,HEADER_NAME Journal_Name,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,c.USER_JE_CATEGORY_NAME,,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,apps.GL_JE_CATEGORIES c
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+--and  (b.PERIOD_NAME='MAY-04')
+--and b.PERIOD_YEAR=2009
+and (a.segment3='120100') and ACTUAL_FLAG='A'
+and HEADER_STATUS ='P'
+
+
+
+
+---------------------GL journal  with full category name
+select b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME Journal
+,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,--JE_CATEGORY,
+c.USER_JE_CATEGORY_NAME,
+b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,
+apps.GL_JE_CATEGORIES c
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME in ('DEC-07','NOV-07'))
+--and b.PERIOD_YEAR=2009
+and ACTUAL_FLAG='A'
+and HEADER_STATUS ='P'
+and (b.JE_SOURCE='Manual' or JE_CATEGORY ='Adjustment')
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+
+
+
+-------------Cost center's PTD
+
+select a.segment3 as Account,d.DESCRIPTION as Account_Desc,a.segment2 as CC,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,
+b.JE_SOURCE,c.USER_JE_CATEGORY_NAME,
+b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME,HEADER_NAME Journal_Name,
+--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE--,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,apps.FND_FLEX_VALUES_VL d,apps.GL_JE_CATEGORIES c
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and d.FLEX_VALUE=a.segment3
+and  (b.PERIOD_NAME in ('JAN-04','FEB-04','MAR-04','APR-04','MAY-04','JUN-04','JUL-04','AUG-04','SEP-04'))
+--and b.PERIOD_YEAR=2009
+and (a.segment2='1510' or a.segment2='1520'  or  a.segment2='1530') and ACTUAL_FLAG='A'
+and HEADER_STATUS ='P'
+
+
+select sum(LINE_ACCOUNTED_DR) Dr,sum(LINE_ACCOUNTED_CR) Cr,a.segment3 as Account,d.DESCRIPTION as Account_Desc,a.segment2 as CC
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,apps.FND_FLEX_VALUES_VL d
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and d.FLEX_VALUE=a.segment3
+and  (b.PERIOD_NAME in ('JAN-04','FEB-04','MAR-04','APR-04','MAY-04','JUN-04','JUL-04','AUG-04','SEP-04'))
+--and b.PERIOD_YEAR=2009
+and (a.segment2='1510' or a.segment2='1520'  or  a.segment2='1530') and ACTUAL_FLAG='A'
+and HEADER_STATUS ='P'
+group by a.segment3,d.DESCRIPTION,a.segment2
+

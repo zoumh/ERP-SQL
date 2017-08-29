@@ -1,0 +1,48 @@
+
+--------PR with requestor for CC
+select h.segment1 Item,PR.SEGMENT1 PR_Num,e.LINE_NUM,f.DISTRIBUTION_NUM Dist_num,
+pr.TYPE_LOOKUP_CODE, (e.UNIT_PRICE*f.REQ_LINE_QUANTITY) Dist_Amt,f.REQ_LINE_QUANTITY Dist_Qty,
+g.segment2,g.segment3,pr.ORG_ID,d.FULL_NAME PR_Requestor,d.EMPLOYEE_NUMBER
+from
+apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+(select INVENTORY_ITEM_ID,segment1 from apps.mtl_system_items where ORGANIZATION_ID=127) h
+where PR.PREPARER_ID=d.PERSON_ID(+)
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+and e.ITEM_ID =h.INVENTORY_ITEM_ID(+)
+and g.segment2 like '15%'--in ('4997','4998','4999','5997','5998')
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and f.CREATION_DATE>=to_date('2009-1-1','yyyy-mm-dd') 
+--and PR.SEGMENT1='40601'
+order by PR.SEGMENT1 ,e.LINE_NUM,f.DISTRIBUTION_NUM
+
+
+---------Sum by Requestor/CC/Acc  (has item)
+select 
+pr.TYPE_LOOKUP_CODE,count(*),sum(e.UNIT_PRICE*f.REQ_LINE_QUANTITY) Dist_Amt,--f.REQ_LINE_QUANTITY Dist_Qty,
+g.segment2,g.segment3,pr.ORG_ID,d.FULL_NAME PR_Requestor,d.EMPLOYEE_NUMBER
+from
+apps.PER_PEOPLE_V7 d,
+apps.PO_REQUISITION_HEADERS_ALL PR,
+apps.po_requisition_lines_all e,
+apps.PO_REQ_DISTRIBUTIONS_all f,
+apps.gl_code_combinations g,
+(select INVENTORY_ITEM_ID from apps.mtl_system_items where ORGANIZATION_ID=127) h
+where PR.PREPARER_ID=d.PERSON_ID(+)
+and e.REQUISITION_LINE_ID=f.REQUISITION_LINE_ID
+and f.CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and pr.requisition_header_id=e.requisition_header_id
+and pr.ORG_ID=e.ORG_ID
+--and h.ORGANIZATION_ID=127
+and e.ITEM_ID =h.INVENTORY_ITEM_ID(+)
+and g.segment2 like '15%'--in ('4997','4998','4999','5997','5998')
+and pr.AUTHORIZATION_STATUS='APPROVED'
+and f.CREATION_DATE>=to_date('2009-1-1','yyyy-mm-dd') 
+--and PR.SEGMENT1='40601'
+group by   pr.TYPE_LOOKUP_CODE,g.segment2,g.segment3,pr.ORG_ID,d.FULL_NAME ,d.EMPLOYEE_NUMBER

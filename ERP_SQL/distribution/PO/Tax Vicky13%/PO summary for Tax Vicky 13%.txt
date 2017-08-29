@@ -1,0 +1,25 @@
+
+SELECT d.segment1 PO_number, d.AUTHORIZATION_STATUS ,d.attribute1 Tax_Purpose,
+to_date(d.CREATION_DATE) Header_Create_Date,to_date(c.CREATION_DATE) Line_Create_Date,to_date(c.closed_date) Invoice_date,
+c.ITEM_DESCRIPTION,'' Comm_Unique,
+nvl(d.rate,1)*a.QUANTITY_ORDERED*C.UNIT_PRICE as PO_CNY_Amt,
+to_char(c.LINE_NUM) PO_Line_Num,to_char(e.SHIPMENT_NUM) PO_Ship_Num,to_char(a.DISTRIBUTION_NUM) PO_Dist_Num,
+a.QUANTITY_ORDERED,a.QUANTITY_DELIVERED,a.QUANTITY_BILLED,
+d.CURRENCY_CODE,C.UNIT_PRICE,a.QUANTITY_ORDERED*C.UNIT_PRICE PO_AMOUNT,
+f.VENDOR_NAME
+FROM apps.PO_DISTRIBUTIONS_ALL A,
+     apps.GL_CODE_COMBINATIONS B,
+	 apps.PO_LINES_ALL         C,
+	 apps.PO_HEADERS_ALL       D,
+	 apps.po_Line_locations_all e,
+	 apps.PO_VENDORS f
+WHERE A.CODE_COMBINATION_ID=B.CODE_COMBINATION_ID
+AND  C.PO_LINE_ID=A.PO_lINE_ID
+AND  D.PO_HEADER_ID=A.PO_HEADER_ID
+and  e.LINE_LOCATION_ID=a.LINE_LOCATION_ID
+--and c.LINE_TYPE_ID=1020 --No-BOM PO line
+--and (d.AUTHORIZATION_STATUS ='APPROVED')
+and f.VENDOR_ID=d.VENDOR_ID
+--and d.segment1='1014707'
+and d.attribute1='Vicky 13%'
+

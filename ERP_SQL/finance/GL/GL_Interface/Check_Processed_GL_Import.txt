@@ -1,0 +1,55 @@
+
+----------Verify GL_Interface with GL_Journal_line  if 'Processed' happened
+
+-------GL_interface
+
+select * from apps.GL_interface where status='PROCESSED'
+
+
+---Sum
+
+select to_char(JE_BATCH_ID) JE_BATCH_ID,to_char(JE_HEADER_ID) JE_HEADER_ID,
+sum(ACCOUNTED_DR),sum(ACCOUNTED_CR),sum(ENTERED_DR) ,CURRENCY_CODE,sum(ENTERED_CR)
+from apps.GL_interface where status='PROCESSED'
+group by JE_BATCH_ID,JE_HEADER_ID,CURRENCY_CODE 
+
+
+---detail
+
+select to_char(JE_BATCH_ID) JE_BATCH_ID,to_char(JE_HEADER_ID) JE_HEADER_ID,to_char(JE_LINE_NUM) JE_LINE_NUM,ENTERED_DR,ENTERED_CR,
+CURRENCY_CODE, ACCOUNTED_DR,ACCOUNTED_CR,
+STATUS,ACCOUNTING_DATE,USER_JE_CATEGORY_NAME,USER_JE_SOURCE_NAME,
+TRANSACTION_DATE
+from apps.GL_interface where status='PROCESSED'
+
+
+
+=================
+
+-------GL_Journal_line
+
+---Sum
+
+select to_char(JE_BATCH_ID) JE_BATCH_ID,to_char(JE_HEADER_ID) JE_HEADER_ID,
+sum(LINE_ACCOUNTED_DR),sum(LINE_ACCOUNTED_CR) ,CURRENCY_CODE ,sum(LINE_ENTERED_DR),sum(LINE_ENTERED_CR)
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a where JE_BATCH_ID in 
+(select JE_BATCH_ID from apps.GL_interface where status='PROCESSED')
+and  b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+group by JE_BATCH_ID,JE_HEADER_ID,CURRENCY_CODE 
+
+
+
+
+---Detail
+
+select to_char(JE_BATCH_ID) JE_BATCH_ID,to_char(JE_HEADER_ID) JE_HEADER_ID,b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME as Journal_Name,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,b.HEADER_DESCRIPTION,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ 
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a where JE_BATCH_ID in 
+(select JE_BATCH_ID from apps.GL_interface where status='PROCESSED')
+and  b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+
+
+
+
+

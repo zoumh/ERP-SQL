@@ -1,0 +1,53 @@
+
+
+
+----------Foreign Curr SO Amount with Line/Ship number ,for BOM SO
+
+select c.NAME SO_Type,a.order_number SO,b.line_number Line,b.shipment_number Ship,
+a.transactional_curr_code Curr,d.CONVERSION_RATE Rate,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+b.ordered_quantity,b.cancelled_quantity,b.unit_selling_price,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price*decode(a.transactional_curr_code,'CNY',1,d.CONVERSION_RATE) CNY_Amy,
+b.Ordered_Item,b.pricing_date pricing_dateTime,to_date(b.pricing_date) pricing_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c,
+apps.GL_DAILY_RATES d
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and d.conversion_type='Corporate'
+and d.to_currency='CNY'
+and d.from_currency<>'CNY'
+and d.from_currency=a.transactional_curr_code
+and d.conversion_date=to_date(b.pricing_date)
+and a.transactional_curr_code<>'CNY'
+and c.name not like 'ARC%'
+and c.name not like '%Proto%'
+and c.name not like '%cancellation%'
+and c.name not like 'Internal%'
+and c.name not like 'Temp%'
+and b.creation_date>=to_date('2004-1-27','YYYY-MM-DD')
+and b.creation_date<=to_date('2004-12-31','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+order by a.order_number,b.line_number
+
+
+------------CNY SO Amount with Line/Ship number,for BOM SO
+select c.NAME SO_Type,a.order_number SO,b.line_number Line,b.shipment_number Ship,
+a.transactional_curr_code Curr,
+(nvl(b.ordered_quantity,0)-nvl(b.cancelled_quantity,0))*b.unit_selling_price Amt,
+b.ordered_quantity,b.cancelled_quantity,b.unit_selling_price,
+b.Ordered_Item,b.pricing_date pricing_dateTime,to_date(b.pricing_date) pricing_date
+from apps.OE_ORDER_HEADERS_all a,apps.OE_ORDER_lineS_all b,apps.oe_transaction_types_tl c
+where c.TRANSACTION_TYPE_ID=a.ORDER_TYPE_ID and c.LANGUAGE='US'
+and a.HEADER_ID=b.HEADER_ID
+and a.transactional_curr_code='CNY'
+and c.name not like 'ARC%'
+and c.name not like '%Proto%'
+and c.name not like '%cancellation%'
+and c.name not like 'Internal%'
+and c.name not like 'Temp%'
+and b.creation_date>=to_date('2004-1-27','YYYY-MM-DD')
+and b.creation_date<=to_date('2004-12-31','YYYY-MM-DD')
+and b.flow_status_code<>'CANCELLED'
+and a.flow_status_code<>'CANCELLED'
+order by a.order_number,b.line_number

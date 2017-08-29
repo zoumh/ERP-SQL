@@ -1,0 +1,209 @@
+REM $Header: i2471362.sql 115.1 2003/10/01 22:34:36 mdevassy ship $
+REM dbdrv: none
+REM 
+REM  Copyright (c) 2001, Oracle Corporation, Redwood Shores, California, USA
+REM                           All rights reserved.
+REM
+REM
+REM FILE
+REM
+REM
+REM HISTORY
+REM The following script will get rid of outstanding  reservation
+REM records that exist for order lines which are closed or cancelled.
+REM ** For both external sales orders and internal orders.**
+REM Also script cleans reservations left after Order line is deleted
+REM but reservations exist
+REM Script deletes from mtl_demand which are not in sync with Mtl_reservations.
+REM 
+REM ARGUMENTS
+REM None
+REM 
+REM HISTORY
+REM 
+REM        KALYAN ADAVI         Created.
+REM +========================================================================+
+
+WHENEVER SQLERROR EXIT FAILURE ROLLBACK or CONTINUE;
+spool rsv_delete 
+PROMPT ** Getting the profile option value for profile option 'ONT_SOURCE_CODE' 
+
+COL OE_PROFILE NEW_VALUE OE_SOURCE_CODE
+
+SELECT  V.PROFILE_OPTION_VALUE OE_PROFILE
+FROM    FND_PROFILE_OPTION_VALUES V
+WHERE   (V.PROFILE_OPTION_ID, V.APPLICATION_ID, V.LEVEL_ID) =
+                (SELECT V2.PROFILE_OPTION_ID,V2.APPLICATION_ID,MAX(V2.LEVEL_ID)
+                FROM FND_PROFILE_OPTIONS OO,
+                     FND_PROFILE_OPTION_VALUES V2
+                WHERE ((V2.LEVEL_ID = 10001 AND V2.LEVEL_VALUE=0)
+                          OR (V2.LEVEL_ID = 10002 AND V2.LEVEL_VALUE=660))
+                AND   OO.PROFILE_OPTION_ID = V2.PROFILE_OPTION_ID
+                AND   OO.APPLICATION_ID = V2.APPLICATION_ID
+                AND   OO.APPLICATION_ID = 660
+                AND   UPPER(OO.PROFILE_OPTION_NAME) = 'ONT_SOURCE_CODE'
+                GROUP BY V2.PROFILE_OPTION_ID, V2.APPLICATION_ID)
+AND   V.LEVEL_VALUE = DECODE(V.LEVEL_ID, 10001, 0, 10002, 660);
+
+PROMPT ** This gets rid of extraneous demand and reservations that are left
+PROMPT ** after a line has been cancelled   
+
+SELECT L.LINE_ID, L.HEADER_ID
+FROM OE_ORDER_LINES_ALL L, MTL_RESERVATIONS M
+WHERE  M.PRIMARY_RESERVATION_QUANTITY>0
+AND nvl(L.CANCELLED_FLAG,'N')='Y'
+AND L.CANCELLED_QUANTITY IS NOT NULL
+AND L.LINE_ID = M.DEMAND_SOURCE_LINE_ID
+AND NOT EXISTS (SELECT NULL FROM MTL_TRANSACTIONS_INTERFACE MTI
+                WHERE  MTI.TRX_SOURCE_LINE_ID = L.LINE_ID
+                AND    MTI.SOURCE_HEADER_ID = L.HEADER_ID
+                AND    MTI.SOURCE_CODE = '&OE_SOURCE_CODE'); 
+
+
+UPDATE MTL_RESERVATIONS 
+SET    PRIMARY_RESERVATION_QUANTITY = 0
+,      RESERVATION_QUANTITY = 0
+,      LAST_UPDATED_BY=-2471362
+WHERE  PRIMARY_RESERVATION_QUANTITY>0
+AND    EXISTS (SELECT 'X'
+               FROM   OE_ORDER_LINES_ALL L
+               WHERE  nvl(L.CANCELLED_FLAG,'N')='Y' 
+               AND L.CANCELLED_QUANTITY IS NOT NULL
+               AND L.LINE_ID = MTL_RESERVATIONS.DEMAND_SOURCE_LINE_ID
+               AND NOT EXISTS (SELECT NULL FROM MTL_TRANSACTIONS_INTERFACE MTI
+                               WHERE  MTI.TRX_SOURCE_LINE_ID = L.LINE_ID
+                               AND    MTI.SOURCE_HEADER_ID = L.HEADER_ID
+                               AND    MTI.SOURCE_CODE = '&OE_SOURCE_CODE'));
+
+
+
+PROMPT ** This gets rid of extraneous demand and reservations that are left
+PROMPT ** after a line has been closed or delivery detail is cancelled 
+
+SELECT L.LINE_ID, L.HEADER_ID
+FROM OE_ORDER_LINES_ALL L, MTL_RESERVATIONS M
+WHERE   M.PRIMARY_RESERVATION_QUANTITY>0
+AND nvl(L.OPEN_FLAG,'Y')='N'
+AND L.LINE_ID = M.DEMAND_SOURCE_LINE_ID
+AND NOT EXISTS (SELECT NULL FROM MTL_TRANSACTIONS_INTERFACE MTI
+                WHERE  MTI.TRX_SOURCE_LINE_ID = L.LINE_ID
+                AND    MTI.SOURCE_HEADER_ID = L.HEADER_ID
+                AND    MTI.SOURCE_CODE = '&OE_SOURCE_CODE')
+AND NOT EXISTS	(SELECT 1 FROM WSH_DELIVERY_DETAILS WDD
+                 WHERE WDD.SOURCE_LINE_ID=L.LINE_ID
+                   AND WDD.SOURCE_CODE ='OE'
+                   AND WDD.INV_INTERFACED_FLAG IN ('N','P')
+                   AND WDD.RELEASED_STATUS <> 'D');
+
+
+UPDATE MTL_RESERVATIONS
+SET    PRIMARY_RESERVATION_QUANTITY = 0
+,      RESERVATION_QUANTITY = 0
+,      LAST_UPDATED_BY=-2471362
+WHERE  PRIMARY_RESERVATION_QUANTITY>0
+AND    EXISTS (SELECT 'X'
+               FROM   OE_ORDER_LINES_ALL L
+               WHERE  nvl(L.OPEN_FLAG,'Y')='N'
+               AND L.LINE_ID = nvl(MTL_RESERVATIONS.DEMAND_SOURCE_LINE_ID,-99)
+               AND NOT EXISTS (SELECT NULL FROM MTL_TRANSACTIONS_INTERFACE MTI
+                               WHERE  MTI.TRX_SOURCE_LINE_ID = L.LINE_ID
+                               AND    MTI.SOURCE_HEADER_ID = L.HEADER_ID
+                               AND    MTI.SOURCE_CODE = '&OE_SOURCE_CODE')
+               AND NOT EXISTS	(SELECT 1 FROM WSH_DELIVERY_DETAILS WDD
+                 WHERE WDD.SOURCE_LINE_ID=L.LINE_ID
+                   AND WDD.SOURCE_CODE ='OE'
+                   AND WDD.INV_INTERFACED_FLAG IN ('N','P')
+                   AND WDD.RELEASED_STATUS <> 'D'));
+
+
+
+PROMPT ORDER DETAILS WITH ORPHAN RESERVATIONS AFTER LINE IS DELETED
+
+SELECT MSO.SEGMENT1 ORD_NUMBER,
+       MSO.SEGMENT2 ORD_TYPE,
+       MSO.SALES_ORDER_ID sALES_ORDER_ID,
+       MR.DEMAND_SOURCE_LINE_ID oRDER_LINE_ID,
+       MR.iNVENTORY_ITEM_ID iTEM_ID,
+       MR.ORGANIZATION_ID ORGANIZATION_ID,
+       MR.PRIMARY_RESERVATION_QUANTITY pRSV_QTY,
+       MR.RESERVATION_QUANTITY RSV_QTY
+ FROM MTL_RESERVATIONS MR,
+      MTL_SALES_ORDERS MSO
+WHERE MSO.SALES_ORDER_ID=MR.DEMAND_SOURCE_HEADER_ID
+  AND MR.DEMAND_SOURCE_TYPE_ID IN (2,8)
+  AND MR.DEMAND_SOURCE_LINE_ID NOT IN (SELECT LINE_ID FROM OE_ORDER_LINES_ALL
+                                         WHERE LINE_ID=MR.DEMAND_SOURCE_LINE_ID );
+
+
+PROMPT UPDATING MTL_RESERVATIONS
+
+UPDATE MTL_RESERVATIONS MR
+SET PRIMARY_RESERVATION_QUANTITY=0,
+    RESERVATION_QUANTITY=0,
+    LAST_UPDATED_BY=-2471362
+   WHERE MR.DEMAND_SOURCE_TYPE_ID IN (2,8)
+     AND MR.DEMAND_SOURCE_LINE_ID NOT IN (SELECT LINE_ID FROM OE_ORDER_LINES_ALL 
+                                            WHERE LINE_ID=MR.DEMAND_SOURCE_LINE_ID);
+COMMIT;
+
+PROMPT **Updating records for closed /cancelled lines in mtl_demand where records are not in sync 
+UPDATE MTL_DEMAND D
+SET    PRIMARY_UOM_QUANTITY = 0
+,      LINE_ITEM_QUANTITY   = 0
+,      COMPLETED_QUANTITY   = 0
+,      LINE_ITEM_RESERVATION_QTY = 0
+,      RESERVATION_QUANTITY = 0
+,      LAST_UPDATED_BY=-2471362
+WHERE  DEMAND_SOURCE_TYPE IN (2,8)
+AND RESERVATION_TYPE = 2
+AND    DEMAND_SOURCE_LINE = ( SELECT O.LINE_ID
+                                FROM OE_ORDER_LINES_ALL O
+                                WHERE  ( NVL(o.OPEN_FLAG,'Y') = 'N'
+                                         OR NVL(O.CANCELLED_FLAG,'N') ='Y')
+                                AND  O.LINE_ID =D.DEMAND_SOURCE_LINE )
+AND   DEMAND_SOURCE_LINE NOT IN  ( select TRX_SOURCE_LINE_ID
+                    FROM  MTL_TRANSACTIONS_INTERFACE MTI
+                    WHERE  MTI.SOURCE_LINE_ID = D.DEMAND_SOURCE_LINE)
+AND DEMAND_SOURCE_LINE NOT IN (SELECT SOURCE_LINE_ID 
+                   FROM WSH_DELIVERY_DETAILS WDD
+                 WHERE WDD.SOURCE_LINE_ID=D.DEMAND_SOURCE_LINE
+                   AND WDD.SOURCE_CODE='OE'
+                   AND WDD.INV_INTERFACED_FLAG IN ('N','P'));
+
+PROMPT FINAL UPDATING MTL_DEMAND
+
+UPDATE MTL_DEMAND SET PRIMARY_UOM_QUANTITY=0,
+                      COMPLETED_QUANTITY=0,
+                      RESERVATION_QUANTITY=0,
+                      LAST_UPDATED_BY=-2471362
+       WHERE DEMAND_SOURCE_TYPE IN (2,8)
+         AND RESERVATION_TYPE=2
+         AND DEMAND_ID IN (SELECT N_COLUMN1 FROM MTL_RESERVATIONS WHERE
+                                    DEMAND_SOURCE_TYPE_ID IN (2,8)
+                                AND PRIMARY_RESERVATION_QUANTITY=0
+                                AND RESERVATION_QUANTITY=0
+                                AND LAST_UPDATED_BY=-2471362);
+
+
+
+PROMPT **Deleting reservations which are complete
+
+COMMIT;
+
+DELETE FROM MTL_RESERVATIONS WHERE
+       DEMAND_SOURCE_TYPE_ID IN (2,8)
+ AND   LAST_UPDATED_BY=-2471362;
+
+
+PROMPT **Deleting records from mtl_demand where reservations are complete
+
+DELETE FROM MTL_DEMAND WHERE
+    DEMAND_SOURCE_TYPE IN (2,8)
+AND RESERVATION_TYPE=2      
+AND LAST_UPDATED_BY=-2471362;
+
+spool off 
+
+COMMIT;
+
+EXIT;

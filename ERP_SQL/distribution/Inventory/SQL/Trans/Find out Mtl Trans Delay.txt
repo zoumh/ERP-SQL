@@ -1,0 +1,31 @@
+
+
+-----(mmt.CREATION_DATE- mmt.transaction_date)
+
+select   mmt.transaction_date, mmt.CREATION_DATE,(mmt.CREATION_DATE- mmt.transaction_date) Diff,
+mmt.transaction_id,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.organization_id Organization --,
+--		 trunc(mmt.transaction_date) as Trans_Date,
+--		 mtt.DESCRIPTION as Type_Description,
+--		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+--and transaction_id=28826432
+and    (mmt.transaction_date) >= to_date('20060721 21:12:12','YYYYMMDD HH24:MI:SS') 
+and    (mmt.transaction_date) <= to_date('20060722 23:59:59','YYYYMMDD HH24:MI:SS') 
+and mtt.transaction_type_name='WIP Move Order Issue'
+and mmt.CREATION_DATE- mmt.transaction_date>0.1
+
+and mmt.CREATION_DATE>=to_date('20060801 00:12:12','YYYYMMDD HH24:MI:SS') 
+and mmt.CREATION_DATE<=to_date('20060801 02:12:12','YYYYMMDD HH24:MI:SS') 
+
+

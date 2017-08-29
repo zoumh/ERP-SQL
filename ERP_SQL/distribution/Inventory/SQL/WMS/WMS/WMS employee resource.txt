@@ -1,0 +1,28 @@
+
+----------Employee ,Resource
+select a.RESOURCE_CODE,
+decode(a.ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master',
+133,'SE',87,'CSC',83,'PRD',84,'ARC',85,'SEM',81,'MAS',86,'PRJ',107,'ACC',to_char(a.ORGANIZATION_ID)) Org,
+a.COST_CODE_TYPE,a.UNIT_OF_MEASURE,a.RESOURCE_TYPE,a.DISABLE_DATE,
+c.EMPLOYEE_NUMBER,c.FULL_NAME,c.START_DATE,c.EFFECTIVE_START_DATE,c.EFFECTIVE_END_DATE
+from apps.BOM_RESOURCES_V a,apps.bom_resource_employees b, apps.PER_PEOPLE_V7 c
+where 1=1 
+and a.RESOURCE_ID=b.RESOURCE_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.PERSON_ID=c.PERSON_ID
+order by a.ORGANIZATION_ID,a.RESOURCE_CODE
+
+
+select c.resource_code,convert(b.full_name,'ZHS16GBK') full_name,a.effective_start_date,a.effective_end_date,a.organization_id,b.employee_number 
+from apps.bom_resource_employees a,apps.PER_ALL_PEOPLE_F b,apps.BOM_RESOURCES_V c
+where a.person_id=b.person_id and a.resource_id=c.resource_id and a.organization_id=c.organization_id
+order by c.organization_id,c.resource_code
+
+
+------------Find user's all resource
+select c.resource_code,convert(b.full_name,'ZHS16GBK') full_name,a.effective_start_date,a.effective_end_date,a.organization_id,b.employee_number 
+from apps.bom_resource_employees a,apps.PER_ALL_PEOPLE_F b,apps.BOM_RESOURCES_V c
+where a.person_id=b.person_id and a.resource_id=c.resource_id and a.organization_id=c.organization_id
+and b.full_name='Zhang Dong Lin,'
+
+

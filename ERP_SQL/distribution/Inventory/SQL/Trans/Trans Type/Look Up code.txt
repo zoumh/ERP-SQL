@@ -1,0 +1,48 @@
+
+-------Define MTL_TRANSACTION_ACTION Look_Up_Code
+select MEANING TRANSACTION_ACTION_Code,LOOKUP_CODE TRANSACTION_ACTION_ID,
+ENABLED_FLAG,START_DATE_ACTIVE,END_DATE_ACTIVE,CREATION_DATE
+from apps.FND_LOOKUP_VALUES_VL where LOOKUP_TYPE='MTL_TRANSACTION_ACTION'
+order by to_number(LOOKUP_CODE)
+
+
+
+MTL_MATERIAL_TRANSACTIONS.TRANSACTION_ACTION_ID  :
+ACTION_ID    ACTION_CODE
+1            Issue from stores
+2            Subinventory transfer
+3            Direct organization transfer
+4            Cycle count adjustment
+5            Planning Transfer
+6            Ownership Transfer
+8            Physical inventory adjustment
+12           Intransit receipt
+21           Intransit shipment
+24           Cost update
+27           Receipt into stores
+28           Staging transfer
+29           Delivery adjustments
+30           WIP scrap transaction
+31           Assembly completion
+32           Assembly return
+33           Negative component issue
+34           Negative component return
+35           Container transaction
+40           Lot Split
+41           Lot Merge
+42           Lot Translate
+43           Lot Update Quantity
+50           Container Pack
+51           Container Unpack
+52           Container Split
+55           Cost Group Transfer
+
+
+
+MTL_MATERIAL_TRANSACTIONS.TRANSACTION_STATUS :
+Indicates if it has to be processed or just saved. 
+1 or null is default behavior. 
+2 is save only. 
+3 is ready to process
+
+

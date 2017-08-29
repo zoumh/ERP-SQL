@@ -1,0 +1,30 @@
+
+RMA 6034649, line 2.3 has a wrong correction 3 pics, fix it:
+1. Delete the correction transaction for line 2.3 at table <rcv_supply> & <RCV_TRANSACTIONS>
+2. Cancel line 2.10 by update it's status then manual cancel it
+
+
+
+Dear Jenny
+ 
+附件是近两次RMA问题的数据，请查收附件
+ 
+下列SQL修复系统数据，然后用户在OM中取消出错的claim行，并把cancell掉的数量补充进尚未预收的claim行，以保证接收数量和发出数量相等
+
+/*UPDATE OE LINE FOR CANCELL*/
+UPDATE OE_ORDER_LINES_ALL
+SET FLOW_STATUS_CODE='AWAITING_RETURN',SHIPPED_QUANTITY=null,SHIPPING_QUANTITY_UOM=null
+WHERE line_id IN(1447927)
+--------------------------------------------------
+/*PO*/
+/*DEL RECEIVING QTY*/
+delete FROM APPS.rcv_supply rsup 
+where SHIPMENT_HEADER_ID in ('1034545')
+--------------------------------------------------
+/*DEL RCV TRANSACTION SUMMARY*/
+delete FROM APPS.RCV_TRANSACTIONS 
+WHERE SHIPMENT_HEADER_ID in ('1034545')
+AND TRANSACTION_TYPE='CORRECT'
+ 
+Best Regards
+Luck

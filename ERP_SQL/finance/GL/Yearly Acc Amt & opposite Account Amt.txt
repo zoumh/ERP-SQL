@@ -1,0 +1,45 @@
+
+
+
+-------------An account's yearly amt
+
+select 
+Sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt,b.JE_SOURCE,c.USER_JE_CATEGORY_NAME JE_Category
+,a.segment3 as Account
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a ,apps.GL_JE_CATEGORIES c
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and c.JE_CATEGORY_NAME=b.JE_CATEGORY
+and  (b.PERIOD_NAME like '%05')-- ('DEC-04','NOV-04','OCT-04','SEP-04','AUG-04','JUL-04','JUN-04','MAY-04','APR-04','MAR-04','FEB-04'))
+--and b.PERIOD_YEAR=2009
+and (a.segment3 in ('124302','124301')) and ACTUAL_FLAG='A'
+--and b.JE_CATEGORY='MTL'
+--and b.HEADER_STATUS ='P'
+and b.ACTUAL_FLAG='A'
+group by b.JE_SOURCE,JE_CATEGORY,a.segment3
+
+
+
+--------------Account's opposite account amount in the year 2005
+
+select 
+Sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt,b.JE_SOURCE,JE_CATEGORY
+,a.segment3 as Account
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='05'
+--and b.PERIOD_NAME<>'JAN-04'
+and a.segment3 <>'124302'
+and ACTUAL_FLAG='A'
+and HEADER_ROW_ID in
+(
+select --BATCH_ROW_ID,JE_BATCH_ID,JE_HEADER_ID,
+HEADER_ROW_ID
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  substr(to_char(b.PERIOD_NAME),5,2)='05'
+--and b.PERIOD_NAME<>'JAN-04'
+and a.segment3 ='124302'
+and ACTUAL_FLAG='A'
+)
+--and b.JE_SOURCE='Manual'
+group by b.JE_SOURCE,JE_CATEGORY,a.segment3

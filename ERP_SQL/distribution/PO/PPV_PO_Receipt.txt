@@ -1,0 +1,66 @@
+
+
+
+---------------------------PPV Report - GL
+
+---------GL summary for OCt 12320201 , source=Inv
+
+select b.JE_SOURCE,b.JE_CATEGORY,a.segment3,
+--Sum(LINE_ACCOUNTED_DR),sum(LINE_ACCOUNTED_CR),
+--Sum(LINE_ACCOUNTED_DR)-sum(LINE_ACCOUNTED_CR) Amt--,b.PERIOD_NAME--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+Sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) Amt
+--,b.JE_SOURCE--,JE_CATEGORY--,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME = ('OCT-07'))
+and (a.segment3='12320201') and ACTUAL_FLAG='A'
+--and b.JE_CATEGORY='MTL'
+group by b.JE_CATEGORY,b.JE_SOURCE,a.segment3
+
+
+
+---------Inv PPV & Acc=12320201
+select sum(BASE_TRANSACTION_VALUE)
+from apps.mtl_transaction_accounts mta,apps.GL_CODE_combinations b ,
+apps.mtl_material_transactions  mmt
+where 
+(mta.accounting_line_type = 6
+OR b.segment3='12320201' )
+and mta.reference_account=b.CODE_COMBINATION_ID
+and mta.TRANSACTION_DATE>=to_date('2007-10-1','yyyy-mm-dd')
+and mta.TRANSACTION_DATE<to_date('2007-11-1','yyyy-mm-dd')
+and mmt.TRANSACTION_ID=mta.TRANSACTION_ID
+--and mmt.ORGANIZATION_ID=mta.ORGANIZATION_ID
+and b.segment3='12320201'
+
+
+ -----------My SQL (with PO,Receipt) PPV value (mta.BASE_TRANSACTION_VALUE) reconcile to GL
+select   mmt.ORGANIZATION_ID,
+round(((nvl(mmt.CURRENCY_CONVERSION_RATE,1)*nvl(PO_UNIT_PRICE,0)-nvl(mmt.ACTUAL_COST,0))*mmt.TRANSACTION_QUANTITY),2)  Caculate_PPV,
+mta.BASE_TRANSACTION_VALUE mta_ppv,
+round(((nvl(mmt.CURRENCY_CONVERSION_RATE,1)*nvl(PO_UNIT_PRICE,0)-nvl(mmt.ACTUAL_COST,0))*mmt.TRANSACTION_QUANTITY),2)-mta.BASE_TRANSACTION_VALUE diff,
+mmt.TRANSACTION_QUANTITY Qty,
+PO_UNIT_PRICE,mmt.ACTUAL_COST,rcv.CURRENCY_CONVERSION_RATE rcv_rate,mmt.CURRENCY_CONVERSION_RATE mmtrate,
+rcv.CURRENCY_CODE Curr,poh.segment1 PO,sh.RECEIPT_NUM,
+rcv.TRANSACTION_TYPE,mmt.TRANSACTION_DATE,mmt.TRANSACTION_ID
+from apps.mtl_transaction_accounts mta,apps.GL_CODE_combinations b,
+apps.mtl_material_transactions  mmt,apps.rcv_transactions rcv
+,apps.PO_HEADERS_ALL poh,apps.rcv_shipment_headers sh,apps.PO_LINES_ALL pol
+where
+(mta.accounting_line_type = 6
+OR b.segment3='12320201' )
+and mta.reference_account=b.CODE_COMBINATION_ID
+and mta.TRANSACTION_DATE>=to_date('2008-2-1','yyyy-mm-dd')
+and mta.TRANSACTION_DATE<to_date('2008-3-1','yyyy-mm-dd')
+and mmt.TRANSACTION_ID=mta.TRANSACTION_ID
+and mmt.ORGANIZATION_ID=mta.ORGANIZATION_ID
+and b.segment3='12320201'
+and mmt.rcv_transaction_id=rcv.transaction_id
+and mmt.ORGANIZATION_ID=rcv.ORGANIZATION_ID
+--and rcv.TRANSACTION_TYPE in ('DELIVER','RETURN TO RECEIVING')
+ and rcv.PO_HEADER_ID=poh.PO_HEADER_ID
+and rcv.SHIPMENT_HEADER_ID =sh.SHIPMENT_HEADER_ID
+and rcv.PO_HEADER_ID=pol.PO_HEADER_ID
+and rcv.PO_line_ID=pol.PO_line_ID
+--and mmt.TRANSACTION_ID=66685446
+--and abs(round(((nvl(mmt.CURRENCY_CONVERSION_RATE,1)*nvl(PO_UNIT_PRICE,0)-nvl(mmt.ACTUAL_COST,0))*mmt.TRANSACTION_QUANTITY),2)-mta.BASE_TRANSACTION_VALUE)>0.01

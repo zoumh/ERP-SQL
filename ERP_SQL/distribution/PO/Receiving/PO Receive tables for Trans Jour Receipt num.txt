@@ -1,0 +1,39 @@
+
+select * from APPS.RCV_RECEIVING_SUB_LEDGER
+
+select * from APPS.RCV_RECEIVING_SUB_LEDGER where rcv_transaction_id=393509
+
+select distinct source_doc_number from APPS.RCV_RECEIVING_SUB_LEDGER
+
+RCV_TRANSACTION_ID	6		N	NUMBER	
+
+select * from apps.rcv_transactions where SOURCE_DOCUMENT_CODE='REQ'
+
+select distinct SOURCE_DOCUMENT_CODE,transaction_type from apps.rcv_transactions
+
+select * from apps.rcv_transactions where	transaction_id=393509
+
+select license_plate_number from apps.wms_license_plate_numbers where LPN_ID=661272
+
+license_plate_number=X394123
+
+req_distribution_id=80139
+
+requisition_line_id=79698
+
+requisition_header_id=51765
+
+shipment_header_id=153882
+
+shipment_line_id=227078
+
+Qty=10
+
+select * from apps.rcv_shipment_headers where shipment_header_id=153882
+
+
+select * from apps.rcv_shipment_lines where shipment_header_id=153882
+
+select * from apps.PO_REQUISITION_LINES_all where requisition_line_id=79698
+
+select * from apps.PO_REQUISITION_HEADERS_all where requisition_header_id=51765

@@ -1,0 +1,26 @@
+
+------Find PO info at mtl_trans_temp
+SELECT 
+rt.DESTINATION_TYPE_CODE,rt.TRANSACTION_TYPE,
+mmtt.CREATION_DATE,
+poh.segment1 PO_NUMBER,
+pol.line_num LINE_NUM,
+pol.quantity QTY,
+--poh.creation_date Order_CREATE_Date,
+rsh.receipt_num RECEIPT_NUMBER,mmtt.transaction_temp_id
+FROM 
+apps.mtl_material_transactions_temp mmtt,
+apps.po_headers_all poh,
+apps.po_lines_all pol,
+apps.rcv_shipment_headers rsh,
+apps.mtl_txn_request_lines mtrl,
+apps.rcv_transactions rt
+WHERE 
+MMTT.move_order_line_id =MTRL.line_id and
+MTRL.txn_source_id =rt.transaction_id and
+rt.po_header_id =poh.po_header_id and
+rt.Po_line_id=pol.po_line_id and
+Rt.shipment_header_id =rsh.shipment_header_id and
+mmtt.transaction_temp_id in (81637990,80702770,80507520,87191985,84108510,87501617,86391157,90911615,
+98015729,98018228,97289396);
+

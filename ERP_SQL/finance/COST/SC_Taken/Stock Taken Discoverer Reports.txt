@@ -1,0 +1,56 @@
+
+
+----------------Can used with any Org 
+--View :APPS.BMC_CST_PHYSIC_ADJUSTMENT
+
+BMC COST PHYSIC SNAPSHOOT ID
+
+BMC COST Physic Adjustment Report
+
+-----For easy to stastic
+BMC COST Physic Adjustment Report_PRD Non WIP
+
+BMC COST Physic Adjustment Report_PRD's WIP
+
+
+
+
+
+
+
+
+----------------------------------PRD only, Stock Taken Result for Finance
+View APPS.BMC_CST_STOCK_TAKEN_RESULT
+
+BMC COST SC Taken Result Finance  (see Latest AP Invoice Batch & price -- in PRD)
+
+
+---------Stastic
+BMC COST SC TAKE ITEM_TAG NUMBER IN EACH
+
+BMC COST SC TAKE TOTAL ITEM NUMBER
+
+
+----the SQL
+
+CREATE OR REPLACE VIEW COST_SC_TAKE_TOTAL_NUMBERS
+AS 
+select count(distinct(a.INVENTORY_ITEM_ID)) Item_number_no_Rev,
+	   count(distinct(to_char(inventory_item_id)||REVISION)) item_number_Rev,
+	   count(distinct(a.ADJUSTMENT_ID)) Tag_number,a.subinventory_name,c.PHYSICAL_INVENTORY_NAME,
+	   a.physical_inventory_id,b.NAME as Organization_Name,a.organization_id
+from   apps.mtl_physical_adjustments a ,apps.HR_ORGANIZATION_UNITS_V b,apps.MTL_PHYSICAL_INVENTORIES c
+where  a.organization_id=c.organization_id
+and a.organization_id=b.organization_id
+and a.physical_inventory_id =c.physical_inventory_id 
+--and a.physical_inventory_id in (672)
+group by a.subinventory_name,a.physical_inventory_id,a.organization_id ,b.NAME,c.PHYSICAL_INVENTORY_NAME
+anization_id ,b.NAME,c.PHYSICAL_INVENTORY_NAME;
+
+
+-----
+CREATE OR REPLACE View APPS.BMC_CST_TOTAL_ITEM_NUM
+AS
+select count(distinct(inventory_item_id)) item_no_Rev,count(distinct(to_char(inventory_item_id)||REVISION)) item_Rev,SUBINVENTORY_NAME,PHYSICAL_INVENTORY_ID
+from apps.mtl_physical_adjustments --where PHYSICAL_INVENTORY_ID=672 
+group by SUBINVENTORY_NAME,PHYSICAL_INVENTORY_ID

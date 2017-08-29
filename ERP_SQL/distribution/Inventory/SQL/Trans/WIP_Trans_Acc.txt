@@ -1,0 +1,98 @@
+
+
+---------WIP Trans & Type (to list Job close variance)
+
+select a.transaction_date, a.base_transaction_value value,a.primary_quantity Qty,a.rate_or_amount Rate_Amt,a.accounting_line_type,
+b.segment3 Acc,b.segment2 CC,c.TRANSACTION_TYPE,d.WIP_ENTITY_NAME,e.MEANING
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_ENTITIES d,
+apps.MFG_LOOKUPS e
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and a.transaction_date>=to_date('2006-05-14','yyyy-mm-dd')
+and a.transaction_date<=to_date('2006-05-21','yyyy-mm-dd')
+
+
+
+
+-------------WIPL_TRANSACTION_ACCOUNTS.ACCOUNTING_LINE_TYPE (MFG_LOOKUPS)
+
+1 Inv valuation
+2 Account
+3 Overhead absorption
+4 Resource absorption
+5 Receiving Inspection
+6 Purchase price variance or
+rate variance
+7 WIP valuation
+8 WIP variance
+9 Inter每org payables
+10 Inter每org receivables
+11 Inter每org transfer credit
+12 Inter每org freight charge
+13 Average cost variance
+14 Intransit Inventory
+15 Encumbrance Reversal
+
+
+-------------- Check GL_interface & WIP Trans_Account
+
+
+Select set_of_books_id SOB ,      
+user_je_category_name  CAT,      
+user_je_source_name SOURCE,      
+status,      
+reference21     
+from apps.gl_interface     
+where status= 'EU02,P'     
+order by reference21
+
+SELECT M.currency_code CURRENCY,     
+M.REFERENCE_ACCOUNT ACCOUNT,    
+DECODE(sign(SUM(NVL(M.TRANSACTION_VALUE,    
+M.BASE_TRANSACTION_VALUE))),1,    
+SUM(NVL(M.TRANSACTION_VALUE,M.BASE_TRANSACTION_VALUE)),0) d,    
+DECODE(sign(SUM(NVL(M.TRANSACTION_VALUE,    
+M.BASE_TRANSACTION_VALUE))),-1,    
+(-1*SUM(NVL(M.TRANSACTION_VALUE,M.BASE_TRANSACTION_VALUE))),0) c,    
+DECODE(sign(SUM(M.BASE_TRANSACTION_VALUE)),1,    
+SUM(M.BASE_TRANSACTION_VALUE),0) e,    
+DECODE(sign(SUM(M.BASE_TRANSACTION_VALUE)),    
+-1,
+(-1*SUM(M.BASE_TRANSACTION_VaLUE)),0)  f    
+FROM apps.WIP_TRANSACTION_ACCOUNTS M     
+WHERE gl_batch_id = 4289--&reference21    	  
+GROUP BY    	 
+M.CURRENCY_CODE,    	 
+M.REFERENCE_ACCOUNT ; 
+
+
+
+
+SELECT M.currency_code CURRENCY,     
+M.REFERENCE_ACCOUNT ACCOUNT,    
+DECODE(sign(SUM(NVL(M.TRANSACTION_VALUE,    
+M.BASE_TRANSACTION_VALUE))),1,    
+SUM(NVL(M.TRANSACTION_VALUE,M.BASE_TRANSACTION_VALUE)),0) d,    
+DECODE(sign(SUM(NVL(M.TRANSACTION_VALUE,    
+M.BASE_TRANSACTION_VALUE))),-1,    
+(-1*SUM(NVL(M.TRANSACTION_VALUE,M.BASE_TRANSACTION_VALUE))),0) c,    
+DECODE(sign(SUM(M.BASE_TRANSACTION_VALUE)),1,    
+SUM(M.BASE_TRANSACTION_VALUE),0) e,    
+DECODE(sign(SUM(M.BASE_TRANSACTION_VALUE)),    
+-1,
+(-1*SUM(M.BASE_TRANSACTION_VaLUE)),0)  f    
+FROM apps.mtl_TRANSACTION_ACCOUNTS M     
+WHERE gl_batch_id = 4289--&reference21    	  
+GROUP BY    	 
+M.CURRENCY_CODE,    	 
+M.REFERENCE_ACCOUNT ; 
+
+select * from apps.gl_code_combinations where CODE_COMBINATION_ID=-2
+

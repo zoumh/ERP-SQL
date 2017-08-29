@@ -1,0 +1,50 @@
+
+BMC_AP_List_V1 (Correct Multi Distribuation , due Invoice amount issue, Without AP_INVOICE_DISTRIBUTIONS_ALL)
+
+
+CREATE VIEW APPS.BMC_AP_List_V1
+AS
+select VDR.VENDOR_NAME as Supplier
+,api.INVOICE_NUM
+,api.GL_DATE
+,apb.BATCH_NAME as InvBatch
+,api.ATTRIBUTE1 as Inv_Trans_Num
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,api.PAYMENT_STATUS_FLAG as FullyPay
+,nvl(api.AMOUNT_PAID,0) as Pay_Amount
+,api.PAY_GROUP_LOOKUP_CODE as PayGroup 
+,api.PAYMENT_CURRENCY_CODE as PayCur
+,api.PAYMENT_CROSS_RATE_DATE as PayDate
+,api.VAT_CODE
+,api.VENDOR_SITE_ID
+,TRM.DUE_DAYS as TermsDate
+,TRM.DUE_DAYS+api.INVOICE_DATE as DueDate
+,api.VENDOR_ID
+,VDR.SEGMENT1 as SupplierCode
+,api.INVOICE_ID
+,api.INVOICE_TYPE_LOOKUP_CODE as InvType
+,AP_INVOICES_PKG.GET_PO_NUMBER( api.INVOICE_ID) PO_NUMBER
+,api.ATTRIBUTE2 as Bank_Cash
+,api.SOURCE
+,api.SET_OF_BOOKS_ID SOB
+,api.TAX_AMOUNT
+,api.TERMS_ID
+,api.WFAPPROVAL_STATUS as ApprovStatus
+,api.GOODS_RECEIVED_DATE as GRN_Date
+,apb.BATCH_ID
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+,	    apps.AP_BATCHES_ALL apb
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+
+
+
+
+
+
+

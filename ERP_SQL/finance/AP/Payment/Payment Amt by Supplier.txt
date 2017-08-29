@@ -1,0 +1,149 @@
+
+
+--------AP invoice & payment date/amount of a supplier (include Open AP invocie amount)
+
+select a.INVOICE_NUM,INVOICE_AMOUNT,b.amount Paid_Amt,
+a.CREATION_DATE Invoice_Date,
+b.ACCOUNTING_DATE pay_Date,--b.REVERSAL_FLAG,b.POSTED_FLAG,VDR.VENDOR_NAME, 
+VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site,a.DESCRIPTION
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.ORG_ID=b.ORG_ID
+and a.ORG_ID=aps.ORG_ID
+and a.INVOICE_ID=b.INVOICE_ID(+)
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.SEGMENT1=2058
+and a.ORG_ID>=127
+
+
+
+--------Paid Amount by suppler, by currency (not include Open AP invocie amount)
+
+select --to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+vdr.VENDOR_NAME,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+--,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+,sum(b.amount) as Paid_Amt,a.INVOICE_CURRENCY_CODE
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (a.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW','AL'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2005-01-1','yyyy-mm-dd')
+and b.accounting_date<=to_date('2005-12-31','yyyy-mm-dd')
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+--and a.INVOICE_DATE >=to_date('2005-01-01','yyyy-mm-dd') -- new add at Nov-04
+group by --to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE),
+vdr.VENDOR_NAME,VDR.VENDOR_NAME,VDR.SEGMENT1,aps.VENDOR_SITE_CODE ,a.INVOICE_CURRENCY_CODE
+order by a.INVOICE_CURRENCY_CODE,to_number(VDR.SEGMENT1)
+
+-------------
+
+select round((a.CHECK_DATE-to_date('2005-1-1','yyyy-mm-dd'))/7,0) week,a.CHECK_DATE,
+--BANK_NAME,BANK_ACCOUNT_NUM,CHECK_NUMBER, CHECKRUN_NAME ,
+sum(a.AMOUNT) amt,a.BANK_CURRENCY_CODE currency,a.VENDOR_NAME,a.VENDOR_NUMBER--,--CREATION_DATE,CHECK_STATUS        
+from apps.AP_CHECKS_V a,apps.PO_VENDORS b where CHECK_STATUS='Negotiable' and BANK_NAME<>'Dummy Bank'
+and CHECK_DATE>=to_date('2005-01-01','yyyy-mm-dd')
+and b.SEGMENT1 =a.VENDOR_NUMBER
+and b.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+group by BANK_CURRENCY_CODE,a.VENDOR_NAME,a.VENDOR_NUMBER,round((a.CHECK_DATE-to_date('2005-1-1','yyyy-mm-dd'))/7,0),a.CHECK_DATE
+order by a.VENDOR_NAME,round((a.CHECK_DATE-to_date('2005-1-1','yyyy-mm-dd'))/7,0)
+
+ 
+select (sum(nvl(a.ENTERED_DR,0))-sum(nvl(a.ENTERED_CR,0))  ) Paid_amt,a.REFERENCE1 Supplier
+--,sum(nvl(a.ENTERED_Dr,0)) Dr, sum(nvl(a.ENTERED_CR,0)) Cr 
+,a.CURRENCY_CODE,round((b.ACCOUNTING_DATE-to_date('2005-1-1','yyyy-mm-dd'))/7,0) week,b.ACCOUNTING_DATE
+from APPS.ap_ae_lines_all a,APPS.ap_ae_HEADeRs_all b,apps.GL_CODE_combinations c,apps.PO_VENDORS d
+where a.AE_HEADER_ID=b.AE_HEADER_ID
+and a.CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+and (b.GL_TRANSFER_FLAG is null or b.GL_TRANSFER_FLAG='Y')
+and d.VENDOR_NAME =a.REFERENCE1
+and d.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and b.ACCOUNTING_DATE>=to_date('2005-01-01','yyyy-mm-dd')
+and REFERENCE6='AP Payments' and a.AE_LINE_TYPE_CODE='CASH'
+group by a.REFERENCE1,a.CURRENCY_CODE,round((b.ACCOUNTING_DATE-to_date('2005-1-1','yyyy-mm-dd'))/7,0),b.ACCOUNTING_DATE 
+order by a.REFERENCE1,a.CURRENCY_CODE,round((b.ACCOUNTING_DATE-to_date('2005-1-1','yyyy-mm-dd'))/7,0),b.ACCOUNTING_DATE
+ 
+
+ 
+
+select vdr.VENDOR_NAME,VDR.SEGMENT1 as Supplier_Num
+--,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+,sum(b.amount) as Paid_Amt,a.INVOICE_CURRENCY_CODE,b.accounting_date,round((b.accounting_date-to_date('2005-1-1','yyyy-mm-dd'))/7,0) weeks
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,  apps.PO_VENDORS VDR
+,  apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+--and (a.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW','AL'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2005-01-1','yyyy-mm-dd')
+--and b.accounting_date<=to_date('2005-12-31','yyyy-mm-dd')
+--and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+group by vdr.VENDOR_NAME,VDR.VENDOR_NAME,VDR.SEGMENT1,a.INVOICE_CURRENCY_CODE,b.accounting_date,round((b.accounting_date-to_date('2005-1-1','yyyy-mm-dd'))/7,0)
+order by a.INVOICE_CURRENCY_CODE,to_number(VDR.SEGMENT1),b.accounting_date,round((b.accounting_date-to_date('2005-1-1','yyyy-mm-dd'))/7,0)
+ 
+----------------------
+
+
+
+--------Paid Amount by suppler
+
+select to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site
+,sum(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (a.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW','AL'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2000-01-1','yyyy-mm-dd')
+and b.accounting_date<=to_date('2005-04-8','yyyy-mm-dd')
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+--and a.INVOICE_DATE >=to_date('2005-01-01','yyyy-mm-dd') -- new add at Nov-04
+group by to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE),VDR.VENDOR_NAME,VDR.SEGMENT1,aps.VENDOR_SITE_CODE 
+order by to_number(VDR.SEGMENT1)
+
+
+
+
+--------Paid Detail Amount by suppler
+
+select /*to_char(VDR.SEGMENT1)||to_char(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier
+,VDR.SEGMENT1 as Supplier_Num,aps.VENDOR_SITE_CODE as Site, */
+a.invoice_num,a.INVOICE_CURRENCY_CODE Curr,b.EXCHANGE_RATE Rate,b.amount
+,(b.amount*decode(a.INVOICE_CURRENCY_CODE,'CNY',1,b.EXCHANGE_RATE)) as CNY_Paid_Amt
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (a.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY','CL','FW','AL'))
+and ((VDR.PAY_GROUP_LOOKUP_CODE <>'EM' and (VDR.PAY_GROUP_LOOKUP_CODE <>'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>=to_date('2000-01-1','yyyy-mm-dd')
+and b.accounting_date<=to_date('2005-04-8','yyyy-mm-dd')
+and (b.REVERSAL_FLAG<>'Y' or b.REVERSAL_FLAG is null)
+--and VDR.SEGMENT1=2

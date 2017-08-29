@@ -1,0 +1,186 @@
+
+
+
+----PPV Journal
+
+select   mmt.transaction_date, b.SEGMENT1 as PO,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, 
+		 mmt.subinventory_code, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+	mmt.TRANSACTION_QUANTITY as Qty,
+		 mmt.transaction_id, 
+		 mst.transaction_source_type_name, 
+		 (select a.wip_entity_name from apps.wip_entities a where a.wip_entity_id=mmt.transaction_source_id 
+		  and mst.transaction_source_type_name like 'Job%') job, 
+		 mta.gl_batch_id, 
+		 decode(mmt.organization_id,130,'VP','Unknown') Organization ,
+		 gcc.segment3 as Account_Num, 
+		 cst.item_cost, cst.material_cost, cst.resource_cost,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 to_char(oeh.ORDER_NUMBER) Order_number,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.cst_item_costs            cst,
+  apps.OE_ORDER_HEADERS_ALL		 oeh,apps.PO_HEADERS_ALL b
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like 'KRH%' or msi.segment1 like 'DPY%')
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer')
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=130 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1
+and    mta.organization_id = 130 and mmt.organization_id = 130 and msi.organization_id = 130 
+and    mmt.TRANSACTION_REFERENCE =to_char(oeh.HEADER_ID(+)) 
+and    trunc(mmt.transaction_date) >= to_date('20060301','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20060331','YYYYMMDD') 
+--and gcc.segment3='121105'
+and mmt.transaction_type_id=18  --PO receive transaction
+and mmt.TRANSACTION_SOURCE_ID=b.PO_HEADER_ID
+and mta.ACCOUNTING_LINE_TYPE=6 --(PPV account)
+--and mmt.TRANSACTION_ID in (6750942,6750949,6750956,6750963,6750970)
+
+and b.SEGMENT1='1006583'
+
+
+
+select a.creation_date,(a.quantity) Qty,
+a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,
+a.CURRENCY_CONVERSION_RATE,a.CURRENCY_CODE,a.PO_UNIT_PRICE
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h
+where 
+a.source_document_code='PO'
+--and c.segment1='1015700'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+and trunc(a.creation_date) >= to_date('20060301','YYYYMMDD') 
+and trunc(a.creation_date) <= to_date('20060331','YYYYMMDD') 
+and a.DESTINATION_TYPE_CODE='RECEIVING'
+
+
+
+------Receive Trans
+select a.creation_date,(a.quantity) Qty,
+a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,
+a.CURRENCY_CONVERSION_RATE,a.CURRENCY_CODE,a.PO_UNIT_PRICE,gcc.SEGMENT3 Acc,a.DESTINATION_TYPE_CODE
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h,apps.gl_code_combinations gcc,apps.PO_DISTRIBUTIONS_ALL b
+where 
+a.source_document_code='PO'
+--and c.segment1='1023822'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and gcc.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+and b.PO_HEADER_ID=a.PO_HEADER_ID
+and b.PO_LINE_ID=d.PO_LINE_ID
+--and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+and trunc(a.creation_date) >= to_date('20060301','YYYYMMDD') 
+and trunc(a.creation_date) <= to_date('20060331','YYYYMMDD') 
+--and a.DESTINATION_TYPE_CODE='RECEIVING'
+
+
+
+-------Match PO incoive
+
+select d.ATTRIBUTE1,g.segment3,b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist
+,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f,apps.GL_CODE_COMBINATIONS g
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+--and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and a.DIST_CODE_COMBINATION_ID=g.CODE_COMBINATION_ID
+and d.segment1 ='1023822'
+
+in ('1023577','1024459','1024458','1024311','1022257','1022280','1024137','1025334','1023822','1023621','1024423')
+
+
+-------Receive Journal
+select b.reference4 PO_Num,b.source_doc_quantity Qty,
+(b.ACCOUNTED_DR) Dr_Amt_CNY,(b.ACCOUNTED_CR) Cr_Amt_CNY,
+gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account,
+(b.ENTERED_DR) Dr_Amt,(b.ENTERED_CR) Cr_Amt ,b.CURRENCY_CODE,b.CURRENCY_CONVERSION_RATE Rate,b.period_name,
+b.chart_of_accounts_id,b.code_combination_id,b.je_batch_name,b.je_header_name
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_HEADERS_ALL POH,
+apps.gl_code_combinations gcc
+WHERE b.REFERENCE4=POH.segment1
+and gcc.code_combination_id =b.code_combination_id 
+--and b.period_name='MAR-06'
+and b.reference4='1023822'
+
+
+
+---------Open PO Rate check
+select nvl(d.rate,1) Rate,a.currency_code Curr,b.unit_price,
+a.segment1 PO_Num,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED) Dist_Open_Qty,
+d.quantity_ordered Dist_Order_Qty,d.quantity_cancelled Dist_Canced_Qty,d.QUANTITY_DELIVERED Dist_Rec_Qty,
+b.Item_Description,g.segment1 Item,d.creation_date,f.line_type,c.ship_to_organization_id,h.full_name Buyer
+from 	apps.PO_HEADERS_ALL a
+,		apps.PO_LINES_ALL b
+,		apps.po_Line_locations_all c
+,		apps.PO_DISTRIBUTIONS_ALL d
+,		apps.PO_line_types f
+,		apps.mtl_system_items_b g
+,		apps.PER_ALL_PEOPLE_F h
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and c.closed_code ='OPEN'
+and g.INVENTORY_ITEM_ID(+)=b.item_id 
+and a.currency_code<>'CNY'
+--and (d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)>0
+and (c.QUANTITY -c.QUANTITY_CANCELLED -c.QUANTITY_RECEIVED)>0	
+--and a.segment1 in ('1014581','1014751')
+and c.ship_to_organization_id=g.organization_id
+and h.person_id=a.AGENT_ID
+order by a.segment1 ,b.line_num,c.shipment_num ,d.DISTRIBUTION_NUM
+
+
+
+

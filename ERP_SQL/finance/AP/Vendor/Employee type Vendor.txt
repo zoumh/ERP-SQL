@@ -1,0 +1,16 @@
+
+
+-----------Employee type Vendor link with employee
+select a.VENDOR_NAME, a.SEGMENT1 Vendor_Number,b.EMPLOYEE_NUMBER,b.FULL_NAME,
+a.VENDOR_TYPE_LOOKUP_CODE Supplier_Type, 
+c.Description Create_By,c.Description LAST_UPDATED_BY,
+a.CREATION_DATE,a.LAST_UPDATE_DATE,a.PAY_GROUP_LOOKUP_CODE Pay_group,a.INVOICE_CURRENCY_CODE Curr,a.END_DATE_ACTIVE
+from apps.PO_VENDORS a ,apps.PER_PEOPLE_V7 b,apps.FND_USER c,apps.FND_USER d
+where a.EMPLOYEE_ID=b.PERSON_ID(+)
+and a.CREATED_BY=c.user_id
+and a.LAST_UPDATED_BY=d.user_id
+and a.VENDOR_TYPE_LOOKUP_CODE ='EMPLOYEE'
+--and a.EMPLOYEE_ID is null
+--and a.VENDOR_NAMEb.FULL_NAME
+
+

@@ -1,0 +1,76 @@
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_FA_LIST_V1
+AS
+SELECT fav.asset_number
+,	fav.description
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),1,2) as MajCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as MinCat
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as StatusCat
+,      fak.segment1 as Prj
+,      fak.segment2 as Prd
+,	fab.DATE_PLACED_IN_SERVICE
+,	fab.COST
+,	fab.SALVAGE_VALUE
+,	fab.DEPRECIATE_FLAG
+,	fab.RECOVERABLE_COST
+,	FAD.YTD_DEPRN
+,	FAD.DEPRN_RESERVE as Depr_Accmu
+,	FAD.DEPRN_SOURCE_CODE
+,	fad.DEPRN_RUN_DATE
+,	fab.COST-FAD.DEPRN_RESERVE as NTValue
+,	GLC.SEGMENT2 as Depr_CC
+,	GLC.SEGMENT3 as Depr_Acc
+FROM FA_ADDITIONS_V fav
+,    FA_ASSET_KEYWORDS fak
+,    FA_BOOKS_V fab
+,	 FA_deprn_summary FAD
+,	 GL_CODE_COMBINATIONS GLC
+,	 FA_DISTRIBUTION_HISTORY FAH
+WHERE fav.ASSET_KEY_CCID = fak.CODE_COMBINATION_ID 
+AND fav.asset_id=fab.asset_id 
+AND fab.asset_id=FAD.ASSET_ID
+AND fab.BOOK_TYPE_CODE='BMC_FA_BOOK' 
+and fad.DEPRN_SOURCE_CODE like 'D%'
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fah.DATE_INEFFECTIVE is  null
+AND FAH.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.ASSET_ID=fav.asset_id
+AND fad.DEPRN_RUN_DATE in (select max(DEPRN_RUN_DATE) from FA_deprn_summary group by asset_id) and fad.book_type_code='BMC_FA_BOOK' 
+
+--------list FA Acc,CC,Pej,prd,cat2,cat3,DFFs
+SELECT fav.asset_number
+,	GLC.SEGMENT2 as CC
+,	GLC.SEGMENT3 as Acc
+,	GLC.SEGMENT4 as Prd
+,	GLC.SEGMENT5 as Prj
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),4,2) as Cat2
+,	SUBSTR(to_char(fav.ATTRIBUTE_CATEGORY_CODE),7,2) as Cat3,
+fav.Attribute1 Remark,fav.Attribute2 IT_Asset_Name,fav.Attribute3 Property_Type,fav.Attribute4 Warranty,fav.Attribute8 Line_No,
+fav.asset_id
+FROM APPS.FA_ADDITIONS_V fav
+,	 apps.FA_CATEGORIES_VL  a
+,	 FA_DISTRIBUTION_HISTORY FAH
+,	 GL_CODE_COMBINATIONS GLC
+where a.CATEGORY_ID=fav.ASSET_CATEGORY_ID
+AND FAH.ASSET_ID=fav.asset_id
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fah.DATE_INEFFECTIVE is  null
+and asset_number='11000009'
+
+---------List FA Employee
+SELECT e.EMPLOYEE_NUMBER,e.FULL_NAME,
+fav.asset_number,fav.ASSET_KEY_CCID ,fav.asset_id, fak.CODE_COMBINATION_ID
+,      fak.segment1 as Key_Prj
+,      fak.segment2 as Key_Prd
+,    GLC.SEGMENT5 as Depr_Prj
+,    GLC.SEGMENT4 as Depr_Prd
+FROM apps.FA_ADDITIONS_V fav
+,    apps.FA_ASSET_KEYWORDS fak
+,     apps.GL_CODE_COMBINATIONS GLC
+,     apps.FA_DISTRIBUTION_HISTORY FAH,apps.PER_PEOPLE_V7 e
+WHERE fav.ASSET_KEY_CCID = fak.CODE_COMBINATION_ID(+) 
+AND GLC.CODE_COMBINATION_ID=FAH.CODE_COMBINATION_ID
+and fah.DATE_INEFFECTIVE is null
+AND FAH.BOOK_TYPE_CODE='BMC_FA_BOOK'
+AND FAH.ASSET_ID=fav.asset_id
+and fah.ASSIGNED_TO=e.PERSON_ID

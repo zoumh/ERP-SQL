@@ -1,0 +1,24 @@
+
+
+
+--------max SO number for each Assign/Define/Category/SO type
+select e.Max_number,c.INITIAL_VALUE,b.NAME Catrgory,c.NAME Sequence_Define,a.DOC_SEQUENCE_ID,a.CATEGORY_CODE,a.APPLICATION_ID,a.END_DATE 
+from apps.FND_DOC_SEQUENCE_ASSIGNMENTS a,apps.FND_DOC_SEQUENCE_CATEGORIES b,apps.FND_DOCUMENT_SEQUENCES c,
+(select max(d.ORDER_NUMBER) Max_number ,f.NAME SO_Type--,b.CREATION_DATE order_Date
+from  
+apps.OE_ORDER_HEADERS_ALL d,
+apps.oe_transaction_types_tl f
+where  f.TRANSACTION_TYPE_ID=d.ORDER_TYPE_ID 
+and f.LANGUAGE='US'
+and d.CREATION_DATE>to_date('2008-1-1','yyyy-mm-dd')
+group by f.NAME ) e
+where a.DOC_SEQUENCE_ID=c.DOC_SEQUENCE_ID
+and b.NAME=e.SO_Type
+and a.CATEGORY_CODE=b.CODE
+and a.APPLICATION_ID=660
+and b.APPLICATION_ID=660
+and c.APPLICATION_ID=660  
+and (a.END_DATE >to_date(sysdate) or a.END_DATE is null)
+order by c.INITIAL_VALUE
+
+

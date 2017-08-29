@@ -1,0 +1,29 @@
+
+
+-------All Vendors of a model in AVL
+
+select g.segment1 Model,d.vendor_name,e.vendor_site_code
+from apps.mtl_system_items a
+,apps.PO_approved_supplier_list b
+,apps.PO_ASL_ATTRIBUTES c
+,apps.po_vendors d
+,apps.po_vendor_sites_all e,apps.PO_ASL_STATUSES f,
+(select * from apps.mtl_item_categories_v where CATEGORY_SET_ID=1 and segment1 in ('MOLI','MOLI TOUCH') ) g
+,apps.fnd_user h
+where a.inventory_item_id(+)=b.item_id and 
+a.ORGANIZATION_ID(+)=b.OWNING_ORGANIZATION_ID and
+b.vendor_id=e.vendor_id(+) and
+b.VENDOR_SITE_ID=e.vendor_site_id(+) and
+b.vendor_id=d.vendor_id and
+d.vendor_id=e.vendor_id and
+e.org_id=127 and
+b.OWNING_ORGANIZATION_ID >126 and
+b.asl_id=c.asl_id(+) and
+b.USING_ORGANIZATION_ID=c.USING_ORGANIZATION_ID(+)
+and g.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=a.ORGANIZATION_ID
+and b.asl_status_id=f.STATUS_ID
+and b.CREATED_BY=h.user_id
+order by g.segment1,d.vendor_name,e.vendor_site_code
+
+

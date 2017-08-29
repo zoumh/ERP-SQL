@@ -1,0 +1,50 @@
+
+View :  BMC_CST_PRICE_CHK_PO
+
+
+CREATE OR REPLACE FORCE VIEW APPS.BMC_CST_PRICE_CHK_PO
+AS
+select b.ITEM_NUMBER
+,b.ITEM_COST as STD_COST
+,a.UNIT_PRICE as PO_Price
+,c.SEGMENT1 as PO_NUM
+,c.FOB_LOOKUP_CODE as TOD
+,c.CURRENCY_CODE as Curr
+,c.CREATION_DATE as PO_Date
+,b.ORGANIZATION_ID as ORG_ID /*--  83 -->Prod , 84-->ARC, 81-->Mas */
+,d.NAME as Org
+,c.CANCEL_FLAG
+,c.CLOSED_CODE
+,c.status_lookup_code       /*  C--closed , I--In Process , A--Active  */
+from 	  apps.CST_ITEM_COST_TYPE_V b
+,(select  distinct 
+ ITEM_ID,PO_HEADER_ID ,UNIT_PRICE,ORG_ID 
+from apps.PO_LINES_all pla1
+where PO_HEADER_ID=
+(select max(pla2.po_header_id)
+ from apps.po_lines_all pla2
+ where pla1.item_id = pla2.item_id
+ and pla1.unit_price = pla2.unit_price
+ and pla1.org_id = pla2.org_id) )  a
+	 ,apps.PO_HEADERS_ALL c
+	 ,HR_ORGANIZATION_UNITS_V d
+where 
+ a.ITEM_ID=b.INVENTORY_ITEM_ID
+and a.UNIT_PRICE<>0 
+and b.COST_TYPE='Frozen'
+and b.ITEM_COST=0
+and a.PO_HEADER_ID=c.PO_HEADER_ID
+and (b.ORGANIZATION_ID=83 or b.ORGANIZATION_ID=84)
+and c.CANCEL_FLAG<>'Y'
+and d.ORGANIZATION_ID=b.ORGANIZATION_ID
+order by org_id,ITEM_ID
+
+
+
+
+
+
+
+
+
+

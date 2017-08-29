@@ -1,0 +1,19 @@
+
+
+-----------
+To find Value set ID by using count() to match with screen export list
+
+
+select count(),flex_value_set_id from apps.FND_FLEX_VALUES_VL group by flex_value_set_id
+
+flex_value_set_id=1007646 (Item Category)
+
+select flex_value ,ENABLED_FLAG,START_DATE_ACTIVE,END_DATE_ACTIVE,
+DESCRIPTION,FLEX_VALUE_MEANING,flex_value_set_id from apps.FND_FLEX_VALUES_VL where flex_value_set_id=1007646 --(Item Category)
+
+
+----------Key Flexfield segments
+select SEGMENT_NAME,FLEX_VALUE_SET_ID,SEGMENT_NUM,ID_FLEX_NUM, APPLICATION_ID,ID_FLEX_CODE
+from apps.FND_ID_FLEX_SEGMENTS_VL where SEGMENT_NAME like '%BMC%'
+and SEGMENT_NAME in ('BMC_CCC','BMC_ACC','BMC_PRD','BMC_PRJ')
+

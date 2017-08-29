@@ -1,0 +1,129 @@
+
+
+------------Link PO receive Trans with Journal at Item level
+
+select a.TRANSACTION_ID,b.segment1 PO,c.LINE_NUM Line,d.segment1 Item,a.transaction_date,
+c.UNIT_PRICE,b.CURRENCY_CODE Curr,a.transaction_type,a.quantity,
+g.ACCOUNTED_DR,g.ACCOUNTED_CR,h.segment3 Account
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b,apps.PO_VENDORS VDR,
+apps.mtl_system_items d, apps.PO_VENDOR_SITES_ALL e,APPS.mtl_parameters f,
+APPS.RCV_RECEIVING_SUB_LEDGER g,apps.GL_CODE_combinations h
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and a.organization_id>127
+and VDR.VENDOR_ID=b.VENDOR_ID
+--and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id=b.org_id
+and c.org_id>=127
+--and DESTINATION_TYPE_CODE='RECEIVING'
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.po_line_id=c.po_line_id
+and d.organization_id=a.organization_id
+and d.inventory_item_id=c.item_id
+and b.VENDOR_SITE_ID=e.VENDOR_SITE_ID
+and b.org_id=e.org_id 
+and a.organization_id=f.organization_id
+and g.RCV_TRANSACTION_ID=a.TRANSACTION_ID
+and g.CODE_COMBINATION_ID=h.CODE_COMBINATION_ID  
+and d.segment1 in ('SXK 109 6127.R3')
+and b.segment1='1034459'
+
+
+-------------from PO Number, find out Accru Journal
+select a.ACCOUNTED_DR,a.ACCOUNTED_CR,ACCOUNTING_DATE,a.CURRENCY_CODE,a.CURRENCY_CONVERSION_RATE Rate,
+a.ENTERED_DR,a.ENTERED_CR,b.segment3 Account,a.TRANSACTION_DATE,a.reference4 PO,a.SOURCE_DOC_QUANTITY
+FROM APPS.RCV_RECEIVING_SUB_LEDGER a,apps.GL_CODE_combinations b where 
+a.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID  
+and RCV_TRANSACTION_ID in
+(select a.TRANSACTION_ID 
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d
+where 
+a.transfer_lpn_id=b.lpn_id
+--and a.transfer_lpn_id=414020 
+and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+--and d.organization_id=83
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and a.PO_header_id=115778
+)
+and a.reference4='1021792'
+
+
+
+----------For AP monthly Purchasing (AP Report Package)
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,
+sum(b.ACCOUNTED_DR) Dr_Amt,sum(b.ACCOUNTED_CR) Cr_Amt 
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_VENDORS VDR,
+apps.PO_VENDOR_SITES_all aps,
+apps.PO_HEADERS_ALL POH
+WHERE b.REFERENCE4=POH.segment1
+and VDR.VENDOR_ID=POH.VENDOR_ID
+and aps.VENDOR_SITE_ID=poh.VENDOR_SITE_ID
+and b.CODE_COMBINATION_ID IN (select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3 in ('120100','120101') )
+and  (b.PERIOD_NAME='APR-05' )
+group by (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE),VDR.SEGMENT1,VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE
+
+
+--------BOM PO Receipt number,PO,Item,Rev, Vendor
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num, b.segment1 Item,d.ITEM_REVISION ,
+b.description,a.Quantity,a.transaction_date,a.creation_date,c.SEGMENT1 PO,d.LINE_NUM,e.RECEIPT_NUM,a.TRANSACTION_TYPE
+from apps.rcv_transactions a,apps.mtl_system_items b,apps.PO_HEADERS_ALL c,apps.PO_LINES_ALL d ,
+apps.RCV_SHIPMENT_HEADERS e,apps.PO_VENDORS VDR
+where --a.TRANSACTION_TYPE ='RECEIVE' and 
+a.po_header_id=c.po_header_id
+and b.organization_id=83 and a.organization_id=83
+and b.inventory_item_id=d.item_id
+and a.po_line_id=d.po_line_id
+and a.po_header_id=d.po_header_id
+and a.SHIPMENT_HEADER_ID=e.SHIPMENT_HEADER_ID
+and VDR.VENDOR_ID=c.VENDOR_ID
+and a.transaction_date>= to_date('20051001','YYYYMMDD') 
+and a.transaction_date<= to_date('20051024','YYYYMMDD')
+
+
+----Detail with vendor Site & PO num
+
+select (VDR.SEGMENT1)||(aps.VENDOR_SITE_CODE) as ID,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,VDR.SEGMENT1 as Supplier_Num
+,aps.VENDOR_SITE_CODE as Site,b.REFERENCE4 as PO
+,b.ACCOUNTED_DR,b.ACCOUNTED_CR ,b.PERIOD_NAME,b.ACCOUNTING_DATE ,b.TRANSACTION_DATE
+,b.CURRENCY_CODE,b.CURRENCY_CONVERSION_RATE as Rate
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_VENDORS VDR,
+apps.PO_VENDOR_SITES_all aps,
+apps.PO_HEADERS_ALL POH
+WHERE b.REFERENCE4=POH.segment1
+and VDR.VENDOR_ID=POH.VENDOR_ID
+and aps.VENDOR_SITE_ID=poh.VENDOR_SITE_ID
+and b.CODE_COMBINATION_ID IN (select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3 in ('120100','120101') )
+and  (b.PERIOD_NAME='APR-05' )
+
+ 
+
+
+----------------------PO receiving Journal accounting --reconcile with GL
+----------Sum
+select  b.segment3 Account,
+sum(nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0)) amt,
+JE_SOURCE_NAME,JE_CATEGORY_NAME,REVERSE_JOURNAL_FLAG
+from APPS.RCV_RECEIVING_SUB_LEDGER a,apps.gl_code_combinations b  where period_name ='NOV-07'
+and CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and CREATION_DATE<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+and b.code_combination_id=a.CODE_COMBINATION_ID
+and b.segment3='120100'
+group by JE_SOURCE_NAME,JE_CATEGORY_NAME,REVERSE_JOURNAL_FLAG,b.segment3
+
+----------Detail
+select CREATION_DATE,ACCOUNTING_DATE,TRANSACTION_DATE, b.segment3 Account,
+ACCOUNTED_DR ,ACCOUNTED_CR,ENTERED_DR,ENTERED_CR,CURRENCY_CODE,
+JE_SOURCE_NAME,JE_CATEGORY_NAME,
+a.CODE_COMBINATION_ID,REVERSE_JOURNAL_FLAG
+from APPS.RCV_RECEIVING_SUB_LEDGER a,apps.gl_code_combinations b  where period_name ='NOV-07'
+and CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and CREATION_DATE<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+and b.code_combination_id=a.CODE_COMBINATION_ID
+

@@ -1,0 +1,18 @@
+
+
+
+select license_plate_number from apps.wms_license_plate_numbers where LPN_ID=498532
+
+select * from apps.wms_license_plate_numbers where lpn_id= 414020
+
+select * from apps.wms_lpn_contents where parent_lpn_id= 414020
+
+select a.creation_date,
+from apps.rcv_transactions, apps.wms_license_plate_numbers b
+where 
+
+------Solve Ship Pick task error with LPN ,lpn_context=11,should be 1
+
+update apps.wms_license_plate_numbers set lpn_context=1 where license_plate_number='CNCB5+ZZY04E' --and lpn_context=11
+
+

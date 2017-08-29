@@ -1,0 +1,37 @@
+
+------------JO Qty not same with Mtl Trans Qty
+
+1. If have lock (in most case would have)
+
+select * from v$lock where block=1 order by ctime desc
+
+select sid,serial#,module from v$session where sid=479
+
+alter system kill session '479,55980'
+
+commit
+
+
+
+2.
+Check Pending WIP Completation, re-submit them
+
+Check Error in Interface
+
+
+3.
+select * from apps.wip_entities where WIP_ENTITY_NAME ='060506-D-6714R1A-SA2'
+
+
+select START_QUANTITY,QUANTITY_COMPLETED,QUANTITY_SCRAPPED,NET_QUANTITY    
+from apps.WIP_DISCRETE_JOBS where WIP_ENTITY_ID =528451
+
+update apps.WIP_DISCRETE_JOBS  set QUANTITY_COMPLETED=1170  where wip_entity_id=528451
+
+
+
+
+select * from apps.WIP_DISCRETE_JOBS where WIP_ENTITY_ID =528451
+
+
+

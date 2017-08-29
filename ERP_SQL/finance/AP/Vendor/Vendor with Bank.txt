@@ -1,0 +1,38 @@
+
+---must run this, otherwise no Bank Account
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('127');
+END;
+
+
+select  
+c.SEGMENT1 As Vender_Num, c.VENDOR_NAME,
+b.ADDRESS_LINE1,
+b.ADDRESS_LINE2,
+b.ADDRESS_LINE3,
+b.ADDRESS_LINE4,
+b.PHONE Telephone_Number,
+b.FAX FAX_Number,
+FIRST_NAME ||' '||LAST_NAME Contact_Name,
+to_char(b.Creation_date,'yyyy-mm-dd') Date_Activated,
+to_char(b.INACTIVE_DATE,'yyyy-mm-dd') Date_Terminated ,
+d.BANK_ACCOUNT_NUM,BANK_NAME,
+b.VAT_CODE VAT_Number,--b.VAT_REGISTRATION_NUM,
+b.VENDOR_SITE_CODE,c.VENDOR_TYPE_LOOKUP_CODE As Type
+from apps.PO_VENDOR_CONTACTS a,
+apps.PO_VENDOR_SITES_ALL b,
+apps.PO_VENDORS c,
+AP_BANK_ACCOUNT_USES_V d
+where b.VENDOR_ID=c.VENDOR_ID
+and a.VENDOR_site_ID(+)=b.VENDOR_site_ID
+and d.VENDOR_site_ID(+)=b.VENDOR_site_ID
+and b.ORG_ID=127 
+--and d.ORG_ID=127
+--and VENDOR_TYPE_LOOKUP_CODE<>'EMPLOYEE'
+--and ((b.PAY_GROUP_LOOKUP_CODE <>'EM' and (b.PAY_GROUP_LOOKUP_CODE <>'RH')) or (b.PAY_GROUP_LOOKUP_CODE  is null))
+--and b.BANK_ACCOUNT_NAME is not null
+--and c.SEGMENT1=483
+order by b.VENDOR_ID,b.VENDOR_SITE_CODE
+
+
+

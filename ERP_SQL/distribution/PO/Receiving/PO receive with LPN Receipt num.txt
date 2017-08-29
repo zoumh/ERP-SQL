@@ -1,0 +1,26 @@
+
+-----------PO receiving transaction with LPN , receipt number
+
+select a.creation_date ,a.quantity,
+a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,PARENT_TRANSACTION_ID,
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB,i.license_plate_number 
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h,apps.wms_license_plate_numbers i
+where 
+a.source_document_code='PO'
+--and c.segment1 in ('1021817','1022034')
+and g.RECEIPT_NUM='1550439'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and a.transfer_lpn_id=i.lpn_id(+)
+--and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+--and trunc(a.creation_date) >= to_date('20081001','YYYYMMDD') 
+order by a.creation_date
+
+

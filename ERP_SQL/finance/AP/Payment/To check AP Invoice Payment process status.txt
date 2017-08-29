@@ -1,0 +1,48 @@
+
+
+To check AP Invoice payment status (not use Batch) ,  run below:
+
+
+
+select * from apps.AP_INVOICES_ALL where invoice_num='NT-AP20050430-101'
+
+select invoice_id,invoice_num,invoice_amount,amount_paid,PAYMENT_STATUS_FLAG from apps.AP_INVOICES_ALL where invoice_num='NT-AP20050430-101'
+
+invoice_id=92460
+---------
+
+
+select * from apps.AP_PAYMENT_SCHEDULES_all where invoice_id=92460
+
+select amount_remaining,payment_status_flag,gross_amount,checkrun_id from apps.AP_PAYMENT_SCHEDULES_all where invoice_id=92460
+
+-------
+
+select * from apps.AP_INVOICE_PAYMENTS_all where invoice_id=92460
+
+select amount,check_id,invoice_id,invoice_payment_id,reversal_flag,accounting_date,period_name,posted_flag 
+from apps.AP_INVOICE_PAYMENTS_all  where invoice_id=92460
+
+--------
+
+select * from apps.AP_CHECKS_all where check_id=33640
+
+
+select check_number,amount,currency_code,Bank_account_name,status_lookup_code Status,vendor_name,payment_type_flag Pay_Type from apps.AP_CHECKS_all where check_id=33640
+
+----------
+
+select checkrun_id,checkrun_name from apps.AP_CHECKS_all where check_id=33640
+
+select * from apps.AP_INV_SELECTION_CRITERIA_ALL where checkrun_id=  (or checkrun_name= )
+
+
+
+
+---------------If only apps.AP_INVOICES_ALL status was not updated then :
+
+UPDATE apps.AP_INVOICES_ALL 
+set AMOUNT_PAID = '4587.98',
+PAYMENT_STATUS_FLAG = 'Y'
+where INVOICE_ID = 92460
+

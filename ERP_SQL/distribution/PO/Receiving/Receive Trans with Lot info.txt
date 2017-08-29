@@ -1,0 +1,50 @@
+
+
+-----------Receive Trans with Lot / lpn info
+
+select LOT_NUM,f.QUANTITY Lot_Qty,a.transaction_type,e.segment1 PO,c.LINE_NUM, 
+a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.SUBINVENTORY,
+a.transaction_id,d.segment1 Item,c.Item_Description,a.transaction_date
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_headerS_ALL e,apps.RCV_LOT_TRANSACTIONS f,apps.rcv_shipment_lines g
+where 
+a.transfer_lpn_id=b.lpn_id (+)
+--and a.transfer_lpn_id=414020 
+--and a.transaction_type='RECEIVE'
+--and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=a.organization_id
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and b.license_plate_number='PC0004871'
+and e.PO_HEADER_ID=c.PO_HEADER_ID
+and e.segment1='1031687'
+and f.SHIPMENT_LINE_ID (+) =g.SHIPMENT_LINE_ID
+and a.SHIPMENT_LINE_ID=g.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+
+select * from apps.rcv_shipment_headers where shipment_header_id=370704
+
+select * from apps.rcv_shipment_lines where shipment_header_id=370704
+
+select * from apps.RCV_LOT_TRANSACTIONS where SHIPMENT_LINE_ID=545819
+
+
+----------Receive with LPN
+select a.SHIPMENT_HEADER_ID,a.TRANSACTION_TYPE,b.license_plate_number,e.segment1 PO,c.LINE_NUM, a.creation_date Receive_Date,a.quantity Receive_Qty,b.license_plate_number LPN,a.transaction_id,
+d.segment1 Item,c.Item_Description,a.transaction_date
+from apps.rcv_transactions a, apps.wms_license_plate_numbers b,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_headerS_ALL e
+where 
+a.transfer_lpn_id=b.lpn_id (+)
+--and a.transfer_lpn_id=414020 
+--and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and c.item_id=d.inventory_item_id
+and d.organization_id=a.organization_id
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+--and b.license_plate_number='PC0004871'
+and e.PO_HEADER_ID=c.PO_HEADER_ID
+and e.segment1='1031687'
+and a.transaction_date=to_date('2006-10-13','yyyy-mm-dd')

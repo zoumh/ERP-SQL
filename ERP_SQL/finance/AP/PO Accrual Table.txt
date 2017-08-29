@@ -1,0 +1,45 @@
+
+-----------------reconcile accrual function & tables
+
+select TRANSACTION_DATE,AGING_DATE,TRANSACTION_QUANTITY,VENDOR_NAME,INVOICE_NUM,INVOICE_LINE_NUM,ACCRUAL_CODE,RECEIPT_NUM
+,PO_NUM,TRANSACTION_UNIT_PRICE,TRANSACTION_AMOUNT,TRANSACTION_SOURCE_CODE,WRITE_OFF_FLAG,DESTINATION_TYPE_CODE,VENDOR_NAME_ALT
+,AGING_DATE,b.segment2 CC,b.segment3 Account
+from apps.po_accrual_reconcile_temp_all a,apps.gl_code_combinations b
+where b.CODE_COMBINATION_ID=a.ACCRUAL_ACCOUNT_ID
+and PO_NUM  in 
+(select PO_NUM from apps.po_accrual_reconcile_temp_all group by  PO_NUM
+having (sum(TRANSACTION_AMOUNT)<10 ) )
+
+
+(select PO_NUM ,sum(TRANSACTION_AMOUNT) from apps.po_accrual_reconcile_temp_all group by  PO_NUM
+having (sum(TRANSACTION_AMOUNT)<10 ) )
+
+
+
+select * from apps.po_accrual_reconcile_temp_all
+
+
+
+----------------------PO receiving Journal accounting
+----------Sum
+select  b.segment3 Account,
+sum(nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0)) amt,
+JE_SOURCE_NAME,JE_CATEGORY_NAME,REVERSE_JOURNAL_FLAG
+from APPS.RCV_RECEIVING_SUB_LEDGER a,apps.gl_code_combinations b  where period_name ='NOV-07'
+and CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and CREATION_DATE<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+and b.code_combination_id=a.CODE_COMBINATION_ID
+and b.segment3='120100'
+group by JE_SOURCE_NAME,JE_CATEGORY_NAME,REVERSE_JOURNAL_FLAG,b.segment3
+
+----------Detail
+select CREATION_DATE,ACCOUNTING_DATE,TRANSACTION_DATE, b.segment3 Account,
+ACCOUNTED_DR ,ACCOUNTED_CR,ENTERED_DR,ENTERED_CR,CURRENCY_CODE,
+JE_SOURCE_NAME,JE_CATEGORY_NAME,
+a.CODE_COMBINATION_ID,REVERSE_JOURNAL_FLAG
+from APPS.RCV_RECEIVING_SUB_LEDGER a,apps.gl_code_combinations b  where period_name ='NOV-07'
+and CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and CREATION_DATE<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+and b.code_combination_id=a.CODE_COMBINATION_ID
+
+

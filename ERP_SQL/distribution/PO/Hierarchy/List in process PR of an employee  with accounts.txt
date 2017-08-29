@@ -1,0 +1,23 @@
+
+
+------List in process PR of an employee  with accounts
+select a.segment1 PR_Num,b.line_num,c.DISTRIBUTION_NUM,
+--HI.ACTION_CODE,
+a.AUTHORIZATION_STATUS,d.segment2 CC,d.segment3 Acc,d.segment4 PRD,d.segment5 PRJ,
+b.ITEM_ID,b.DESTINATION_TYPE_CODE,hi.OBJECT_TYPE_CODE,
+b.ITEM_DESCRIPTION,b.QUANTITY,b.rate,b.unit_price,b.currency_code,
+b.currency_unit_price,b.creation_date
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.gl_code_combinations d ,apps.PO_ACTION_HISTORY Hi,apps.PER_PEOPLE_V7 PE
+where a.REQUISITION_HEADER_ID=HI.OBJECT_ID
+and a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+AND a.AUTHORIZATION_STATUS in ('IN PROCESS', 'PRE-APPROVED')
+and HI.EMPLOYEE_ID=PE.PERSON_ID
+and HI.ACTION_CODE is null
+AND PE.EMPLOYEE_NUMBER='28466482'
+and hi.OBJECT_TYPE_CODE='REQUISITION'
+--and a.segment1='44308'
+order by a.segment1,b.line_num,c.DISTRIBUTION_NUM
+

@@ -1,0 +1,74 @@
+
+----------SO (check SO release Qty avaliable) --onhand Qty needs Org/WH
+select --SOURCE_HEADER_ID,
+c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,
+d.ORDERED_QUANTITY Order_Qty,h.Quantities onhand,e.RESERVATION_QUANTITY,
+nvl(h.Quantities,0)-nvl(e.RESERVATION_QUANTITY,0)-nvl(d.ORDERED_QUANTITY,0) Qty,
+a.segment1 Item,d.SCHEDULE_SHIP_DATE,
+c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,
+--b.released_Status_name Ship_Status,b.released_Status,
+--e.RESERVATION_QUANTITY,--b.cancelled_quantity,
+--e.SUBINVENTORY_CODE Reserv_WH,f.segment2||'.'||f.segment3||'.'||f.segment4||'.'||f.segment5 Reserv_Locator,
+--b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,
+--b.revision,
+--b.SUBINVENTORY  Release_WH,g.segment2||'.'||g.segment3||'.'||g.segment4||'.'||g.segment5 release_Locator,
+d.ORDERED_ITEM Cust_Item
+from apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,
+apps.mtl_system_items_b a,apps.MTL_RESERVATIONS e,
+(SELECT b.INVENTORY_ITEM_ID,b.subinventory_code Sub_inventory, 
+	   b.LOCATOR_ID,SUM(b.primary_transaction_quantity) Quantities ,b.organization_id 
+FROM   apps.MTL_ONHAND_QUANTITIES_DETAIl b 
+WHERE (b.subinventory_code='W12')  AND b.organization_id=131
+GROUP by b.INVENTORY_ITEM_ID,b.subinventory_code,b.LOCATOR_ID) h
+where c.header_id=d.header_id
+--and b.SOURCE_HEADER_ID=c.header_id
+--and b.source_line_id=d.LINE_ID
+--and a.organization_id=h.organization_id(+)
+and d.INVENTORY_ITEM_ID=h.INVENTORY_ITEM_ID(+)
+and d.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+--and b.LOCATOR_ID=h.LOCATOR_ID
+and d.SHIP_FROM_ORG_ID=a.organization_id
+and c.ORDER_NUMBER='4011284'
+and d.LINE_ID = e.DEMAND_SOURCE_LINE_ID(+)
+order by d.LINE_NUMBER
+
+
+
+
+------W01,Org_ID=129 RC, The Pickstage Qty , Reservation Qty & onhand Qty for the SO Delivery
+
+select SOURCE_HEADER_ID,c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,
+c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status,b.released_Status,
+b.shipped_quantity,b.Requested_quantity,e.RESERVATION_QUANTITY,b.cancelled_quantity,
+e.SUBINVENTORY_CODE Reserv_WH,f.segment2||'.'||f.segment3||'.'||f.segment4||'.'||f.segment5 Reserv_Locator,
+--b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,
+a.segment1 Item,b.revision,
+b.SUBINVENTORY  Release_WH,g.segment2||'.'||g.segment3||'.'||g.segment4||'.'||g.segment5 release_Locator,
+b.item_description,d.ORDERED_ITEM Cust_Item
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,
+apps.mtl_system_items_b a,apps.MTL_RESERVATIONS e,apps.mtl_item_locations f,apps.mtl_item_locations g,
+(SELECT b.INVENTORY_ITEM_ID,b.subinventory_code Sub_inventory, 
+	   b.LOCATOR_ID,SUM(b.primary_transaction_quantity) Quantities ,b.organization_id 
+FROM   apps.MTL_ONHAND_QUANTITIES_DETAIl b 
+WHERE (b.subinventory_code='W01')  AND b.organization_id=129
+GROUP by b.INVENTORY_ITEM_ID,b.subinventory_code,b.LOCATOR_ID) h
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and h.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID=h.INVENTORY_ITEM_ID
+and b.LOCATOR_ID=h.LOCATOR_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and c.ORDER_NUMBER='4421726'
+and d.LINE_ID = e.DEMAND_SOURCE_LINE_ID(+)
+and f.INVENTORY_LOCATION_ID=e.LOCATOR_ID
+and g.INVENTORY_LOCATION_ID=b.LOCATOR_ID
+and b.Type='L' -- 'C'=Container, 'L'=Delivery line
+
+
+----Org
+select ORGANIZATION_CODE,ORGANIZATION_ID,SET_OF_BOOKS_ID,BUSINESS_GROUP_ID,OPERATING_UNIT,
+LEGAL_ENTITY,INVENTORY_ENABLED_FLAG from apps.org_organization_definitions where organization_id >=127--= 130
+
+

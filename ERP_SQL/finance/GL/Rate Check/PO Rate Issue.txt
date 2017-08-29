@@ -1,0 +1,102 @@
+
+
+PO Rtae wrong issue solve routines
+(Use step 1 & 3 on daily routine check is enough)
+
+1.	Open PO ,buyer should use Discover Report <BMC GL Open PO Rate Check>  find out irregular Rate, then to correct the Rate at Distribution level before Receive Transaction.
+
+CREATE OR REPLACE VIEW APPS.BMC_Open_PO_Rate_Check
+AS
+select nvl(d.rate,1) Rate,a.currency_code Curr,b.unit_price,
+a.segment1 PO_Num,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+(d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED) Dist_Open_Qty,
+d.quantity_ordered Dist_Order_Qty,d.quantity_cancelled Dist_Canced_Qty,d.QUANTITY_DELIVERED Dist_Rec_Qty,
+b.Item_Description,g.segment1 Item,d.creation_date,f.line_type,c.ship_to_organization_id,h.full_name Buyer
+from 	apps.PO_HEADERS_ALL a
+,		apps.PO_LINES_ALL b
+,		apps.po_Line_locations_all c
+,		apps.PO_DISTRIBUTIONS_ALL d
+,		apps.PO_line_types f
+,		apps.mtl_system_items_b g
+,		apps.PER_ALL_PEOPLE_F h
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and f.LINE_TYPE_ID=b.LINE_TYPE_ID
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (c.CANCEL_FLAG<>'Y' or c.CANCEL_FLAG is null)
+and c.closed_code ='OPEN'
+and g.INVENTORY_ITEM_ID(+)=b.item_id 
+and a.currency_code<>'CNY'
+--and (d.quantity_ordered-d.quantity_cancelled-d.QUANTITY_DELIVERED)>0
+and (c.QUANTITY -c.QUANTITY_CANCELLED -c.QUANTITY_RECEIVED)>0	
+--and a.segment1 in ('1014581','1014751')
+and c.ship_to_organization_id=g.organization_id
+and h.person_id=a.AGENT_ID
+order by a.segment1 ,b.line_num,c.shipment_num ,d.DISTRIBUTION_NUM
+
+2.	Receive of wrong Rate PO (this is a way to check out all kinds of rate issue,for ISIT to use)
+
+1.	Non-BOM PO (Account >12xxx) , won¡¯t create accrual Journal, when match AP Invoice, will use system Rate (not the PO receive transaction Rate) , so no PPV & ERV, no problem ,no need to correct.
+
+2.	BOM PO (Account=12xxx), create accrual Journal, when putaway will create PPV, when match Invoice will create ¨CERV. The PPV/ERV will create currency revaluation variance at month end.
+So recommemd to correct the wrong PO journal by return to Vendor, enter a new correct PO lines, then receive it.
+The correction (return & re-receive) should be done in the same month & not in the same day (otherwise will create GL journal transfer interface stuck error)
+
+3.	Find some BOM PO, receive transaction rate is wrong, but Receiving Journal is OK,putaway is OK,Invoice is OK.
+(like PO : 1023822, 1025298) 
+
+4.	IP org PO , will create wrong layer cost & Inventory valuation. Must return to Vendor then enter a new correct PO lines, then receive it.
+
+
+SQL :
+
+select a.creation_date,(a.quantity) Qty,
+a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,
+a.CURRENCY_CONVERSION_RATE,a.CURRENCY_CODE,a.PO_UNIT_PRICE,gcc.SEGMENT3 Acc,a.DESTINATION_TYPE_CODE
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h,apps.gl_code_combinations gcc,apps.PO_DISTRIBUTIONS_ALL b
+where 
+a.source_document_code='PO'
+--and c.segment1='1023822'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and gcc.CODE_COMBINATION_ID=b.CODE_COMBINATION_ID 
+and b.PO_HEADER_ID=a.PO_HEADER_ID
+and b.PO_LINE_ID=d.PO_LINE_ID
+--and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+and trunc(a.creation_date) >= to_date('20060301','YYYYMMDD') 
+and trunc(a.creation_date) <= to_date('20060331','YYYYMMDD') 
+--and a.DESTINATION_TYPE_CODE='RECEIVING'
+
+3.	Use Discover report  <BMC GL PO Receive Rate check> to check PO Receiving Journal Rate issue
+BOM PO (Account=12xxx), will create accrual Journal. Recommemd to correct the wrong PO journal by return to Vendor, enter a new correct PO lines, then receive it.
+The correction (return & re-receive) should be done in the same month & must not in the same day (otherwise will create GL journal transfer interface stuck error)
+
+SQL:
+select b.reference4 PO_Num,b.source_doc_quantity Qty,
+(b.ACCOUNTED_DR) Dr_Amt_CNY,(b.ACCOUNTED_CR) Cr_Amt_CNY,
+gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account,
+(b.ENTERED_DR) Dr_Amt,(b.ENTERED_CR) Cr_Amt ,b.CURRENCY_CODE,b.CURRENCY_CONVERSION_RATE Rate,b.period_name,
+b.chart_of_accounts_id,b.code_combination_id,b.je_batch_name,b.je_header_name
+FROM APPS.RCV_RECEIVING_SUB_LEDGER b,
+apps.PO_HEADERS_ALL POH,
+apps.gl_code_combinations gcc
+WHERE b.REFERENCE4=POH.segment1
+and gcc.code_combination_id =b.code_combination_id 
+and b.period_name='MAR-06'
+
+
+

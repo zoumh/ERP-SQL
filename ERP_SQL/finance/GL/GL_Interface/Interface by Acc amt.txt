@@ -1,0 +1,36 @@
+
+
+----list interface error group info (user,account--if have,Dr,cr, source)
+select group_id,REQUEST_ID,status,
+--to_char(JE_BATCH_ID) JE_BATCH_ID,to_char(JE_HEADER_ID) JE_HEADER_ID,
+a.REFERENCE4,user_je_category_name category,user_je_source_name source,
+b.segment3 Acc,
+(ACCOUNTED_DR),(ACCOUNTED_CR),CURRENCY_CODE, (ENTERED_DR) , (ENTERED_CR),c.user_name created_by
+from apps.GL_interface a,apps.GL_CODE_combinations b,apps.fnd_user c
+where (status<>'NEW' or group_id=945203)
+and  b.CODE_COMBINATION_ID(+) =a.CODE_COMBINATION_ID 
+and c.user_id=a.CREATED_BY
+
+
+
+
+
+select ACCOUNTING_DATE , status,ACCOUNTED_DR,ACCOUNTED_CR,b.ENTERED_DR,b.ENTERED_CR,
+user_je_category_name Category 
+,b.USER_JE_SOURCE_NAME source,b.CURRENCY_CODE,
+a.segment3 as Account
+from  apps.GL_interface b ,apps.GL_CODE_combinations a 
+where b.CODE_COMBINATION_ID =a.CODE_COMBINATION_ID(+)
+and b.USER_JE_SOURCE_NAME='Inventory'
+--and group_id=773812
+--and status in ('EC12','CORRECTED')
+
+---sum
+select b.segment3 Acc,
+sum(ACCOUNTED_DR) Dr_CNY,sum(ACCOUNTED_CR) Cr_CNY
+from apps.GL_interface a,apps.GL_CODE_combinations b,apps.fnd_user c
+where group_id=2047474
+and  b.CODE_COMBINATION_ID(+) =a.CODE_COMBINATION_ID 
+and c.user_id=a.CREATED_BY
+group by  b.segment3
+

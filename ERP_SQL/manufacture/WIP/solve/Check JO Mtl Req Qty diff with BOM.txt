@@ -1,0 +1,62 @@
+
+
+
+----------------JO Mtl requirement Qty with BOM Qty
+
+select a.start_quantity,b.REQUIRED_QUANTITY,b.QUANTITY_PER_ASSEMBLY,bic.COMPONENT_QUANTITY  
+from apps.bom_inventory_components bic,apps.bom_bill_of_materials bom,
+apps.wip_discrete_jobs a,apps.wip_requirement_operations b,apps.wip_entities c
+where bic.bill_sequence_id=bom.BILL_SEQUENCE_ID
+and bom.ORGANIZATION_ID=a.ORGANIZATION_ID
+and b.ORGANIZATION_ID=a.ORGANIZATION_ID
+and c.ORGANIZATION_ID=a.ORGANIZATION_ID
+and a.PRIMARY_ITEM_ID=bom.assembly_item_id
+and c.wip_entity_id=a.wip_entity_id
+and c.wip_entity_id=b.wip_entity_id
+and bom.ORGANIZATION_ID >127
+and wip_entity_name = '0070457573/1'
+and bic.COMPONENT_ITEM_ID=b.INVENTORY_ITEM_ID 
+
+
+-----JO Details Mtl requirement Qty <> QUANTITY_PER_ASSEMBLY
+select c.wip_entity_name,b.SEGMENT1,a.start_quantity,b.REQUIRED_QUANTITY,b.QUANTITY_PER_ASSEMBLY
+,DATE_RELEASED,DATE_COMPLETED,decode(JOB_TYPE,1,'Standard') Job_Type,CLASS_CODE
+from apps.wip_discrete_jobs a,apps.wip_requirement_operations b,apps.wip_entities c
+where b.ORGANIZATION_ID=a.ORGANIZATION_ID
+and c.ORGANIZATION_ID=a.ORGANIZATION_ID
+and c.wip_entity_id=a.wip_entity_id
+and c.wip_entity_id=b.wip_entity_id
+--and wip_entity_name = '0070457573/1'
+and b.ORGANIZATION_ID=130
+and a.start_quantity*b.QUANTITY_PER_ASSEMBLY<>b.REQUIRED_QUANTITY
+and status_Type<>7 ---cancelled
+order by c.wip_entity_name
+
+
+-----JO Number, Mtl requirement Qty <> QUANTITY_PER_ASSEMBLY
+select distinct c.wip_entity_name,DATE_RELEASED,DATE_COMPLETED,decode(JOB_TYPE,1,'Standard') Job_Type,CLASS_CODE
+from apps.wip_discrete_jobs a,apps.wip_requirement_operations b,apps.wip_entities c
+where b.ORGANIZATION_ID=a.ORGANIZATION_ID
+and c.ORGANIZATION_ID=a.ORGANIZATION_ID
+and c.wip_entity_id=a.wip_entity_id
+and c.wip_entity_id=b.wip_entity_id
+--and wip_entity_name = '0070457573/1'
+and b.ORGANIZATION_ID=130
+and a.start_quantity*b.QUANTITY_PER_ASSEMBLY<>b.REQUIRED_QUANTITY
+and status_Type<>7 ---cancelled
+order by c.wip_entity_name
+
+
+----------Fix it by Tar 5543338.993
+UPDATE wip_requirement_operations
+SET required_quantity = quantity_per_assembly * 1000
+WHERE wip_entity_id = 537829
+AND organization_id = 130;
+  
+UPDATE wip_requirement_operations
+SET required_quantity = quantity_per_assembly * 3000
+WHERE wip_entity_id = 538224 
+AND organization_id = 130;
+
+commit;
+

@@ -1,0 +1,358 @@
+
+Flex -- Feb:
+YTD Invoice --Feb
+select VDR.VENDOR_NAME as Supplier
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as YTD_InvAmt
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE='FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_DATE>=to_date('2004-01-01','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME
+order by sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) desc
+
+
+
+Flex Month end AP - Feb:
+select VDR.VENDOR_NAME as Supplier
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1))-sum(nvl(api.AMOUNT_PAID,0)*decode(api.PAYMENT_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as AP
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE='FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_DATE>=to_date('2000-01-01','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME
+order by sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1))-sum(nvl(api.AMOUNT_PAID,0)*decode(api.PAYMENT_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) desc
+
+
+-----------------
+
+JPY --Feb:
+YTD Invoice --Feb
+select VDR.VENDOR_NAME as Supplier
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as YTD_InvAmt
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE<>'FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_CURRENCY_CODE ='JPY'
+and api.INVOICE_DATE>=to_date('2004-01-01','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME
+order by sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) desc
+
+
+
+JPY -- AP month end Feb 
+select VDR.VENDOR_NAME as Supplier
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1))-sum(nvl(api.AMOUNT_PAID,0)*decode(api.PAYMENT_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as AP
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE<>'FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_CURRENCY_CODE ='JPY'
+and api.INVOICE_DATE>=to_date('2000-01-01','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME
+order by sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1))-sum(nvl(api.AMOUNT_PAID,0)*decode(api.PAYMENT_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) desc
+
+
+
+EUR -- YTD Invoiced Feb
+select VDR.VENDOR_NAME as Supplier
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as YTD_InvAmt
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE<>'FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_CURRENCY_CODE ='EUR'
+and api.INVOICE_DATE>=to_date('2004-01-01','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME
+order by sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) desc
+
+
+
+EUR -- AP Feb 
+select VDR.VENDOR_NAME as Supplier
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1))-sum(nvl(api.AMOUNT_PAID,0)*decode(api.PAYMENT_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as AP
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE<>'FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_CURRENCY_CODE ='EUR'
+and api.INVOICE_DATE>=to_date('2000-01-01','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME
+order by sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1))-sum(nvl(api.AMOUNT_PAID,0)*decode(api.PAYMENT_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) desc
+
+
+
+
+Other -- YTD Invoiced Feb
+select VDR.VENDOR_NAME as Supplier
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as YTD_InvAmt
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE<>'FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_CURRENCY_CODE <>'EUR'
+and api.INVOICE_CURRENCY_CODE <>'JPY'
+and api.INVOICE_DATE>=to_date('2004-01-01','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME
+order by sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) desc
+
+
+Other AP Feb 
+select VDR.VENDOR_NAME as Supplier
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1))-sum(nvl(api.AMOUNT_PAID,0)*decode(api.PAYMENT_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as AP
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE<>'FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_CURRENCY_CODE <>'EUR'
+and api.INVOICE_CURRENCY_CODE <>'JPY'
+and api.INVOICE_DATE>=to_date('2000-01-01','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME
+order by sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1))-sum(nvl(api.AMOUNT_PAID,0)*decode(api.PAYMENT_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) desc
+
+
+
+
+
+
+
+=================================================================
+
+----------Flex
+select VDR.VENDOR_NAME as Supplier,vdr.VENDOR_TYPE_LOOKUP_CODE
+,api.INVOICE_NUM
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1) as CNY_Amt
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,api.PAYMENT_STATUS_FLAG as FullyPay
+,nvl(api.AMOUNT_PAID,0) as Pay_Amount
+,TRM.DUE_DAYS+api.INVOICE_DATE as DueDate
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+,	    apps.AP_BATCHES_ALL apb
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE='FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+order by VDR.VENDOR_NAME,api.INVOICE_CURRENCY_CODE
+
+
+
+select VDR.VENDOR_NAME as Supplier,vdr.VENDOR_TYPE_LOOKUP_CODE
+,api.INVOICE_NUM
+,api.GL_DATE
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1) as CNY_Amt
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,api.PAYMENT_STATUS_FLAG as FullyPay
+,nvl(api.AMOUNT_PAID,0) as Pay_Amount
+,api.PAY_GROUP_LOOKUP_CODE as PayGroup 
+,api.PAYMENT_CURRENCY_CODE as PayCur
+,api.PAYMENT_CROSS_RATE_DATE as PayDate
+,aps.VENDOR_SITE_CODE
+,TRM.DUE_DAYS as TermsDate
+,TRM.DUE_DAYS+api.INVOICE_DATE as DueDate
+,api.INVOICE_TYPE_LOOKUP_CODE as InvType
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+,	    apps.AP_BATCHES_ALL apb
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE='FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+order by VDR.VENDOR_NAME,api.INVOICE_CURRENCY_CODE
+
+select ,api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1) as CNY_Amt
+select * from apps.GL_daily_RATEs where CONVERSION_DATE=to_date('2004-03-10','yyyy-mm-dd')
+
+
+------------JPY
+select VDR.VENDOR_NAME as Supplier,vdr.VENDOR_TYPE_LOOKUP_CODE
+,api.INVOICE_NUM
+,api.GL_DATE
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1) as CNY_Amt
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,api.PAYMENT_STATUS_FLAG as FullyPay
+,nvl(api.AMOUNT_PAID,0) as Pay_Amount
+,api.PAY_GROUP_LOOKUP_CODE as PayGroup 
+,api.PAYMENT_CURRENCY_CODE as PayCur
+,api.PAYMENT_CROSS_RATE_DATE as PayDate
+,aps.VENDOR_SITE_CODE
+,TRM.DUE_DAYS as TermsDate
+,TRM.DUE_DAYS+api.INVOICE_DATE as DueDate
+,api.INVOICE_TYPE_LOOKUP_CODE as InvType
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+,	    apps.AP_BATCHES_ALL apb
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE<>'FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_CURRENCY_CODE ='JPY'
+and api.INVOICE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+order by VDR.VENDOR_NAME,api.INVOICE_CURRENCY_CODE
+
+
+
+
+---------------------Other
+select VDR.VENDOR_NAME as Supplier,vdr.VENDOR_TYPE_LOOKUP_CODE
+,api.INVOICE_NUM
+,api.GL_DATE
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1) as CNY_Amt
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,api.PAYMENT_STATUS_FLAG as FullyPay
+,nvl(api.AMOUNT_PAID,0) as Pay_Amount
+,api.PAY_GROUP_LOOKUP_CODE as PayGroup 
+,api.PAYMENT_CURRENCY_CODE as PayCur
+,api.PAYMENT_CROSS_RATE_DATE as PayDate
+,aps.VENDOR_SITE_CODE
+,TRM.DUE_DAYS as TermsDate
+,TRM.DUE_DAYS+api.INVOICE_DATE as DueDate
+,api.INVOICE_TYPE_LOOKUP_CODE as InvType
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+,	    apps.AP_BATCHES_ALL apb
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE<>'FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_CURRENCY_CODE <>'EUR'
+and api.INVOICE_CURRENCY_CODE <>'JPY'
+and api.INVOICE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+order by VDR.VENDOR_NAME,api.INVOICE_CURRENCY_CODE
+
+
+============================OLD
+select VDR.VENDOR_NAME as Supplier,vdr.VENDOR_TYPE_LOOKUP_CODE
+,api.INVOICE_NUM
+,api.GL_DATE
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,api.PAYMENT_STATUS_FLAG as FullyPay
+,nvl(api.AMOUNT_PAID,0) as Pay_Amount
+,api.PAY_GROUP_LOOKUP_CODE as PayGroup 
+,api.PAYMENT_CURRENCY_CODE as PayCur
+,api.PAYMENT_CROSS_RATE_DATE as PayDate
+,api.VAT_CODE
+,api.VENDOR_SITE_ID
+,aps.VENDOR_SITE_CODE
+,TRM.DUE_DAYS as TermsDate
+,TRM.DUE_DAYS+api.INVOICE_DATE as DueDate
+,api.VENDOR_ID
+,VDR.SEGMENT1 as SupplierCode
+,api.INVOICE_ID
+,api.INVOICE_TYPE_LOOKUP_CODE as InvType
+,api.SOURCE
+,api.SET_OF_BOOKS_ID SOB
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+,	    apps.AP_BATCHES_ALL apb
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE='FLEXTRONICS GROUP'
+
+
+
+------------------test
+select VDR.VENDOR_NAME as Supplier,vdr.VENDOR_TYPE_LOOKUP_CODE
+,api.INVOICE_NUM
+,api.GL_DATE
+,api.INVOICE_DATE
+,api.INVOICE_AMOUNT
+,api.INVOICE_AMOUNT*decode('USD',8.2767,'JPY',0.7562,'SEK',1.121,'EUR',10.3012)
+,api.INVOICE_CURRENCY_CODE as Inv_Curr
+,api.PAYMENT_STATUS_FLAG as FullyPay
+,nvl(api.AMOUNT_PAID,0) as Pay_Amount
+,api.PAY_GROUP_LOOKUP_CODE as PayGroup 
+,api.PAYMENT_CURRENCY_CODE as PayCur
+,api.PAYMENT_CROSS_RATE_DATE as PayDate
+,aps.VENDOR_SITE_CODE
+,TRM.DUE_DAYS as TermsDate
+,TRM.DUE_DAYS+api.INVOICE_DATE as DueDate
+,api.INVOICE_TYPE_LOOKUP_CODE as InvType
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,	  	apps.AP_TERMS_LINES TRM
+,	    apps.AP_BATCHES_ALL apb
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and     TRM.TERM_ID=api.TERMS_ID
+and     api.BATCH_ID=apb.BATCH_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE='FLEXTRONICS GROUP'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and api.INVOICE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+order by VDR.VENDOR_NAME,api.INVOICE_CURRENCY_CODE
+
+select amount*decode('USD',8.2767,'JPY',0.7562,'SEK',1.121,'EUR',10.3012,1)
+
+select * from apps.GL_daily_RATEs where CONVERSION_DATE=to_date('2004-03-10','yyyy-mm-dd')

@@ -1,0 +1,56 @@
+
+---------------Delete Closed/Canceled MO in Mtl_Trans_tmp
+
+select d.REQUEST_NUMBER,b.line_id ,a.CREATION_DATE,a.TRANSACTION_DATE,  c.segment1 Item,a.TRANSACTION_QUANTITY,a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where 
+--d.REQUEST_NUMBER='291224' and 
+--c.segment1='SXA 109 4522/4' and 
+c.ORGANIZATION_ID>127 and 
+d.header_id=b.header_id and
+--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+a.TRX_SOURCE_LINE_ID=b.TXN_SOURCE_LINE_ID and 
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+and b.line_status in (5,6)
+order by a.TRANSACTION_DATE 
+
+select * from Apps.Mtl_Material_Transactions_Temp where 
+transaction_date<= to_date('20060103','yyyymmdd')
+
+
+
+delete from Apps.Mtl_Material_Transactions_Temp where 
+--transaction_date
+creation_date<= to_date('20060103','yyyymmdd')
+
+commit
+
+
+
+---------------Clear MO in Mtl_Trans_tmp with Creation_Date range
+select a.CREATION_DATE,a.TRANSACTION_DATE ,d.REQUEST_NUMBER,c.ORGANIZATION_ID,c.segment1 Item,a.TRANSACTION_QUANTITY,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type,
+a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,a.INVENTORY_ITEM_ID,d.header_id
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where 
+--d.REQUEST_NUMBER='HZMV01' and 
+--c.segment1='KRH 101 316/3.R6A' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+a.TRX_SOURCE_LINE_ID=b.line_id and
+a.move_order_line_id=b.line_id and 
+a.TRANSACTION_SOURCE_ID =d.HEADER_ID and
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+order by a.TRANSACTION_DATE 

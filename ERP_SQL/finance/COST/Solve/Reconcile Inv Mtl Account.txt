@@ -1,0 +1,53 @@
+
+
+---------Mtl Account   of one Item in Period
+
+select    mmt.organization_id,gcc.segment3 as Account_Num,
+          mtt.transaction_type_name, 
+          mta.base_transaction_value, 
+          mta.primary_quantity  as Qty, mmt.actual_cost,
+         mmt.transaction_id, msi.segment1 item_code, mmt.transaction_date,
+         mst.transaction_source_type_name, 
+          mmt.subinventory_code,mmt.transfer_subinventory             Destination_WareHouse,  
+         mta.gl_batch_id
+from         
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+--apps.wip_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    (msi.segment1 ='1/KRH 101 453/1.R2A') 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = mmt.organization_id  and msi.organization_id = mmt.organization_id 
+and    trunc(mmt.transaction_date) >= to_date('20070201','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20070228','YYYYMMDD')
+
+
+----------After find the Item , List item's Mtl_transaction creation Date/time to compare with Trans_Date
+select   mmt.transaction_date,mmt.CREATION_DATE,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, mmt.TRANSACTION_QUANTITY as Qty,
+         mmt.ACTUAL_COST,
+         mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+         mmt.transaction_id,
+         mmt.organization_id Organization 
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi--, 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+and    trunc(mmt.transaction_date) >= to_date('20070831','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20070901','YYYYMMDD')
+--and mtt.transaction_type_name not in ('Sales Order Pick','Container Pack','Subinventory Transfer')
+--and mmt.TRANSACTION_QUANTITY>0
+and msi.segment1='RNH 942 268.R1B'
+order by trunc(mmt.transaction_date),mmt.transaction_id
+

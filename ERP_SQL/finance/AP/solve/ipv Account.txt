@@ -1,0 +1,59 @@
+
+
+
+select * from APPS.ap_ae_lines_all where AE_HEADER_ID =155191
+
+select * from APPS.ap_ae_lines_all where AE_line_ID =499609
+
+update APPS.ap_ae_lines_all set CODE_COMBINATION_ID=75359 where AE_line_ID =499609
+
+commit
+
+select * from APPS.ap_ae_HEADeRs_all where ACCOUNTING_EVENT_ID =190135
+
+
+select * from apps.ap_invoices_all where INVOICE_NUM='218025'
+
+select * from apps.AP_INVOICE_DISTRIBUTIONS_all where invoice_id=172940
+
+select * from apps.AP_ACCOUNTING_EVENTS_ALL where SOURCE_ID=172940
+
+select segment1,segment2,segment3,segment4,segment5,CODE_COMBINATION_ID  
+from apps.GL_code_combinations where  CODE_COMBINATION_ID in  (4155,75359,42478,75368)
+
+
+delete from AP_ACCOUNTING_EVENTS_ALL where ACCOUNTING_EVENT_ID=190135
+
+
+delete from AP_AE_HEADERS_ALL where ACCOUNTING_EVENT_ID=190135
+
+delete from AP_AE_LINES_ALL where ae_header_id=155191
+
+rollback
+
+commit
+
+----------
+
+select * from apps.ap_invoices_all where INVOICE_NUM='10556042'
+
+select * from apps.AP_ACCOUNTING_EVENTS_ALL where SOURCE_ID=172932
+
+select * from APPS.ap_ae_headers_all where ACCOUNTING_EVENT_ID =190127
+
+select * from APPS.ap_ae_lines_all where AE_HEADER_ID =155185
+
+select * from APPS.ap_ae_lines_all where AE_HEADER_ID =155185 and AE_line_ID in (499580,499582)
+
+update APPS.ap_ae_lines_all set CODE_COMBINATION_ID=75359 where AE_HEADER_ID =155185 and AE_line_ID in (499580,499582)
+
+commit
+
+
+
+select * from apps.ap_invoices_all where INVOICE_NUM='00034878'
+
+select * from apps.AP_ACCOUNTING_EVENTS_ALL where SOURCE_ID=172982
+
+
+

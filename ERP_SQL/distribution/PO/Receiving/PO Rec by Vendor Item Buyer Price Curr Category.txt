@@ -1,0 +1,36 @@
+
+
+----------Kelly , BOM PO received Qty by Date,Vendor,Item,Category,Buyer,PO,Price,Curr
+
+select g.segment1 Model,d.segment1 Item,
+c.UNIT_PRICE,b.CURRENCY_CODE Curr,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) Rec_Qty,b.segment1 PO,
+sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO VENDOR',-1*a.quantity,a.quantity)) CNY_Value,
+a.transaction_date,VDR.VENDOR_NAME as Supplier,e.VENDOR_SITE_CODE Site,h.full_name Buyer,f.organization_code
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.PO_HEADERS_ALL b,apps.PO_VENDORS VDR,
+apps.mtl_system_items d, apps.PO_VENDOR_SITES_ALL e,APPS.mtl_parameters f,apps.mtl_item_categories_v g,
+apps.PER_ALL_PEOPLE_F h
+where c.po_header_id=b.po_header_id --and a.transaction_type='RECEIVE'
+and a.source_document_code='PO'
+and a.organization_id>127
+and VDR.VENDOR_ID=b.VENDOR_ID
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id=b.org_id
+and c.org_id>=127
+and DESTINATION_TYPE_CODE='RECEIVING'
+--and c.line_type_id not in (1020,1021) ---No-BOM POs
+and a.po_line_id=c.po_line_id
+and a.transaction_date>=to_date('2007-01-03','YYYY-MM-DD')
+and a.transaction_date<=to_date('2007-01-31','YYYY-MM-DD')
+and d.organization_id=a.organization_id
+and d.inventory_item_id=c.item_id
+and b.VENDOR_SITE_ID=e.VENDOR_SITE_ID
+and b.org_id=e.org_id
+and a.organization_id=f.organization_id
+and h.person_id=b.AGENT_ID
+and d.INVENTORY_ITEM_ID=g.INVENTORY_ITEM_ID
+and d.ORGANIZATION_ID= g.ORGANIZATION_ID
+and g.category_set_id=1
+group by VDR.VENDOR_NAME,e.VENDOR_SITE_CODE,b.segment1,d.segment1,b.CURRENCY_CODE,c.UNIT_PRICE,f.organization_code,
+h.full_name,g.segment1,a.transaction_date
+order by f.organization_code,VDR.VENDOR_NAME,e.VENDOR_SITE_CODE,b.segment1

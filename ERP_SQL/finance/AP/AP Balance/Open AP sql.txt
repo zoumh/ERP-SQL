@@ -1,0 +1,209 @@
+
+
+
+---------------Open AP invoice header
+
+
+select c.ORG_ID,vdr.SEGMENT1 vendor_Number,vds.VENDOR_SITE_CODE, 
+c.INVOICE_TYPE_LOOKUP_CODE Inv_type,c.INVOICE_NUM,apb.BATCH_NAME as InvBatch,
+c.INVOICE_AMOUNT,(c.AMOUNT_PAID) Paid_Amt,
+(c.BASE_AMOUNT) Inv_CNY_Amt,
+(nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)) Open_Amt,
+c.PAYMENT_STATUS_FLAG,
+c.INVOICE_DATE,c.GL_DATE, --c.TERMS_DATE,
+TRM.DUE_DAYS as Terms,
+(TRM.DUE_DAYS+c.INVOICE_DATE) as DueDate,c.DESCRIPTION,
+d.segment2||'.'||d.segment3||'.'||d.segment4||'.'||d.segment5  Cr_account,
+c.PAY_GROUP_LOOKUP_CODE Pay_Group,c.VAT_CODE,c.EXCHANGE_RATE,c.EXCHANGE_DATE , c.EXCHANGE_RATE_TYPE ,
+c.APPROVAL_STATUS,vdr.VENDOR_NAME,
+c.PREPAY_FLAG, c.WFAPPROVAL_STATUS,      
+c.invoice_currency_code Curr
+from --apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+--,apps.GL_CODE_combinations b
+apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+,apps.AP_BATCHES_ALL apb
+,apps.AP_TERMS_LINES TRM,
+apps.PO_VENDOR_SITES_ALL vds 
+where --a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+--and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID and TRM.TERM_ID=c.TERMS_ID
+and vds.VENDOR_SITE_ID =c.VENDOR_SITE_ID 
+and vds.ORG_ID =c.org_id
+--and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and c.BATCH_ID=apb.BATCH_ID
+--and a.accounting_date>=to_date('2005-10-01','yyyy-mm-dd')
+and PAYMENT_STATUS_FLAG in ('N','P')
+--and c.INVOICE_TYPE_LOOKUP_CODE<>'STANDARD'
+--and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')
+--order by c.INVOICE_NUM
+--and c.INVOICE_AMOUNT<>0
+and nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)<>0
+
+------------Verify with OU
+
+select vdr.SEGMENT1||'&&'||c.INVOICE_NUM Inv_ID, vdr.SEGMENT1 vendor_Number,c.INVOICE_TYPE_LOOKUP_CODE Inv_type,c.ORG_ID, c.INVOICE_NUM,
+c.INVOICE_AMOUNT,(c.AMOUNT_PAID) Paid_Amt,
+(c.BASE_AMOUNT) Inv_CNY_Amt
+from apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.AP_BATCHES_ALL apb
+where VDR.VENDOR_ID=c.VENDOR_ID
+and c.BATCH_ID=apb.BATCH_ID
+and PAYMENT_STATUS_FLAG in ('N','P')
+and nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)<>0
+and c.ORG_ID=81
+and vdr.SEGMENT1||'&&'||c.INVOICE_NUM not in 
+(select vdr.SEGMENT1||'&&'||c.INVOICE_NUM Inv_ID
+from apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.AP_BATCHES_ALL apb
+where VDR.VENDOR_ID=c.VENDOR_ID
+and c.BATCH_ID=apb.BATCH_ID
+and PAYMENT_STATUS_FLAG in ('N','P')
+and nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)<>0
+and c.ORG_ID=127)
+
+
+--------------Prepayment 
+
+SELECT * FROM ap_system_parameters
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('81');
+END;
+
+
+select distinct approval_status_lookup_code from apps.AP_INVOICES_v --where INVOICE_NUM ='BMC-01'
+
+APPROVED
+AVAILABLE
+FULL
+NEEDS REAPPROVAL
+
+select c.approval_status_lookup_code,vdr.SEGMENT1||'&&'||c.INVOICE_NUM Inv_ID,vdr.SEGMENT1 vendor_Number,c.VENDOR_ID,c.INVOICE_TYPE_LOOKUP_CODE Inv_type,c.ORG_ID, c.INVOICE_NUM,apb.BATCH_NAME as InvBatch,
+c.INVOICE_AMOUNT,(c.AMOUNT_PAID) Paid_Amt,
+(c.BASE_AMOUNT) Inv_CNY_Amt,
+(nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)) Open_Amt,
+c.PAYMENT_STATUS_FLAG,
+c.INVOICE_DATE,c.GL_DATE, c.DESCRIPTION,c.TERMS_DATE,
+c.PAY_GROUP_LOOKUP_CODE Pay_Group,c.VAT_CODE,c.EXCHANGE_RATE,c.EXCHANGE_DATE , c.EXCHANGE_RATE_TYPE ,
+c.APPROVAL_STATUS,
+c.PREPAY_FLAG, c.WFAPPROVAL_STATUS,      
+c.invoice_currency_code Curr,c.INVOICE_TYPE_LOOKUP_CODE Inv_Type--,--,c.GL_DATE
+from apps.AP_INVOICES_v c
+,apps.PO_VENDORS VDR
+,apps.AP_BATCHES_ALL apb
+where VDR.VENDOR_ID=c.VENDOR_ID
+and c.BATCH_ID=apb.BATCH_ID
+--and PAYMENT_STATUS_FLAG in ('N','P')
+--and nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)<>0
+and c.INVOICE_TYPE_LOOKUP_CODE='PREPAYMENT'
+and c.approval_status_lookup_code<>'CANCELLED'
+
+
+
+---------Open ap Invoice with distrib
+
+select c.INVOICE_NUM,f.segment1 PO_Num,sum(a.QUANTITY_INVOICED) Invoice_Qty,
+sum(e.QUANTITY_ORDERED-QUANTITY_CANCELLED) Order_Qty ,sum(e.QUANTITY_DELIVERED) Ship_Qty,sum(e.QUANTITY_BILLED) Billed_Qty,
+sum(a.AMOUNT) Inv_Amt,sum(c.AMOUNT_PAID) Paid_Amt,
+--sum(a.BASE_AMOUNT) Inv_CNY_Amt
+sum(nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)) Open_Amt,
+c.PAYMENT_STATUS_FLAG,apb.BATCH_NAME as InvBatch,
+c.invoice_currency_code Curr,c.INVOICE_TYPE_LOOKUP_CODE Inv_Type--,--,c.GL_DATE
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+,apps.GL_CODE_combinations d
+,apps.AP_BATCHES_ALL apb
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+--and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and c.BATCH_ID=apb.BATCH_ID
+--and a.accounting_date>=to_date('2005-10-01','yyyy-mm-dd')
+and PAYMENT_STATUS_FLAG in ('N','P')
+and c.INVOICE_TYPE_LOOKUP_CODE='STANDARD'
+--and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')
+--order by c.INVOICE_NUM
+--and c.INVOICE_AMOUNT<>0
+and nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)<>0
+group by c.INVOICE_TYPE_LOOKUP_CODE,c.INVOICE_NUM,PAYMENT_STATUS_FLAG,apb.BATCH_NAME,c.invoice_currency_code--,a.DIST_MATCH_TYPE,(sysdate-c.TERMS_DATE)
+--,c.TERMS_DATE
+
+
+
+----------verify by supplier
+
+select c.ORG_ID,vdr.SEGMENT1 as Supplier_Num,sum(c.INVOICE_AMOUNT) Inv_amt ,sum(c.AMOUNT_PAID) Paid_Amt,
+sum(decode(c.invoice_currency_code,'CNY',c.BASE_AMOUNT,c.BASE_AMOUNT*c.EXCHANGE_RATE)) Inv_CNY_Amt,sum(BASE_AMOUNT) base_Amt 
+from --apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+--,apps.GL_CODE_combinations b
+apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+--,apps.GL_CODE_combinations d
+,apps.AP_BATCHES_ALL apb
+where --a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+--and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+--and a.invoice_id=c.invoice_id
+--and 
+VDR.VENDOR_ID=c.VENDOR_ID
+--and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and c.BATCH_ID=apb.BATCH_ID
+--and a.accounting_date>=to_date('2005-10-01','yyyy-mm-dd')
+and PAYMENT_STATUS_FLAG in ('N','P')
+--and c.INVOICE_TYPE_LOOKUP_CODE<>'STANDARD'
+--and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')
+--order by c.INVOICE_NUM
+--and c.INVOICE_AMOUNT<>0
+and nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)<>0
+group by c.ORG_ID,vdr.SEGMENT1
+
+
+
+
+select c.INVOICE_TYPE_LOOKUP_CODE Inv_type,c.ORG_ID, c.INVOICE_NUM,apb.BATCH_NAME as InvBatch,
+c.INVOICE_AMOUNT,(c.AMOUNT_PAID) Paid_Amt,
+(c.BASE_AMOUNT) Inv_CNY_Amt,
+(nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)) Open_Amt,
+c.PAYMENT_STATUS_FLAG,
+c.INVOICE_DATE,c.GL_DATE, c.DESCRIPTION,c.TERMS_DATE,
+c.PAY_GROUP_LOOKUP_CODE Pay_Group,c.VAT_CODE,c.EXCHANGE_RATE,c.EXCHANGE_DATE , c.EXCHANGE_RATE_TYPE ,
+c.APPROVAL_STATUS,
+c.PREPAY_FLAG, c.WFAPPROVAL_STATUS,      
+c.invoice_currency_code Curr,c.INVOICE_TYPE_LOOKUP_CODE Inv_Type--,--,c.GL_DATE
+from --apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+--,apps.GL_CODE_combinations b
+apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+--,apps.GL_CODE_combinations d
+,apps.AP_BATCHES_ALL apb
+where --a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+--and d.CODE_COMBINATION_ID=c.ACCTS_PAY_CODE_COMBINATION_ID
+--and a.invoice_id=c.invoice_id
+--and 
+VDR.VENDOR_ID=c.VENDOR_ID
+--and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and c.BATCH_ID=apb.BATCH_ID
+--and a.accounting_date>=to_date('2005-10-01','yyyy-mm-dd')
+and PAYMENT_STATUS_FLAG in ('N','P')
+--and c.INVOICE_TYPE_LOOKUP_CODE<>'STANDARD'
+--and a.accounting_date<=to_date('2005-04-30','yyyy-mm-dd')
+--order by c.INVOICE_NUM
+--and c.INVOICE_AMOUNT<>0
+and nvl(c.INVOICE_AMOUNT,0)-nvl(c.AMOUNT_PAID,0)<>0
+and vdr.SEGMENT1='8'
+
+
+
+
+-------Non canceled, paid status must be in ('N','P')
+select * from apps.AP_INVOICES_ALL c where nvl(c.INVOICE_AMOUNT,0)<> nvl(c.AMOUNT_PAID,0)
+and PAYMENT_STATUS_FLAG in ('N','P')
+and INVOICE_AMOUNT<>0
+

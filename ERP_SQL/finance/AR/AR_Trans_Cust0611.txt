@@ -1,0 +1,101 @@
+
+
+------------ AR Transactions (Open) with Commercial Invoice number by customer number
+----INVOICE level Open amount
+select convert(a.CUSTOMER_NAME,'ZHS16GBK') as Name,a.CUSTOMER_NAME,a.CUSTOMER_NUMBER
+,g.TRX_NUMBER as Inv_num
+,l.ATTRIBUTE1 as Com_Inv
+,g.TRX_DATE,g.GL_DATE
+,AMOUNT_DUE_REMAINING,g.INVOICE_CURRENCY_CODE
+,g.CUSTOMER_SITE_USE_ID
+,f.SITE_USE_CODE,f.LOCATION as Bill_Location
+from apps.AR_CUSTOMERS_V  a
+,apps.HZ_CUST_ACCT_SITES_ALL  c
+,apps.ar_payment_schedules_all g
+, (select SITE_USE_CODE,SITE_USE_id,CUST_ACCT_SITE_ID,LOCATION from apps.HZ_CUST_SITE_USES_all h where SITE_USE_CODE='BILL_TO' ) f
+,apps.ra_customer_trx_all l
+where a.CUSTOMER_ID=c.CUST_ACCOUNT_ID
+and c.CUST_ACCT_SITE_ID=f.CUST_ACCT_SITE_ID
+and g.CUSTOMER_SITE_USE_ID=f.SITE_USE_id
+and l.CUSTOMER_TRX_ID=g.CUSTOMER_TRX_ID
+and ( a.CUSTOMER_NUMBER='1002' or a.CUSTOMER_NUMBER='1139')
+and g.AMOUNT_DUE_REMAINING<>0
+--and g.GL_DATE>=to_date('2004-05-01','YYYY-MM-DD')
+--and g.GL_DATE<=to_date('2004-05-31','YYYY-MM-DD')
+
+
+
+------Inv_num,line,Open Amt, VAT_Amt (not OK)
+select g.TRX_NUMBER as Inv_num,j.LINE_NUMBER ,l.ATTRIBUTE1 as Com_Inv
+,g.AMOUNT_DUE_REMAINING,g.AMOUNT_LINE_ITEMS_ORIGINAL,g.AMOUNT_LINE_ITEMS_REMAINING,g.NUMBER_OF_DUE_DATES,g.INVOICE_CURRENCY_CODE
+,g.TRX_DATE,g.GL_DATE,g.DUE_DATE
+,j.EXTENDED_AMOUNT as Line_Amt,k.EXTENDED_AMOUNT as line_tax,k.TAX_RATE
+,g.CUSTOMER_SITE_USE_ID
+,f.SITE_USE_CODE,f.LOCATION as Bill_Location,j.INTERFACE_LINE_ATTRIBUTE2 as Type
+,convert(a.CUSTOMER_NAME,'ZHS16GBK') as Name,a.CUSTOMER_NUMBER
+from apps.AR_CUSTOMERS_V  a
+,apps.HZ_CUST_ACCT_SITES_ALL  c
+,apps.ar_payment_schedules_all g
+,(select EXTENDED_AMOUNT,LINE_NUMBER,CUSTOMER_TRX_LINE_ID,CUSTOMER_TRX_ID,INTERFACE_LINE_ATTRIBUTE2 from apps.RA_CUSTOMER_TRX_lines_ALL where LINE_TYPE='LINE') j
+,(select EXTENDED_AMOUNT,LINE_NUMBER,LINK_TO_CUST_TRX_LINE_ID,TAX_RATE FROM apps.RA_CUSTOMER_TRX_lines_ALL where LINE_TYPE='TAX') k
+, (select SITE_USE_CODE,SITE_USE_id,CUST_ACCT_SITE_ID,LOCATION from apps.HZ_CUST_SITE_USES_all h where SITE_USE_CODE='BILL_TO' ) f
+,apps.ra_customer_trx_all l
+where a.CUSTOMER_ID=c.CUST_ACCOUNT_ID
+and c.CUST_ACCT_SITE_ID=f.CUST_ACCT_SITE_ID
+and g.CUSTOMER_SITE_USE_ID=f.SITE_USE_id
+and g.CUSTOMER_TRX_ID=j.CUSTOMER_TRX_ID
+and l.CUSTOMER_TRX_ID=g.CUSTOMER_TRX_ID
+--and j.LINE_TYPE='LINE'
+and j.CUSTOMER_TRX_LINE_ID=k.LINK_TO_CUST_TRX_LINE_ID
+and (a.CUSTOMER_NUMBER='1002' or a.CUSTOMER_NUMBER='1139')
+--and ( a.CUSTOMER_NUMBER='1139')
+--and g.TRX_NUMBER='10710'
+and g.AMOUNT_DUE_REMAINING<>0
+--and g.GL_DATE>=to_date('2004-01-01','YYYY-MM-DD')
+--and g.GL_DATE<=to_date('2004-05-31','YYYY-MM-DD')
+
+
+
+
+
+
+
+
+
+
+
+
+select * from APPS.GL_JOURNAL_LIST where PERIOD_NAME='MAY-04' and account='120100'
+
+select * from apps.ra_customer_trx_all where CUSTOMER_TRX_ID=4110
+
+select * from apps.ra_customer_trx_lines_all where CUSTOMER_TRX_ID=4110
+
+select * from apps.ar_payment_schedules_all a where TRX_NUMBER='10710'
+
+select * from apps.AR_CUSTOMERS_V where CUSTOMER_NUMBER='1002'
+
+select * from apps.RA_CUST_TRX_LINE_GL_DIST_all where CUSTOMER_TRX_ID=4110
+
+select j.CUSTOMER_TRX_ID,convert(a.CUSTOMER_NAME,'ZHS16GBK') as Name,a.CUSTOMER_NUMBER--,b.SITE_USE_ID,b.LOCATION
+,g.CUSTOMER_SITE_USE_ID,AMOUNT_DUE_REMAINING,g.INVOICE_CURRENCY_CODE,g.TRX_NUMBER,g.TRX_DATE,g.GL_DATE
+,f.SITE_USE_CODE,f.LOCATION as Bill_Location,l.ATTRIBUTE1 as ComInv
+from apps.AR_CUSTOMERS_V  a
+,apps.HZ_CUST_ACCT_SITES_ALL  c
+,apps.ar_payment_schedules_all g
+,(select EXTENDED_AMOUNT,apps.RA_CUSTOMER_TRX_lines_ALL j
+, (select SITE_USE_CODE,SITE_USE_id,CUST_ACCT_SITE_ID,LOCATION from apps.HZ_CUST_SITE_USES_all h where SITE_USE_CODE='BILL_TO' ) f
+,apps.ra_customer_trx_all l
+where a.CUSTOMER_ID=c.CUST_ACCOUNT_ID
+and c.CUST_ACCT_SITE_ID=f.CUST_ACCT_SITE_ID
+and g.CUSTOMER_SITE_USE_ID=f.SITE_USE_id
+and g.CUSTOMER_TRX_ID=j.CUSTOMER_TRX_ID
+and l.CUSTOMER_TRX_ID=g.CUSTOMER_TRX_ID
+and j.LINE_TYPE='LINE'
+and a.CUSTOMER_NUMBER='1002'
+--and g.TRX_NUMBER='10710'
+and g.AMOUNT_DUE_REMAINING<>0
+
+
+
+

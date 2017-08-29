@@ -1,0 +1,71 @@
+
+------GL side Sum by Account
+select b.JE_CATEGORY,b.JE_SOURCE,a.segment3 as Account,
+sum(nvl(b.LINE_ACCOUNTED_DR,0)-nvl(b.LINE_ACCOUNTED_CR,0)) Accounted_Amt, 
+sum(nvl(b.LINE_ENTERED_DR,0)-nvl(b.LINE_ENTERED_CR,0)) Amt
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME='FEB-09')
+and je_source = 'Receivables'
+--and a.segment3= '55031004'
+group by b.JE_CATEGORY,b.JE_SOURCE,a.segment3
+
+
+-----------AR applied G/L in the period linked with GL (use Inv Rate & Receipt Rate)
+select
+cash.RECEIPT_NUMBER,
+cash.EXCHANGE_RATE Receipt_Rate,
+ar.AMOUNT_APPLIED,
+ra.EXCHANGE_RATE Invoice_Rate,
+--(decode(cash.EXCHANGE_RATE,null,1,cash.EXCHANGE_RATE)*ar.AMOUNT_APPLIED) Receipt_amt,
+--(decode(ra.EXCHANGE_RATE,null,1,ra.EXCHANGE_RATE)*ar.AMOUNT_APPLIED) Inv_amt,
+(decode(cash.EXCHANGE_RATE,null,1,cash.EXCHANGE_RATE)-decode(ra.EXCHANGE_RATE,null,1,ra.EXCHANGE_RATE))*ar.AMOUNT_APPLIED Exchange_Variance_amount,
+ra.TRX_NUMBER AR_Invoice_number,
+--ar.ACCTD_AMOUNT_APPLIED_TO,
+cash.CURRENCY_CODE Receipt_Currency,ra.INVOICE_CURRENCY_CODE Invoice_Currency,
+cash.EXCHANGE_DATE Receipt_Rate_date,
+--cash.EXCHANGE_RATE_TYPE Receipt_Rate_Type,
+ra.EXCHANGE_DATE Invoice_Rate_Date,
+ra.TRX_DATE Invlice_GL_Date,
+h.POSTED_DATE GL_Post_Date,
+--ra.EXCHANGE_rate_type Invoice_Rate_Type,
+h.PERIOD_NAME
+from
+apps.gl_je_headers h,
+apps.gl_je_lines l,
+apps.gl_import_references r,
+apps.AR_PAYMENT_SCHEDULES_ALL PS,
+apps.RA_CUSTOMER_TRX_ALL RA,
+apps.AR_RECEIVABLE_APPLICATIONS_ALL AR,
+apps.AR_CASH_RECEIPTS_ALL  CASH
+where h.je_header_id=l.je_header_id
+and  l.JE_HEADER_ID=r.JE_HEADER_ID
+and  l.JE_LINE_NUM=r.JE_LINE_NUM
+and PS.CUSTOMER_TRX_ID=RA.CUSTOMER_TRX_ID
+AND  AR.CASH_RECEIPT_ID=CASH.CASH_RECEIPT_ID
+AND  PS.PAYMENT_SCHEDULE_ID=AR.APPLIED_PAYMENT_SCHEDULE_ID
+AND  r.REFERENCE_4=cash.RECEIPT_NUMBER
+and  r.REFERENCE_5=ra.TRX_NUMBER
+AND  AR.DISPLAY='Y'
+and h.period_name='FEB-09'
+and   l.code_combination_id=44346
+--and cash.CURRENCY_CODE<>ra.INVOICE_CURRENCY_CODE 
+--and  ra.EXCHANGE_RATE<>cash.EXCHANGE_RATE
+
+
+------------Foreign AR Applied amount with Invoice Rate(not match with GL)
+select --a.APPLIED_CUSTOMER_TRX_ID,a.CUSTOMER_TRX_ID, APPLIED_CUSTOMER_TRX_LINE_ID,
+b.TRX_NUMBER Invoice_Num,b.INVOICE_CURRENCY_CODE Curr,
+a.AMOUNT_APPLIED,--a.LINE_APPLIED,a.TAX_APPLIED,
+b.TRX_DATE Inv_GL_Date,b.CREATION_DATE Inv_Create_Date,b.EXCHANGE_DATE Inv_Rate_Date,b.EXCHANGE_RATE Inv_Rate,
+a.GL_DATE Apply_Date,a.CREATION_DATE Apply_Create_Date,
+a.APPLICATION_TYPE,a.STATUS,a.APPLY_DATE,a.DISPLAY,a.GL_POSTED_DATE
+from apps.AR_RECEIVABLE_APPLICATIONS_all a,apps.ra_customer_trx_all b 
+where b.CUSTOMER_TRX_ID=a.APPLIED_CUSTOMER_TRX_ID
+and b.ORG_ID=a.org_id
+and a.GL_DATE>= to_date('20090101','YYYYMMDD') 
+and a.GL_DATE< to_date('20090201','YYYYMMDD')
+--and a.STATUS='APP'
+--and b.INVOICE_CURRENCY_CODE<>'CNY'
+--and a.CUSTOMER_TRX_ID in (551427,555326)
+

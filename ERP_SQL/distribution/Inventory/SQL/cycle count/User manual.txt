@@ -1,0 +1,113 @@
+
+
+ISIT task:
+
+Manual -cycle counts -Ctl F11 , locate at a cycle name -->Tools-->Perform Full Cycle Count
+Fill in 3 Parameter -the cycle count name
+
+
+request: schedule at 8:30 -8:50 each day
+<Perform full cycle count (Report Set)>
+
+--------------------BMC steps (use working calendar)
+
+Setup:
+1. ISIT create Cycle Counting Name
+2. ISIT setup Class upder the cycle counting
+3. ISIT input items under this cycle counting
+4. (ISIT onetime) Run schedule:
+Tools-> Perform full cycle count
+----Actual request set: Perform full cycle count (Report Set)
+
+
+Daily:
+1.Daily, user at Cycle Count Entries-Choose Name - (B)Find -Export all open count request to excel
+
+2.User data load the count_Qty
+At entry screen, enter the count_Qty, otherwise it would be show in future export list!
+
+3.ISIT Need to reject the data before the Item was counted again ! 
+otherwise will in task screen
+
+
+
+-------------Oracle user manual
+Performing Cycle and Physical Counting with WMS
+
+Oracle WMS enables you to perform both cycle and physical counts, using the
+mobile device. The WMS offers the following enhancements to standard inventory
+cycle counting:
+ Mobile device enabled
+ You can scan information about material
+ You can enter count quantities real-time
+ The system automatically matches count information to the cycle count request
+
+(If no matches are found, the system creates an unscheduled cycle count. The
+system will create an unscheduled count only if you allow unscheduled entries
+while defining the cycle count.)
+
+ Provides you the choice of counting the LPN or the LPN quantities
+ Cycle counts can either be dispatched as tasks or user directed
+This section includes the following topics:
+ Describing the WMS Cycle Counting Process
+ Using WMS Cycle Counting Features
+ Setting Up and Performing Cycle Counts
+
+Describing the WMS Cycle Counting Process
+The process of defining and scheduling cycle counts are documented in the Oracle
+Inventory User¡¯s Guide. However, with WMS installed, additional cycle count header
+values have been added to control license plate discrepancies.
+
+Optionally, the following can be defined:
+ Set up an employee and assign that employee to the user who will perform the cycle counting task.
+ Define a department, or use an existing department, for cycle counting.
+ Create a new resource of type Person, and assign the employee, that is associated with the user who will perform the cycle counting tasks, to the
+resource.
+
+Define a standard task type for cycle counting, and assign your cycle counting
+department to the task type.
+Assign a task type of Cycle Count.
+Assign the resource, that was created for cycle counting, in operational
+resources.
+The next step in the process requires that the operator log into the mobile user
+interface and start entering counts for warehouse items. The organization name,
+cycle count name, subinventory, locator, cost group, project, task (with a WMS
+enabled Project Manufacturing organization), and any other attributes are all
+captured using the mobile device. At this point, the count can either be task
+dispatched or user directed.
+After the count is performed, the system automatically matches the cycle count
+results against the cycle count request. If the cycle count results do not match the
+cycle count request, then the system creates an unscheduled cycle count.
+
+After the matching process, authorized personnel can approve the counts and make
+adjustments.
+
+Using WMS Cycle Counting Features
+Before you can perform cycle counting in WMS, you must have completed the
+following:
+ Defined workday calendar: You must define and assign the work day calendar
+to a cycle count. The system uses this calendar for scheduling automatic counts.
+Depending on the holidays and other exception days, the system can
+automatically schedule cycle counts.
+ Compiled the ABC analysis: The system can also perform cycle counting, based
+on an ABC compile. An ABC compile can then be assigned to a cycle count, at
+which time the cycle count can be performed.
+ Defined ABC classes: You must define ABC classes before performing a cycle
+count. All of the items that are included in a cycle count must belong to one of
+the classes. Items can be individually assigned to classes. A class assignment for
+a particular item can be changed.
+Setting Up and Performing Cycle Counts
+Setting Up and performing cycle counts includes the following:
+
+Defining the scope of the cycle count, either at the organization- or
+subinventory level
+ Defining ABC classes
+ Defining items
+ Scheduling cycle counts
+ Generating cycle count requests
+ Entering count results
+ Making approvals and adjustments
+ Generating and viewing reports
+
+
+

@@ -1,0 +1,60 @@
+
+
+GL_Imported_Table , to view Dr/Cr  by account 
+
+select CODE_COMBINATION_ID,entered_dr,entered_cr from apps.GL_JE_lines where CODE_COMBINATION_ID in
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where SEGMENT3='21710101' 
+and SEGMENT1<>'T' and SEGMENT2<>'T' and SEGMENT4<>'T' and SEGMENT5<>'T' and SEGMENT6<>'T')
+
+
+select CODE_COMBINATION_ID,entered_dr,entered_cr from apps.GL_JE_lines where CODE_COMBINATION_ID in
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where SEGMENT3='21710102' 
+and SEGMENT1<>'T' and SEGMENT2<>'T' and SEGMENT4<>'T' and SEGMENT5<>'T' and SEGMENT6<>'T')
+
+
+
+select * from apps.GL_JE_lines where CODE_COMBINATION_ID in
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where SEGMENT1='02')
+
+select * from apps.GL_CODE_combinations where SEGMENT1='02'
+
+select CODE_COMBINATION_ID,segment2,segment3 from apps.GL_CODE_combinations where segment3='212000'
+
+
+1013
+1004
+7787
+8963
+12032
+11490
+
+
+
+
+
+=====================
+
+
+select CODE_COMBINATION_ID,entered_dr,entered_cr from apps.GL_JE_lines where CODE_COMBINATION_ID in
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where (CODE_COMBINATION_ID='1162' or CODE_COMBINATION_ID='2736' 
+or CODE_COMBINATION_ID='5301' or CODE_COMBINATION_ID='3253' or CODE_COMBINATION_ID='5223' or CODE_COMBINATION_ID='5645' or CODE_COMBINATION_ID='5648')
+
+
+CODE_COMBINATION_ID in
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where (select CODE_COMBINATION_ID from apps.GL_CODE_combinations where SEGMENT3='21710102')) --or SEGMENT3='21710102' order by SEGMENT3
+and period_name='FEB-04'
+
+
+select entered_dr,entered_cr from apps.GL_JE_lines where CODE_COMBINATION_ID in
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where SEGMENT3='21710102') --or SEGMENT3='21710102' order by SEGMENT3
+and period_name='FEB-04'
+
+
+select * from apps.GL_JE_lines_v
+
+select CODE_COMBINATION_ID,SEGMENT3 ,SEGMENT1,SEGMENT2,SEGMENT4,SEGMENT5,SEGMENT6,SEGMENT7 from apps.GL_CODE_combinations where SEGMENT3='21710101' 
+and SEGMENT1<>'T' and SEGMENT2<>'T' and SEGMENT4<>'T' and SEGMENT5<>'T' and SEGMENT6<>'T'
+
+
+or SEGMENT3='21710102' order by SEGMENT3
+

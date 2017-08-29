@@ -1,0 +1,75 @@
+
+
+
+-------------NBOM PO & matched Invoice
+
+select b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist
+,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,
+e.ITEM_DESCRIPTION,e.ATTRIBUTE1--,c.DESTINATION_TYPE_CODE,c.ACCRUE_ON_RECEIPT_FLAG
+,a.DIST_MATCH_TYPE,g.segment3
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+,apps.GL_CODE_combinations g
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and e.LINE_TYPE_ID=1020 --No-BOM PO line
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and g.CODE_COMBINATION_ID=a.DIST_CODE_COMBINATION_ID
+--and g.segment3='15010000'
+order by d.segment1--b.INVOICE_NUM
+
+
+
+select d.INVOICE_NUM,d.DESCRIPTION,c.DISTRIBUTION_LINE_NUMBER as Invoice_Dist_Line
+,c.AMOUNT
+,f.SEGMENT1 as PO,e.LINE_NUM as PO_Line
+,a.LINE_NUM as Recept_Line,a.QUANTITY_SHIPPED,a.QUANTITY_RECEIVED
+,b.TRANSACTION_DATE,b.QUANTITY,b.TRANSACTION_TYPE,c.DIST_MATCH_TYPE
+,c.BASE_AMOUNT,c.QUANTITY_INVOICED
+,d.INVOICE_CURRENCY_CODE
+from apps.rcv_shipment_lines a
+,apps.rcv_transactions b
+,APPS.AP_INVOICE_DISTRIBUTIONS_ALL c
+,apps.AP_INVOICES_ALL d
+,apps.PO_lines_all e
+,apps.PO_headers_all f
+,apps.GL_CODE_combinations g
+where a.SHIPMENT_LINE_ID=b.SHIPMENT_LINE_ID
+and c.RCV_TRANSACTION_ID=b.TRANSACTION_ID
+and d.INVOICE_ID=c.INVOICE_ID
+--and a.PO_LINE_ID=1838 
+and e.PO_HEADER_ID=f.PO_HEADER_ID
+and e.PO_LINE_ID=a.PO_LINE_ID
+and g.CODE_COMBINATION_ID=c.DIST_CODE_COMBINATION_ID
+and g.segment3='15010000'
+--and d.INVOICE_NUM='NT-AP20040929-135'
+
+
+
+
+
+select distinct(c.INVOICE_NUM) ,c.DESCRIPTION PO--,c.INVOICE_AMOUNT,c.INVOICE_DATE
+--,VDR.VENDOR_NAME as Supplier,vdr.VENDOR_ID
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a,apps.GL_CODE_combinations b,apps.AP_INVOICES_ALL c--,apps.PO_VENDORS VDR
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and (b.segment3='15010000')
+and a.invoice_id=c.invoice_id
+and c.DESCRIPTION is not null
+
+
+------No link for vdr table !
+select c.INVOICE_NUM,VDR.VENDOR_NAME as Supplier,vdr.VENDOR_ID,c.INVOICE_AMOUNT,c.INVOICE_DATE,c.DESCRIPTION,b.segment3 
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a,apps.GL_CODE_combinations b,apps.AP_INVOICES_ALL c,apps.PO_VENDORS VDR
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and (b.segment3='15010000')
+and a.invoice_id=c.invoice_id
+and c.DESCRIPTION is not null
+

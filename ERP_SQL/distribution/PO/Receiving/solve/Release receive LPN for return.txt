@@ -1,0 +1,46 @@
+
+
+select * from apps.wms_license_plate_numbers WHERE  LICENSE_PLATE_NUMBER in ('ACC00050536-B','ACC00050537-B','ACC00050538-B','ACC00050531-B')
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_id in (2097797,2097798,2097799,2096685)
+
+select lpn_id, quantity_detailed,quantity_delivered,line_status,inspection_status,wms_process_flag from apps.mtl_txn_request_lines where lpn_id in (2097797,2097798,2097799,2096685)
+ 
+
+
+----------Solve received LPN can't return/putaway,release LPN info for return
+
+create table rt_backup as
+select * from apps.rcv_transactions where lpn_id=1297963 or transfer_lpn_id=1297963 order
+by transaction_id;
+ 
+create table lpn_contents_backup as
+select * from apps.wms_lpn_contents where parent_lpn_id=1297963;
+ 
+create table lpn_backup as
+select * from apps.wms_license_plate_numbers where lpn_id=1297963;
+ 
+create table txn_line_backup as
+select * from apps.mtl_txn_request_lines where lpn_id=1297963;
+ 
+update apps.rcv_transactions
+set transfer_lpn_id=null
+where transaction_id=898159;
+ 
+update apps.wms_lpn_contents
+set source_header_id=null,
+source_name=null
+where parent_lpn_id=1297963;
+ 
+update apps.mtl_txn_request_lines
+set quantity_detailed=null,
+quantity_delivered=null,
+line_status=7,
+inspection_status=1,wms_process_flag=1
+where lpn_id=1297963;
+ 
+commit;
+
+ 
+BR//Zhong Jin
+ 

@@ -1,0 +1,67 @@
+
+------error when create accounting: 'No Error in CSTPSISC.ins_std_cost'
+
+To implement the solution, please execute the following steps:
+
+Run the following scripts to confirm that erred rows in MMT exist only in the mtl_cst_actual_cost_details table:
+
+1. Check mtl_transaction_accounts (query should return no rows): 
+SQL> select mmt.transaction_id
+from mtl_material_transactions mmt, 
+mtl_transaction_accounts mta,
+where mmt.costed_flag = 'E'
+and mmt.transaction_id = mta.transaction_id;
+
+2. Check mtl_cst_actual_cost_details (query should return rows):
+
+SQL> select mmt.transaction_id
+from mtl_material_transactions mmt, 
+mtl_cst_actual_cost_details mcacd
+where mmt.costed_flag in ('N','E')
+and mmt.organization_id = &org_id
+and mmt.transaction_id = mcacd.transaction_id;
+
+3. Check mtl_cst_txn_cost_details (query should return no rows):
+
+select mmt.transaction_id
+from mtl_material_transactions mmt, 
+mtl_cst_txn_cost_details mctcd
+where mmt.costed_flag in ('N','E')
+and mmt.organization_id = &org_id
+and mmt.transaction_id = mctcd.transaction_id;
+
+4. Check mtl_actual_cost_subelement:
+
+select mmt.transaction_id
+from mtl_material_transactions mmt, 
+mtl_actual_cost_subelement macs
+where mmt.costed_flag in ('N','E')
+and mmt.organization_id = &org_id
+and mmt.transaction_id = macs.transaction_id;
+
+
+If only query 2 returns rows, proceed with the following:
+
+1. Backup MTL_CST_ACTUAL_COST_DETAILS table
+
+CREATE TABLE t1_mtl_cst_actual_cost_details
+AS (SELECT * FROM mtl_cst_actual_cost_details);
+
+CREATE TABLE t2_mtl_cst_actual_cost_details AS (SELECT * FROM mtl_cst_actual_cost_details mcacd where transaction_id in (select transaction_id fr
+om mtl_material_transactions mmt WHERE mmt.costed_flag IN ('N','E') AND mmt.orga
+nization_id = &org_id));
+
+CREATE TABLE t3_mtl_material_transactions AS (SELECT * from mtl_material_transactions where costed_flag in ('N','E')); 
+
+2. Delete the records from MTL_CST_ACTUAL_COST_DETAILS which have corresponding records 
+(same transaction_id) in mtl_material_transactions with costed_flag = N or E. 
+
+DELETE FROM mtl_cst_actual_cost_details
+WHERE transaction_id IN
+(SELECT transaction_id
+FROM mtl_material_transactions
+WHERE costed_flag IN ('N','E')
+AND organization_id = &org_id); << the organization_id which has the errors
+
+3. Resubmit the erred rows in mtl_material_transactions. INV: Transactions: Material Transactions:
+query the erred rows: From the menu, Tools Select All: Tools Submit All 

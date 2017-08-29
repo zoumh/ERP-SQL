@@ -1,0 +1,43 @@
+
+
+
+/* Formatted on 2005/12/28 13:23 (Formatter Plus v4.8.5) */
+ 
+
+--//Step1
+SELECT   asl.item_id, asl.vendor_id, asl.vendor_site_id,
+         asl.using_organization_id, COUNT (*)
+    FROM po_approved_supplier_lis_val_v asl
+GROUP BY asl.item_id,
+         asl.vendor_id,
+         asl.vendor_site_id,
+         asl.using_organization_id
+  HAVING COUNT (*) >= 2 
+ --//Step2
+SELECT   asl_id, using_organization_id, COUNT (*)
+    FROM po_asl_attributes
+   WHERE using_organization_id = -1
+GROUP BY asl_id, using_organization_id
+  HAVING COUNT (*) >= 2;
+   
+--//Step3
+ 
+  SELECT   asl.item_id, asl.vendor_id, asl.vendor_site_id,
+         asl.using_organization_id, COUNT (*)
+    FROM po_approved_supplier_lis_val_v asl, po_asl_attributes po
+   WHERE po.asl_id = asl.asl_id
+     AND po.using_organization_id = asl.using_organization_id
+     AND asl.using_organization_id = -1
+GROUP BY asl.item_id,
+         asl.vendor_id,
+         asl.vendor_site_id,
+         asl.using_organization_id
+  HAVING COUNT (*) >= 2;  
+ 
+ 
+  SELECT  *--asl.item_id, asl.vendor_id, asl.vendor_site_id,   asl.using_organization_id 
+    FROM po_approved_supplier_lis_val_v asl
+ WHERE item_id=79600 AND vendor_id=25 
+ 
+ SELECT a.organization_id,a.segment1 ,a.inventory_item_id FROM mtl_system_items_b a WHERE a.inventory_item_id IN (79600,53910,70570)
+

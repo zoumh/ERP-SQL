@@ -1,0 +1,47 @@
+
+
+
+select person_id from apps.PER_PEOPLE_V7 where employee_number='22966145'
+
+select * from apps.per_all_assignments_f where person_id=1639
+
+
+update per_all_assignments_f a
+set effective_end_date = to_date('4712-12-31','YYYY-MM-DD')
+where a.position_id = 64 and a.person_id = 1639
+
+
+
+---------------happen again 20091019,issue been fixed automatically
+------------Find WF_roles view no this employee/position id, after while, find the record , & all right.
+
+select * from apps.WF_roles where DISPLAY_NAME like '%Tanak%'
+
+test this view:
+1. Add login CCC, NOTIFICATION_PREFERENCE=MAILHTML
+2. Create employee CCC, this view no change
+3. After link login with employee, add a record NOTIFICATION_PREFERENCE=MAILTEXT, DISPLAY_NAME like '%CCC%'
+4. After assign a position to this employee, change two fields here:NOTIFICATION_PREFERENCE=MAILHTML,EMAIL_ADDRESS=null
+
+
+Table:
+
+select * from apps.wf_local_roles where DISPLAY_NAME like '%Tanak%'
+
+select * from apps.WF_LOCAL_USERS
+
+select * from apps.WF_LOCAL_USER_ROLES
+
+
+View:
+
+select * from apps.WF_ROLES_VL, 
+
+select * from apps.WF_USERS_VL
+
+select * from apps.WF_USER_ROLES_VL
+
+
+
+test PO
+1093192

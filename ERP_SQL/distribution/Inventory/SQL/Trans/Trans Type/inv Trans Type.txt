@@ -1,0 +1,78 @@
+-------Inventory Transaction Source Type:
+select * from apps.mtl_txn_source_types
+
+
+---Inventory Transaction Type & Source Type with ID,action_code:
+select a.TRANSACTION_TYPE_ID,a.transaction_source_type_id ,
+b.TRANSACTION_SOURCE_TYPE_NAME Source_Type,a.Transaction_type_name,
+c.TRANSACTION_ACTION_Code,a.disable_date,a.user_defined_flag
+from apps.MTL_TRANSACTION_TYPES a,apps.mtl_txn_source_types b,
+(select MEANING TRANSACTION_ACTION_Code,LOOKUP_CODE TRANSACTION_ACTION_ID,
+ENABLED_FLAG,START_DATE_ACTIVE,END_DATE_ACTIVE,CREATION_DATE
+from apps.FND_LOOKUP_VALUES_VL where LOOKUP_TYPE='MTL_TRANSACTION_ACTION') c
+where a.transaction_source_type_id=b.transaction_source_type_id
+and a.TRANSACTION_ACTION_ID=c.TRANSACTION_ACTION_ID
+--and  b.TRANSACTION_SOURCE_TYPE_NAME='Move order'
+order by user_defined_flag,b.TRANSACTION_SOURCE_TYPE_NAME,a.Transaction_type_name
+
+
+
+---Current Inventory Transaction Type from Mtl_Trans
+select distinct mtt.transaction_type_name,mst.transaction_source_type_name
+from   apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_txn_source_types      mst
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+
+
+---Inventory Transaction Source (Miscel Issue name)
+select a.segment1 from apps.mtl_generic_dispositions a,apps.mtl_material_transactions b
+where b.TRANSACTION_SOURCE_ID=a.DISPOSITION_ID(+) 
+and b.transaction_id=3960086
+
+
+------Current WIP Transaction Type (from WIP_Trans)
+select distinct c.TRANSACTION_TYPE,e.MEANING
+FROM apps.WIP_TRANSACTIONs c,apps.MFG_LOOKUPS e
+where e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+
+
+------Inventory Account Alias
+select c.ORGANIZATION_CODE ,b.SEGMENT2 CC,b.SEGMENT3 ACC,a.SEGMENT1 Alias_Name,
+b.SEGMENT1||'.'||b.SEGMENT2||'.'||b.SEGMENT3||'.'||b.SEGMENT4||'.'||b.SEGMENT5||'.'||b.SEGMENT6 Accounts,
+a.ENABLED_FLAG,a.SUMMARY_FLAG,EFFECTIVE_DATE,a.DISABLE_DATE,a.CREATION_DATE,a.START_DATE_ACTIVE,a.END_DATE_ACTIVE
+from apps.MTL_GENERIC_DISPOSITIONS a,apps.GL_Code_Combinations b,apps.org_organization_definitions c
+where a.DISTRIBUTION_ACCOUNT=b.CODE_COMBINATION_ID
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.ORGANIZATION_ID>127
+order by a.ORGANIZATION_ID
+
+
+
+---Inventory Transaction source code (PO,SO no)
+select b.SEGMENT1 as PO,d.SEGMENT3 as Account 
+from apps.MTL_MATERIAL_TRANSACTIONS a,apps.PO_HEADERS_ALL b ,apps.PO_DISTRIBUTIONS_ALL c,
+apps.GL_CODE_COMBINATIONS d
+where      --trunc(transaction_date) = to_date('20040724','YYYYMMDD') 
+   transaction_type_id=18 
+  and a.TRANSACTION_SOURCE_ID=b.PO_HEADER_ID 
+  and c.PO_HEADER_ID=b.PO_HEADER_ID
+  and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+
+
+--------Account Alias & Used Trans count
+
+select b.SEGMENT2 CC,b.SEGMENT3 ACC,a.SEGMENT1 Alias_Name,c.Count Used_Count,a.ENABLED_FLAG,a.SUMMARY_FLAG,EFFECTIVE_DATE,DISABLE_DATE,CREATION_DATE,a.ORGANIZATION_ID,a.START_DATE_ACTIVE,a.END_DATE_ACTIVE
+from apps.MTL_GENERIC_DISPOSITIONS a,apps.GL_Code_Combinations b,
+(select MGD.SEGMENT1 Alias_SOURCE,MMT.ORGANIZATION_ID,count(MGD.SEGMENT1 ) as Count
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.mtl_generic_dispositions  MGD
+WHERE  MMT.organization_id=MGD.organization_id(+)
+AND    MMT.TRANSACTION_SOURCE_ID=MGD.DISPOSITION_ID(+)
+group by MMT.organization_id,MGD.SEGMENT1) c
+where a.DISTRIBUTION_ACCOUNT=b.CODE_COMBINATION_ID
+and a.ORGANIZATION_ID=c.ORGANIZATION_ID(+)
+and a.SEGMENT1=c.Alias_SOURCE(+)

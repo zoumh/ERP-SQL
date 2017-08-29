@@ -1,0 +1,117 @@
+
+
+
+----Open Billing PR 
+
+select a.org_id,a.segment1 PR_Num,b.line_num,c.DISTRIBUTION_NUM,b.ITEM_DESCRIPTION,b.QUANTITY,b.rate,b.unit_price,b.currency_code,
+b.currency_unit_price,b.creation_date,a.authorization_status,
+d.segment2 CC,d.segment3 Acc,d.segment4 PRD,d.segment5 PRJ
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.gl_code_combinations d 
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and d.segment2 in ('5020','9050')
+and a.org_id=b.org_id
+and a.org_id=c.org_id
+and a.org_id>81
+and a.authorization_status<>'CANCELLED'
+
+
+----Open Billing  PO
+
+select g.segment2 CostCenter,g.segment3 Account
+,a.SEGMENT1 as PO,b.LINE_NUM,c.SHIPMENT_NUM,e.DISTRIBUTION_NUM--,b.PO_HEADER_ID
+,a.CREATION_DATE as PO_Date
+,e.QUANTITY_ORDERED
+,e.QUANTITY_DELIVERED,e.QUANTITY_BILLED
+,b.ITEM_DESCRIPTION
+from apps.PO_HEADERS_ALL a, apps.PO_LINES_ALL b,apps.PO_LINE_LOCATIONS_ALL c,apps.PO_DISTRIBUTIONS_all e
+,apps.AP_TERMS_LINES TRM,apps.PO_VENDORS VDR,apps.GL_code_combinations g--,apps.mtl_system_items_b d
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and TRM.TERM_ID=a.TERMS_ID
+and c.LINE_LOCATION_ID=e.LINE_LOCATION_ID
+and a.PO_HEADER_ID=e.PO_HEADER_ID
+and b.PO_LINE_ID=e.PO_line_ID
+and e.code_combination_id=g.CODE_COMBINATION_ID
+--and d.INVENTORY_ITEM_ID(+)=b.item_id 
+--and (d.ORGANIZATION_ID=c.SHIP_TO_ORGANIZATION_ID(+))--'81' or d.ORGANIZATION_ID='83') ---Org is multi if use 81 & 83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+--and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+--and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+--and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+--and a.CURRENCY_CODE <>'CNY' and a.CURRENCY_CODE <>'USD'
+--and b.LINE_TYPE_ID<>1020  -- NON_BOM PO Line Type
+--and a.SEGMENT1='TP28735'
+and ( (nvl(e.QUANTITY_ORDERED,0) -nvl(e.QUANTITY_CANCELLED,0)) >nvl(e.QUANTITY_DELIVERED,0)
+or
+nvl(e.QUANTITY_BILLED,0)<nvl(e.QUANTITY_DELIVERED,0)
+)  
+and g.segment2 in ('5020','9050')
+and a.org_id=b.org_id
+and a.org_id=c.org_id
+and a.org_id=e.org_id
+and a.org_id>81
+
+
+
+
+
+
+
+---------------Open PR (Not Transfer to PO) with CC
+
+select a.segment1 PR_Num,b.line_num,c.DISTRIBUTION_NUM,b.ITEM_DESCRIPTION,b.QUANTITY,b.rate,b.unit_price,b.currency_code,
+b.currency_unit_price,b.creation_date,a.authorization_status,
+d.segment2 CC,d.segment3 Acc,d.segment4 PRD,d.segment5 PRJ
+from apps.po_requisition_headers_all a,apps.po_requisition_lines_all b ,apps.PO_REQ_DISTRIBUTIONS_all c,
+apps.gl_code_combinations d 
+where a.requisition_header_id=b.requisition_header_id
+and c.REQUISITION_LINE_ID=b.REQUISITION_LINE_ID
+and c.CODE_COMBINATION_ID=d.CODE_COMBINATION_ID
+and d.segment2 in ('8030','8040')
+and a.authorization_status<>'CANCELLED'
+and c.DISTRIBUTION_ID not in
+(select POD.REQ_DISTRIBUTION_ID from  apps.PO_REQ_DISTRIBUTIONS_all PORD,apps.PO_DISTRIBUTIONS_all POD
+where POD.REQ_DISTRIBUTION_ID = PORD.DISTRIBUTION_ID)
+
+
+
+
+--------------- Open PO with CC
+
+select g.segment2 CostCenter,g.segment3 Account
+,a.SEGMENT1 as PO,b.LINE_NUM,c.SHIPMENT_NUM,e.DISTRIBUTION_NUM--,b.PO_HEADER_ID
+,a.CREATION_DATE as PO_Date
+,e.QUANTITY_ORDERED
+,e.QUANTITY_DELIVERED
+,b.ITEM_DESCRIPTION
+from apps.PO_HEADERS_ALL a, apps.PO_LINES_ALL b,apps.PO_LINE_LOCATIONS_ALL c,apps.PO_DISTRIBUTIONS_all e
+,apps.AP_TERMS_LINES TRM,apps.PO_VENDORS VDR,apps.GL_code_combinations g--,apps.mtl_system_items_b d
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and TRM.TERM_ID=a.TERMS_ID
+and c.LINE_LOCATION_ID=e.LINE_LOCATION_ID
+and a.PO_HEADER_ID=e.PO_HEADER_ID
+and b.PO_LINE_ID=e.PO_line_ID
+and e.code_combination_id=g.CODE_COMBINATION_ID
+--and d.INVENTORY_ITEM_ID(+)=b.item_id 
+--and (d.ORGANIZATION_ID=c.SHIP_TO_ORGANIZATION_ID(+))--'81' or d.ORGANIZATION_ID='83') ---Org is multi if use 81 & 83
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+--and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+--and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+--and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+--and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+--and a.CURRENCY_CODE <>'CNY' and a.CURRENCY_CODE <>'USD'
+--and b.LINE_TYPE_ID<>1020  -- NON_BOM PO Line Type
+--and a.SEGMENT1='TP28735'
+and (e.QUANTITY_ORDERED -e.QUANTITY_CANCELLED) >e.QUANTITY_DELIVERED  
+and g.segment2 in ('8030','8040')

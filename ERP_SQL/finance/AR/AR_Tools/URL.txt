@@ -1,0 +1,9 @@
+
+-----AR Diagnostic Tools
+
+http://metalink.oracle.com/metalink/plsql/showdoc?db=NOT&id=204790.1&blackframe=0
+
+
+
+---------Oracle Application Diagnostic Tools
+http://metalink.oracle.com/metalink/plsql/showdoc?db=NOT&id=179661.1&blackframe=0

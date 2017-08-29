@@ -1,0 +1,82 @@
+
+----------PO delivery to SAxx
+
+select   msi.segment1 Item,f.segment1 Model,f.segment2 Type,f.segment3,f.segment4,--mmt.TRANSACTION_QUANTITY,
+--mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH
+--sum(decode(transaction_type_name,'Subinventory Transfer',0,mmt.TRANSACTION_QUANTITY)) MO_Qty,
+sum(mmt.TRANSACTION_QUANTITY ) Qty,rcv.VENDOR_NAME--,trunc(mmt.transaction_date),(mmt.TRANSACTION_QUANTITY) Qty
+from
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt,
+  (select distinct a.transaction_id,VENDOR_NAME,a.organization_id from apps.rcv_transactions a,apps.PO_VENDORS b where a.VENDOR_ID=b.VENDOR_ID) rcv,
+  apps.mtl_item_categories_v f,
+  apps.mtl_system_items_b        msi
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id  
+and    mmt.organization_id=130  
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and mmt.organization_id = msi.organization_id 
+and    trunc(mmt.transaction_date) >= to_date('20061008','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20061018','YYYYMMDD') 
+--and mtt.transaction_type_name in ('PO Receipt','Return to Vendor')--,'Move Order Transfer','SF Move Order Transfer','SH Move Order Transfer')
+--and mmt.TRANSACTION_QUANTITY <=0
+and (mmt.lpn_id <>mmt.transfer_LPN_ID or mmt.lpn_id is null or mmt.transfer_LPN_ID is null)
+and mmt.RCV_TRANSACTION_ID =rcv.transaction_id-- (+)
+and    mmt.organization_id=rcv.organization_id-- (+)
+and f.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and f.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and f.category_set_id=1
+and f.segment3<>'JIT'
+and (msi.segment1 not like 'RTK%' and msi.segment1 not like '%LZ%')
+and msi.Item_Type='COM'
+and msi.planning_make_buy_code=2 --Buy
+--and (mmt.transfer_subinventory like 'SA%')
+and (mmt.subinventory_code like 'SA%')
+group by rcv.VENDOR_NAME,msi.segment1,f.segment1 ,f.segment2 ,f.segment3,f.segment4
+
+
+
+-----------MO from SD to SAxx
+-----Sum 
+select --mmt.lpn_id,mmt.transaction_id,mmt.TRANSFER_LPN_ID,lpn.LICENSE_PLATE_NUMBER lpn,
+msi.segment1 Item,f.segment1 Model,f.segment2 Type,f.segment3,f.segment4,
+--mmt.subinventory_code From_WH,
+--decode(substr(mmt.transfer_subinventory,1,2),'SA','SAxx','OtherWH') To_WH,
+sum(decode(rcv.VENDOR_NAME,null,0,mmt.TRANSACTION_QUANTITY)) Vendor_Qty,rcv.VENDOR_NAME,
+sum(decode(rcv.VENDOR_NAME,null,mmt.TRANSACTION_QUANTITY,0)) No_Vendor_Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.mtl_item_categories_v f,
+  apps.wms_license_plate_numbers LPN,
+  (select distinct a.transfer_lpn_id,VENDOR_NAME from apps.rcv_transactions a,apps.PO_VENDORS b where a.VENDOR_ID=b.VENDOR_ID) rcv 
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id  
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and (transaction_type_name like ('%Mo%Transfer') and transaction_type_name not in ('Cost Group Transfer','Direct Org Transfer'))
+and    trunc(mmt.transaction_date) >= to_date('20061008','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20061018','YYYYMMDD') 
+--and (mmt.subinventory_code = 'PQA' and mmt.transfer_subinventory = 'SA1')
+and (mmt.transfer_subinventory like 'SA%')
+and (mmt.subinventory_code in ('SB','SD'))
+and mmt.TRANSACTION_QUANTITY <=0
+and f.INVENTORY_ITEM_ID=msi.INVENTORY_ITEM_ID
+and f.ORGANIZATION_ID=msi.ORGANIZATION_ID
+and f.category_set_id=1
+and    mmt.TRANSFER_LPN_ID =LPN.LPN_ID(+)
+and mmt.organization_id = lpn.organization_id(+)  
+and f.segment3<>'JIT'
+--and lpn.LICENSE_PLATE_NUMBER ='205011'
+and (msi.segment1 not like 'RTK%' and msi.segment1 not like '%LZ%')
+and msi.Item_Type='COM'
+and msi.planning_make_buy_code=2 --Buy
+and mmt.LPN_ID=rcv.transfer_lpn_id(+)
+--and rcv.VENDOR_NAME is null
+--and (mmt.lpn_id =mmt.transfer_LPN_ID and mmt.lpn_id is not null and mmt.transfer_LPN_ID is not null)
+group by --decode(substr(mmt.transfer_subinventory,1,2),'SA','SAxx','OtherWH'),
+--mmt.subinventory_code,mtt.transaction_type_name,
+rcv.VENDOR_NAME,msi.segment1,f.segment1 ,f.segment2 ,f.segment3,f.segment4
+

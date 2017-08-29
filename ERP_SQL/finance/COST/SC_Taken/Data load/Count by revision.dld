@@ -1,0 +1,154 @@
+begindelays
+DataDelay=0
+CellDelay=0.2
+FormDelay=0.25
+KeyHold=50
+SystemHold=50
+MenuCall=250
+HourGlass=1000
+TAB=0
+ENT=0
+*UP=0
+*DN=0
+*LT=0
+*RT=0
+*SP=0
+*SAVE=0
+*NB=0
+*PB=0
+*NF=0
+*PF=0
+*NR=0
+*PR=0
+*FR=0
+*LR=0
+*ER=0
+*DR=0
+*SB=0
+*ST=0
+*BM=0
+*QE=0
+*QR=0
+*FI=0
+*FA=0
+*IR=0
+*CL=0
+*FE=0
+*AA=0
+*AB=0
+*AC=0
+*AD=0
+*AE=0
+*AF=0
+*AG=0
+*AH=0
+*AI=0
+*AJ=0
+*AK=0
+*AL=0
+*AM=0
+*AN=0
+*AO=0
+*AP=0
+*AQ=0
+*AR=0
+*AS=0
+*AT=0
+*AU=0
+*AV=0
+*AW=0
+*AX=0
+*AY=0
+*AZ=0
+enddelays
+beginheader
+	*SL1	TAB	Data	TAB	Data	TAB		*SL1	TAB	TAB	TAB	TAB	Data	*DN	TAB	TAB	TAB	TAB	TAB	TAB	TAB	TAB
+endheader
+beginother
+Window=Oracle Applications - TEST
+Description=
+CommandGroup=11i
+PasteCtrlV=1
+endother
+begindata
+RTK 101 01	*SL1	TAB	0	TAB	W04	TAB	D.1.1.2	*SL1	TAB	TAB	TAB	TAB	100	*DN	TAB	TAB	TAB	TAB	TAB	TAB	TAB	TAB
+RTK 101 01	*SL1	TAB	0	TAB	W04	TAB	D.1.1.2	*SL1	TAB	TAB	TAB	TAB	100	*DN	TAB	TAB	TAB	TAB	TAB	TAB	TAB	TAB
+RTK 101 01	*SL1	TAB	0	TAB	W04	TAB	D.1.1.2	*SL1	TAB	TAB	TAB	TAB	100	*DN	TAB	TAB	TAB	TAB	TAB	TAB	TAB	TAB
+RTK 101 01	*SL1	TAB	0	TAB	W04	TAB	D.1.1.2	*SL1	TAB	TAB	TAB	TAB	100	*DN	TAB	TAB	TAB	TAB	TAB	TAB	TAB	TAB
+enddata
+beginoptions
+AutoTab=false
+HourGlass=false
+AutoInsert=true
+ProgressBar=true
+TitleSize=false
+Feedback=false
+DataWait=false
+CommandWait=true
+DataColour=16777215
+CommandColour=16777215
+KeystrokeColour=16777215
+DataSource=0
+ImportLoad=0
+FeedbackFile=
+endoptions
+beginformat
+ColumnWidth1=101
+endformat
+begincommands
+Command	Feedback	11i	NCA	10SC	Other	Description
+TAB	Key Next_item	\{TAB}	\{TAB}	\{TAB}	\{TAB}	TAB Key
+ENT	[various]	\{ENTER}	\{ENTER}	\{ENTER}	\{ENTER}	Enter
+*UP	Key Up	\{UP}	\{UP}	\{UP}	\{UP}	Up arrow key
+*DN	Key Down	\{DOWN}	\{DOWN}	\{DOWN}	\{DOWN}	Down arrow key
+*LT	[various]	\{LEFT}	\{LEFT}	\{LEFT}	\{LEFT}	Left arrow key
+*RT	[various]	\{RIGHT}	\{RIGHT}	\{RIGHT}	\{RIGHT}	Right arrow key
+*SP	MENU CUSTOM FILE ACCEPT	\%F%V	\%A%{DOWN 4}{ENTER}	\%A%A		Save & Proceed
+*SAVE	Key Commit_form	\^S	\^S	\{F10}		Save
+*NB	Key Next_block	\+{PGDN}	\+{PGDN}	\^{PGDN}		Next Block
+*PB	Key Previous_block	\+{PGUP}	\+{PGUP}	\^{PGUP}		Previous Block
+*NF	Key Next_item	\{TAB}	\%G%{DOWN}{ENTER}	\{TAB}		Next Field
+*PF	Key Previous_item	\+{TAB}	\%G%{DOWN 2}{ENTER}	\+{TAB}		Previous Field
+*NR	Key Down	\{DOWN}	\%G%{DOWN 3}{ENTER}	\+{DOWN}		Next record
+*PR	Key Up	\{UP}	\%G%{DOWN 4}{ENTER}	\+{UP}		Previous record
+*FR	MENU CUSTOM RECORD FIRST	\%V%DF	\%G%{DOWN 5}{ENTER}	\%G%F		First record
+*LR	MENU CUSTOM RECORD LAST	\%V%DL	\%G%{DOWN 6}{ENTER}	\%G%L		Last record
+*ER	Key Clear_record	\{F6}	\{F6}	\+{F4}		Erase record
+*DR	Key Delete_record	\^{UP}	\^{UP}	\+{F6}		Delete record
+*SB	[various]	\ 	\ 	\ 	\ 	Space bar
+*ST	[none]	\{HOME}+{END}	\{HOME}+{END}	\{HOME}+{END}		Select field text
+*BM	Key Block_menu	\^B	\^B	\{F5}		Block menu
+*QE	Key Enter_query	\{F11}	\{F11}	\{F7}		Query enter
+*QR	Key Execute_query	\^{F11}	\^{F11}	\{F8}		Query run
+*FI	MENU CUSTOM VIEW FIND	\%V%F	\%Q%{DOWN}{ENTER}			Find
+*FA	MENU CUSTOM VIEW FIND_ALL	\%V%I	\%Q%{DOWN 2}{ENTER}			Find all
+*IR	Key Create_record	\^{DOWN}	\^{DOWN}	\{F6}		Insert record
+*CL	Key Clear_item	\{F5}	\{F5}	\^U		Clear field
+*FE	Key Edit	\^E	\^E	\^E		Field edit
+*AA	[various]	\%A	\%A	\%A	\%A	Alt A
+*AB	[various]	\%B	\%B	\%B	\%B	Alt B
+*AC	[various]	\%C	\%C	\%C	\%C	Alt C
+*AD	[various]	\%D	\%D	\%D	\%D	Alt D
+*AE	[various]	\%E	\%E	\%E	\%E	Alt E
+*AF	[various]	\%F	\%F	\%F	\%F	Alt F
+*AG	[various]	\%G	\%G	\%G	\%G	Alt G
+*AH	[various]	\%H	\%H	\%H	\%H	Alt H
+*AI	[various]	\%I	\%I	\%I	\%I	Alt I
+*AJ	[various]	\%J	\%J	\%J	\%J	Alt J
+*AK	[various]	\%K	\%K	\%K	\%K	Alt K
+*AL	[various]	\%L	\%L	\%L	\%L	Alt L
+*AM	[various]	\%M	\%M	\%M	\%M	Alt M
+*AN	[various]	\%N	\%N	\%N	\%N	Alt N
+*AO	[various]	\%O	\%O	\%O	\%O	Alt O
+*AP	[various]	\%P	\%P	\%P	\%P	Alt P
+*AQ	[various]	\%Q	\%Q	\%Q	\%Q	Alt Q
+*AR	[various]	\%R	\%R	\%R	\%R	Alt R
+*AS	[various]	\%S	\%S	\%S	\%S	Alt S
+*AT	[various]	\%T	\%T	\%T	\%T	Alt T
+*AU	[various]	\%U	\%U	\%U	\%U	Alt U
+*AV	[various]	\%V	\%V	\%V	\%V	Alt V
+*AW	[various]	\%W	\%W	\%W	\%W	Alt W
+*AX	[various]	\%X	\%X	\%X	\%X	Alt X
+*AY	[various]	\%Y	\%Y	\%Y	\%Y	Alt Y
+*AZ	[various]	\%Z	\%Z	\%Z	\%Z	Alt Z
+endcommands

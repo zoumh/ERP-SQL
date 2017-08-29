@@ -1,0 +1,41 @@
+
+1) Use this SQL to found the closed job order
+
+select a.wip_entity_name, c.segment1, date_Closed, quantity_completed, 
+to_char(round(sum(nvl(d.base_transaction_value,0)), 2),'999,999,999,999,999,999.9999') net_value, 
+e.segment1||'.'||e.segment2||'.'||e.segment3||'.'||e.segment4||'.'||e.segment5||'.'||e.segment6 account_code
+from apps.wip_entities a, apps.wip_discrete_jobs b, apps.mtl_system_items c, 
+apps.wip_transaction_accounts d, apps.gl_code_combinations e
+where a.wip_entity_id=b.wip_entity_id and b.organization_id=83 and c.organization_id=83 and d.organization_id=83
+and b.primary_item_id=c.inventory_item_id and d.reference_account = e.code_combination_id
+and d.wip_entity_id=b.wip_entity_id and e.segment3 like '410102%' and base_transaction_value !=0
+and status_type=12 and to_char(date_closed,'YYYYMMDD') < '20040301'
+group by 
+         a.wip_entity_name, c.segment1, date_Closed, quantity_completed,
+         e.segment1||'.'||e.segment2||'.'||e.segment3||'.'||e.segment4||'.'||e.segment5||'.'||e.segment6
+having sum(nvl(d.base_transaction_value,0)) != 0
+order by to_char(date_closed,'YYYYMMDD')
+
+2) And then use this SQL to found the closed job order wiith zero cost 
+
+select a.wip_entity_name, c.segment1, date_Closed, quantity_completed, to_char(f.item_cost, 999999.9999) cost,
+to_char(round(sum(nvl(d.base_transaction_value,0)), 2),'999,999,999,999,999,999.9999') net_value, 
+e.segment1||'.'||e.segment2||'.'||e.segment3||'.'||e.segment4||'.'||e.segment5||'.'||e.segment6 account_code
+from apps.wip_entities a, apps.wip_discrete_jobs b, apps.mtl_system_items c, 
+apps.wip_transaction_accounts d, apps.gl_code_combinations e, apps.cst_item_costs f
+where a.wip_entity_id=b.wip_entity_id and b.organization_id=83 and c.organization_id=83 and d.organization_id=83
+and b.primary_item_id=c.inventory_item_id and d.reference_account = e.code_combination_id
+and f.organization_id=83 and b.primary_item_id=f.inventory_item_id
+and d.wip_entity_id=b.wip_entity_id and e.segment3 like '410102%' and base_transaction_value !=0
+and status_type=12 and to_char(date_closed,'YYYYMMDD') < '20040301'
+group by 
+         a.wip_entity_name, c.segment1, date_Closed, quantity_completed, f.item_cost,
+         e.segment1||'.'||e.segment2||'.'||e.segment3||'.'||e.segment4||'.'||e.segment5||'.'||e.segment6
+having sum(nvl(d.base_transaction_value,0)) != 0
+order by to_char(date_closed,'YYYYMMDD')
+
+
+3)Then use Oracle std function: Material Distribution to found which item with zero cost sales
+---- Use Trans Type= 'Sales Order Issue'  to find out the Sold Item Transaction
+
+

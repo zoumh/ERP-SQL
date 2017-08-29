@@ -1,0 +1,51 @@
+
+
+------------Domestic Auto Packing
+
+Step1. Find error source from. 
+
+Run below script:
+
+select * from BMC_AUTO_LPN_NEW wapl
+where (status <> 'PICKED' or status is null)
+and not exists (select 'X'
+                  from WMS_LICENSE_PLATE_NUMBERS wlpn
+				 where wlpn.LICENSE_PLATE_NUMBER = wapl.vp_lpn
+				   and wlpn.lpn_context  = 4)
+and not exists (select 'X'
+                from   bmc_auto_so_new_v bas
+                where  bas.so_number = wapl.so_number
+                and    nvl(bas.status,'A') = 'SHIPPED'
+                );
+if raise error ¡®invalid number¡¯ then run below script :
+SELECT   bal.so_number, 
+		 COUNT (bal.vp_lpn) total_pallets,
+         SUM (bal.quantity) total_qty
+FROM bmc_auto_lpn_new bal						
+GROUP BY bal.so_number;
+Must be raise error ¡®invalid number ¡¯. 
+
+If you can find above error, it must be data error in table ¡®bmc_auto_lpn_new¡¯ column :¡®quantity¡¯.
+Run below script, find out the error data : 
+select po_number,
+	   po_line_number,
+	   so_number,
+	   VP_LPN,
+	   SE_LPN,
+	   quantity
+from   bmc_auto_lpn_new;
+
+Step2. Update error data, before update please backup first :
+
+UPDATE BMC_AUTO_LPN_NEW
+SET	   QUANTITY=:P_QUANTITY
+WHERE  PO_NUMBER=:P_PO_NUMBER
+AND	   PO_LINE_NUMBER=:P_PO_LINE_NUMBER
+AND	   SO_NUMBER=:P_SO_NUMBER
+AND	   VP_LPN=:P_VP_LPN
+AND	   SE_LPN=:P_SE_LPN;
+
+Commit;
+
+
+Step3. Check it.

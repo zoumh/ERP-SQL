@@ -1,0 +1,73 @@
+
+
+BMC--Year To Month AR Report By Customer:
+
+select convert(f.CUSTOMER_NAME,'ZHS16GBK'),f.CUSTOMER_NUMBER
+,sum(e.AMOUNT)  as Amount,b.INVOICE_CURRENCY_CODE as Curr,b.EXCHANGE_RATE,sum(e.ACCTD_AMOUNT) as CNY_Amount
+from apps.ra_customer_trx_all b
+,apps.RA_CUST_TRX_LINE_GL_DIST_all e
+,apps.AR_customers_v f
+where b.CUSTOMER_TRX_ID=e.CUSTOMER_TRX_ID
+and b.BILL_TO_CUSTOMER_ID=f.CUSTOMER_ID
+and e.GL_DATE>=to_date('2004-01-27','yyyy-mm-dd') and e.GL_DATE<=to_date('2004-02-29','yyyy-mm-dd')  
+--and b.CUSTOMER_TRX_ID=2752
+and e.ACCOUNT_CLASS='REV'
+group by f.CUSTOMER_NAME,f.CUSTOMER_NUMBER,b.INVOICE_CURRENCY_CODE,b.EXCHANGE_RATE
+
+
+
+
+
+
+
+BMC--Year To Month invoice for BOM AP Report:
+
+select convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,aps.VENDOR_SITE_CODE
+,sum(api.INVOICE_AMOUNT*decode(api.INVOICE_CURRENCY_CODE,'USD',8.2769,'JPY',0.07562,'SEK',1.121,'EUR',10.3012,'CNY',1,1)) as CNY_Amt
+,api.INVOICE_CURRENCY_CODE as Inv_Curr,sum(api.INVOICE_AMOUNT) as Amount
+from 	apps.AP_INVOICES_ALL api
+,		apps.PO_VENDORS VDR
+,		apps.PO_VENDOR_SITES_all aps
+where 	VDR.VENDOR_ID=api.VENDOR_ID
+and aps.VENDOR_SITE_ID=api.VENDOR_SITE_ID
+and vdr.VENDOR_TYPE_LOOKUP_CODE <>'EMPLOYEE'
+and api.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+and (api.PAY_GROUP_LOOKUP_CODE in ('JN' , 'KY'))
+and api.INVOICE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and api.INVOICE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE,api.INVOICE_CURRENCY_CODE
+
+
+
+
+
+
+
+BMC -- Year To Month BOM GOODS VALUE RECEIVED BUT NOT BILLED:
+
+select VDR.VENDOR_NAME as Supplier,aps.VENDOR_SITE_CODE
+,sum((c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)*h.ITEM_COST) as Amount
+from apps.PO_HEADERS_ALL a
+, apps.PO_LINES_ALL b
+,apps.PO_LINE_LOCATIONS_ALL c
+,apps.PO_VENDORS VDR
+,apps.CST_ITEM_COST_TYPE_V h
+,apps.PO_VENDOR_SITES_all aps
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+and VDR.VENDOR_ID=a.VENDOR_ID
+and b.ITEM_ID=h.INVENTORY_ITEM_ID
+and h.ORGANIZATION_ID=83
+and h.COST_TYPE='Frozen'
+and (a.AUTHORIZATION_STATUS ='APPROVED')  
+and (a.USER_HOLD_FLAG is null or a.USER_HOLD_FLAG='N' )
+and (a.CANCEL_FLAG ='N' or a.CANCEL_FLAG  is null)
+and (a.CLOSED_CODE<>'CLOSED' or a.CLOSED_CODE is null)
+and (b.CANCEL_FLAG<>'Y' or b.CANCEL_FLAG is null)
+and (b.CLOSED_FLAG<>'Y' or b.CLOSED_FLAG is null) 
+and (c.CLOSED_FLAG<>'Y' or c.CLOSED_FLAG is null)
+and (c.QUANTITY_RECEIVED -c.QUANTITY_BILLED-c.QUANTITY_CANCELLED)>0
+and a.VENDOR_SITE_ID=aps.VENDOR_SITE_ID
+and c.LAST_UPDATE_DATE>=to_date('2004-01-27','yyyy-mm-dd')
+and c.LAST_UPDATE_DATE<=to_date('2004-02-29','yyyy-mm-dd')
+group by VDR.VENDOR_NAME,aps.VENDOR_SITE_CODE

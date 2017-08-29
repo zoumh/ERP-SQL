@@ -1,0 +1,97 @@
+
+
+
+----------All KRH have this component ---one level Item where use
+select  msi2.segment1 Assembly_Item,msi2.organization_id,
+      msi2.item_type,
+       msi.SEGMENT1 Component_Item,msi.item_type,
+                            bic.component_quantity,
+                            bic.COMPONENT_YIELD_FACTOR,
+                            bic.item_num,
+                         bic.wip_supply_type,
+                         bic.supply_subinventory,
+                         bic.effectivity_date,bic.DISABLE_DATE,bic.IMPLEMENTATION_DATE 
+           FROM    apps.bom_inventory_components bic ,
+            apps.bom_bill_of_materials bom,
+           apps.mtl_system_items msi,
+     apps.mtl_system_items msi2
+          where --bic.disable_date  IS  NULL and 
+		  bic.COMPONENT_ITEM_ID=msi.INVENTORY_ITEM_ID
+    and msi.organization_id = msi2.organization_id
+    and bic.bill_sequence_id=bom.BILL_SEQUENCE_ID
+    and bom.assembly_item_id = msi2.INVENTORY_ITEM_ID
+    and msi2.organization_id = bom.ORGANIZATION_ID 
+	and bom.ORGANIZATION_ID =130
+--and msi2.segment1 ='DPY 101 3010/72'	
+and ((bic.DISABLE_DATE>sysdate or bic.DISABLE_DATE is null) and (bic.effectivity_date is null or bic.effectivity_date<sysdate))
+and msi.SEGMENT1='SVF 930 1469/40.R1A'
+
+
+----------All DPY have this component ---two level Item where use
+select  msi2.segment1 Assembly_Item,msi2.organization_id,
+      msi2.item_type,
+       msi.SEGMENT1 Component_Item,msi.item_type,
+                            bic.component_quantity,
+                            bic.COMPONENT_YIELD_FACTOR,
+                            bic.item_num,
+                         bic.wip_supply_type,
+                         bic.supply_subinventory,
+                         bic.effectivity_date,bic.DISABLE_DATE,bic.IMPLEMENTATION_DATE 
+           FROM    apps.bom_inventory_components bic ,
+            apps.bom_bill_of_materials bom,
+           apps.mtl_system_items msi,
+     apps.mtl_system_items msi2
+          where --bic.disable_date  IS  NULL and 
+		  bic.COMPONENT_ITEM_ID=msi.INVENTORY_ITEM_ID
+    and msi.organization_id = msi2.organization_id
+    and bic.bill_sequence_id=bom.BILL_SEQUENCE_ID
+    and bom.assembly_item_id = msi2.INVENTORY_ITEM_ID
+    and msi2.organization_id = bom.ORGANIZATION_ID 
+	and bom.ORGANIZATION_ID =130
+--and msi2.segment1 ='DPY 101 3010/72'	
+and ((bic.DISABLE_DATE>sysdate or bic.DISABLE_DATE is null) and (bic.effectivity_date is null or bic.effectivity_date<sysdate))
+and bic.COMPONENT_ITEM_ID in
+(select bom.assembly_item_id
+           FROM    apps.bom_inventory_components bic ,
+            apps.bom_bill_of_materials bom,
+           apps.mtl_system_items msi,
+     apps.mtl_system_items msi2
+          where --bic.disable_date  IS  NULL and 
+          bic.COMPONENT_ITEM_ID=msi.INVENTORY_ITEM_ID
+    and msi.organization_id = msi2.organization_id
+    and bic.bill_sequence_id=bom.BILL_SEQUENCE_ID
+    and bom.assembly_item_id = msi2.INVENTORY_ITEM_ID
+    and msi2.organization_id = bom.ORGANIZATION_ID 
+    and bom.ORGANIZATION_ID =130
+--and msi2.segment1 ='DPY 101 3010/72'	
+--and ((bic.DISABLE_DATE>sysdate or bic.DISABLE_DATE is null) and (bic.effectivity_date is null or bic.effectivity_date<sysdate))
+and msi.SEGMENT1='SXA 109 5259/3.R1B')
+
+
+
+------------------All Demand Qty (MPS) for those DPYs include this component
+select SCHEDULE_DESIGNATOR,b.segment1 Item,SCHEDULE_DATE ,SCHEDULE_QUANTITY,ORIGINAL_QUANTITY,
+decode(SUPPLY_DEMAND_TYPE,1,'Demand',2,'Supply','else')
+RELIEF_FLAG,SCHEDULE_LEVEL,
+LINE_CODE,a.ORGANIZATION_ID,SOURCE_ORGANIZATION_CODE,SOURCE_CODE,FORECAST_ID 
+from apps.MRP_SCHEDULE_DATES_V a,apps.mtl_system_items_b  b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and SCHEDULE_DESIGNATOR ='W705DMRP'
+and b.INVENTORY_ITEM_ID in 
+(select bom.assembly_item_id
+           FROM    apps.bom_inventory_components bic ,
+            apps.bom_bill_of_materials bom,
+           apps.mtl_system_items msi,
+     apps.mtl_system_items msi2
+          where --bic.disable_date  IS  NULL and 
+		  bic.COMPONENT_ITEM_ID=msi.INVENTORY_ITEM_ID
+    and msi.organization_id = msi2.organization_id
+    and bic.bill_sequence_id=bom.BILL_SEQUENCE_ID
+    and bom.assembly_item_id = msi2.INVENTORY_ITEM_ID
+    and msi2.organization_id = bom.ORGANIZATION_ID 
+	and bom.ORGANIZATION_ID =130
+--and msi2.segment1 ='DPY 101 3010/72'	
+and ((bic.DISABLE_DATE>sysdate or bic.DISABLE_DATE is null) and (bic.effectivity_date is null or bic.effectivity_date<sysdate))
+and msi.SEGMENT1='SVF 930 1469/40.R1A'
+)

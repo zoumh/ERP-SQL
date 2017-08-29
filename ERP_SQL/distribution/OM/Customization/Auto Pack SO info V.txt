@@ -1,0 +1,62 @@
+
+BMC_AUTO_PK_SO_INFO_V
+
+
+CREATE OR REPLACE VIEW BMC_AUTO_PK_SO_INFO_V
+(SO_NUMBER, SO_HEADER_ID, SO_LINE_NUMBER, SO_LINE_ID, PO_NUMBER, 
+ PO_LINE_NUMBER, ITEM_NUMBER, ITEM_ID, ORDERED_QTY, OPEN_QTY, 
+ TOTAL_PALLETS, DELAY_REASON, PACKING_CODE, FORWARDER, OPERATOR, 
+ STATUS, OE_LINE_STAUTS, WIP_COMPLETE_DATE, WIP_BOM_REVISION, SCHEDULE_SHIP_DATE, 
+ SCHEDULE_ARRIVAL_DATE, SHIP_CONFIRM_DATE, SHIP_TO_CUSTOMER_ID, SHIP_TO_COUNTRY, SEMC_CUSTOMER_REFERENCE, 
+ CREATED_BY, CREATION_DATE, LAST_UPDATED_BY, LAST_UPDATE_DATE)
+AS 
+SELECT DISTINCT oh.order_number, oh.header_id, ol.line_number, ol.line_id,
+                   ol.orig_sys_document_ref, ol.orig_sys_line_ref,
+                      msi.segment1
+                   || DECODE (ol.item_revision, NULL, NULL, '.')
+                   || ol.item_revision,
+                   ol.inventory_item_id, ol.ordered_quantity,
+                   ol.ordered_quantity - balv.total_qty, balv.total_pallets,
+                   bas.attribute1, oh.global_attribute15,
+                   oh.freight_carrier_code, bas.attribute2,
+                   (CASE
+                       WHEN wnd.confirm_date IS NULL
+                          THEN bas.status
+                       ELSE 'SHIPED'
+                    END
+                   ) status,
+                   ol.flow_status_code, wdj.date_completed, wdj.bom_revision,
+                   ol.schedule_ship_date, ol.schedule_arrival_date,
+                   wnd.confirm_date,
+                   raa.address_lines_phonetic ship_to_customer_id,
+                   raa.country ship_to_country,
+                   oh.global_attribute4 semc_customer_reference,
+                   bas.created_by, bas.creation_date, bas.last_updated_by,
+                   bas.last_update_date
+              FROM oe_order_headers oh,
+                   ra_addresses_all raa,
+                   hz_cust_site_uses_all hsu,
+                   oe_order_lines ol,
+                   mtl_system_items_b msi,
+                   wsh_new_deliveries wnd,
+                   wip_discrete_jobs wdj,
+                   bmc_auto_pk_so_info bas,
+                   (SELECT   bal.so_number, COUNT (bal.lpn) total_pallets,
+                             SUM (bal.quantity) total_qty
+                        FROM bmc_auto_pk_lpn_info bal
+                    GROUP BY bal.so_number) balv
+             WHERE bas.so_number = oh.order_number
+               AND oh.header_id = ol.header_id
+               AND ol.ship_to_org_id = hsu.site_use_id       --hsu.location(+)
+               AND raa.address_id = hsu.cust_acct_site_id
+               AND ol.ordered_quantity <> 0
+               AND ol.inventory_item_id = msi.inventory_item_id
+               AND ol.ship_from_org_id = msi.organization_id
+               AND (oh.header_id = wnd.source_header_id(+))
+               AND ol.line_id = wdj.attribute2(+)
+               AND ol.header_id = wdj.attribute1(+)
+               AND bas.so_number = balv.so_number;
+
+
+
+

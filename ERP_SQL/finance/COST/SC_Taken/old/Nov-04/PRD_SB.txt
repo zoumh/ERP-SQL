@@ -1,0 +1,749 @@
+
+
+select * from apps.GL_interface where GROUP_ID is not null
+
+
+select PHYSICAL_INVENTORY_NAME,PHYSICAL_INVENTORY_ID,ORGANIZATION_ID,DESCRIPTION,FREEZE_DATE,TOTAL_ADJUSTMENT_VALUE,NEXT_TAG_NUMBER  from apps.MTL_PHYSICAL_INVENTORIES 
+where trunc(FREEZE_DATE)>= to_date('2004-11-20','YYYY-MM-DD')
+  and trunc(FREEZE_DATE)<= to_date('2004-12-1','YYYY-MM-DD')
+order by PHYSICAL_INVENTORY_ID
+
+385
+
+
+select distinct c.segment1,c.segment2,c.segment3,c.segment4,c.segment5 --Locat3--,a.subinventory_name SubInv
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =346  
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+	   and a.subinventory_name='SB'
+	   
+	   
+select SECONDARY_INVENTORY_NAME,DESCRIPTION,decode(LOCATOR_TYPE,1,'No',2,'Prespecified',LOCATOR_TYPE) Locate_Type,ORGANIZATION_ID from apps.MTL_SECONDARY_INVENTORIES_FK_V --where ORGANIZATION_ID=84
+order by ORGANIZATION_ID,SECONDARY_INVENTORY_NAME
+
+
+--------No P, sort SEGMENT3,SEGMENT5
+select distinct c.segment1,c.segment2,c.segment3,c.segment4,c.segment5 --Locat3--,a.subinventory_name SubInv
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =346  
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+	   and a.subinventory_name='SB'
+	   and c.segment2 not like 'P%'
+order by SEGMENT3,SEGMENT5
+
+
+---------PRD all Tag
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) tag 
+       ,system_quantity,'' Qty1,  '' Qty2, b.segment1 item, a.revision Rev, a.subinventory_name SubInv, 
+       c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+	   , e.cost_group, 
+       (select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) lpn, 
+       '' Audit_Qty
+	,actual_cost
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+and 
+(a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and SEGMENT1 in
+('2/ROA 128 0102R3A',
+'BKB 191 342',
+'BKB 193 148/1',
+'BKB 193 148/2',
+'BKB 193 155',
+'BKB 193 162/2', 
+'BKB 193 167/1',
+'BKB 193 170/3',
+'BKB 193 172/10',
+'BKB 193 172/11',
+'BKB 193 174/1',
+'BKB 193 174/11',
+'BKB 193 174/2',
+'BKB 193 175/1',
+'BKB 193 176/1',
+'BKB 193 178/1',
+'BKB 193 188/1',
+'BKB 193 188/12',
+'BKB 193 191/11',
+'BKB 193 191/12',
+'BKB 193 193',
+'BKB 193 196/1',
+'BKB 193 197/1',
+'BKB 193 197/2',
+'BML 162 160/1',
+'BML 162 160/2',
+'BML 162 160/3',
+'BML 162 160/4',
+'BML 162 160/5',
+'BML 162 162/21',
+'BML 162 162/22',
+'BML 162 162/23',
+'BML 162 162/24',
+'BML 162 162/25',
+'BML 162 170/4',
+'KDR 109 016/32',
+'KDR 109 083/32',
+'KNC 201 01',
+'KNC 201 02',
+'KNC 201 04',
+'KRY 101 1087',
+'KRY 105 183',
+'KRY 105 190',
+'KRY 105 191',
+'KRY 105 192/8',
+'RLF 501 25/04',
+'RLF 501 38',
+'RLF 501 47',
+'RNH 942 213',
+'RNH 942 27',
+'RNH 942 59/2',
+'RNH 942 61/6',
+'RNH 942 63/7',
+'RNH 942 63/8',
+'RNH 942 64/2',
+'ROA 128 0351/2R4A',
+'ROA 128 0351/2R4A/1',
+'ROA 128 0351/2R6A',
+'ROA 128 0351/2R6B',
+'ROA 128 0351/2R6C',
+'ROA 128 0351/2R6D',
+'ROA 128 0351/2R6F',
+'ROA 128 0477R2A',
+'ROA 128 0477R2B',
+'ROA 128 0477R3A',
+'ROA 128 0568R1D',
+'ROA 128 0568R1E',
+'ROA 128 0568R1F',
+'ROA 128 0568R5A',
+'ROA 128 0568R6A',
+'ROA 128 0768/1R1H',
+'ROA 128 0768/1R1N',
+'ROA 128 0958/2R1A',
+'ROA 128 0958/2R1C',
+'ROA 128 0958/2R1D',
+'ROA 128 1044R4A',
+'ROA 128 1044R5A',
+'ROA 128 1044R6A',
+'RYT 118 927',
+'SXK 109 5745',
+'SXK 109 5910')
+)
+or a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and ITEM_TYPE in ('DPY','KRH')
+and SEGMENT1 not in
+('KRH 101 202',
+'KRH 101 202R1A',
+'KRH 101 202R1B',
+'KRH 101 201',
+'KRH 101 201R1A',
+'KRH 101 201R1B',
+'KRH 101 200',
+'KRH 101 200R1A',
+'KRH 101 200R1B')
+)
+)
+
+--------Verify all Tag in PRD
+select count(*)
+from   apps.mtl_physical_adjustments a 
+where  a.physical_inventory_id =385  and a.organization_id=83
+and 
+(INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and SEGMENT1 in
+('2/ROA 128 0102R3A',
+'BKB 191 342',
+'BKB 193 148/1',
+'BKB 193 148/2',
+'BKB 193 155',
+'BKB 193 162/2', 
+'BKB 193 167/1',
+'BKB 193 170/3',
+'BKB 193 172/10',
+'BKB 193 172/11',
+'BKB 193 174/1',
+'BKB 193 174/11',
+'BKB 193 174/2',
+'BKB 193 175/1',
+'BKB 193 176/1',
+'BKB 193 178/1',
+'BKB 193 188/1',
+'BKB 193 188/12',
+'BKB 193 191/11',
+'BKB 193 191/12',
+'BKB 193 193',
+'BKB 193 196/1',
+'BKB 193 197/1',
+'BKB 193 197/2',
+'BML 162 160/1',
+'BML 162 160/2',
+'BML 162 160/3',
+'BML 162 160/4',
+'BML 162 160/5',
+'BML 162 162/21',
+'BML 162 162/22',
+'BML 162 162/23',
+'BML 162 162/24',
+'BML 162 162/25',
+'BML 162 170/4',
+'KDR 109 016/32',
+'KDR 109 083/32',
+'KNC 201 01',
+'KNC 201 02',
+'KNC 201 04',
+'KRY 101 1087',
+'KRY 105 183',
+'KRY 105 190',
+'KRY 105 191',
+'KRY 105 192/8',
+'RLF 501 25/04',
+'RLF 501 38',
+'RLF 501 47',
+'RNH 942 213',
+'RNH 942 27',
+'RNH 942 59/2',
+'RNH 942 61/6',
+'RNH 942 63/7',
+'RNH 942 63/8',
+'RNH 942 64/2',
+'ROA 128 0351/2R4A',
+'ROA 128 0351/2R4A/1',
+'ROA 128 0351/2R6A',
+'ROA 128 0351/2R6B',
+'ROA 128 0351/2R6C',
+'ROA 128 0351/2R6D',
+'ROA 128 0351/2R6F',
+'ROA 128 0477R2A',
+'ROA 128 0477R2B',
+'ROA 128 0477R3A',
+'ROA 128 0568R1D',
+'ROA 128 0568R1E',
+'ROA 128 0568R1F',
+'ROA 128 0568R5A',
+'ROA 128 0568R6A',
+'ROA 128 0768/1R1H',
+'ROA 128 0768/1R1N',
+'ROA 128 0958/2R1A',
+'ROA 128 0958/2R1C',
+'ROA 128 0958/2R1D',
+'ROA 128 1044R4A',
+'ROA 128 1044R5A',
+'ROA 128 1044R6A',
+'RYT 118 927',
+'SXK 109 5745',
+'SXK 109 5910')
+)
+or INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and ITEM_TYPE in ('DPY','KRH')
+and SEGMENT1 not in
+('KRH 101 202',
+'KRH 101 202R1A',
+'KRH 101 202R1B',
+'KRH 101 201',
+'KRH 101 201R1A',
+'KRH 101 201R1B',
+'KRH 101 200',
+'KRH 101 200R1A',
+'KRH 101 200R1B')
+)
+)
+
+
+
+----Px.x.x.x , sort by c.segment3,c.segment5
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) tag 
+       ,system_quantity,'Qty.1',  'Qty.2', b.segment1 item, a.revision Rev, a.subinventory_name SubInv, 
+       c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+	   , e.cost_group, 
+       (select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) lpn, 
+       'Audit Qty'
+	   ,(case when a.actual_cost>=50 then 'c' else case when (a.actual_cost<50 and a.actual_cost>=20) then 'b' else 'a' end end) au_FLag,
+	actual_cost
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+	   and (a.subinventory_name='SB' )
+	   and c.segment2 like 'P%'
+and 
+(a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and SEGMENT1 in
+('2/ROA 128 0102R3A',
+'BKB 191 342',
+'BKB 193 148/1',
+'BKB 193 148/2',
+'BKB 193 155',
+'BKB 193 162/2', 
+'BKB 193 167/1',
+'BKB 193 170/3',
+'BKB 193 172/10',
+'BKB 193 172/11',
+'BKB 193 174/1',
+'BKB 193 174/11',
+'BKB 193 174/2',
+'BKB 193 175/1',
+'BKB 193 176/1',
+'BKB 193 178/1',
+'BKB 193 188/1',
+'BKB 193 188/12',
+'BKB 193 191/11',
+'BKB 193 191/12',
+'BKB 193 193',
+'BKB 193 196/1',
+'BKB 193 197/1',
+'BKB 193 197/2',
+'BML 162 160/1',
+'BML 162 160/2',
+'BML 162 160/3',
+'BML 162 160/4',
+'BML 162 160/5',
+'BML 162 162/21',
+'BML 162 162/22',
+'BML 162 162/23',
+'BML 162 162/24',
+'BML 162 162/25',
+'BML 162 170/4',
+'KDR 109 016/32',
+'KDR 109 083/32',
+'KNC 201 01',
+'KNC 201 02',
+'KNC 201 04',
+'KRY 101 1087',
+'KRY 105 183',
+'KRY 105 190',
+'KRY 105 191',
+'KRY 105 192/8',
+'RLF 501 25/04',
+'RLF 501 38',
+'RLF 501 47',
+'RNH 942 213',
+'RNH 942 27',
+'RNH 942 59/2',
+'RNH 942 61/6',
+'RNH 942 63/7',
+'RNH 942 63/8',
+'RNH 942 64/2',
+'ROA 128 0351/2R4A',
+'ROA 128 0351/2R4A/1',
+'ROA 128 0351/2R6A',
+'ROA 128 0351/2R6B',
+'ROA 128 0351/2R6C',
+'ROA 128 0351/2R6D',
+'ROA 128 0351/2R6F',
+'ROA 128 0477R2A',
+'ROA 128 0477R2B',
+'ROA 128 0477R3A',
+'ROA 128 0568R1D',
+'ROA 128 0568R1E',
+'ROA 128 0568R1F',
+'ROA 128 0568R5A',
+'ROA 128 0568R6A',
+'ROA 128 0768/1R1H',
+'ROA 128 0768/1R1N',
+'ROA 128 0958/2R1A',
+'ROA 128 0958/2R1C',
+'ROA 128 0958/2R1D',
+'ROA 128 1044R4A',
+'ROA 128 1044R5A',
+'ROA 128 1044R6A',
+'RYT 118 927',
+'SXK 109 5745',
+'SXK 109 5910')
+)
+or a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and ITEM_TYPE in ('DPY','KRH')
+and SEGMENT1 not in
+('KRH 101 202',
+'KRH 101 202R1A',
+'KRH 101 202R1B',
+'KRH 101 201',
+'KRH 101 201R1A',
+'KRH 101 201R1B',
+'KRH 101 200',
+'KRH 101 200R1A',
+'KRH 101 200R1B')
+)
+)
+and c.segment5 not in ('11','22','33','44')
+order by (c.segment3),c.segment5
+
+
+
+----Non Px.x.x.x , sort by c.segment3,c.segment5  (include PCB,LCD , exclude ('11','22','33','44'))
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) tag 
+       ,system_quantity,'Qty.1',  'Qty.2', b.segment1 item, a.revision Rev, a.subinventory_name SubInv, 
+       c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+	   , e.cost_group, 
+       (select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) lpn, 
+       'Audit Qty'
+	   ,(case when a.actual_cost>=50 then 'c' else case when (a.actual_cost<50 and a.actual_cost>=20) then 'b' else 'a' end end) au_FLag,
+	actual_cost
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+	   and (a.subinventory_name='SB' )
+	   and c.segment2 not like 'P%'
+and 
+(a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and SEGMENT1 in
+('2/ROA 128 0102R3A',
+'BKB 191 342',
+'BKB 193 148/1',
+'BKB 193 148/2',
+'BKB 193 155',
+'BKB 193 162/2', 
+'BKB 193 167/1',
+'BKB 193 170/3',
+'BKB 193 172/10',
+'BKB 193 172/11',
+'BKB 193 174/1',
+'BKB 193 174/11',
+'BKB 193 174/2',
+'BKB 193 175/1',
+'BKB 193 176/1',
+'BKB 193 178/1',
+'BKB 193 188/1',
+'BKB 193 188/12',
+'BKB 193 191/11',
+'BKB 193 191/12',
+'BKB 193 193',
+'BKB 193 196/1',
+'BKB 193 197/1',
+'BKB 193 197/2',
+'BML 162 160/1',
+'BML 162 160/2',
+'BML 162 160/3',
+'BML 162 160/4',
+'BML 162 160/5',
+'BML 162 162/21',
+'BML 162 162/22',
+'BML 162 162/23',
+'BML 162 162/24',
+'BML 162 162/25',
+'BML 162 170/4',
+'KDR 109 016/32',
+'KDR 109 083/32',
+'KNC 201 01',
+'KNC 201 02',
+'KNC 201 04',
+'KRY 101 1087',
+'KRY 105 183',
+'KRY 105 190',
+'KRY 105 191',
+'KRY 105 192/8',
+'RLF 501 25/04',
+'RLF 501 38',
+'RLF 501 47',
+'RNH 942 213',
+'RNH 942 27',
+'RNH 942 59/2',
+'RNH 942 61/6',
+'RNH 942 63/7',
+'RNH 942 63/8',
+'RNH 942 64/2',
+'ROA 128 0351/2R4A',
+'ROA 128 0351/2R4A/1',
+'ROA 128 0351/2R6A',
+'ROA 128 0351/2R6B',
+'ROA 128 0351/2R6C',
+'ROA 128 0351/2R6D',
+'ROA 128 0351/2R6F',
+'ROA 128 0477R2A',
+'ROA 128 0477R2B',
+'ROA 128 0477R3A',
+'ROA 128 0568R1D',
+'ROA 128 0568R1E',
+'ROA 128 0568R1F',
+'ROA 128 0568R5A',
+'ROA 128 0568R6A',
+'ROA 128 0768/1R1H',
+'ROA 128 0768/1R1N',
+'ROA 128 0958/2R1A',
+'ROA 128 0958/2R1C',
+'ROA 128 0958/2R1D',
+'ROA 128 1044R4A',
+'ROA 128 1044R5A',
+'ROA 128 1044R6A',
+'RYT 118 927',
+'SXK 109 5745',
+'SXK 109 5910')
+)
+or a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and ITEM_TYPE in ('DPY','KRH')
+and SEGMENT1 not in
+('KRH 101 202',
+'KRH 101 202R1A',
+'KRH 101 202R1B',
+'KRH 101 201',
+'KRH 101 201R1A',
+'KRH 101 201R1B',
+'KRH 101 200',
+'KRH 101 200R1A',
+'KRH 101 200R1B')
+)
+)
+and c.segment5 not in ('11','22','33','44')
+order by (c.segment3),c.segment5
+
+
+
+
+----c.segment5  11,22,33,,44
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) tag 
+       ,system_quantity,'Qty.1',  'Qty.2', b.segment1 item, a.revision Rev, a.subinventory_name SubInv, 
+       c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+	   , e.cost_group, 
+       (select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) lpn, 
+       'Audit Qty'
+	   ,(case when a.actual_cost>=50 then 'c' else case when (a.actual_cost<50 and a.actual_cost>=20) then 'b' else 'a' end end) au_FLag,
+	actual_cost
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+	   and (a.subinventory_name='SB' )
+--	   and c.segment2 not like 'P%'
+and 
+(a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and SEGMENT1 in
+('2/ROA 128 0102R3A',
+'BKB 191 342',
+'BKB 193 148/1',
+'BKB 193 148/2',
+'BKB 193 155',
+'BKB 193 162/2', 
+'BKB 193 167/1',
+'BKB 193 170/3',
+'BKB 193 172/10',
+'BKB 193 172/11',
+'BKB 193 174/1',
+'BKB 193 174/11',
+'BKB 193 174/2',
+'BKB 193 175/1',
+'BKB 193 176/1',
+'BKB 193 178/1',
+'BKB 193 188/1',
+'BKB 193 188/12',
+'BKB 193 191/11',
+'BKB 193 191/12',
+'BKB 193 193',
+'BKB 193 196/1',
+'BKB 193 197/1',
+'BKB 193 197/2',
+'BML 162 160/1',
+'BML 162 160/2',
+'BML 162 160/3',
+'BML 162 160/4',
+'BML 162 160/5',
+'BML 162 162/21',
+'BML 162 162/22',
+'BML 162 162/23',
+'BML 162 162/24',
+'BML 162 162/25',
+'BML 162 170/4',
+'KDR 109 016/32',
+'KDR 109 083/32',
+'KNC 201 01',
+'KNC 201 02',
+'KNC 201 04',
+'KRY 101 1087',
+'KRY 105 183',
+'KRY 105 190',
+'KRY 105 191',
+'KRY 105 192/8',
+'RLF 501 25/04',
+'RLF 501 38',
+'RLF 501 47',
+'RNH 942 213',
+'RNH 942 27',
+'RNH 942 59/2',
+'RNH 942 61/6',
+'RNH 942 63/7',
+'RNH 942 63/8',
+'RNH 942 64/2',
+'ROA 128 0351/2R4A',
+'ROA 128 0351/2R4A/1',
+'ROA 128 0351/2R6A',
+'ROA 128 0351/2R6B',
+'ROA 128 0351/2R6C',
+'ROA 128 0351/2R6D',
+'ROA 128 0351/2R6F',
+'ROA 128 0477R2A',
+'ROA 128 0477R2B',
+'ROA 128 0477R3A',
+'ROA 128 0568R1D',
+'ROA 128 0568R1E',
+'ROA 128 0568R1F',
+'ROA 128 0568R5A',
+'ROA 128 0568R6A',
+'ROA 128 0768/1R1H',
+'ROA 128 0768/1R1N',
+'ROA 128 0958/2R1A',
+'ROA 128 0958/2R1C',
+'ROA 128 0958/2R1D',
+'ROA 128 1044R4A',
+'ROA 128 1044R5A',
+'ROA 128 1044R6A',
+'RYT 118 927',
+'SXK 109 5745',
+'SXK 109 5910')
+)
+or a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and ITEM_TYPE in ('DPY','KRH')
+and SEGMENT1 not in
+('KRH 101 202',
+'KRH 101 202R1A',
+'KRH 101 202R1B',
+'KRH 101 201',
+'KRH 101 201R1A',
+'KRH 101 201R1B',
+'KRH 101 200',
+'KRH 101 200R1A',
+'KRH 101 200R1B')
+)
+)
+and c.segment5 in ('11','22','33','44')
+order by (c.segment3),c.segment5
+
+
+
+
+
+----No SB Tags
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) tag 
+       ,system_quantity,'Qty.1',  'Qty.2', b.segment1 item, a.revision Rev, a.subinventory_name SubInv, 
+       c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 locator,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+	   , e.cost_group, 
+       (select g.license_plate_number from apps.wms_license_plate_numbers g where a.parent_lpn_id=g.lpn_id and rownum=1) lpn, 
+       'Audit Qty'
+	   ,(case when a.actual_cost>=50 then 'c' else case when (a.actual_cost<50 and a.actual_cost>=20) then 'b' else 'a' end end) au_FLag,
+	actual_cost
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c, apps.cst_cost_groups e 
+where  a.physical_inventory_id =:d --and actual_cost > 50 
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=83 and b.organization_id=83 
+       and a.locator_id=c.inventory_location_id and c.organization_id=83 
+       and a.cost_group_id=e.cost_group_id 
+	   and (a.subinventory_name<>'SB' )
+--	   and c.segment2 not like 'P%'
+and 
+(a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and SEGMENT1 in
+('2/ROA 128 0102R3A',
+'BKB 191 342',
+'BKB 193 148/1',
+'BKB 193 148/2',
+'BKB 193 155',
+'BKB 193 162/2', 
+'BKB 193 167/1',
+'BKB 193 170/3',
+'BKB 193 172/10',
+'BKB 193 172/11',
+'BKB 193 174/1',
+'BKB 193 174/11',
+'BKB 193 174/2',
+'BKB 193 175/1',
+'BKB 193 176/1',
+'BKB 193 178/1',
+'BKB 193 188/1',
+'BKB 193 188/12',
+'BKB 193 191/11',
+'BKB 193 191/12',
+'BKB 193 193',
+'BKB 193 196/1',
+'BKB 193 197/1',
+'BKB 193 197/2',
+'BML 162 160/1',
+'BML 162 160/2',
+'BML 162 160/3',
+'BML 162 160/4',
+'BML 162 160/5',
+'BML 162 162/21',
+'BML 162 162/22',
+'BML 162 162/23',
+'BML 162 162/24',
+'BML 162 162/25',
+'BML 162 170/4',
+'KDR 109 016/32',
+'KDR 109 083/32',
+'KNC 201 01',
+'KNC 201 02',
+'KNC 201 04',
+'KRY 101 1087',
+'KRY 105 183',
+'KRY 105 190',
+'KRY 105 191',
+'KRY 105 192/8',
+'RLF 501 25/04',
+'RLF 501 38',
+'RLF 501 47',
+'RNH 942 213',
+'RNH 942 27',
+'RNH 942 59/2',
+'RNH 942 61/6',
+'RNH 942 63/7',
+'RNH 942 63/8',
+'RNH 942 64/2',
+'ROA 128 0351/2R4A',
+'ROA 128 0351/2R4A/1',
+'ROA 128 0351/2R6A',
+'ROA 128 0351/2R6B',
+'ROA 128 0351/2R6C',
+'ROA 128 0351/2R6D',
+'ROA 128 0351/2R6F',
+'ROA 128 0477R2A',
+'ROA 128 0477R2B',
+'ROA 128 0477R3A',
+'ROA 128 0568R1D',
+'ROA 128 0568R1E',
+'ROA 128 0568R1F',
+'ROA 128 0568R5A',
+'ROA 128 0568R6A',
+'ROA 128 0768/1R1H',
+'ROA 128 0768/1R1N',
+'ROA 128 0958/2R1A',
+'ROA 128 0958/2R1C',
+'ROA 128 0958/2R1D',
+'ROA 128 1044R4A',
+'ROA 128 1044R5A',
+'ROA 128 1044R6A',
+'RYT 118 927',
+'SXK 109 5745',
+'SXK 109 5910')
+)
+or a.INVENTORY_ITEM_ID in
+(select INVENTORY_ITEM_ID from apps.mtl_system_items
+where  ORGANIZATION_ID=83 and ITEM_TYPE in ('DPY','KRH')
+and SEGMENT1 not in
+('KRH 101 202',
+'KRH 101 202R1A',
+'KRH 101 202R1B',
+'KRH 101 201',
+'KRH 101 201R1A',
+'KRH 101 201R1B',
+'KRH 101 200',
+'KRH 101 200R1A',
+'KRH 101 200R1B')
+)
+)
+order by a.subinventory_name
+

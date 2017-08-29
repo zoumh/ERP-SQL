@@ -1,0 +1,17 @@
+
+
+
+Dear all,
+
+The following reports has been checked to ensure there is no pending transactions stuck in OM module, no exception found:
+1. AR-Run->Inventory Interface - SRS  (If no parameter value avaliable, then no problem )
+2. AR-Run->Interface Trip Stop - SRS  (If no parameter value avaliable, then no problem)
+3. Discoverer->BMC AR check SO status
+4. Discoverer->BMC AR check SO fulfilled
+
+Kelly: pls start to run auto invoice.
+
+Best Regards,
+Jessica Zhan
+BMC Finance
+

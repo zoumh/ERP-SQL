@@ -1,0 +1,42 @@
+
+
+- not able to see payment batch EH041104USD in payment batch window
+- STATUS of the batch in ap_inv_selection_criteria_all is NULL
+- 47 rows in ap_selected_invoices_all for that batch
+- 12 rows in ap_selected_invoice_checks_all for that batch
+- this implies that the batch was already built
+- customer said that the person who reported the problem got the error when building the batch
+- tested in local instance that updating the status would show the batch in the window
+- need to explore further to know the exact status to which the batch should be updated
+- requested customer to upload the dumps of the three batch tables involved
+
+
+
+
+
+--Can't see this paymentbatch
+select * from apps.AP_INV_SELECTION_CRITERIA_all where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+----This batch status & selected invoice
+select * from apps.AP_SELECTED_INVOICES_ALL where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+select CHECKRUN_NAME,INVOICE_ID,INVOICE_NUM,INVOICE_AMOUNT,AMOUNT_REMAINING,PAYMENT_AMOUNT,PROPOSED_PAYMENT_AMOUNT,OK_TO_PAY_FLAG,PAY_SELECTED_CHECK_ID,VENDOR_NAME,VENDOR_NUM,VENDOR_SITE_CODE
+from apps.AP_SELECTED_INVOICES_ALL where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+--check 
+select * from apps.AP_SELECTED_INVOICE_CHECKS_ALL where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+select CHECKRUN_NAME,CHECK_NUMBER,CHECK_AMOUNT,VENDOR_NUM,VENDOR_NAME,VENDOR_SITE_CODE,OK_TO_PAY_FLAG,SELECTED_CHECK_ID
+from apps.AP_SELECTED_INVOICE_CHECKS_ALL where CHECKRUN_NAME in ('EH041104USD','EH041105USD')
+
+
+
+
+select * from apps.ap_inv_selection_criteria_all where checkrun_name= 'EH041104USD'
+
+select * from apps.ap_selected_invoices_all where checkrun_name= 'EH041104USD'
+
+select * from apps.ap_selected_invoice_checks_all where checkrun_name= 'EH041104USD'

@@ -1,0 +1,21 @@
+
+
+
+-------Workbook & creator
+select DOC_NAME,DOC_DEVELOPER_KEY,b.USER_Name Created_By,b.description Created_By2
+,DOC_Created_Date,c.USER_Name UPDATED_BY,c.description Updated_By2,DOC_UPDATED_DATE,DOC_ID
+from apps.EUL4_DOCUMENTS a,apps.FND_USER b,apps.FND_USER c 
+where substr(a.DOC_CREATED_BY,instr(DOC_CREATED_BY,'#')+1,length(DOC_CREATED_BY)) =b.USER_ID 
+and substr(a.DOC_UPDATED_BY,instr(a.DOC_UPDATED_BY,'#')+1,length(a.DOC_UPDATED_BY))=c.USER_ID
+ 
+
+
+
+
+--------Scheduled   Workbook & creator
+select BR_ID,BR_Name,BR_Workbook_name,BR_Description,BR_EU_ID,BR_Report_Schema,b.USER_Name Created_By,b.description Created_By2
+,BR_Created_Date,c.USER_Name UPDATED_BY,c.description Updated_By2,BR_UPDATED_DATE
+from apps.EUL4_BATCH_REPORTS a,apps.FND_USER b,apps.FND_USER c 
+where substr(BR_Created_By,instr(BR_Created_By,'#')+1,length(BR_Created_By)) =b.USER_ID 
+and substr(a.BR_UPDATED_BY,instr(a.BR_UPDATED_BY,'#')+1,length(a.BR_UPDATED_BY))=c.USER_ID
+

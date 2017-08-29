@@ -1,0 +1,74 @@
+
+Move order are closed but records existed  in system.
+
+
+
+---------1) Find TRX_SOURCE_LINE_ID from MTL_TXN_REQUEST_lines
+select c.segment1 Item,a.TRANSACTION_QUANTITY,a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,b.LINE_STATUS,e.transaction_type_name Trans_type
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where 
+d.REQUEST_NUMBER='270703' and 
+--c.segment1='SXA 109 4522/4' and 
+c.ORGANIZATION_ID=83 and 
+d.header_id=b.header_id and
+--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+a.TRX_SOURCE_LINE_ID=b.TXN_SOURCE_LINE_ID and 
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+
+----same Find TRX_SOURCE_LINE_ID from MTL_TXN_REQUEST_lines, link use b.LINE_ID
+select a.TRX_SOURCE_LINE_ID,a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,a.TRANSACTION_QUANTITY ,d.header_id,b.LINE_STATUS
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,apps.MTL_TXN_REQUEST_headers d
+where 
+d.REQUEST_NUMBER='LUY040605-01' and 
+c.segment1='SXA 109 4522/4' and 
+c.ORGANIZATION_ID=83 and 
+d.header_id=b.header_id and
+a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+
+
+
+----------------Check Mtl_tmp details (locator --onhand Qty)
+select c.segment1 Item,a.transaction_header_id,a.transaction_temp_id,a.creation_date,a.transaction_date,a.LAST_UPDATE_DATE,
+a.subinventory_code,a.transfer_subinventory,a.transaction_quantity,MTT.TRANSACTION_TYPE_NAME,a.ORGANIZATION_ID,a.LOCATOR_ID,
+a.POSTING_FLAG,a.PROCESS_FLAG,decode(a.transaction_status,2,'Save Only',3,'Ready to Process','default') Trans_Status
+,d.segment2||'.'||d.segment3||'.'||d.segment4||'.'||d.segment5 Locator,
+e.segment2||'.'||e.segment3||'.'||e.segment4||'.'||e.segment5 Transfer_To_Locator
+from apps.mtl_material_transactions_temp a,apps.mtl_system_items c,
+apps.MTL_TRANSACTION_TYPES MTT,apps.mtl_item_locations d,apps.mtl_item_locations e
+where c.organization_id=83 and a.inventory_item_id=c.inventory_item_id
+and a.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+and d.Inventory_LOCATion_ID=a.LOCATOR_ID
+and e.Inventory_LOCATion_ID=a.TRANSFER_TO_LOCATION
+and TRX_SOURCE_LINE_ID in (1360712)
+
+
+
+--------2) DELETE 3 RECORDS,
+SELECT * FROM apps.mtl_material_transactions_temp WHERE TRANSACTION_TEMP_ID IN (12300337,12300244,12300456)
+
+
+
+
+
+----------------Move order Request details
+select a.request_number Move_Order_num,b.line_number,d.transaction_type_name Trans_type,a.ORGANIZATION_ID Org,
+decode(a.move_order_type,1,'Requisition',2,'Replenishment',3,'Pick Wave') move_order_type,
+a.date_required Head_Req_Date,a.header_status,b.line_status,b.FROM_SUBINVENTORY_CODE Fr_WH,b.TO_SUBINVENTORY_CODE To_WH,
+c.segment1 Item,b.REVISION,b.quantity,b.quantity_delivered,b.primary_quantity,b.date_required Line_Req_Date,b.transaction_header_id,
+b.txn_source_id,b.txn_source_line_id
+from apps.mtl_txn_request_headers a,apps.mtl_txn_request_lines b,apps.mtl_system_items_b c,
+apps.mtl_transaction_types d
+where a.transaction_type_id=d.transaction_type_id
+and a.header_id=b.header_id and a.organization_id=b.organization_id
+and a.organization_id=c.organization_id
+and b.inventory_item_id=c.INVENTORY_ITEM_ID
+and a.request_number in ('LBH-050614-1','cjf-050614-1')
+and c.segment1 in ('SXA 109 4516','RLC 509 418','SXA 109 4777')
+order by a.request_number,b.line_number
+
+
+

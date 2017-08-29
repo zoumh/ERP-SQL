@@ -1,0 +1,51 @@
+
+---------PO Receive Transaction with Receipt Number/LPN, item
+select a.creation_date ,a.quantity,a.DESTINATION_TYPE_CODE,
+a.transaction_type,c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB,i.license_plate_number,
+j.segment1 Item 
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h,apps.wms_license_plate_numbers i,
+apps.mtl_system_items j
+where 
+a.source_document_code='PO'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and d.item_id=j.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=j.ORGANIZATION_ID
+and a.PO_LINE_ID =d.PO_LINE_ID 
+and a.transfer_lpn_id=i.lpn_id(+)
+and j.segment1='1212-5177.2'
+and g.RECEIPT_NUM='1754404'
+--and c.segment1 in ('1021817','1022034')
+--and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+--and trunc(a.creation_date) >= to_date('20060101','YYYYMMDD') 
+order by a.creation_date
+
+---Non LPN , with Receipt number,Item
+
+select e.segment1 PO,g.RECEIPT_NUM,
+DESTINATION_TYPE_CODE, SOURCE_DOCUMENT_CODE,
+c.LINE_NUM, a.transaction_type,a.creation_date Receive_Date,a.quantity Receive_Qty,
+a.transaction_id,d.segment1 Item,c.Item_Description,a.transaction_date,a.ORGANIZATION_ID
+from apps.rcv_transactions a,apps.PO_LINES_ALL c,apps.mtl_system_items d,
+apps.PO_HEADERS_ALL e,apps.rcv_shipment_headers g
+where 
+a.source_document_code='PO' and 
+c.item_id=d.inventory_item_id
+and d.organization_id=a.ORGANIZATION_ID
+and c.org_id=e.org_id
+--and c.line_type_id=1023
+and a.po_line_id=c.po_line_id
+and e.po_header_id=a.po_header_id
+and a.po_header_id=a.po_header_id
+and e.po_header_id=c.po_header_id
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.transaction_id in (2521460,2521461)
+--and d.segment1='ROA 128 1153.R8B'
+order by e.segment1,c.LINE_NUM

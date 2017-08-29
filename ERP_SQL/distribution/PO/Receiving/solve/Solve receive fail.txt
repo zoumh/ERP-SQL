@@ -1,0 +1,52 @@
+
+
+1. Export the receiving transaction from summary screen
+
+2. run PO report to see PO qty of receive
+
+select a.segment1||'-'||b.line_num||'-'||c.shipment_num||'-'||d.DISTRIBUTION_NUM POID, a.segment1 PO_Num,d.creation_date,b.line_num,c.shipment_num Ship_num,d.DISTRIBUTION_NUM Dist_Num,
+d.quantity_ordered Dist_Qty,d.quantity_cancelled Dist_Canced,
+(d.quantity_ordered-d.quantity_cancelled)*b.unit_price Amount_CNY,b.unit_price,nvl(d.rate,1) Rate,
+a.currency_code Curr,Item_Description,b.cancel_flag Line_Cancel,c.quantity ShipLine_Qty,
+c.quantity_received ShipLine_Received,c.QUANTITY_BILLED,c.QUANTITY_SHIPPED,c.QUANTITY_REJECTED   
+from apps.PO_HEADERS_ALL a,apps.PO_LINES_ALL b,apps.po_Line_locations_all c,apps.PO_DISTRIBUTIONS_ALL d
+where a.po_header_id=b.po_header_id
+and a.po_header_id=d.po_header_id
+and b.po_line_id=d.po_line_id
+and b.po_line_id=c.po_line_id
+and a.po_header_id=c.po_header_id
+and d.line_location_id=c.line_location_id
+and a.segment1='1017909'
+
+and a.currency_code='CNY'
+and (b.line_type_id in (1023,1024))----N-BOM PO Line
+--and a.segment1='0000057023'--0000056941'--'1010075'--'0000056941'
+and d.creation_date<to_date('2005-1-1','YYYY-MM-DD')
+and d.creation_date>to_date('2004-1-1','YYYY-MM-DD')
+and a.segment1 not like 'TP%' -------Golf migration PO
+and a.segment1 not like 'FP%'
+and a.segment1 not like 'tp%'
+
+
+3. check receipt head/line table
+
+select * from apps.rcv_shipment_headers where receipt_num=324073
+
+
+select * from apps.rcv_shipment_lines where shipment_header_id=243777
+
+
+4. check LPN table
+select LICENSE_PLATE_NUMBER ,lpn_id,LPN_CONTEXT from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER in ('D0029674','D0029673','D0029672','D0029671')
+
+select CREATION_DATE, parent_lpn_id,COST_GROUP_ID,INVENTORY_ITEM_ID,QUANTITY,SOURCE_NAME    
+from apps.wms_lpn_contents WHERE parent_lpn_id in (1012381)
+
+
+5. check receive trans
+
+select * from apps.rcv_transactions  where shipment_header_id=243777
+
+select group_id,processing_mode_code,processing_status_code,transaction_status_code from apps.rcv_transactions_interface  
+where shipment_header_id=243777
+

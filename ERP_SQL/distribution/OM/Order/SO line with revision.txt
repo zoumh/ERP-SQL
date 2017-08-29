@@ -1,0 +1,37 @@
+
+ITEM_REVISION is null
+
+--------SO,Line,Type,status,schedule_Ship_Date with revision
+select b.CREATION_DATE,a.SCHEDULE_SHIP_DATE,a.LAST_UPDATE_DATE,
+c.NAME SO_Type,b.order_number,a.LINE_NUMBER||'.'||a.SHIPMENT_NUMBER line,
+a.FLOW_STATUS_CODE line_Status ,a.FLOW_STATUS_CODE Header_status,
+a.ORDERED_ITEM,a.ORDERED_QUANTITY,a.SHIPPING_QUANTITY,a.UNIT_SELLING_PRICE
+from apps.OE_ORDER_LINES_all a,apps.OE_ORDER_HEADERS_all b,
+apps.oe_transaction_types_tl c
+where a.HEADER_ID=b.HEADER_ID
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID 
+and a.org_id=b.org_id
+and c.LANGUAGE='US'
+and a.ITEM_REVISION is null
+and a.org_id=127
+and b.CREATION_DATE>to_date('2009-1-1','yyyy-mm-dd')
+and c.NAME in ('DC DPY Order New','Domestic BTOrder New','Accessory BTO Dom. Order New','Accessory 13 Export Order New')
+order by b.CREATION_DATE
+
+
+
+-------- Sum by Type
+select c.NAME SO_Type,--b.order_number,a.LINE_NUMBER||'.'||a.SHIPMENT_NUMBER line,
+count(*)
+from apps.OE_ORDER_LINES_all a,apps.OE_ORDER_HEADERS_all b,
+apps.oe_transaction_types_tl c
+where a.HEADER_ID=b.HEADER_ID
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID 
+and a.org_id=b.org_id
+and c.LANGUAGE='US'
+and a.ITEM_REVISION is null
+and a.org_id=127
+and b.CREATION_DATE>to_date('2009-1-1','yyyy-mm-dd')
+and c.NAME in ('DC DPY Order New','Domestic BTOrder New','Accessory BTO Dom. Order New','Accessory 13 Export Order New')
+group by c.NAME--,b.order_number,a.LINE_NUMBER||'.'||a.SHIPMENT_NUMBER
+

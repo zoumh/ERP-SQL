@@ -1,0 +1,33 @@
+
+1. WIP Complete at FG.RFD
+2. (BMC FG WH User) enter SO number,Scan LPN,Qty for each LPN when JO complete (total Qty)
+3. SE user check all Qty were entered('complete time' come out) Submit, will subinv transfer from RFD -> TD... , 
+   then pack LPN, then release SO, then finish task
+
+5. At SE verify stock
+
+
+---------Domestic Auto packing head table
+select * from  APPS.BMC_AUTO_SO_NEW where so_number='309118' 
+
+---------Domestic Auto packing line table
+select * from APPS.BMC_AUTO_LPN_NEW where so_number='309118'
+
+
+-----Find Domestic Auto packing user request,time,lpn  (from head & line table)
+select a.CREATION_DATE Head_Create,a.LAST_UPDATE_DATE Head_last_update,b.CREATION_DATE Line_Create,b.LAST_UPDATE_DATE Line_last_update,a.SO_NUMBER,a.SO_LINE_NUMBER,a.ITEM_NUMBER, a.attribute3 REQUEST_ID,b.STATUS,
+b.VP_LPN,QUANTITY,WEIGHT,SEAL_NUMBER,VOLUME
+from  APPS.BMC_AUTO_SO_NEW a,APPS.BMC_AUTO_LPN_NEW b
+where  a.so_number=b.so_number and a.SO_LINE_NUMBER=b.SO_LINE_NUMBER
+and a.so_number  IN (309137,309138,309139,309118) 
+order by a.so_number,a.SO_LINE_NUMBER
+
+
+
+---------Find step 1's request (RFD-->TB,Pack , Release SO, Task)
+select attribute3 request_id from apps.BMC_AUTO_SO_NEW where so_number =309277
+
+
+
+
+

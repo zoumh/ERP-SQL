@@ -1,0 +1,220 @@
+
+BMC_DC_DELIVERY_REP_DATE_NEW
+
+
+
+CREATE OR REPLACE VIEW BMC_DC_DELIVERY_REP_DATE_0626
+(SCHEDULE_SHIP_DATE, SCHEDULE_ARRIVAL_DATE, REQUESTED_ARRIVAL_DATE, ESTIMATE_PALLET_QTY, FIRST_CONFIRM_ETD_DATE, 
+ FIRST_CONFIRM_DATE_TIME, RESPONSE_TIME_HOURS, ITEM_MODEL, FREIGHT_TERMS_CODE, CARRIER, 
+ PO_RECEIVING_DATE, SHIP_NO, AWB_NO, HAWB_NO, FLIGHT_NO, 
+ FLIGHT_DATE, BOOKED, PICKUP, ARRIVED_ORIG_COUNTRY, DEPARTURE_ORIG_COUNTRY, 
+ ARRIVED_DESTI_COUNTRY, CUSTOMS_CLEARED, ARRIVED_HUB_CROSSDOCK, DEPARTURE_TRANSSHIP, GOODS_DELIVERED, 
+ GROSS_WEIGHT, PALLET_QTY, CONFIRM_DATE, --INVOICE_NO, 
+PO_NO, 
+ SO_NO, LINE_NUMBER, ORDER_TYPE, REGION_ID, INVOICE_TYPE, 
+ ORDERED_ITEM, ITEM_REVISION, SOLD_PARTY_NUMBER, SHIP_PARTY_NUMBER, DOCUMENTARY_CREDIT, 
+ DESCRIPTION, LINE_STATUS, ITEM_CODE_REV, SIGLE_PRICE, TOTAL_PRICE, 
+ QTY, CONSIGNEE_CUSTOMER_NAME, COUNTRY_NAME, PACKING_INSTRUCTIONS, ADDRESS, 
+ SPECIAL_PROCESSING, PO_CONFIRM_DATE_TIME, CHO_NEW_REQ_ETD_DATE, FINAL_CONFIRMED_ETD_DATE, CHO_CHANGE_DATE_TIME, 
+ SHIP_DATE_COMPLETED, SCHEDULED_START_DATE, DATE_COMPLETED, CONSIGNEE_ADDRESS, NOTIFIER_ADDRESS, 
+ PRE_BOOKING_FLAG)
+AS 
+SELECT DISTINCT
+                                  /*decode(to_number(edi_h.handover_pod),12,'Y',null) as  Pickup,
+                   decode(edi_h.handover_pod,24,'Y',null) as Departure,
+                   decode(edi_h.handover_pod,1,'Y',null) as Arrived,
+                   decode(edi_h.handover_pod,16,'Y',null) as Handover,
+                   decode(edi_h.handover_pod,12,'Y',null) as Cleared,
+                   decode(edi_h.handover_pod,27,'Y',null) as Despatched,
+                   decode(edi_h.handover_pod,22,'Y',null) as CompletedDelivery,*/
+                   oola.schedule_ship_date schedule_ship_date,
+                   oola.schedule_arrival_date schedule_arrival_date,
+                   oola.request_date requested_arrival_date,
+		  -- oola.attribute3   estimate_pallet_qty,
+                   oola.INDUSTRY_ATTRIBUTE2  estimate_pallet_qty,
+                   get_first_confirm_etd_date
+                                         (oola.line_id)
+                                                       first_confirm_etd_date,
+                   ha1.last_update_date first_confirm_date_time,
+                   ROUND ((ha1.last_update_date - ooha.ordered_date) * 24,
+                          2
+                         ) response_time_hours,
+--wdd.date_scheduled,
+                   get_item_model (oola.inventory_item_id,
+                                   oola.ship_from_org_id
+                                  ) item_model,
+                   ooha.freight_terms_code freight_terms_code,
+-- ||','||wnd.FOB_CODE
+                   --wc.FREIGHT_CODE                           carrier,
+                   ooha.freight_carrier_code carrier,
+                   ooha.ordered_date po_receiving_date, wnd.NAME ship_no,
+/*wnd.WAYBILL          AWB_No,
+wnd.attribute1       HAWB_No,
+wnd.attribute2       Flight_No,
+wnd.attribute3       POD_Date,  */
+                   edi_mbc.awb awb_no, edi_mbc.hwb hawb_no,
+                   edi_mbc.flight_number flight_no,
+                   edi_mbc.estimated_departure_date flight_date,
+                   edi_h.Booked AS Booked,
+                   edi_h.Pickup AS Pickup,
+                   edi_h.Arrived_Orig_Country AS Arrived_Orig_Country,
+                   edi_h.Departure_Orig_Country AS Departure_Orig_Country,
+                   edi_h.Arrived_Desti_Country AS Arrived_Desti_Country,
+                   edi_h.Customs_Cleared AS Customs_Cleared,
+                   edi_h.Arrived_Hub_Crossdock AS Arrived_Hub_Crossdock,
+                   edi_h.Departure_Transship AS Departure_Transship,
+                   edi_h.Goods_Delivered AS Goods_Delivered,
+--             DECODE(edi_h.handover_pod ,'22',edi_h.event_date ,NULL) pod_date,
+                   --wnd.gross_weight,
+                   get_shipment_gross_weight (wnd.delivery_id) gross_weight,
+                   wnd.number_of_lpn pallet_qty,
+                   wnd.confirm_date confirm_date,
+                   --wnd.NAME dn,
+---                   get_invoice_no (wnd.delivery_id,
+---                                   ooha.order_number
+---                                  ) invoice_no,
+                   NVL (ooha.cust_po_number, oola.attribute5) po_no,
+                   --ooha.cust_po_number po_no,
+                   ooha.order_number so_no,
+                   oola.line_number || ','
+                   || oola.shipment_number line_number,
+                   typ.NAME order_type,
+                   --oola.attribute4 region_id,
+                   Get_region_code (raa.country,ooha.ship_from_org_id) region_id,
+                   trx.NAME invoice_type, oola.ordered_item,
+		   oola.item_revision,
+                   bsc.customer_info_ref sold_party_number,
+                   get_ship_party_number (ooha.header_id) ship_party_number,
+                   ooha.global_attribute8 documentary_credit,
+                   oola.global_attribute1 description,
+                   oola.flow_status_code line_status,
+                   msi.segment1 item_code_rev,
+--miv.REVISION ver,
+                   oola.unit_list_price sigle_price,
+                   oola.pricing_quantity * oola.unit_list_price total_price,
+                   --maggie oola.pricing_quantity qty,
+                   oola.ordered_quantity qty,
+                   get_customer_name
+                                 (ooha.ship_to_org_id)
+                                                      consignee_customer_name,
+                   get_country_name (raa.country) country_name,
+                   ooha.global_attribute15 packing_instructions,
+                      raa.address1
+                   || raa.address2
+                   || raa.address3
+                   || raa.address4 address,
+                   ooha.global_attribute16 special_processing,
+                   NVL (ha1.submission_datetime,
+                        ha1.last_update_date
+                       ) po_confirm_date_time,
+                   get_latest_cho_req_etd_date
+                                           (oola.line_id)
+                                                         cho_new_req_etd_date,
+                   TO_DATE (oola.attribute15,
+                            'DD-MON-YYYY hh24:mi:ss'
+                           ) final_confirmed_etd_date,
+                   cho_change_date_time (ooha.header_id,
+                                         ooha.org_id
+                                        ) cho_change_date_time,
+                   wdj.date_completed ship_date_completed,
+				   wdj.scheduled_start_date,
+				   wdj.date_completed,
+                      bsc_i.address1
+                   || ' '
+                   || bsc_i.address2
+                   || ' '
+                   || bsc_i.address3
+                   || ' '
+                   || bsc_i.address4
+                   || ' '
+                   || bsc_i.city
+                   || ' '
+                   || bsc_i.postal_code
+                   || ' '
+                   || bsc_i.country consignee_address,
+                      bsc_n.address1
+                   || ' '
+                   || bsc_n.address2
+                   || ' '
+                   || bsc_n.address3
+                   || ' '
+                   || bsc_n.address4
+                   || ' '
+                   || bsc_n.city
+                   || ' '
+                   || bsc_n.postal_code
+                   || ' '
+                   || bsc_n.country notifier_address,
+		   Get_Pre_Booking_Flag(ooha.ship_from_org_id,ooha.order_number,oola.line_number)  Pre_Booking_Flag
+              FROM oe_order_headers_all ooha,
+                   oe_order_lines_all oola,
+                   oe_transaction_types_tl typ,
+                   oe_transaction_types_all typ_all,
+                   ra_cust_trx_types_all trx,
+--wsh_pick_slip_v wpsv,
+                   wsh_delivery_details wdd,
+                   wsh_new_deliveries wnd,
+                   wsh_delivery_assignments wda,
+                   mtl_system_items msi,
+--mtl_item_revisions miv,
+                   oe_header_acks ha1,
+                   ra_addresses_all raa,
+                   ra_site_uses_all rsua,
+                   wsh_carriers wc,
+                   bmc_semc_customers bsc,
+                   bmc_edi_iftmbc_in edi_mbc,
+                   bmc_dc_delivery_rep_date_hrl edi_h,
+                   wip_discrete_jobs wdj,
+                   oe_order_headers_v oohv,
+                   bmc_semc_customers bsc_n,
+                   bmc_semc_customers bsc_i
+             WHERE ooha.ship_to_org_id = rsua.site_use_id
+               AND ooha.order_type_id = typ.transaction_type_id
+               AND typ.LANGUAGE = 'US'
+               AND ooha.order_type_id = typ_all.transaction_type_id
+               AND trx.cust_trx_type_id = typ_all.cust_trx_type_id
+               AND rsua.address_id = raa.address_id
+               AND ooha.header_id = oola.header_id
+--AND wpsv.move_order_line_id(+) = wdd.move_order_line_id
+               AND wdd.source_line_id(+) = oola.line_id
+               AND wdd.source_header_id(+) = oola.header_id
+               AND wdd.delivery_detail_id = wda.delivery_detail_id(+)
+               AND wda.delivery_id = wnd.delivery_id(+)
+               AND oola.inventory_item_id = msi.inventory_item_id
+               AND oola.ship_from_org_id = msi.organization_id
+--AND msi.inventory_item_id = miv.INVENTORY_ITEM_ID
+--AND msi.organization_id = miv.ORGANIZATION_ID
+               AND ooha.global_attribute4 = bsc.current_customer_id(+)
+               AND ha1.header_id(+) = ooha.header_id
+               AND edi_mbc.bmc_so(+) = ooha.order_number
+--and edi_mbc.bmc_so_line=oola.line_number
+               AND edi_h.bmc_so(+) = ooha.order_number
+			   AND ha1.org_id(+) = ooha.org_id
+               AND ha1.acknowledgment_flag(+) = 'Y'
+               AND ha1.first_ack_code(+) = 'AC'
+               AND wc.carrier_id(+) = wnd.carrier_id
+--              AND ooha.orig_sys_document_ref = '0070351754'
+--         AND wdj.attribute1= ooha.header_id
+               AND wdj.attribute2(+) = oola.line_id
+               AND wdj.primary_item_id(+) = oola.inventory_item_id
+               AND wdj.organization_id(+) = oola.ship_from_org_id
+               AND ooha.header_id = oohv.header_id(+)
+               AND ooha.order_number = oohv.order_number(+)
+               AND ooha.org_id = oohv.org_id(+)
+               AND oohv.global_attribute5 = bsc_n.current_customer_id(+)
+               AND oohv.global_attribute6 = bsc_i.current_customer_id(+);
+
+
+
+select * from BMC_DC_DELIVERY_REP_DATE_0626 where ORDER_TYPE='DC DPY Order New' 
+and  (SCHEDULE_SHIP_DATE)=(to_date('2006-06-27','yyyy-mm-dd')) 
+   and (SCHEDULE_SHIP_DATE)<=(to_date('2006-07-06','yyyy-mm-dd'))
+
+SELECT * FROM ap_system_parameters
+
+BEGIN
+ apps.Fnd_Client_Info.set_org_context('127');
+END;
+
+
+	

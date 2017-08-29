@@ -1,0 +1,20 @@
+
+
+
+---------------Value of Un-Cost Transactions
+
+select a.TRANSACTION_QUANTITY,cst.item_cost,(a.TRANSACTION_QUANTITY*cst.item_cost) Amount,c.segment1 Item,
+mtt.TRANSACTION_TYPE_NAME ,a.CREATION_DATE,a.LAST_UPDATE_DATE, 
+a.ORGANIZATION_ID,a.request_id ,transaction_group_id,costed_flag,error_code,error_explanation, 
+a.INVENTORY_ITEM_ID,a.SUBINVENTORY_CODE,a.TRANSFER_SUBINVENTORY,
+a.LOCATOR_ID,a.TRANSACTION_DATE,a.transaction_id
+from apps.mtl_material_transactions a,apps.MTL_TRANSACTION_TYPES MTT,apps.mtl_system_items c,
+apps.cst_item_costs cst
+where a.costed_flag in ( 'E') and a.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+and c.organization_id=a.organization_id and a.inventory_item_id=c.inventory_item_id
+and c.organization_id=cst.organization_id
+and cst.cost_type_id=1 
+and cst.inventory_item_id = a.inventory_item_id
+--and trunc(a.CREATION_DATE)=to_date('2005-07-27','yyyy-mm-dd')
+order by a.ORGANIZATION_ID,a.CREATION_DATE 
+

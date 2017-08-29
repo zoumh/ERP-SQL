@@ -1,0 +1,112 @@
+
+------------FG Period Summary Qty by Model & Trans Type
+
+select  cat.segment1 Model, msi.segment1 Item,sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+sum(mmt.TRANSACTION_QUANTITY) as Qty,mtt.transaction_type_name
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_item_categories_v     cat
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cat.organization_id=83 and cat.inventory_item_id = mmt.inventory_item_id --and cst.cost_type_id=1 
+and mmt.organization_id = 83 and msi.organization_id = 83 
+and    trunc(mmt.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20041001','YYYYMMDD') 
+and mtt.transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Internal Order Pick') 
+and mtt.transaction_type_name not like '%Move Order Transfer%'
+and mtt.transaction_type_name not like '%Container%'
+and msi.PLANNING_MAKE_BUY_CODE=1
+and msi.Item_Type  in ('KRH','DPY')
+and cat.category_set_id=1
+group by cat.segment1,msi.segment1,mtt.transaction_type_name
+order by cat.segment1,msi.segment1,mtt.transaction_type_name
+
+
+
+------------Modle's Item List (Buy Item)
+
+SELECT a.segment1 Item ,b.segment1 Modle from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83
+and b.segment1 in ('9912','VIOLETTA' ,'V800','9902','9914','9915','F500','F500I','K500','K500C','K500I','K506C','K508C','K508I')
+and a.planning_make_buy_code=2 -- 2=buy , 1=Make
+and b.category_set_id=1
+
+
+---------Item's total Qty for these modles
+
+
+select a.Qty,a.Value,b.Item,b.Modle
+from 
+(
+select   msi.segment1 Item,sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+sum(mmt.TRANSACTION_QUANTITY) as Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and mmt.organization_id = 83 and msi.organization_id = 83 
+and    trunc(mmt.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20050301','YYYYMMDD') 
+and mtt.transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Internal Order Pick') 
+and mtt.transaction_type_name not like '%Move Order Transfer%'
+and mtt.transaction_type_name not like '%Container%'
+group by msi.segment1
+) a,
+(
+SELECT a.segment1 Item ,b.segment1 Modle from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83 and b.category_set_id=1
+and b.segment1 in ('9912','VIOLETTA' ,'V800','9902','9914','9915','F500','F500I','K500','K500C','K500I','K506C','K508C','K508I')
+) b
+where a.Item(+)=b.Item
+
+
+
+---------Detail Trans Qty for these modle's Item
+
+select a.Qty,a.Value,b.Item,b.Modle,a.transaction_type_name,a.Trans_Date,a.From_WH,a.To_WH
+from 
+(
+select   msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, (mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+mmt.transaction_id,mmt.TRANSACTION_QUANTITY as Qty,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.cst_item_costs            cst
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cst.organization_id=83 and cst.inventory_item_id = mmt.inventory_item_id and cst.cost_type_id=1 
+and mmt.organization_id = 83 and msi.organization_id = 83 
+and    trunc(mmt.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20050301','YYYYMMDD') 
+and mtt.transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Internal Order Pick') 
+and mtt.transaction_type_name not like '%Move Order Transfer%'
+and mtt.transaction_type_name not like '%Container%'
+) a,
+(
+SELECT a.segment1 Item ,b.segment1 Modle from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=83 and b.ORGANIZATION_ID=83 and b.category_set_id=1
+and b.segment1 in ('9912','VIOLETTA' ,'V800','9902','9914','9915','F500','F500I','K500','K500C','K500I','K506C','K508C','K508I')
+) b
+where a.Item(+)=b.Item

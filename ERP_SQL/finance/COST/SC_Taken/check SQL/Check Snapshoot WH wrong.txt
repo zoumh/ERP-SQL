@@ -1,0 +1,20 @@
+
+
+
+----------If snapshoot WH is wrong !
+
+select f.tag_number tag,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty,
+ b.segment1 item, a.revision Rev, a.subinventory_name Snapshoot_WH, c.SUBINVENTORY_CODE Actual_WH,
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator
+from   apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c,
+apps.mtl_physical_inventory_tags f
+where  a.physical_inventory_id =:d
+and a.adjustment_id=f.adjustment_id
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=b.organization_id 
+       and a.locator_id=c.inventory_location_id and c.organization_id=a.organization_id 
+--	   and b.segment1='SXA 109 5261/8'
+and c.SUBINVENTORY_CODE<>a.SUBINVENTORY_NAME  
+order by f.tag_number 
+
+

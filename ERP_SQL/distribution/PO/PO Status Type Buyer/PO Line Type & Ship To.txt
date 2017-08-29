@@ -1,0 +1,13 @@
+
+
+
+
+---------PO Ship to Location
+select * from apps.HR_LOCATIONS
+
+
+---------PO line Type:
+select distinct(description) from apps.PO_LINE_types_tl a,apps.PO_LINEs_all b where a.LINE_TYPE_ID=b.LINE_TYPE_ID
+select LINE_TYPE,LINE_TYPE_ID,DESCRIPTION from apps.PO_line_types
+
+

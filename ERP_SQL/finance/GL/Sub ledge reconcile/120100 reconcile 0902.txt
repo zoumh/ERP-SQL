@@ -1,0 +1,204 @@
+PO return use new price re-produce way:
+
+a)Some PO line change need_by_date will auto update price from Quotation (if the date range has a new price)
+b) May be a shortage of EBS:
+ 1. PO open create line
+ 2. At open period, receive/delivery
+ 3. After the receive/delivery, before close the PO, change line price
+
+
+
+select * from apps.rcv_transactions 
+where po_header_id in 
+(select po_header_id from apps.po_headers_all where
+segment1 in ('1014953','1015847','1050310','1057833','1057914','1058083','1058205','1058309','1060262','1063378'))
+
+select * from apps.PO_LINES_ALL where po_header_id in 
+(select po_header_id from apps.PO_HEADERS_ALL where
+segment1 in ('1014953','1015847','1050310','1057833','1057914','1058083','1058205','1058309','1060262','1063378')
+)
+
+select * from apps.rcv_transactions where
+TRANSACTION_TYPE='RETURN TO RECEIVING'
+and creation_date>to_date('2009-1-13','yyyy-mm-dd')
+
+
+
+--------Receiving journal has diff price on return
+select d.segment1 PO,a.LINE_NUM,e.RECEIPT_NUM,f.segment3 Acc,c.PO_UNIT_PRICE Rcv_Price,
+round((nvl(b.ENTERED_CR,0)-nvl(b.ENTERED_DR,0))/c.QUANTITY,2) Caculate_Price,c.QUANTITY,
+(nvl(b.ENTERED_DR,0)-nvl(b.ENTERED_CR,0)) Amt_Return,c.PO_UNIT_PRICE *c.QUANTITY Amt_Rec,
+(nvl(b.ENTERED_DR,0)-nvl(b.ENTERED_CR,0)) +c.PO_UNIT_PRICE *c.QUANTITY Amt_diff,
+b.CURRENCY_CODE,b.CURRENCY_CONVERSION_RATE as Rate,
+--b.ACCOUNTED_DR,b.ACCOUNTED_CR,c.TRANSACTION_TYPE , c.TRANSACTION_ID,
+b.ACCOUNTING_DATE ,b.TRANSACTION_DATE ,b.PERIOD_NAME--,b.REFERENCE4 as PO
+FROM apps.PO_LINES_ALL a,APPS.RCV_RECEIVING_SUB_LEDGER b,apps.RCV_TRANSACTIONS c,
+apps.PO_HEADERS_ALL d,apps.RCV_SHIPMENT_HEADERS e,apps.GL_CODE_combinations f
+WHERE --b.creation_date=to_Date('2006-10-30','yyyy-mm-dd') and 
+b.RCV_TRANSACTION_ID=c.TRANSACTION_ID
+and e.SHIPMENT_HEADER_ID=c.SHIPMENT_HEADER_ID
+and d.PO_HEADER_ID=c.PO_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =c.PO_LINE_ID
+and  f.CODE_COMBINATION_ID =b.CODE_COMBINATION_ID
+--and e.RECEIPT_NUM='1594491'
+--and a.LINE_NUM='7'
+and c.TRANSACTION_TYPE='RETURN TO VENDOR'
+and e.RECEIPT_NUM='1594491'
+and a.LINE_NUM='7'
+and f.segment3='120100'
+group by d.segment1 ,a.LINE_NUM,e.RECEIPT_NUM,f.segment3 ,c.PO_UNIT_PRICE ,
+b.CURRENCY_CODE,b.CURRENCY_CONVERSION_RATE,
+c.QUANTITY,b.ACCOUNTING_DATE ,b.TRANSACTION_DATE ,b.PERIOD_NAME,
+(nvl(b.ENTERED_CR,0)-nvl(b.ENTERED_DR,0))/c.QUANTITY,
+(nvl(b.ENTERED_DR,0)-nvl(b.ENTERED_CR,0))
+having abs((nvl(b.ENTERED_DR,0)-nvl(b.ENTERED_CR,0))+c.PO_UNIT_PRICE *c.QUANTITY)>0.01
+
+
+
+---------Receiving transaction with receipt
+select a.DESTINATION_TYPE_CODE,a.transaction_type,a.PO_UNIT_PRICE,
+a.creation_date ,a.quantity,
+c.SEGMENT1 PO,d.LINE_NUM,g.RECEIPT_NUM,a.TRANSACTION_ID,
+a.PO_UNIT_PRICE,a.CURRENCY_CONVERSION_RATE,a.quantity Qty_DB,i.license_plate_number
+from apps.rcv_transactions a,
+apps.PO_HEADERS_ALL c,
+apps.PO_LINES_ALL d,
+apps.rcv_shipment_headers g, apps.rcv_shipment_lines h,apps.wms_license_plate_numbers i
+where
+a.source_document_code='PO'
+--and c.segment1 in ('1021817','1022034')
+--and g.RECEIPT_NUM='1570446'
+and g.SHIPMENT_HEADER_ID =a.SHIPMENT_HEADER_ID
+and a.SHIPMENT_LINE_ID =h.SHIPMENT_LINE_ID
+and g.SHIPMENT_HEADER_ID =h.SHIPMENT_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and d.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =d.PO_LINE_ID
+and a.transfer_lpn_id=i.lpn_id(+)
+and d.LINE_NUM='12'
+and c.SEGMENT1='1078980'
+--and a.TRANSACTION_TYPE='RETURN TO RECEIVING'
+--and a.DESTINATION_TYPE_CODE='RECEIVING'
+--and a.transaction_type in ('RETURN TO VENDOR','RETURN TO RECEIVING','RECEIVE','CORRECT')
+--and trunc(a.creation_date) >= to_date('20090101','YYYYMMDD') 
+order by g.RECEIPT_NUM,a.creation_date
+
+
+--------Receiving journal
+select d.segment1 PO,a.LINE_NUM,e.RECEIPT_NUM,f.segment3 Acc,c.PO_UNIT_PRICE Rcv_Price,
+(nvl(b.ENTERED_DR,0)-nvl(b.ENTERED_CR,0))/c.QUANTITY Caculate_Price,c.QUANTITY,
+(nvl(b.ENTERED_DR,0)-nvl(b.ENTERED_CR,0)) Amt,b.CURRENCY_CODE,b.CURRENCY_CONVERSION_RATE as Rate,
+b.ACCOUNTED_DR,b.ACCOUNTED_CR,TRANSACTION_TYPE , c.TRANSACTION_ID,
+b.ACCOUNTING_DATE ,b.TRANSACTION_DATE ,b.PERIOD_NAME,b.REFERENCE4 as PO
+FROM apps.PO_LINES_ALL a,APPS.RCV_RECEIVING_SUB_LEDGER b,apps.RCV_TRANSACTIONS c,
+apps.PO_HEADERS_ALL d,apps.RCV_SHIPMENT_HEADERS e,apps.GL_CODE_combinations f
+WHERE --b.creation_date=to_Date('2006-10-30','yyyy-mm-dd') and 
+b.RCV_TRANSACTION_ID=c.TRANSACTION_ID
+and e.SHIPMENT_HEADER_ID=c.SHIPMENT_HEADER_ID
+and d.PO_HEADER_ID=c.PO_HEADER_ID
+and a.PO_HEADER_ID =c.PO_HEADER_ID
+and a.PO_LINE_ID =c.PO_LINE_ID
+and e.RECEIPT_NUM='1594491'
+and a.LINE_NUM='7'
+and  f.CODE_COMBINATION_ID =b.CODE_COMBINATION_ID
+
+
+
+----PO, price,Mtl Transaction/Accounts ,RCV_Transaction
+select mta.TRANSACTION_VALUE,mta.base_transaction_value,mtt.transaction_type_name,
+gcc.segment3,mta.ACCOUNTING_LINE_TYPE Type,SHIPMENT_HEADER_ID Receipt,mta.primary_quantity,
+pol.UNIT_PRICE POL_Price,mta.TRANSACTION_VALUE/mta.PRIMARY_QUANTITY Caculate_price,
+mta.RATE_OR_AMOUNT,mmt.ACTUAL_COST,mmt.CURRENCY_CONVERSION_RATE,
+mmt.TRANSACTION_COST,
+mta.TRANSACTION_DATE,poh.SEGMENT1 PO,pol.LINE_NUM, 
+mta.organization_id, 
+mmt.transaction_id,mta.gl_batch_id
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,
+  apps.mtl_transaction_types     mtt,
+  apps.PO_HEADERS_ALL            poh,
+   apps.rcv_transactions         rcv,
+   apps.PO_LINES_ALL             pol
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id   
+and    mta.organization_id = mmt.organization_id  
+and    mmt.TRANSACTION_SOURCE_ID=poh.PO_HEADER_ID(+)
+and rcv.TRANSACTION_ID=mmt.RCV_TRANSACTION_ID
+and rcv.PO_HEADER_ID =poh.PO_HEADER_ID
+and poh.PO_HEADER_ID =pol.PO_HEADER_ID
+and rcv.PO_LINE_ID =pol.PO_LINE_ID
+--and mta.TRANSACTION_DATE>=to_date('20080901 00:00:00','YYYYMMDD HH24:MI:SS')
+and poh.SEGMENT1='1083196'
+and pol.LINE_NUM='5'
+order by SHIPMENT_HEADER_ID,mtt.transaction_type_name
+
+
+
+----PO Mtl Transaction  link RCV_Transaction , PO, line
+select mtt.transaction_type_name,
+SHIPMENT_HEADER_ID Receipt,mmt.primary_quantity,
+pol.UNIT_PRICE POL_Price PO_Price,
+mmt.ACTUAL_COST,mmt.CURRENCY_CONVERSION_RATE,
+mmt.TRANSACTION_COST,
+mmt.TRANSACTION_DATE,
+poh.SEGMENT1 PO,pol.LINE_NUM, 
+mmt.transaction_id
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt,
+  apps.PO_HEADERS_ALL            poh,
+   apps.rcv_transactions         rcv,
+   apps.PO_LINES_ALL             pol
+where  mtt.transaction_type_id = mmt.transaction_type_id   
+and    mmt.TRANSACTION_SOURCE_ID=poh.PO_HEADER_ID(+)
+and rcv.TRANSACTION_ID=mmt.RCV_TRANSACTION_ID
+and rcv.PO_HEADER_ID =poh.PO_HEADER_ID
+and poh.PO_HEADER_ID =pol.PO_HEADER_ID
+and rcv.PO_LINE_ID =pol.PO_LINE_ID
+--and mta.TRANSACTION_DATE>=to_date('20080901 00:00:00','YYYYMMDD HH24:MI:SS')
+and poh.SEGMENT1='1083196'
+and pol.LINE_NUM='6'
+order by SHIPMENT_HEADER_ID,mtt.transaction_type_name
+
+
+
+1078980
+SONY ERICSSON MOBILE COMM. AB
+B-USD-SWEDEN
+line 12
+Receipt 1570446 & 1577306
+1200-8254.1
+4.27
+
+
+Test PO =1083196
+
+Post to GL (PO/Inv)
+120100 GL balance= 
+Reports:
+
+
+Direct Delivery --> line 1 ,4.82 ,100 pics,1594476, after return to receiving, chg price =4.2 
+Standard Receipt --> line 2 ,4.82 ,100 pics, 1594477, 
+		     after receiving,chg price =4.2 , after delivery chg price =4.0,after return to receiving, chg price =3.9
+Direct Delivery --> line 3 ,4.82 ,100 pics,1594478, after delivery,before return, chg price =4.2
+Standard Receipt --> line 4 ,4.82 , 100 pics,1594479, after return to receiving, chg price =4.2
+Direct Delivery --> line 5 ,4.82 , 1594480
+Direct Delivery --> line 6 ,4.82 , 1594487
+
+
+Price=4.82
+line 1 ,Direct Delivery 
+
+
+
+
+
+
+
+
+

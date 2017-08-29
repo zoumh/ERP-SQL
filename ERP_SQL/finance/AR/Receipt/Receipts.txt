@@ -1,0 +1,94 @@
+
+
+-----Yearly receipt by Customer/Curr
+
+select round((a.RECEIPT_DATE-to_date('2005-1-1','yyyy-mm-dd'))/7,0) week,b.CUSTOMER_NAME,sum(a.AMOUNT) amount,
+a.CURRENCY_CODE,a.ORG_ID
+from apps.ar_cash_receipts_all a,apps.AR_CUSTOMERS_V b
+where a.PAY_FROM_CUSTOMER=b.CUSTOMER_ID and a.STATUS not in ('NSF','REV','STOP')
+and a.RECEIPT_DATE>=to_date('2005-01-01','yyyy-mm-dd')
+group by round((a.RECEIPT_DATE-to_date('2005-1-1','yyyy-mm-dd'))/7,0),b.CUSTOMER_NAME,a.CURRENCY_CODE,a.ORG_ID
+order by b.CUSTOMER_NAME,a.ORG_ID,round((a.RECEIPT_DATE-to_date('2005-1-1','yyyy-mm-dd'))/7,0),a.CURRENCY_CODE
+
+
+
+---details,status not in 'APP','UNAPP'
+select a.STATUS,b.CUSTOMER_NAME,a.RECEIPT_NUMBER, a.RECEIPT_DATE,a.AMOUNT,a.CURRENCY_CODE,a.CUSTOMER_SITE_USE_ID,a.ORG_ID, 
+a.PAY_FROM_CUSTOMER from apps.ar_cash_receipts_all a,apps.AR_CUSTOMERS_V b
+where a.PAY_FROM_CUSTOMER=b.CUSTOMER_ID and a.STATUS in ('NSF','REV','STOP')
+
+
+
+---AR receipt details with User
+select a.RECEIPT_NUMBER, a.RECEIPT_DATE,a.AMOUNT,
+a.CURRENCY_CODE,c.USER_NAME User_ID,c.DESCRIPTION User_Name,a.STATUS,b.CUSTOMER_NAME
+from apps.ar_cash_receipts_all a,apps.AR_CUSTOMERS_V b,apps.fnd_user c
+where a.PAY_FROM_CUSTOMER=b.CUSTOMER_ID --and a.STATUS not in ('NSF','REV','STOP')
+and a.RECEIPT_DATE>to_date('2007-1-1','yyyy-mm-dd')
+and c.user_id=a.CREATED_BY
+
+
+------------------
+apps.ar_cash_receipts_all
+
+
+STATUS :
+APP   --Applied
+NSF   --Non¨CSufficient Funds
+REV   --Reversal¨CUser Error
+STOP  -- Stopped Payment
+UNAPP --Unapplied
+UNID  --Unidentified
+
+
+-------------------Receipt with applied detail
+select app.*,crh.STATUS,
+--sum(crh.acctd_amount)+
+--sum(app.AMOUNT_APPLIED*nvl(cr.EXCHANGE_RATE,1))--
+app.AMOUNT_APPLIED,nvl(cr.EXCHANGE_RATE,1),crh.*,cr.*
+from apps.ar_cash_receipts_all cr,apps.ar_cash_receipt_history_all crh,apps.ar_receivable_applications_all app
+where cr.cash_receipt_id=crh.CASH_RECEIPT_ID
+and cr.cash_receipt_id=app.CASH_RECEIPT_ID
+and crh.CASH_RECEIPT_HISTORY_ID =app.CASH_RECEIPT_HISTORY_ID
+and crh.GL_DATE between to_date('01-FEB-06','DD-MON-YY') and to_date('28-FEB-06','DD-MON-YY')
+and crh.STATUS in ('REVERSED','CLEARED') 
+and cr.RECEIPT_NUMBER = 'AL0602-16'
+
+
+-----------AR applied G/L in the period linked with GL (use Inv Rate & Receipt Rate)
+select
+cash.RECEIPT_NUMBER,
+cash.EXCHANGE_RATE Receipt_Rate,
+ar.AMOUNT_APPLIED,
+ra.EXCHANGE_RATE Invoice_Rate,
+(decode(cash.EXCHANGE_RATE,null,1,cash.EXCHANGE_RATE)*ar.AMOUNT_APPLIED) Receipt_amt,
+(decode(ra.EXCHANGE_RATE,null,1,ra.EXCHANGE_RATE)*ar.AMOUNT_APPLIED) Inv_amt,
+(decode(cash.EXCHANGE_RATE,null,1,cash.EXCHANGE_RATE)-decode(ra.EXCHANGE_RATE,null,1,ra.EXCHANGE_RATE))*ar.AMOUNT_APPLIED Diff,
+ra.TRX_NUMBER AR_Invoice,
+ar.ACCTD_AMOUNT_APPLIED_TO,
+cash.CURRENCY_CODE Receipt_Curr,ra.INVOICE_CURRENCY_CODE Inv_Curr,
+cash.EXCHANGE_DATE Receipt_Rate_date,
+cash.EXCHANGE_RATE_TYPE Receipt_Rate_Type,
+ra.EXCHANGE_DATE Invoice_Rate_Date,
+ra.EXCHANGE_rate_type Invoice_Rate_Type,
+h.PERIOD_NAME
+from
+apps.gl_je_headers h,
+apps.gl_je_lines l,
+apps.gl_import_references r,
+apps.AR_PAYMENT_SCHEDULES_ALL PS,
+apps.RA_CUSTOMER_TRX_ALL RA,
+apps.AR_RECEIVABLE_APPLICATIONS_ALL AR,
+apps.AR_CASH_RECEIPTS_ALL  CASH
+where h.je_header_id=l.je_header_id
+and   l.code_combination_id=44346
+and  l.JE_HEADER_ID=r.JE_HEADER_ID
+and  l.JE_LINE_NUM=r.JE_LINE_NUM
+and PS.CUSTOMER_TRX_ID=RA.CUSTOMER_TRX_ID
+AND  r.REFERENCE_4=cash.RECEIPT_NUMBER
+and  r.REFERENCE_5=ra.TRX_NUMBER
+AND  PS.PAYMENT_SCHEDULE_ID=AR.APPLIED_PAYMENT_SCHEDULE_ID
+AND  AR.DISPLAY='Y'
+AND  AR.CASH_RECEIPT_ID=CASH.CASH_RECEIPT_ID
+and  ra.EXCHANGE_RATE<>cash.EXCHANGE_RATE
+and h.period_name='FEB-09'

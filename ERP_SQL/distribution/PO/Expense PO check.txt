@@ -1,0 +1,47 @@
+
+
+
+------------New OU
+
+
+select c.org_id,e.ITEM_DESCRIPTION,c.segment1 PO,e.LINE_NUM,f.SHIPMENT_NUM, 
+f.QUANTITY,f.QUANTITY_RECEIVED,f.QUANTITY_BILLED,f.QUANTITY_CANCELLED, f.QUANTITY_SHIPPED,f.NEED_BY_DATE,f.PROMISED_DATE      
+from apps.PO_HEADERS_ALL c,--apps.mtl_system_items d, 
+apps.PO_LINES_ALL e,apps.po_line_locations_all f
+where c.org_id>=127
+and c.org_id=e.org_id
+and c.org_id=f.org_id
+and c.po_header_id=e.po_header_id
+and e.PO_LINE_ID=f.PO_LINE_ID
+and c.po_header_id=f.po_header_id
+--and e.item_id=d.inventory_item_id
+and e.PO_LINE_ID=f.PO_LINE_ID
+and e.ITEM_ID is null
+
+
+
+
+------------Old OU (Open approved PO)
+
+select c.org_id,e.ITEM_DESCRIPTION,c.segment1 PO,e.LINE_NUM,f.SHIPMENT_NUM, 
+f.QUANTITY,f.QUANTITY_RECEIVED,f.QUANTITY_BILLED,f.QUANTITY_CANCELLED, f.QUANTITY_SHIPPED,f.NEED_BY_DATE,f.PROMISED_DATE      
+from apps.PO_HEADERS_ALL c,--apps.mtl_system_items d, 
+apps.PO_LINES_ALL e,apps.po_line_locations_all f
+where c.org_id<127
+and c.org_id=e.org_id
+and c.org_id=f.org_id
+and c.po_header_id=e.po_header_id
+and e.PO_LINE_ID=f.PO_LINE_ID
+and c.po_header_id=f.po_header_id
+--and e.item_id=d.inventory_item_id
+and e.PO_LINE_ID=f.PO_LINE_ID
+and e.ITEM_ID is null
+and (f.QUANTITY-f.QUANTITY_CANCELLED)>f.QUANTITY_RECEIVED
+and f.closed_code ='OPEN'
+and (c.AUTHORIZATION_STATUS ='APPROVED')  
+and (c.CANCEL_FLAG ='N' or c.CANCEL_FLAG  is null)
+and (e.CANCEL_FLAG<>'Y' or e.CANCEL_FLAG is null)
+and (f.CANCEL_FLAG<>'Y' or f.CANCEL_FLAG is null)
+
+
+

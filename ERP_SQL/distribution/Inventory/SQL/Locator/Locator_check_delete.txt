@@ -1,0 +1,19 @@
+
+
+
+-----Check Locator ID ( delete only from this table is not enough to clear a locator)
+select INVENTORY_LOCATION_ID from apps.mtl_item_locations where SUBINVENTORY_CODE='SB' and segment2 like 'T2%'
+
+
+
+------Find if these locatr has Transactions
+
+select * from apps.mtl_material_transactions where  LOCATOR_ID in (
+select INVENTORY_LOCATION_ID from apps.mtl_item_locations where SUBINVENTORY_CODE='SB' and segment2 like 'T2%'
+)
+
+
+-------Try to detete this
+
+select * from apps.mtl_item_locations where SUBINVENTORY_CODE='SB' and segment2= like 'T2%' and INVENTORY_LOCATION_ID=13876
+

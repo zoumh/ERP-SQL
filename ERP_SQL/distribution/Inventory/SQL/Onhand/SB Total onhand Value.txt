@@ -1,0 +1,11 @@
+
+-----------SB Total onhand Value
+select sum(a.transaction_quantityto_number(d.item_cost,999999.99999)) as Amt
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b,apps.cst_item_costs d
+where a.organization_id=83 and b.organization_id=83 and d.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and d.cost_type_id=1
+--and category_set_id = 1100000001 
+--and structure_id=101 
+--and b.segment1='A12000030010075'
+and a.subinventory_code='SB'

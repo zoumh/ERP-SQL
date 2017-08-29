@@ -1,0 +1,19 @@
+
+
+
+----It returns LOT_CONTROL='Y' and SERIAL_CONTROL='Dynamic at INV receipt'
+inventory_item_id=169845 for item=Lot-Serial-Controlled-1 
+
+Select mp.organization_id Org_Id, mp.organization_code Org_Code, 
+msi.inventory_item_id, msi.segment1, decode(to_char(msi.lot_control_code),
+  '2','Y',
+  '1','N') LOT_CONTROL,
+decode(to_char(msi.serial_number_control_code),
+  '1','None',
+  '2','Predefined',
+  '5','Dynamic at INV receipt',
+  '6','Dynamic at SO issue') SERIAL_CONTROL
+  from mtl_system_items_b msi,mtl_parameters mp
+where msi.segment1 like '&item' and msi.organization_id=mp.organization_id; 
+
+

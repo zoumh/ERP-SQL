@@ -1,0 +1,55 @@
+
+---------AC Org ,Export SO LPN,Weight,Volumn,Forwarder,Customer
+select a.po_number,a.so_number,a.so_line_number,a.item_number,e.segment1 Model,
+a.lpn,a.quantity,a.weight,a.CONTAINER_ITEM,a.volume,a.item_revision,
+d.MEANING Forwarder,f.NAME SO_Type, 
+c.ACTUAL_SHIPMENT_DATE,b.GLOBAL_ATTRIBUTE7,
+cust_acct.account_number customer_number
+from BMC_AUTO_PK_LPN_INFO a,
+apps.OE_ORDER_HEADERS_ALL b,
+apps.OE_ORDER_lineS_all c ,
+apps.FND_LOOKUP_VALUES_VL d,
+apps.mtl_item_categories_v e,
+apps.oe_transaction_types_tl f,
+apps.hz_cust_accounts cust_acct
+where a.SO_NUMBER=b.ORDER_NUMBER 
+and c.HEADER_ID=b.HEADER_ID
+and a.so_line_id=c.LINE_ID
+and a.item_id = e.inventory_item_id
+and a.org_id=e.organization_id
+AND b.sold_to_org_id = cust_acct.cust_account_id(+)
+and b.SHIPPING_METHOD_CODE=d.LOOKUP_CODE
+and f.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID 
+and f.LANGUAGE='US'
+and d.LOOKUP_TYPE='SHIP_METHOD'
+and a.org_id=128 
+and e.category_set_id=1
+and b.ORDER_NUMBER='2000684'
+order by c.ACTUAL_SHIPMENT_DATE 
+
+
+---------Not use Autopacking SO Ship with SO_Type
+select d.NAME SO_Type,c.ORDER_NUMBER,b.CUST_PO_NUMBER, 
+b.LINE_NUMBER,a.TRANSACTION_QUANTITY,
+b.ITEM_REVISION,a.creation_Date Close_Date,
+a.transaction_ID,
+b.ACTUAL_SHIPMENT_DATE
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c,
+apps.oe_transaction_types_tl d
+where a.SOURCE_LINE_ID =b.LINE_ID
+and c.HEADER_ID=b.HEADER_ID
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and d.TRANSACTION_TYPE_ID=c.ORDER_TYPE_ID 
+--and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+--and c.ORDER_NUMBER='2000684'
+and d.LANGUAGE='US'
+and a.creation_Date>=to_date('2007-7-1','yyyy-mm-dd')
+--and trunc(a.creation_Date)<>trunc(ACTUAL_SHIPMENT_DATE)
+and a.organization_id =128
+and not exists --c.ORDER_NUMBER not in 
+(select aa.SO_NUMBER from apps.BMC_AUTO_PK_LPN_INFO aa where  
+aa.org_id=128 and aa.CREATION_DATE>=to_date('2007-7-1','yyyy-mm-dd')  
+and aa.SO_NUMBER=c.ORDER_NUMBER 
+)
+

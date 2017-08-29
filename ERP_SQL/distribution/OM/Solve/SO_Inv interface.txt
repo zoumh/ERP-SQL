@@ -1,0 +1,45 @@
+
+
+----------SO info for Trans Open Interface (type,ship_to,SO)
+select b.ORDER_NUMBER,d.LINE_NUMBER,c.NAME Order_Type,ORGANIZATION_code,
+a.CREATION_DATE,a.LAST_UPDATE_DATE,a.TRANSACTION_DATE,
+a.CREATED_BY,a.SHIPMENT_NUMBER,
+CONTENT_LPN,CONTENT_LPN_ID,COST_GROUP_NAME,
+SOURCE_CODE,SUBINVENTORY_CODE,locator_id,a.INVENTORY_ITEM_ID,TRANSACTION_QUANTITY,
+TRANSACTION_SOURCE_NAME,TRANSACTION_TYPE_NAME,
+SOURCE_HEADER_ID,SOURCE_LINE_ID,a.TRANSACTION_MODE
+from apps.MTL_TRANSACTIONS_INTERFACE_V a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c,
+apps.OE_ORDER_lineS_all d
+where a.SOURCE_HEADER_ID=b.header_id
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+and a.SOURCE_LINE_ID=d.LINE_ID
+and b.header_id=d.header_id
+and c.LANGUAGE='US'
+order by CREATION_DATE desc
+
+
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl where LOCATOR_ID=31700 and INVENTORY_ITEM_ID =104680
+
+select * from apps.wms_license_plate_numbers WHERE LICENSE_PLATE_NUMBER ='D112750710'
+
+select * from apps.wms_license_plate_numbers WHERE  lpn_id=2514950
+
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_id =2514950
+
+
+select distinct c.NAME Order_Type,count(*)
+from BMC_BKUP_TRANSINTFC070716 a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c
+where a.SOURCE_HEADER_ID=b.header_id
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+and c.LANGUAGE='US'
+group by c.NAME
+ 
+
+
+select * from all_objects where object_name like 'BMC%BKUP%'
+
+select * from BMC_BKUP_TRANSINTFC070716
+
+

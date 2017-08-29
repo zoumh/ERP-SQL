@@ -1,0 +1,28 @@
+
+
+
+
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty, b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty,
+actual_cost Cost,round(nvl(adjustment_quantity*actual_cost,0),2) Diff_Amount
+--,c.segment2 Locat1,c.segment3 Locat2,(c.segment4) Locat3,c.segment5 Locat4
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b, apps.mtl_item_locations c 
+where  a.physical_inventory_id =526
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=86 and b.organization_id=86 
+       and a.locator_id=c.inventory_location_id and c.organization_id=86 
+	   and a.subinventory_name='SBT'
+union
+select (select f.tag_number from apps.mtl_physical_inventory_tags f where a.adjustment_id=f.adjustment_id and rownum=1) Tag,
+system_quantity Sys_Qty,b.segment1 Item, a.revision Rev, a.subinventory_name Stock, 
+'' Locator,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty,
+actual_cost Cost,round(nvl(adjustment_quantity*actual_cost,0),2) Diff_Amount
+from apps.mtl_physical_adjustments a, apps.mtl_system_items b--, apps.mtl_item_locations c 
+where  a.physical_inventory_id =526
+       and a.inventory_item_id=b.inventory_item_id and a.organization_id=86 and b.organization_id=86
+	   and a.subinventory_name<>'SBT'
+
+
+

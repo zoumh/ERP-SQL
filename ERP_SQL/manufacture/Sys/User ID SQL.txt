@@ -1,0 +1,284 @@
+---------Check user Last Update By, create by  
+select a.USER_NAME,a.DESCRIPTION,a.CREATION_DATE,a.LAST_UPDATE_DATE,
+b.User_name Created_By,c.User_name Last_update_by,c.DESCRIPTION last_update_name, a.END_DATE,a.FAX
+From apps.fnd_user a,apps.fnd_user b,apps.fnd_user c 
+where a.CREATED_BY=b.user_id
+and a.LAST_UPDATED_BY=c.user_id
+--and a.LAST_UPDATE_DATE>=to_date('2009-8-18','yyyy-mm-dd')
+order by a.LAST_UPDATE_DATE desc
+
+
+-------------Check Employee Assign's Last Update
+select a.LAST_UPDATE_DATE Employee_last_update_date,c.user_name Employee_last_update_by,
+b.LAST_UPDATE_DATE Assign_Last_update_date,d.user_name Assign_last_update_by,
+a.EMPLOYEE_NUMBER,a.FULL_NAME,b.assignment_number,a.EFFECTIVE_START_DATE,a.EFFECTIVE_END_DATE
+from apps.PER_PEOPLE_V7 a,apps.PER_ASSIGNMENTS_V7 b ,apps.fnd_user c,apps.fnd_user d
+where a.PERSON_ID=b.PERSON_ID 
+and a.LAST_UPDATED_BY=c.user_id
+and b.LAST_UPDATED_BY=d.user_id
+and a.EMPLOYEE_NUMBER in ('259','22966145','22708772')
+
+
+
+-----------each user login in times during a period
+select 	a.user_id Oracle_User_ID,
+a.user_name Oracle_User_ID,
+convert(a.description,'ZHS16GBK') Oracle_User_Name,
+a.fax Department, a.CREATION_DATE,count(*) login_times,a.LAST_LOGON_DATE
+From 	   apps.fnd_user a,
+apps.fnd_logins e
+where a.end_date is null
+and a.user_id=e.user_id
+and trunc(e.start_time)>=to_date('2005-1-1','yyyy-mm-dd')
+and (trunc(e.end_time)<=to_date('2005-12-10','yyyy-mm-dd') or e.end_time is null)
+group by a.user_id,a.user_name,a.description,a.fax,a.CREATION_DATE,a.LAST_LOGON_DATE
+
+
+---------Validated Users,date (who has validated Responsibilities)
+select  a.user_name,a.description,a.fax Department,a.EMAIL_ADDRESS CC,a.LAST_LOGON_DATE,a.END_DATE,a.creation_date
+From apps.fnd_user a, 
+apps.fnd_user_resp_groups b,
+apps.fnd_responsibility_vl c
+where a.user_id=b.user_id 
+and b.responsibility_id=c.responsibility_id
+and (a.end_date is null or a.end_date>sysdate)
+and (b.end_date is null or b.end_date>sysdate)
+group by a.user_name,a.description,a.fax,a.LAST_LOGON_DATE,a.END_DATE,a.EMAIL_ADDRESS,a.creation_date
+order by a.fax,a.user_name
+
+
+
+------Validate User list with Dept,CC (who has validated Responsibilities)
+select 	distinct 
+a.user_name Oracle_User_ID, 
+convert(a.description,'ZHS16GBK') Oracle_User_Name, 
+a.fax Department,a.EMAIL_ADDRESS CC
+From 	   apps.fnd_user a,
+apps.fnd_user_resp_groups b,
+apps.fnd_responsibility_vl c
+where a.user_id=b.user_id
+and b.responsibility_id=c.responsibility_id
+and (a.end_date is null or a.end_date>sysdate)
+and (b.end_date is null or b.end_date>sysdate)
+group by a.user_id,a.user_name,a.description,a.fax,a.EMAIL_ADDRESS
+having count(b.user_id)>0
+order by a.fax,a.user_name
+
+
+--------- User count at period & one time
+select count(*)--,a,CREATION_DATE  
+From 	   apps.fnd_user a 
+where a.end_date is null
+and a.CREATION_DATE <=to_date('2005-05-01','yyyy-mm-dd')
+
+
+select count(*)--,a,CREATION_DATE  
+From 	   apps.fnd_user a 
+where a.end_date >=to_date('2005-05-01','yyyy-mm-dd')
+and a.CREATION_DATE <=to_date('2005-05-01','yyyy-mm-dd')
+
+
+select count(*)--,a,CREATION_DATE  
+From 	   apps.fnd_user a 
+where a.end_date is null
+and a.CREATION_DATE >=to_date('2005-01-01','yyyy-mm-dd')
+and a.CREATION_DATE <=to_date('2005-09-01','yyyy-mm-dd')
+
+
+------------User & Responsibility , Dept CC with validate date
+select b.user_name UserID,b.description User_Name,b.fax Dept,b.EMAIL_ADDRESS CC,
+f.RESPONSIBILITY_NAME RESPONSIBILITY
+--,a.DESCRIPTION Responsibility_Desc ,f.DESCRIPTION,c.RESPONSIBILITY_KEY
+,b.end_date User_End_Date,a.END_DATE Responsibility_End_Date
+--,to_char(b.USER_ID) User_ID,d.APPLICATION_NAME,e.MENU_NAME,e.TYPE Menu_Type,
+--d.SOURCE_LANG App_Lang,c.APPLICATION_ID,c.RESPONSIBILITY_ID,c.MENU_ID
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+--and (c.end_date is null or c.end_date >sysdate) ---actived responsibility
+order by b.fax,b.user_name
+
+
+-----User of one Responsibility with validate end date
+select b.user_name UserID,b.description User_Name,b.fax Dept,b.EMAIL_ADDRESS CC,
+f.RESPONSIBILITY_NAME RESPONSIBILITY,
+a.end_date resp_End_date,b.end_date user_end_Date
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+--and (c.end_date is null or c.end_date >sysdate) ---actived responsibility
+and f.RESPONSIBILITY_NAME='BMC Purchasing Buyer Super User'
+order by b.fax,b.user_name
+
+
+
+--------User's latest Login date/Dept
+select a.last_logon_date,(case when round(sysdate-a.last_logon_date)>180 then '>6M' else case when round(sysdate-a.last_logon_date)>90 then '>3M' else case when round(sysdate-a.last_logon_date)>30 then '>1M' else '<1M' end end end ) Not_Use_Date_Fence,
+	   a.user_name Oracle_User_ID, 
+	   convert(a.description,'ZHS16GBK') Oracle_User_Name,
+	   a.fax Department,
+	   a.user_id Oracle_User_ID 
+From 	   apps.fnd_user a 
+where 	   a.end_date is null
+
+
+
+--------------Responsibility List
+select RESPONSIBILITY_NAME,created_by,creation_date from apps.FND_RESPONSIBILITY_TL 
+where language='US' 
+order by RESPONSIBILITY_NAME
+
+
+-------------In User of Responsibility & the count
+select  f.RESPONSIBILITY_NAME RESPONSIBILITY,count(*)
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+and f.RESPONSIBILITY_NAME='Preferences SSWA'
+and b.fax not in ('SEMC','Teksen','ISIT','IS/IT')
+group by f.RESPONSIBILITY_NAME
+
+
+-----------Filter out other Dept & special user(with special responsibility)
+select b.user_name UserID,b.description User_Name,b.fax Dept,f.RESPONSIBILITY_NAME RESPONSIBILITY,
+a.end_date resp_End_date,b.end_date user_end_Date
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+and b.user_name not in
+(
+select b.user_name 
+from apps.FND_USER_RESP_GROUPS a,apps.FND_USER b,apps.FND_RESPONSIBILITY c
+,apps.FND_APPLICATION_TL d,apps.FND_MENUS e ,apps.FND_RESPONSIBILITY_TL f
+where a.USER_ID=b.USER_ID
+and a.RESPONSIBILITY_ID=c.RESPONSIBILITY_ID
+and c.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and c.APPLICATION_ID=d.APPLICATION_ID
+--and c.RESPONSIBILITY_ID
+and c.MENU_ID=e.MENU_ID
+and d.LANGUAGE='US'
+and a.RESPONSIBILITY_ID=f.RESPONSIBILITY_ID
+and f.APPLICATION_ID=a.RESPONSIBILITY_APPLICATION_ID
+and f.LANGUAGE='US'
+and (a.end_date is null or a.end_date >sysdate)
+and (b.end_date is null or b.end_date >sysdate)
+and f.RESPONSIBILITY_NAME in ('BMC Purchasing Buyer Super User','BMC MRP/MPS Super User','BMC Price Maintenance',
+'BMC Order Management Super User','BMC Order Management User','BMC Management')
+)
+and b.fax not in ('A','DC','C','HR','IS/IT','ISIT','PR','SEMC','Teksen','Y','Q','I')
+order by b.fax,b.user_name
+
+
+--------Check user leave history
+select USER_NAME,description,fax Department 
+From apps.fnd_user where end_date=to_date('2008-4-28','yyyy-mm-dd')
+--LAST_LOGON_DATE=to_date('2008-4-28','yyyy-mm-dd')
+
+
+-------a user's login history (what time for which Responsibility,Form)
+select 
+e.START_TIME,e.END_TIME,e.LOGIN_NAME,a.user_name User_ID,
+c.RESPONSIBILITY_NAME RESPONSIBILITY,
+b.START_TIME Res_Start_Time,b.END_TIME Res_End_Time,
+f.FORM_NAME,
+d.START_TIME Form_Start_Time,d.END_TIME Form_End_Time,
+e.TERMINAL_ID,e.LOGIN_TYPE,e.SUBMITTED_LOGIN_ID,
+a.description  User_Name,
+a.fax Department
+From apps.fnd_user a, apps.FND_LOGIN_RESPONSIBILITIES b,
+apps.FND_RESPONSIBILITY_TL c,
+apps.FND_LOGIN_RESP_FORMS d,
+apps.fnd_logins e,
+apps.FND_FORM f
+where a.user_id=e.user_id
+and e.LOGIN_ID =b.LOGIN_ID
+and b.RESP_APPL_ID=c.APPLICATION_ID
+and c.RESPONSIBILITY_ID=b.RESPONSIBILITY_ID
+and d.LOGIN_ID =b.LOGIN_ID
+and d.LOGIN_RESP_ID=b.LOGIN_RESP_ID
+and f.APPLICATION_ID=d.FORM_APPL_ID
+and f.FORM_ID=d.FORM_ID
+and c.LANGUAGE='US'
+and a.user_name='28952127'
+and e.START_TIME>=to_date('2009-10-12','yyyy-mm-dd')
+order by  e.START_TIME desc
+
+
+------------ From ZP
+
+select 	   a.fax Department,
+	   a.user_id Oracle_User_ID, 
+	   a.user_name Oracle_User_ID, 
+	   convert(a.description,'ZHS16GBK') Oracle_User_Name, 
+	   c.DESCRIPTION Oracle_Responsibilities,
+	   b.start_date,
+	   b.end_date	   
+From 	   apps.fnd_user a, 
+	   apps.fnd_user_resp_groups b,
+	   apps.fnd_responsibility_vl c
+where 	   a.user_id=b.user_id 
+and b.responsibility_id=c.responsibility_id
+and a.end_date is null
+and b.end_date is null
+
+
+-----------------
+
+select a.user_id Oracle_User_ID, 
+a.user_name Oracle_User_ID, 
+a.description Oracle_User_Name, 
+c.DESCRIPTION Oracle_Responsibilities,
+b.start_date,
+b.end_date	   
+from apps.fnd_user a, 
+apps.fnd_user_resp_groups b,
+apps.fnd_responsibility_vl c
+where a.user_id=b.user_id 
+and b.responsibility_id=c.responsibility_id
+and a.end_date is null
+and b.end_date is null
+

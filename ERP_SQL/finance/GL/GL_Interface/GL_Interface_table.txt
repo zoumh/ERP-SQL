@@ -1,0 +1,81 @@
+
+
+
+
+select distinct status,user_je_category_name,user_je_source_name from apps.GL_interface
+
+
+
+
+select SEGMENT3,SEGMENT2,SEGMENT4,SEGMENT5 from apps.GL_CODE_combinations where CODE_COMBINATION_ID=1165
+
+select * from apps.GL_interface where Status='EC12'--GROUP_ID is not null
+
+
+select to_char(JE_BATCH_ID) BATCH_ID,to_char(JE_HEADER_ID) Journal_Name,
+ACCOUNTED_DR,(ACCOUNTED_CR),(ENTERED_DR) ,(ENTERED_CR),CURRENCY_CODE Currency,STATUS,ACCOUNTING_DATE,USER_JE_CATEGORY_NAME Category,
+USER_JE_SOURCE_NAME Source,SEGMENT1,SEGMENT2,SEGMENT3,SEGMENT4,SEGMENT5,REFERENCE4,REFERENCE5,to_char(JE_LINE_NUM) Line_Num,to_char(CODE_COMBINATION_ID) CCID, 
+to_char(GROUP_ID) Group_ID,to_char(REQUEST_ID) Request_ID
+from apps.GL_interface --where status='PROCESSED'
+
+
+
+select distinct Status,JE_BATCH_ID,JE_HEADER_ID,GROUP_ID from apps.GL_interface
+
+
+select *  from apps.GL_interface where Status<>'NEW'
+
+
+
+GROUP_ID='45336'  is the unique group ID  for one transfer from AP (or other sub module).
+
+REFERENCE21='641'  , is related with ACTUAL_FLAG , some for 'A' actual, some for 'E' encumbrance
+
+----------------
+
+SubLedger --GL transfer record table
+apps.xla_gl_transfer_batches_all
+
+---------------------------------------------------
+
+SELECT 
+STATUS,CURRENCY_CODE,ENTERED_DR,ENTERED_CR,ACCOUNTED_DR,ACCOUNTED_CR
+,CODE_COMBINATION_ID,GROUP_ID
+,USER_JE_SOURCE_NAME,DATE_CREATED,ACCOUNTING_DATE,PERIOD_NAME
+,REFERENCE1,REFERENCE2,REFERENCE21
+,GL_SL_LINK_ID,GL_SL_LINK_TABLE
+,JE_BATCH_ID,JE_HEADER_ID,JE_LINE_NUM
+from apps.GL_INTERFACE
+where JE_BATCH_ID=61310
+ORDER BY JE_BATCH_ID,JE_HEADER_ID,JE_LINE_NUM
+--STATUS<>'NEW'--USER_JE_SOURCE_NAME='Payables'
+
+
+GROUP_ID
+REFERENCE1
+
+
+
+
+select * from apps.GL_interface
+where GROUP_ID is not null
+
+
+
+
+select * from apps.GL_interface
+
+select STATUS,ACCOUNTING_DATE,USER_JE_CATEGORY_NAME,USER_JE_SOURCE_NAME,REFERENCE1,REFERENCE21,JE_HEADER_ID,GROUP_ID from apps.GL_interface
+where GROUP_ID=45336 and REFERENCE21=641 and JE_HEADER_ID=57721
+
+select count(*) from apps.GL_interface
+where GROUP_ID=45336 and REFERENCE21='641' and JE_HEADER_ID=57721
+
+select count(*) from apps.GL_interface
+where REFERENCE21='641'
+
+select count(*) from apps.GL_interface
+where JE_HEADER_ID=57721
+
+select STATUS,ACCOUNTING_DATE,USER_JE_CATEGORY_NAME,USER_JE_SOURCE_NAME,REFERENCE1,REFERENCE21,JE_HEADER_ID,GROUP_ID from apps.GL_interface
+where GROUP_ID=45336 and REFERENCE21=641 and JE_HEADER_ID=57721

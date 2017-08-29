@@ -1,0 +1,29 @@
+
+--------- invoice & payment trans with Curr/rate/group/AP Account
+select a.INVOICE_NUM,b.accounting_date Paid_date,b.amount Paid_Amt,a.INVOICE_CURRENCY_CODE Curr,
+a.INVOICE_AMOUNT,
+a.GL_DATE Inv_GL_Date,a.INVOICE_DATE,a.PAY_GROUP_LOOKUP_CODE Pay_Group,c.segment3 AP_Account,
+a.EXCHANGE_RATE Inv_rate,a.EXCHANGE_DATE Inv_rate_Date,
+vdr.VENDOR_TYPE_LOOKUP_CODE Vendor_Type,
+a.INVOICE_TYPE_LOOKUP_CODE Inv_Type,
+b.REVERSAL_FLAG Payment_reverse_flag,
+vdr.VENDOR_NAME,VDR.SEGMENT1 as Supplier_Num
+from apps.ap_invoice_payments_all b
+,apps.AP_INVOICES_ALL a
+,        apps.PO_VENDORS VDR
+,        apps.PO_VENDOR_SITES_all aps
+,apps.GL_CODE_combinations c
+where VDR.VENDOR_ID=a.VENDOR_ID
+and a.INVOICE_ID=b.INVOICE_ID
+and aps.VENDOR_SITE_ID=a.VENDOR_SITE_ID
+and a.ACCTS_PAY_CODE_COMBINATION_ID=c.CODE_COMBINATION_ID
+--and a.INVOICE_TYPE_LOOKUP_CODE not like 'EXP%'
+--and ((VDR.PAY_GROUP_LOOKUP_CODE 'EM' and (VDR.PAY_GROUP_LOOKUP_CODE 'RH')) or (VDR.PAY_GROUP_LOOKUP_CODE  is null))
+and b.accounting_date>to_date('2009-1-1','yyyy-mm-dd')
+and b.accounting_date<to_date('2009-2-1','yyyy-mm-dd')
+--and (b.REVERSAL_FLAG'Y' or b.REVERSAL_FLAG is null)
+--and a.INVOICE_CURRENCY_CODE <>'CNY'
+and c.segment3 in ('21210108','21210109','21210111','21210203','21210297')
+order by a.INVOICE_NUM
+
+

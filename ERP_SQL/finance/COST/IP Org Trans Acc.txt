@@ -1,0 +1,133 @@
+
+
+
+SELECT mmt.transaction_date, msi.segment1 item_code,
+          mtt.transaction_type_name, mmt.subinventory_code,
+             gcc.segment1
+          || '.'
+          || gcc.segment2
+          || '.'
+          || gcc.segment3
+          || '.'
+          || gcc.segment4
+          || '.'
+          || gcc.segment5
+          || '.'
+          || gcc.segment6 ACCOUNT,
+          TO_NUMBER (mta.base_transaction_value, 9999999999.9999) VALUE,
+          --mmt.TRANSACTION_QUANTITY as Qty,
+          mta.primary_quantity AS qty, mmt.transaction_id,
+          mst.transaction_source_type_name,
+          (SELECT a.wip_entity_name
+             FROM apps.wip_entities a
+            WHERE a.wip_entity_id = mmt.transaction_source_id
+              AND mst.transaction_source_type_name LIKE 'Job%') job,
+          mta.gl_batch_id,
+          ou.organization_code ORGANIZATION,
+          gcc.segment3 AS account_num,-- cst.item_cost, cst.material_cost,
+          --cst.resource_cost, 
+		  TRUNC (mmt.transaction_date) AS trans_date,
+          TO_CHAR (oeh.order_number) order_number,
+          mtt.description type_description, mmt.revision,
+          mgd.segment1 alias_source,
+          mmt.transaction_reference trans_reference, mtr.reason_name,
+          mmt.subinventory_code source_warehouse,
+          mmt.transfer_subinventory destination_warehouse, poh.segment1 po,
+          gcc.segment2 cost_center, mmt.actual_cost, mmt.attribute1 shift,
+          mmt.attribute2 model, mmt.attribute3 document_number,
+          categ.segment1 prod_model
+     FROM apps.mtl_material_transactions mmt,
+          apps.gl_code_combinations gcc,
+          apps.mtl_transaction_accounts mta,
+--apps.wip_transaction_accounts  mta,
+          apps.mtl_transaction_types mtt,
+          apps.mtl_system_items_b msi,
+          apps.mtl_txn_source_types mst,
+--          apps.cst_item_costs cst,
+          apps.mtl_generic_dispositions mgd,
+          apps.oe_order_headers_all oeh,
+          apps.mtl_transaction_reasons mtr,
+          apps.po_headers_all poh,
+          apps.mtl_item_categories_v categ,
+		  APPS.mtl_parameters OU
+    WHERE mta.transaction_id = mmt.transaction_id
+      AND mta.reference_account = gcc.code_combination_id
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%')
+and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order  Transfer')
+and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick')
+and    transaction_type_name not like '%Container%'
+       AND mtt.transaction_type_id = mmt.transaction_type_id
+      AND msi.inventory_item_id = mmt.inventory_item_id
+      AND mmt.transaction_source_type_id = mst.transaction_source_type_id
+      --AND cst.organization_id = mta.organization_id
+      --AND cst.inventory_item_id = mmt.inventory_item_id
+--      AND cst.cost_type_id = 1
+      AND mta.organization_id = mmt.organization_id
+      AND mta.organization_id = msi.organization_id 
+--      AND msi.organization_id = 130
+	  and ou.organization_id=mta.organization_id
+      AND mmt.transaction_reference = TO_CHAR (oeh.header_id(+))
+      AND mmt.transaction_source_id = mgd.disposition_id(+)
+      AND mtr.reason_id(+) = mmt.reason_id
+      AND mmt.transaction_source_id = poh.po_header_id(+)
+      AND msi.inventory_item_id = categ.inventory_item_id
+      AND msi.organization_id = categ.organization_id
+      AND categ.category_set_id = 1
+and    trunc(mmt.transaction_date) >= to_date('20060901','YYYYMMDD')
+and    trunc(mmt.transaction_date) <= to_date('20060910','YYYYMMDD')
+--and    mtt.transaction_type_name='Account alias issue';
+and gcc.segment3='5401030204'
+
+
+
+
+SELECT 
+          sum(mta.base_transaction_value) VALUE,
+          mst.transaction_source_type_name,
+          mta.gl_batch_id,
+          ou.organization_code ORGANIZATION,
+          gcc.segment3 AS account_num
+     FROM apps.mtl_material_transactions mmt,
+          apps.gl_code_combinations gcc,
+          apps.mtl_transaction_accounts mta,
+--apps.wip_transaction_accounts  mta,
+          apps.mtl_transaction_types mtt,
+          apps.mtl_system_items_b msi,
+          apps.mtl_txn_source_types mst,
+--          apps.cst_item_costs cst,
+          apps.mtl_generic_dispositions mgd,
+          apps.oe_order_headers_all oeh,
+          apps.mtl_transaction_reasons mtr,
+          apps.po_headers_all poh,
+          apps.mtl_item_categories_v categ,
+		  APPS.mtl_parameters OU
+    WHERE mta.transaction_id = mmt.transaction_id
+      AND mta.reference_account = gcc.code_combination_id
+       AND mtt.transaction_type_id = mmt.transaction_type_id
+      AND msi.inventory_item_id = mmt.inventory_item_id
+      AND mmt.transaction_source_type_id = mst.transaction_source_type_id
+      --AND cst.organization_id = mta.organization_id
+      --AND cst.inventory_item_id = mmt.inventory_item_id
+--      AND cst.cost_type_id = 1
+      AND mta.organization_id = mmt.organization_id
+      AND mta.organization_id = msi.organization_id 
+--      AND msi.organization_id = 130
+	  and ou.organization_id=mta.organization_id
+      AND mmt.transaction_reference = TO_CHAR (oeh.header_id(+))
+      AND mmt.transaction_source_id = mgd.disposition_id(+)
+      AND mtr.reason_id(+) = mmt.reason_id
+      AND mmt.transaction_source_id = poh.po_header_id(+)
+      AND msi.inventory_item_id = categ.inventory_item_id
+      AND msi.organization_id = categ.organization_id
+      AND categ.category_set_id = 1
+and    trunc(mmt.transaction_date) >= to_date('20060901','YYYYMMDD')
+and    trunc(mmt.transaction_date) <= to_date('20060920','YYYYMMDD')
+--and    mtt.transaction_type_name='Account alias issue';
+and gcc.segment3='5401030204'
+group by mst.transaction_source_type_name,
+          mta.gl_batch_id,
+          ou.organization_code ,
+          gcc.segment3 
+
+
+

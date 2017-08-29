@@ -1,0 +1,107 @@
+
+
+----AP Invoiced amount / from previous month PO List
+
+
+c.MATCH_OPTION
+from apps.PO_HEADERS_ALL a, apps.PO_LINES_ALL b,apps.PO_LINE_LOCATIONS_ALL c
+where	a.PO_HEADER_ID=b.PO_HEADER_ID
+and b.PO_LINE_ID=c.PO_LINE_ID
+
+AP Match option is on:
+AP_INVOICE_DISTRIBUTIONS_ALL.DIST_MATCH_TYPE
+=IP ,Item distribution Matched to Purchase Order
+=IR ,Item distribution Matched to Receipt
+=Null, Not Matched
+=Other,Other Charge distribution Matched to Receipt
+
+
+select b.INVOICE_NUM,b.PAYMENT_CURRENCY_CODE as Currency,b.INVOICE_AMOUNT,b.AMOUNT_PAID
+,b.INVOICE_AMOUNT-nvl(b.AMOUNT_PAID,0) as Remain_Amount
+,b.INVOICE_DATE,b.DESCRIPTION
+,b.EXCHANGE_RATE as Inv_Rate
+,(b.EXCHANGE_RATE-po.RATE) as Rate_Diff
+,b.EXCHANGE_DATE as Inv_rateDate
+, (b.EXCHANGE_RATE- po.RATE)*b.INVOICE_AMOUNT as X_GnL
+,po.PO_number,po.RATE
+from apps.ap_invoices_all b 
+,(select SEGMENT1 as PO_number,CURRENCY_CODE,RATE_DATE,RATE from apps.PO_HEADERS_ALL 
+where CURRENCY_CODE='JPY' 
+and  RATE_DATE>=to_date('2004-04-1','YYYY-MM-DD' )
+and  RATE_DATE>=to_date('2004-04-30','YYYY-MM-DD' )) po
+where b.GL_DATE>=to_date('2004-04-1','YYYY-MM-DD') 
+and b.GL_DATE<=to_date('2004-04-30','YYYY-MM-DD') 
+and b.DESCRIPTION=po.PO_number
+and b.PAYMENT_CURRENCY_CODE='JPY'
+
+
+
+----AP Pay / amount from previous month Invoice List
+select b.GL_Date as Inv_GL_Date,a.AMOUNT,a.EXCHANGE_RATE as PayRate,a.INVOICE_BASE_AMOUNT,decode(a.EXCHANGE_RATE,null,a.AMOUNT,a.PAYMENT_BASE_AMOUNT) as Payment_Amount_CNY ,a.ACCOUNTING_DATE as Pay_Date
+,b.INVOICE_NUM,b.PAYMENT_CURRENCY_CODE as Currency,b.INVOICE_AMOUNT,b.AMOUNT_PAID,b.INVOICE_DATE,b.DESCRIPTION,b.EXCHANGE_RATE as Inv_Rate,b.EXCHANGE_DATE as Inv_rateDate
+,(b.EXCHANGE_RATE-a.EXCHANGE_RATE) as Rate_Diff, (b.EXCHANGE_RATE-a.EXCHANGE_RATE)*a.AMOUNT as X_GnL
+from apps.AP_INVOICE_PAYMENTS_all  a,apps.ap_invoices_all b
+where a.PERIOD_NAME='APR-04' 
+and a.INVOICE_ID=b.INVOICE_ID
+and b.PAYMENT_CURRENCY_CODE='JPY'
+and b.GL_DATE>=to_date('2004-04-1','YYYY-MM-DD')
+and b.GL_DATE<=to_date('2004-04-30','YYYY-MM-DD' )
+--and a.EXCHANGE_RATE is not null
+order by b.INVOICE_ID
+
+
+select sum((b.EXCHANGE_RATE-a.EXCHANGE_RATE)*a.AMOUNT) as X_GnL 
+from apps.AP_INVOICE_PAYMENTS_all  a,apps.ap_invoices_all b
+where PERIOD_NAME='APR-04' 
+and a.INVOICE_ID=b.INVOICE_ID
+and b.PAYMENT_CURRENCY_CODE='JPY'
+--and a.EXCHANGE_RATE is not null
+order by b.INVOICE_ID
+
+
+
+
+-----AP Invoice P/L forcast for the month 
+select b.INVOICE_NUM,b.PAYMENT_CURRENCY_CODE as Currency,b.INVOICE_AMOUNT,b.AMOUNT_PAID
+,b.INVOICE_AMOUNT-nvl(b.AMOUNT_PAID,0) as Remain_Amount
+,b.INVOICE_DATE,b.DESCRIPTION
+,b.EXCHANGE_RATE as Inv_Rate,:New_rate 
+,(b.EXCHANGE_RATE-:New_rate) as Rate_Diff
+,b.EXCHANGE_DATE as Inv_rateDate
+, (b.EXCHANGE_RATE- :New_rate)*b.INVOICE_AMOUNT as X_GnL
+,ATTRIBUTE1 as reference
+from apps.ap_invoices_all b
+where b.GL_DATE>=to_date('2004-05-1','YYYY-MM-DD')
+and b.GL_DATE<=to_date('2004-05-31','YYYY-MM-DD' )
+and b.PAYMENT_CURRENCY_CODE='JPY'
+and b.INVOICE_AMOUNT-nvl(b.AMOUNT_PAID,0)<>0
+--and b.INVOICE_AMOUNT-nvl(b.AMOUNT_PAID,0)<b.INVOICE_AMOUNT
+--and a.EXCHANGE_RATE is not null
+order by b.INVOICE_ID
+
+
+
+
+---- GL adjustment & Pay USD cause G/L
+select LINE_PERIOD_NAME,BATCH_NAME,CURRENCY_CODE as Currency
+,LINE_ENTERED_DR,LINE_ENTERED_CR,LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR
+,HEADER_NAME,JE_SOURCE,JE_CATEGORY,LINE_EFFECTIVE_DATE,LINE_DESCRIPTION
+,LINE_REFERENCE_4,LINE_REFERENCE_1,LINE_REFERENCE_2 ,HEADER_DESCRIPTION
+ from apps.GL_JE_JOURNAL_LINES_V where LINE_CODE_COMBINATION_ID in 
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='550305' )
+and (CURRENCY_CODE='USD' or CURRENCY_CODE='JPY')  and LINE_PERIOD_NAME='APR-04' and (LINE_ENTERED_DR<>0 or LINE_ENTERED_CR<>0)
+and je_source='Manual'
+and LINE_DESCRIPTION like'KY%JPY%'
+
+
+Total:
+select sum(LINE_ENTERED_DR),sum(LINE_ENTERED_CR),sum(LINE_ACCOUNTED_DR),sum(LINE_ACCOUNTED_CR),
+sum(LINE_ACCOUNTED_DR-LINE_ACCOUNTED_CR) as Balance 
+from apps.GL_JE_JOURNAL_LINES_V where LINE_CODE_COMBINATION_ID in 
+(select CODE_COMBINATION_ID from apps.GL_CODE_combinations where segment3='550305' )
+and (CURRENCY_CODE='USD' or CURRENCY_CODE='JPY') and LINE_PERIOD_NAME='APR-04' and (LINE_ENTERED_DR<>0 or LINE_ENTERED_CR<>0)
+and je_source='Manual'
+and LINE_DESCRIPTION like'KY%JPY%'
+
+
+

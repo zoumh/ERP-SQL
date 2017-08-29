@@ -1,0 +1,45 @@
+
+
+
+select   msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,
+a.segment2||'.'||a.segment3||'.'||a.segment4||'.'||a.segment5 Frm_Locator, 
+mmt.transfer_subinventory To_WH,b.segment2||'.'||b.segment3||'.'||b.segment4||'.'||b.segment5 to_Locator,
+(mmt.TRANSACTION_QUANTITY) Qty,TRANSACTION_SOURCE_TYPE_NAME Source_Type,
+mmt.transaction_id,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,apps.mtl_item_locations a,apps.mtl_item_locations b
+where  (msi.segment1 ='RTK 201 06/BMC') 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+and mmt.LOCATOR_ID=a.INVENTORY_LOCATION_ID
+and mmt.TRANSFER_LOCATOR_ID =b.INVENTORY_LOCATION_ID
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer','SH Move Order Transfer')
+--and    trunc(mmt.transaction_date) >= to_date('20050101','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050131','YYYYMMDD')
+
+
+-----------Item Teansaction type,count, (item Max length)
+
+select   max(length(msi.segment1)) maxLength,msi.segment1 Item,mtt.transaction_type_name,count(*) count
+--(mmt.TRANSACTION_QUANTITY) Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi
+where  --(msi.segment1 ='RTK 201 06/BMC') and    
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.organization_id=130  
+and mmt.organization_id = msi.organization_id  
+--and transaction_type_name in ('Subinventory Transfer','Move Order Transfer','SH Move Order Transfer')
+and    trunc(mmt.transaction_date) >= to_date('20080419','YYYYMMDD') 
+--and    trunc(mmt.transaction_date) <= to_date('20050131','YYYYMMDD')
+group by msi.segment1,mtt.transaction_type_name
+order by max(length(msi.segment1)) desc
+

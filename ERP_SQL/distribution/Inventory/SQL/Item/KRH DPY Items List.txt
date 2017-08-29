@@ -1,0 +1,35 @@
+
+
+--------------KRH DPY Items List
+
+select b.ITEM_NUMBER,f.SEGMENT1||'.'||f.SEGMENT2 as Category,b.COST_TYPE
+,b.ITEM_COST as STD_COST
+,b.ORGANIZATION_ID as ORG_ID /*--  83 -->Prod , 84-->ARC, 81-->Mas */
+,d.NAME as Org,c.SEGMENT4 as COGS_PRD_Seg,c.SEGMENT5 as COGS_PRJ_Seg,e.SEGMENT4 as SALES_PRD_Seg,e.SEGMENT5 as SALES_PRJ_Seg
+,INVENTORY_ITEM_STATUS_CODE as Status
+,b.MATERIAL_COST
+,b.RESOURCE_COST
+,g.CREATION_DATE
+,g.LAST_UPDATE_DATE
+,f.SEGMENT1 Category1,f.SEGMENT2 Category2,
+decode(g.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy,g.Item_Type
+from apps.CST_ITEM_COST_TYPE_V b
+,HR_ORGANIZATION_UNITS_V d
+,apps.GL_CODE_combinations c
+,apps.GL_CODE_combinations e	
+,apps.mtl_item_categories_v f 
+,apps.mtl_system_items g
+where 
+(b.COST_TYPE='Frozen' or b.COST_TYPE='FIFO')
+and (b.ORGANIZATION_ID=83 or b.ORGANIZATION_ID=84 or b.ORGANIZATION_ID=86 )
+and d.ORGANIZATION_ID=b.ORGANIZATION_ID
+--and (b.ITEM_NUMBER like '%DPY%' or b.ITEM_NUMBER like '%KRH%' or b.ITEM_NUMBER like '%KRC%' )
+and b.COST_OF_SALES_ACCOUNT=c.CODE_COMBINATION_ID
+and b.SALES_ACCOUNT=e.CODE_COMBINATION_ID
+and f.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+and f.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=g.INVENTORY_ITEM_ID
+and g.ORGANIZATION_ID=b.ORGANIZATION_ID
+and INVENTORY_ITEM_STATUS_CODE='Active'
+and g.Item_Type in ('KRH','DPY','ROA','ROAS' )
+order by org_id,b.INVENTORY_ITEM_ID

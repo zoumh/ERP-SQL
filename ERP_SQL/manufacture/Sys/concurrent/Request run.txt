@@ -1,0 +1,6 @@
+
+
+select  TRUNC ((a.actual_completion_date - a.actual_start_date),5)*1000 min_execution_time,a.REQUEST_DATE
+from fnd_conc_req_summary_v a where a.user_concurrent_program_name ='BMC Bill Of Material Report For RTK Items'
+order by a.REQUEST_DATE desc
+

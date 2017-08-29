@@ -1,0 +1,42 @@
+
+
+----------mtl_material_transactions link with SO
+
+mtl_material_transactions.SOURCE_LINE_ID	=OE_ORDER_lineS_all.LINE_ID
+mtl_material_transactions.TRX_SOURCE_LINE_ID	=OE_ORDER_lineS_all.LINE_ID
+
+mtl_material_transactions.TRANSACTION_REFERENCE =to_char(OE_ORDER_HEADERS_ALL.HEADER_ID)
+
+
+
+select c.ORDER_NUMBER,b.LINE_NUMBER,a.TRANSACTION_QUANTITY,a.transaction_ID,
+a.creation_Date
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+and c.ORDER_NUMBER='1000089'
+
+
+
+----------mtl_material_transactions of SO_Ship,Delivery,LPN
+select e.LICENSE_PLATE_NUMBER CONTENT_LPN,
+c.ORDER_NUMBER,b.LINE_NUMBER,a.TRANSACTION_QUANTITY, 
+d.delivery_ID Delivery_No,d.DELIVERY_DETAIL_ID Del_Detail,
+a.creation_Date
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.OE_ORDER_lineS_all b,apps.OE_ORDER_HEADERS_ALL c,
+apps.WSH_DELIVERABLES_V d,apps.wms_license_plate_numbers e
+where a.SOURCE_LINE_ID =b.LINE_ID
+and a.TRANSACTION_REFERENCE=to_char(c.HEADER_ID)
+and c.HEADER_ID=b.HEADER_ID
+and d.SOURCE_HEADER_ID=c.header_id
+and d.source_line_id=b.LINE_ID
+and b.org_id=c.org_id
+and a.ORGANIZATION_ID=c.SHIP_FROM_ORG_ID
+and a.ORGANIZATION_ID=e.ORGANIZATION_ID
+and a.CONTENT_LPN_ID=e.lpn_id
+and a.SHIPMENT_NUMBER=d.delivery_ID
+and c.ORDER_NUMBER='245026'
+and b.LINE_NUMBER in (2,12)

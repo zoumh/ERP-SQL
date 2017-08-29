@@ -1,0 +1,34 @@
+
+----------DPY max revision, for a model
+SELECT a.segment1 Item,
+(select max(REVISION) from apps.MTL_ITEM_REVISIONS_B c where a.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID and a.ORGANIZATION_ID=c.ORGANIZATION_ID) revision ,
+--c.IMPLEMENTATION_DATE rev_IMPLEMENTATION_DATE,
+--c.EFFECTIVITY_DATE rev_EFFECTIVITY_DATE,
+a.Item_Type, 
+b.segment1 Category1,b.segment2 Category2,
+a.inventory_item_status_code status,a.CREATION_DATE,a.LAST_UPDATE_DATE,
+decode(a.ORGANIZATION_ID,128,'AC',129,'RC',130,'VP',131,'CS',132,'IP',127,'Master') Org,
+a.description
+from 
+apps.mtl_system_items a,apps.mtl_item_categories_v b
+--,apps.MTL_ITEM_REVISIONS_B c
+where a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+--and a.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.ORGANIZATION_ID=b.ORGANIZATION_ID
+--and a.ORGANIZATION_ID=c.ORGANIZATION_ID
+and a.ORGANIZATION_ID=130
+--and  a.segment1='1214-4228'
+and b.category_set_id=1
+--and b.segment2='DPY ITEM'
+and a.inventory_item_status_code='Active'
+and a.Item_Type='DPY'
+and (b.segment1 like 'C905%' or 
+    b.segment1 like 'G705%' or 
+    b.segment1 like 'C901%' or 
+    b.segment1 like 'W995%' or 
+    b.segment1 like 'C903%' or 
+    b.segment1 like 'W705%' or 
+    b.segment1 like 'W715%')
+order by a.segment1
+
+

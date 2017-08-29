@@ -1,0 +1,14 @@
+
+---------Clear Move Order task before SC taken
+
+Select *
+--Delete 
+From   Apps.Mtl_Material_Transactions_Temp t
+Where  Organization_Id = 130 and TRANSACTION_TYPE_ID=64 --(Move Order)
+And t.Transaction_Temp_Id In (Select Transaction_Temp_Id
+From   Apps.Mtl_Material_Transactions_Temp a
+Where  Exists (Select 1
+From   Apps.Mtl_Txn_Request_Lines_v b
+Where  a.Trx_Source_Line_Id = b.Line_Id And
+b.Request_Number In ('467772','468621','468625','469012','469507','470823','471048','471562','473071','474302','479670','486717')))
+order by CREATION_DATE  desc

@@ -1,0 +1,63 @@
+
+----------------Error when run Depr, clear the status to re-run
+
+
+----check category settings
+select a.SEGMENT1 ||'.'||a.SEGMENT2 ||'.'||a.SEGMENT3 category
+,a.SEGMENT1 Maj_Cate,a.SEGMENT2 Min_Cate,a.SEGMENT3 Status,a.DESCRIPTION ,b.BOOK_TYPE_CODE,a.ENABLED_FLAG,a.INVENTORIAL ,
+c.DEPRECIATE_FLAG,c.DEPRN_METHOD,c.LIFE_IN_MONTHS,c.PRORATE_CONVENTION_CODE Prorate_Rule,c.RETIREMENT_PRORATE_CONVENTION Retire_Rule
+,c.PERCENT_SALVAGE_VALUE SALVAGE_VALUE,b.ASSET_CLEARING_ACCT,b.ASSET_COST_ACCT,b.DEPRN_EXPENSE_ACCT,b.DEPRN_RESERVE_ACCT
+,b.BONUS_DEPRN_EXPENSE_ACCT,b.BONUS_DEPRN_RESERVE_ACCT,b.REVAL_AMORTIZATION_ACCT,b.REVAL_RESERVE_ACCT 
+from apps.FA_CATEGORIES_VL a,apps.FA_CATEGORY_BOOKS b,apps.FA_CATEGORY_BOOK_DEFAULTS c
+where  a.CATEGORY_ID =b.CATEGORY_ID
+and c.BOOK_TYPE_CODE=b.BOOK_TYPE_CODE
+and c.CATEGORY_ID=b.CATEGORY_ID
+and c.RETIREMENT_PRORATE_CONVENTION<>'BMC_RETIRE'
+order by SEGMENT1,SEGMENT2,SEGMENT3
+
+
+
+select LAST_PERIOD_COUNTER, DEPRN_STATUS, DEPRN_CALENDAR, book_type_code, deprn_request_id, mass_request_id, deprn_status
+from fa_book_controls --where book_type_code = '&book_type_code'
+
+select * from FA_CALENDAR_PERIODS
+
+
+select * from apps.FA_DEPRN_DETAIL
+
+select * from apps.FA_DEPRN_SUMMARY 
+
+
+select PERIOD_NAME ,period_counter,book_type_code
+from fa_deprn_periods
+where --book_type_code = '&book_type_code' and 
+period_close_date is null;
+
+
+select count(*)
+from fa_deprn_summary
+where book_type_code = '&book_type_code'
+and period_counter = &period_counter
+and deprn_amount is not null
+
+
+select count(*)
+from fa_deprn_detail
+where book_type_code = '&book_type_code'
+and period_counter = &period_counter
+and deprn_amount is not null
+
+
+update fa_book_controls
+set deprn_request_id = NULL, 
+deprn_status = 'E'
+where deprn_status = 'S'
+and book_type_code = '&book_type_code';
+
+
+select deprn_status,book_type_code,deprn_request_id from  fa_book_controls
+where deprn_status = 'S'
+and book_type_code = '&book_type_code';
+
+
+

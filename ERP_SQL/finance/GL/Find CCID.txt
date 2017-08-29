@@ -1,0 +1,15 @@
+
+
+
+select segment1||'.'||segment2||'.'||segment3||'.'||segment4||'.'||segment5||'.'||segment6 Acc,ENABLED_FLAG,END_DATE_ACTIVE,CODE_COMBINATION_ID 
+from apps.gl_code_combinations 
+where segment3='15010000' and segment2 like '4320%' and segment4<>'T' and segment5<>'T'
+order by segment2,segment3,segment4,segment5
+
+
+
+select START_DATE_ACTIVE,LAST_UPDATE_DATE,END_DATE_ACTIVE,segment1||'.'||segment2||'.'||segment3||'.'||segment4||'.'||segment5||'.'||segment6 Acc,
+ENABLED_FLAG,END_DATE_ACTIVE,CODE_COMBINATION_ID 
+from apps.gl_code_combinations where segment2='4340' order by segment3
+
+

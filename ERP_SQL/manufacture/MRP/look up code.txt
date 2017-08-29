@@ -1,0 +1,35 @@
+
+
+ORDER_TYPE 	
+1 Purchase order
+2 Purchase requisition
+3 Discrete job
+4 Suggested aggregate repetitive schedule
+5 Planned order
+7 Non每standard job
+8 PO in receiving
+11 Intransit shipment
+12 Intransit receipt
+13 Suggested repetitive schedule
+14 Discrete job by每product
+15 Nonstandard job by每product
+16 Repetitive schedule by每product
+17 Planned order by每product
+27 Flow schedule
+28 Flow schedule by每product
+29 Payback supply
+
+------------------
+
+SUPPLY_DEMAND_TYPE MRP_SUPPLY_DEMAND_TYPE MFG_LOOKUPS
+1 Demand
+2 Supply
+
+
+-----------------
+
+MRP_WORKBENCH_BUCKET_DATES.BUCKET_TYPE
+MRP_WORKBENCH_BUCKET_TYPE  
+1 Days
+2 Weeks
+3 Periods

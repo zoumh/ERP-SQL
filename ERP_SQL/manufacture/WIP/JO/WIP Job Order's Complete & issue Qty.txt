@@ -1,0 +1,50 @@
+
+
+--------WIP Job Order's Complete Qty
+
+select  wip_entity_name Job_Order,--msi.segment1 Item,mtt.transaction_type_name,mmt.subinventory_code From_WH,mmt.transfer_subinventory To_WH, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Complete_Value,
+sum(mmt.TRANSACTION_QUANTITY) as Complete_Qty--,mmt.ACTUAL_COST,trunc(mmt.transaction_date) as Trans_Date
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.wip_entities Wet  --apps.WIP_DISCRETE_JOBS_V
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = 83 and msi.organization_id = 83 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and    trunc(mmt.transaction_date) >= to_date('20041201','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041231','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+group by wip_entity_name
+order by wip_entity_name
+
+
+------WIP Job Order's Issue Amount
+
+
+select  wip_entity_name Job_Order, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Issue_Value
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.wip_entities Wet  --apps.WIP_DISCRETE_JOBS_V
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = 83 and msi.organization_id = 83 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+and    trunc(mmt.transaction_date) >= to_date('20041001','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041231','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+group by wip_entity_name
+order by wip_entity_name
+
+

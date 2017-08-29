@@ -1,0 +1,61 @@
+
+apps.MTL_SALES_ORDERS  (SO num.Type flexfield)
+
+MTL_SALES_ORDERS stores Inventory¡¯s local definition of sales orders.
+MTL_SALES_ORDERS is a key flexfield table with no structure defining column or set defining column. 
+The flexfield code for this table is MKTS
+
+select SEGMENT1||'.'||SEGMENT2||'.'||SEGMENT13 as SO_Inventory_FlexField_Value,
+SALES_ORDER_ID,SEGMENT1 SO_Num 
+from apps.MTL_SALES_ORDERS where SALES_ORDER_ID=471668
+
+select * from apps.MTL_SALES_ORDERS where sales_order_id in (386586,159588,157411)
+
+select * from apps.MTL_SALES_ORDERS where segment1='5002015'
+
+
+
+select * from apps.MTL_MATERIAL_TRANSACTIONS where transaction_id in (24310647,24542252,24542250)
+
+select b.SEGMENT1 SO,b.segment2 SO_Type,TRANSACTION_QUANTITY 
+from apps.MTL_MATERIAL_TRANSACTIONS a,
+apps.MTL_SALES_ORDERS b
+where a.TRANSACTION_SOURCE_ID =b.SALES_ORDER_ID
+and b.SEGMENT1='5002639'
+
+
+
+159588
+
+select * from apps.OE_ORDER_HEADERS_all where HEADER_ID =270741
+
+select * from apps.OE_ORDER_lineS_all where line_ID= 386586
+
+
+
+------RMA Return & Ship Trans
+
+select   mmt.transaction_date, mmt.TRANSACTION_SOURCE_TYPE_ID,
+         msi.segment1 item_code, 
+         mtt.transaction_type_name, mso.SEGMENT1 SO,mso.SEGMENT2 Type,
+		 mmt.subinventory_code, mmt.TRANSFER_SUBINVENTORY,
+	     mmt.TRANSACTION_QUANTITY as Qty,
+ 	     mmt.transaction_id, 
+		 decode(mmt.organization_id,130,'PRD','Unknown') Organization ,
+		 trunc(mmt.transaction_date) as Trans_Date,
+		 mtt.DESCRIPTION as Type_Description,
+		 mmt.REVISION
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi,
+  apps.MTL_SALES_ORDERS 		 mso 
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and mmt.organization_id = msi.organization_id 
+and mmt.TRANSACTION_SOURCE_ID =mso.SALES_ORDER_ID
+and mso.segment1='5002015'
+and mmt.TRANSACTION_SOURCE_TYPE_ID in (2,12) --- SO & RMA
+and mtt.transaction_type_name in ('Sales order issue','RMA Receipt')
+
+

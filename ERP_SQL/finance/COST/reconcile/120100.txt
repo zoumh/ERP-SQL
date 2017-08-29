@@ -1,0 +1,179 @@
+
+Find the difference  between GL & Receiving Account Distribution Report :
+It is because some Foreign Rate is not correct booked on receiving transaction, while it is corrected on Accounting caculation.
+So GL amount is correct in this circumstance...
+
+
+------------GL sum by Source/Category of account
+select sum(nvl(LINE_ACCOUNTED_DR,0)-nvl(LINE_ACCOUNTED_CR,0)) amt 
+,b.JE_SOURCE,JE_CATEGORY
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME='NOV-07')
+and b.CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+--and HEADER_CREATION_DATE<to_date('20071127 09:59:59','YYYYMMDD HH24:MI:SS')
+and (a.segment3='120100') 
+and ACTUAL_FLAG='A'
+group by b.JE_SOURCE,JE_CATEGORY
+
+
+
+
+-------Find Journal/Source/Category by account
+select b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME,HEADER_NAME Journal_Name,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME='AUG-07')
+and (a.segment3='120100') and ACTUAL_FLAG='A'
+
+----with Journal creation date
+select HEADER_CREATION_DATE,b.PERIOD_NAME,b.BATCH_NAME,b.HEADER_NAME Journal_Name,
+LINE_ACCOUNTED_DR,LINE_ACCOUNTED_CR--,LINE_REFERENCE_4 ,LINE_REFERENCE_5,LINE_DESCRIPTION 
+,b.JE_SOURCE,JE_CATEGORY,b.CURRENCY_CODE,b.LINE_ENTERED_DR,b.LINE_ENTERED_CR
+,b.LINE_EFFECTIVE_DATE,b.CREATION_DATE,a.segment3 as Account--,a.segment2 as CC,a.SEGMENT4 as PRD,a.segment5 as PRJ,b.HEADER_DESCRIPTION,
+from apps.GL_JE_JOURNAL_LINES_V b ,apps.GL_CODE_combinations a 
+where b.LINE_CODE_COMBINATION_ID =a.CODE_COMBINATION_ID
+and  (b.PERIOD_NAME='NOV-07')
+and b.CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+--and HEADER_CREATION_DATE<to_date('20071127 09:59:59','YYYYMMDD HH24:MI:SS')
+and (a.segment3='120100') and ACTUAL_FLAG='A'
+
+
+-----PO receiving distribution report
+----------PO receive Journal sum by CC-Acc , Org
+select  b.segment2 CC,b.segment3 Account, c.ORGANIZATION_ID,
+sum(nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0)) amt,
+JE_SOURCE_NAME,JE_CATEGORY_NAME,REVERSE_JOURNAL_FLAG
+from APPS.RCV_RECEIVING_SUB_LEDGER a,apps.gl_code_combinations b,apps.rcv_transactions c  
+where period_name ='NOV-07'
+and a.CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and a.CREATION_DATE<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+and b.code_combination_id=a.CODE_COMBINATION_ID
+and b.segment3='120100'
+and a.RCV_TRANSACTION_ID=c.TRANSACTION_ID
+group by JE_SOURCE_NAME,JE_CATEGORY_NAME,REVERSE_JOURNAL_FLAG,b.segment3,b.segment2,c.ORGANIZATION_ID 
+
+
+
+----------PO receive Journal detail
+select CREATION_DATE,ACCOUNTING_DATE,TRANSACTION_DATE, b.segment3 Account,
+ACCOUNTED_DR ,ACCOUNTED_CR,ENTERED_DR,ENTERED_CR,CURRENCY_CODE,
+JE_SOURCE_NAME,JE_CATEGORY_NAME,
+a.CODE_COMBINATION_ID,REVERSE_JOURNAL_FLAG
+from APPS.RCV_RECEIVING_SUB_LEDGER a,apps.gl_code_combinations b  where period_name ='NOV-07'
+and CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and CREATION_DATE<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+and b.code_combination_id=a.CODE_COMBINATION_ID
+
+
+-----------compare by trans_id , diff between rcv_sub & rcv_trans value  
+select aa.GL_amt,c.rec_Value, (aa.GL_amt-c.rec_Value) diff,aa.RCV_TRANSACTION_ID,aa.CURRENCY_CODE
+from 
+(select sum(nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0)) GL_amt,a.RCV_TRANSACTION_ID,a.CURRENCY_CODE
+from APPS.RCV_RECEIVING_SUB_LEDGER a,apps.gl_code_combinations b
+where b.code_combination_id=a.CODE_COMBINATION_ID
+and a.CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and a.CREATION_DATE<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+and period_name ='NOV-07'
+and b.segment3='120100' group by RCV_TRANSACTION_ID,CURRENCY_CODE
+) aa,
+(select organization_id,TRANSACTION_ID,
+sum(PO_UNIT_PRICE*nvl( CURRENCY_CONVERSION_RATE,1)*decode( transaction_type,'RETURN TO VENDOR',-1* quantity,quantity)) rec_Value 
+from apps.rcv_transactions  
+group by TRANSACTION_ID,organization_id
+) c
+where  c.organization_id=130
+and aa.RCV_TRANSACTION_ID=c.TRANSACTION_ID
+and abs(aa.GL_amt-c.rec_Value)>0.01
+order by abs(aa.GL_amt-c.rec_Value) desc
+ 
+
+
+----find  PO/item/Rate    by RCV_TRANSACTION_ID  (the amt may not correct)
+select   (nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0)) GL_amt,
+ (c.PO_UNIT_PRICE*nvl(c.CURRENCY_CONVERSION_RATE,1)*decode(c.transaction_type,'RETURN TO VENDOR',-1*c.quantity,c.quantity)) rec_Value
+,abs((nvl(ACCOUNTED_DR,0)-nvl(ACCOUNTED_CR,0))-(c.PO_UNIT_PRICE*nvl(c.CURRENCY_CONVERSION_RATE,1)*decode(c.transaction_type,'RETURN TO VENDOR',-1*c.quantity,c.quantity))) Diff,
+d.segment1 PO,e.LINE_NUM Line,f.segment1 Item,c.transaction_type,
+c.AMOUNT,c.QUANTITY,c.PO_UNIT_PRICE,c.CURRENCY_CONVERSION_RATE Rate,c.CURRENCY_CODE,
+TYPE_LOOKUP_CODE,g.LINE_TYPE
+--,JE_SOURCE_NAME,JE_CATEGORY_NAME,REVERSE_JOURNAL_FLAG
+from APPS.RCV_RECEIVING_SUB_LEDGER a,apps.gl_code_combinations b,apps.rcv_transactions c,
+apps.PO_HEADERS_ALL d,apps.PO_LINES_ALL e,apps.mtl_system_items f ,
+apps.PO_line_types g 
+where period_name ='NOV-07'
+and a.CREATION_DATE>to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and a.CREATION_DATE<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+and b.code_combination_id=a.CODE_COMBINATION_ID
+and b.segment3='120100'
+and c.organization_id=130
+and c.organization_id=f.organization_id
+and a.RCV_TRANSACTION_ID=c.TRANSACTION_ID
+and c.po_line_id=e.po_line_id
+and d.po_header_id=e.po_header_id
+and d.po_header_id=c.po_header_id
+and f.inventory_item_id(+) =e.item_id
+and g.LINE_TYPE_ID=e.LINE_TYPE_ID
+--and  TYPE_LOOKUP_CODE='STANDARD'
+--and g.LINE_TYPE='VP Purchasing'
+--and d.segment1='1055167' and e.LINE_NUM=5
+and RCV_TRANSACTION_ID in (2723443,2737714)
+
+
+
+-----Inv Distribution report Sum on the account
+select   mtt.transaction_type_name, mta.organization_id,
+         sum(mta.base_transaction_value) value
+         from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_txn_source_types      mst
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = mmt.organization_id  
+and gcc.segment3='120100'
+and mmt.transaction_date>=to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and mmt.transaction_date<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+and mta.organization_id not in (129)
+group by mtt.transaction_type_name,mta.organization_id
+
+-----Inv Distribution report Detail
+select   mmt.creation_date, mmt.organization_id,
+         mtt.transaction_type_name, 
+         gcc.segment1||'.'||gcc.segment2||'.'||gcc.segment3||'.'||gcc.segment4||'.'||gcc.segment5||'.'||gcc.segment6 account, 
+         to_number(mta.base_transaction_value, 9999999999.9999) value, 
+     mta.primary_quantity  as Qty, 
+         mmt.transaction_id, 
+         mst.transaction_source_type_name,  
+         gcc.segment3 as Account_Num, 
+         trunc(mmt.transaction_date) as Trans_Date, 
+         mmt.actual_cost
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_txn_source_types      mst
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+--and    (msi.segment1 like '%KRH%' or msi.segment1 like '%DPY%') 
+--and    transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Move Order Transfer') 
+--and    transaction_type_name not in ('SF Move Order Transfer','SH Move Order Transfer','Internal Order Pick') 
+--and    transaction_type_name not like '%Container%' 
+and    mtt.transaction_type_id = mmt.transaction_type_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mta.organization_id = mmt.organization_id  
+--and gcc.segment3='120100'
+and mmt.transaction_date>=to_date('20071125 09:59:59','YYYYMMDD HH24:MI:SS')
+and mmt.transaction_date<=to_date('20071130 23:59:59','YYYYMMDD HH24:MI:SS')
+

@@ -1,0 +1,410 @@
+
+apps.CST_ITEM_COST_TYPE_V.BASED_ON_ROLLUP,1,'Base on rollup',2,'No Rollup'
+
+-------Item convert Routing diff
+
+select (map.new_item_number)      	
+     ,map.OLD_ITEM_NUMBER	
+,old_Routing.amount
+,new_Routing.amount
+from conv_item_mapping            map 					
+,(	 select a.organization_id,b.segment1 Item,
+sum(c.USAGE_RATE_OR_AMOUNT) Amount
+from apps.BOM_OPERATIONAL_ROUTINGS_V a,apps.mtl_system_items_b b,apps.BOM_OPERATION_SEQUENCES_V d,
+apps.BOM_OPERATION_RESOURCES_V c
+where a.ASSEMBLY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.routing_sequence_id = d.routing_sequence_id
+and a.organization_id=b.organization_id
+and c.OPERATION_SEQUENCE_ID=d.OPERATION_SEQUENCE_ID
+group by a.organization_id,b.segment1) old_Routing,
+(	 select a.organization_id,b.segment1 Item,
+sum(c.USAGE_RATE_OR_AMOUNT) Amount
+from apps.BOM_OPERATIONAL_ROUTINGS_V a,apps.mtl_system_items_b b,apps.BOM_OPERATION_SEQUENCES_V d,
+apps.BOM_OPERATION_RESOURCES_V c
+where a.ASSEMBLY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.routing_sequence_id = d.routing_sequence_id
+and a.organization_id=b.organization_id
+and c.OPERATION_SEQUENCE_ID=d.OPERATION_SEQUENCE_ID
+group by a.organization_id,b.segment1) new_Routing
+where new_Routing.organization_id = map.new_organization_id 					
+and new_Routing.Item = map.new_item_number		
+and old_Routing.organization_id = map.old_organization_id 					
+and old_Routing.Item = map.OLD_ITEM_NUMBER		
+and old_Routing.amount<>new_Routing.amount
+
+
+
+---------New Items created after ('2005-12-25','yyyy-mm-dd')
+
+select USER_NAME, organization_id,segment1,enabled_flag, INVENTORY_ITEM_STATUS_CODE ,a.CREATION_DATE 
+ITEM_TYPE from apps.MTL_SYSTEM_ITEMS_b a,apps.fnd_user b 
+where a.CREATION_DATE>to_date('2005-12-25','yyyy-mm-dd') 
+and a.CREATED_BY=b.USER_ID 
+
+
+
+---------New Routing created after '2005-12-26'
+select c.USER_NAME, a.organization_id,b.segment1 Item,b.enabled_flag, 
+b.INVENTORY_ITEM_STATUS_CODE ,a.CREATION_DATE, b.ITEM_TYPE
+from apps.BOM_OPERATIONAL_ROUTINGS_V a,apps.mtl_system_items_b b,apps.fnd_user c
+where a.ASSEMBLY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.CREATED_BY=c.USER_ID 
+and trunc(a.CREATION_DATE)>to_date('2005-12-25','yyyy-mm-dd')
+
+
+--------New BOM created after '2005-12-26'
+
+select c.USER_NAME, a.organization_id,b.segment1 Item,b.enabled_flag, 
+b.INVENTORY_ITEM_STATUS_CODE ,a.CREATION_DATE, b.ITEM_TYPE
+from apps.BOM_BILL_OF_MATERIALS_V a,apps.mtl_system_items_b b,apps.fnd_user c
+where a.ASSEMBLY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.CREATED_BY=c.USER_ID 
+and trunc(a.CREATION_DATE)>to_date('2005-12-25','yyyy-mm-dd')
+
+
+
+---------Routing Details
+select a.organization_id,b.segment1 Item,b.enabled_flag Item_Enable,
+b.INVENTORY_ITEM_STATUS_CODE,b.ITEM_TYPE,--c.STANDARD_OPERATION_CODE, 
+d.OPERATION_SEQ_NUM,d.DEPARTMENT_CODE,
+c.RESOURCE_SEQ_NUM,c.RESOURCE_CODE,
+c.UOM,c.USAGE_RATE_OR_AMOUNT,c.USAGE_RATE_OR_AMOUNT_INVERSE,
+c.BASIS_TYPE,c.ASSIGNED_UNITS,c.AUTOCHARGE_TYPE
+from apps.BOM_OPERATIONAL_ROUTINGS_V a,apps.mtl_system_items_b b,apps.BOM_OPERATION_SEQUENCES_V d,
+apps.BOM_OPERATION_RESOURCES_V c
+where a.ASSEMBLY_ITEM_ID=b.INVENTORY_ITEM_ID
+and a.organization_id=b.organization_id
+and a.routing_sequence_id = d.routing_sequence_id
+and a.organization_id=b.organization_id
+and c.OPERATION_SEQUENCE_ID=d.OPERATION_SEQUENCE_ID
+
+
+-----Item Category
+
+select DISABLE_DATE, ENABLED_FLAG, segment1,segment2,description from apps.MTL_CATEGORIES_V 
+
+
+---------------------------------------------------
+
+SQL 1
+---Check PROD Item's Define Cost and Rollup Cost Confliction (if has both of these two type in a item)
+
+select msib.organization_id, 
+msib.segment1,msib.DESCRIPTION, 
+decode(msib.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+,msib.inventory_item_status_code Item_status,DEFINED_COST.DEFINE_COST,ROLLUP_COST.ROLLUP_COST
+from apps.mtl_system_items_b msib,
+(select distinct organization_id,inventory_item_id from bom.cst_item_cost_details a2 where  
+a2.rollup_source_type = 3 and a2.cost_type_id = :cost_type) c,
+(select distinct organization_id,inventory_item_id from bom.cst_item_cost_details a1 
+where  a1.rollup_source_type = 1 and a1.cost_type_id = :cost_type
+) d ,
+(select sum(a1.item_cost) define_cost,organization_id,inventory_item_id 
+from bom.cst_item_cost_details a1 where  a1.rollup_source_type = 1 and a1.cost_type_id = :cost_type
+group by organization_id ,inventory_item_id ) DEFINED_COST 
+,(select sum(a2.item_cost) ROLLUP_COST,organization_id,inventory_item_id 
+from bom.cst_item_cost_details a2 where  a2.rollup_source_type = 3 and a2.cost_type_id = :cost_type
+group by organization_id ,inventory_item_id ) ROLLUP_COST
+where msib.organization_id in (130,128,131)
+and c.organization_id = msib.organization_id 
+and c.inventory_item_id = msib.inventory_item_id 
+and d.organization_id = msib.organization_id 
+and d.inventory_item_id = msib.inventory_item_id
+and DEFINED_COST.organization_id = msib.organization_id 
+and DEFINED_COST.inventory_item_id = msib.inventory_item_id
+and DEFINED_COST.DEFINE_COST<>0
+and ROLLUP_COST.organization_id = msib.organization_id 
+and ROLLUP_COST.inventory_item_id = msib.inventory_item_id 
+and ROLLUP_COST.ROLLUP_COST<>0
+
+
+
+
+
+SQL 2
+---Check Rollup Item Attribute is correct (Based on Rollup, 都应该有BOM) , 83 & non 83
+
+select msib.organization_id,
+msib.segment1 Item,msib.DESCRIPTION,decode(a2.BASED_ON_ROLLUP,1,'Base on rollup',2,'No Rollup')  Based_On_Rollup_V
+,a2.ITEM_COST, 
+decode(msib.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+,msib.inventory_item_status_code Item_status
+,
+( select 'Yes' from apps.bom_bill_of_materials bbom 
+                   where bbom.organization_id = msib.organization_id
+                         and bbom.assembly_item_id = msib.inventory_item_id ) have_BOM
+						 ,msib.creation_date
+from apps.mtl_system_items_b msib,apps.CST_ITEM_COST_TYPE_V a2
+where msib.organization_id in (81,83,84,85,86,87,107)
+and msib.inventory_item_status_code='Active'
+--and msib.organization_id =83
+and a2.cost_type_id = :cost_type
+and a2.organization_id (+)= msib.organization_id 
+and a2.inventory_item_id (+) = msib.inventory_item_id
+
+
+
+
+SQL 3
+---Check Make/Buy Item Attribute with Item template Attribute (Make/Buy )
+
+SELECT
+DISTINCT  
+ORGANIZATION_ID, segment1,item_type ,INVENTORY_ITEM_STATUS_CODE status,
+DECODE(PLANNING_MAKE_BUY_CODE,1,'make',2,'buy')  make_or_buy_by_item,
+tv.TEMPLATE_NAME,
+DECODE(tav.ATTRIBUTE_VALUE ,1,'make',2,'buy')  make_or_buy_by_template
+FROM apps.MTL_SYSTEM_ITEMS_FVL msi, 
+apps.MTL_ITEM_TEMPLATES_ALL_V  tv,
+apps.MTL_ITEM_TEMPL_ATTRIBUTES_V tav
+WHERE
+msi.item_type = (
+SELECT ATTRIBUTE_value FROM apps.MTL_ITEM_TEMPL_ATTRIBUTES_V 
+WHERE ATTRIBUTE_NAME  = 'MTL_SYSTEM_ITEMS.ITEM_TYPE'
+--and TEMPLATE_ID = 101
+AND TEMPLATE_ID  =tv.TEMPLATE_ID)  AND 
+tav.ATTRIBUTE_NAME = 'MTL_SYSTEM_ITEMS.PLANNING_MAKE_BUY_CODE' AND 
+tv.TEMPLATE_ID = tav.TEMPLATE_ID  
+--and segment1 = 'DPY 101 2732/80R10L' 
+--and   ORGANIZATION_ID = 83
+AND  INVENTORY_ITEM_STATUS_CODE  ='Active'
+and PLANNING_MAKE_BUY_CODE<>tav.ATTRIBUTE_VALUE
+
+
+
+
+SQL 4
+---Check Make/Buy and Rollup Attribute from item mapping table
+
+select distinct(map.new_item_number)      	
+     ,msii.segment1 old_item_code 	
+     ,msii.item_type old_item_type 	
+	 ,nitem.item_type      new_item_type 
+     ,msii.planning_make_buy_code old_make_or_buy	
+	 ,nitem.planning_make_buy_code  new_make_or_buy
+	 ,t.BASED_ON_ROLLUP  old_BASED_ON_ROLLUP
+	 ,nt.BASED_ON_ROLLUP   new_BASED_ON_ROLLUP
+     ,msii.organization_id old_org_id 	
+	 ,nitem.organization_id  new_org_id
+     ,t.item_cost old_item_cost    	
+  	 ,nt.item_cost           new_item_cost
+	 ,t.cost_type_id  old_cost_type,nt.cost_type_id  new_cost_type
+	 ,msii.inventory_item_status_code old_Status				
+	 ,msii.DESCRIPTION 				  old_item_desc 
+	 ,nitem.DESCRIPTION    			  new_description 	
+	 ,map.old_revision 
+	 ,map.new_revision
+from apps.cst_item_cost_type_v        t 					
+     , apps.mtl_system_items_b          msii 					
+     ,conv_item_mapping            map 					
+     , apps.mtl_system_items_b          nitem 					
+     , apps.cst_item_cost_type_v       nt 					
+where msii.inventory_item_id = t.inventory_item_id 					
+and msii.organization_id = t.organization_id 					
+and map.old_organization_id = msii.organization_id 					
+and map.old_inventory_id = msii.inventory_item_id 					
+and nitem.organization_id = map.new_organization_id 					
+and nitem.inventory_item_id = map.new_inventory_item_id 					
+and nitem.inventory_item_id = nt.inventory_item_id 					
+and nitem.organization_id = nt.organization_id 					
+and msii.enabled_flag = 'Y' 
+and ((t.cost_type_id=1 and nt.cost_type_id=3))
+and msii.inventory_item_status_code <> 'Inactive' 
+--and msii.organization_id in (83,130)
+and (--msii.item_type <> nitem.item_type or 
+msii.planning_make_buy_code<> nitem.planning_make_buy_code
+or t.BASED_ON_ROLLUP <> nt.BASED_ON_ROLLUP
+)
+order by msii.organization_id,msii.segment1
+
+
+
+
+SQL 5
+---Check Rollup Item Attribute is correct (Based on Rollup, 都应该有BOM) , 130 & non 130
+
+select msib.organization_id,
+msib.segment1 Item,msib.DESCRIPTION, 
+decode(msib.planning_make_buy_code,1,'Make',2,'Buy') Make_Buy
+,msib.inventory_item_status_code Item_status,msib.creation_date
+,(select decode(a2.BASED_ON_ROLLUP,1,'Base on rollup',2,'No Rollup') 
+from apps.CST_ITEM_COST_TYPE_V a2 
+where  a2.cost_type_id = :cost_type
+and a2.organization_id = msib.organization_id and a2.inventory_item_id (+) = msib.inventory_item_id 
+and rownum=1 
+) Based_On_Rollup_V,
+( select 'Yes' from apps.bom_bill_of_materials bbom 
+                   where bbom.organization_id = msib.organization_id
+                         and bbom.assembly_item_id = msib.inventory_item_id ) have_BOM
+from apps.mtl_system_items_b msib,apps.mtl_item_categories mic,apps.mtl_categories mc
+where msib.organization_id in (128,129,130,131,133,132)
+     and mic.inventory_item_id=msib.inventory_item_id
+     and mic.organization_id=msib.organization_id
+     and mc.structure_id=101 
+and mic.category_id=mc.category_id
+and msib.organization_id =130
+--and msib.organization_id <>130
+
+
+
+
+SQL 6
+---Cost Reconcile SQL
+
+
+select distinct(map.new_item_number)      	
+     ,msii.segment1 old_item_code
+	 ,t.item_cost           old_item_cost   
+	 ,nt.item_cost           new_item_cost
+	   ,t.item_cost-nvl(nt.item_cost,0) Diff_cost
+	 ,map.old_revision
+	 ,map.new_revision
+	 ,msii.item_type old_item_type
+	 ,nitem.item_type               new_item_type 
+	 ,msii.planning_make_buy_code old_make_or_buy
+	 ,nitem.planning_make_buy_code  new_make_or_buy
+	 ,t.BASED_ON_ROLLUP  old_BASED_ON_ROLLUP
+	 ,nt.BASED_ON_ROLLUP   new_BASED_ON_ROLLUP
+	 ,msii.organization_id old_org_id
+	 ,nitem.organization_id  new_org_id
+	  ,t.MATERIAL_COST old_MATERIAL_COST
+	  ,t.RESOURCE_COST  old_RESOURCE_COST	 
+  ,nt.MATERIAL_COST   new_MATERIAL_COST	
+  ,nt.RESOURCE_COST  new_RESOURCE_COST
+     ,msii.DESCRIPTION old_item_desc 	
+  ,nitem.DESCRIPTION    new_description 	
+,t.COST_TYPE_ID old_cst_Type, nt.COST_TYPE_ID new_cst_Type
+from cst_item_cost_type_v        t 	
+     , mtl_system_items_b          msii 	
+     ,conv_item_mapping            map 	
+     , mtl_system_items_b          nitem 	
+     , cst_item_cost_type_v       nt 	
+where msii.inventory_item_id = t.inventory_item_id 	
+and msii.organization_id = t.organization_id 	
+and map.old_organization_id = msii.organization_id 	
+and map.old_inventory_id = msii.inventory_item_id 	
+and nitem.organization_id = map.new_organization_id 	
+and nitem.inventory_item_id = map.new_inventory_item_id 	
+and nitem.inventory_item_id = nt.inventory_item_id 
+and nitem.organization_id = nt.organization_id 
+and msii.enabled_flag = 'Y' 
+and msii.inventory_item_status_code <> 'Inactive' 
+--and msii.organization_id in (83,130)
+and t.item_cost<>nvl(nt.item_cost,0)
+and msii.item_type not in ('COM','ROA')
+and ((t.COST_TYPE_ID =1 and nt.COST_TYPE_ID=3))
+
+
+SQL 8
+---Item has Duplicated Material Cost
+
+select ct.item_number,ct.organization_id,ci.cost_type_id,count(ci.USAGE_RATE_OR_AMOUNT) count					
+from CST_ITEM_COST_DETAILS ci,CST_ITEM_COST_TYPE_V ct					
+where ct.inventory_item_id=ci.inventory_item_id					
+  and ct.organization_id=ci.organization_id					
+  and ci.Cost_Type_Id=3					
+  and ct.cost_type_id=ci.cost_type_id					
+  and ci.cost_element_id=1					
+  and ci.level_type=1					
+group by ct.item_number,ct.organization_id,ci.cost_type_id					
+having count(ci.USAGE_RATE_OR_AMOUNT)>1					
+
+
+
+
+
+
+SQL 9
+---item has no pending cost
+
+SELECT CIM.OLD_ITEM_NUMBER,CIM.OLD_ORGANIZATION_ID,MS.SEGMENT1,MS.ORGANIZATION_ID,
+CIC.COST_TYPE_ID,CIC.ITEM_COST,SUM(MO.TRANSACTION_QUANTITY) NEW_ON_HAND_QUANTITYS
+ FROM  cst_item_costs CIC,MTL_SYSTEM_ITEMS_B MS,mtl_onhand_quantities MO,CONV_ITEM_MAPPING CIM
+WHERE MS.INVENTORY_ITEM_ID=CIC.INVENTORY_ITEM_ID
+  AND MS.ORGANIZATION_ID=CIC.ORGANIZATION_ID
+  AND CIM.NEW_INVENTORY_ITEM_ID=CIC.INVENTORY_ITEM_ID(+)
+  AND CIM.NEW_ORGANIZATION_ID=CIC.ORGANIZATION_ID(+)
+  AND MS.INVENTORY_ITEM_ID=MO.INVENTORY_ITEM_ID(+)
+  AND MS.ORGANIZATION_ID=MO.ORGANIZATION_ID(+)
+  AND CIC.INVENTORY_ITEM_ID NOT IN (select INVENTORY_ITEM_ID
+                                    from cst_item_costs CI
+                                     WHERE CI.COST_TYPE_ID=3
+                                     AND CI.ORGANIZATION_ID>126 )
+ AND CIC.ORGANIZATION_ID>126                                                           
+and cicCOST_TYPE_ID=1
+GROUP BY  CIM.OLD_ITEM_NUMBER,CIM.OLD_ORGANIZATION_ID,MS.SEGMENT1,MS.ORGANIZATION_ID,
+CIC.COST_TYPE_ID,CIC.ITEM_COST
+
+
+
+
+
+-----------------onhand check summary
+
+select a.organization_id,g.organization_code,sum(a.transaction_quantity) onhand ,
+sum(a.transaction_quantity*to_number(d.item_cost,999999.99999)) as Amt
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f,APPS.mtl_parameters g
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+--and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+and a.subinventory_code<>'RWK'
+and g.organization_id=b.organization_id
+group by a.organization_id,g.organization_code
+order by a.organization_id,g.organization_code
+
+
+
+
+-----------------multy Org prd/vp/csC/cs/aRC/rc onhand amount with cg/account
+
+
+select a.organization_id,b.segment1 Item, sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group,e.segment2||'.'||e.segment3 Accounts
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+--and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+group by a.organization_id,b.segment1, a.subinventory_code, c.cost_group, 
+to_number(d.item_cost,999999.99999),e.segment2||'.'||e.segment3 
+order by a.organization_id,a.subinventory_code, b.segment1
+
+
+------------with Revision
+
+select a.organization_id,b.segment1 Item, a.REVISION,sum(a.transaction_quantity) onhand ,
+to_number(d.item_cost,999999.99999) cost,sum(a.transaction_quantity)*to_number(d.item_cost,999999.99999) as Amt
+, a.subinventory_code, c.cost_group,e.segment2||'.'||e.segment3 Accounts
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.cst_item_costs d,apps.gl_code_combinations e,apps.CST_COST_GROUP_ACCOUNTS f
+where a.organization_id=b.organization_id
+and c.organization_id=d.organization_id
+and a.organization_id=c.organization_id
+and a.organization_id=f.organization_id
+--and a.organization_id=83
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id
+and a.cost_group_id=c.cost_group_id and d.cost_type_id=1
+and c.COST_GROUP_ID=f.COST_GROUP_ID
+and f.MATERIAL_ACCOUNT=e.CODE_COMBINATION_ID
+group by a.organization_id,b.segment1,a.REVISION, a.subinventory_code, c.cost_group, to_number(d.item_cost,999999.99999),e.segment2||'.'||e.segment3 
+order by a.organization_id,a.subinventory_code, b.segment1,a.REVISION
+
+

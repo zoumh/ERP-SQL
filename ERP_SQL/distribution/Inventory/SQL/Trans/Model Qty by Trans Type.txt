@@ -1,0 +1,66 @@
+
+
+
+------------FG Period Summary Qty by Model , Item & Trans Type
+
+
+select  cat.segment1 Model, msi.segment1 Item,
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+sum(mmt.TRANSACTION_QUANTITY) as Qty,mtt.transaction_type_name
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_item_categories_v     cat
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cat.organization_id=83 and cat.inventory_item_id = mmt.inventory_item_id --and cst.cost_type_id=1 
+and mmt.organization_id = 83 and msi.organization_id = 83 
+and    trunc(mmt.transaction_date) >= to_date('20050301','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20050401','YYYYMMDD') 
+and mtt.transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Internal Order Pick','Cost Group Transfer') 
+and mtt.transaction_type_name not like '%Move Order Transfer%'
+and mtt.transaction_type_name not like '%Container%'
+and msi.PLANNING_MAKE_BUY_CODE=1
+and cat.segment2 in ('DC','DM','KRC','KRH','ROA','ROAS')
+and cat.category_set_id=1
+group by cat.segment1,msi.segment1,mtt.transaction_type_name
+order by cat.segment1,msi.segment1,mtt.transaction_type_name
+
+
+
+
+-----------FG Period Summary Qty by Model & Trans Type
+
+
+select  cat.segment1 Model, --msi.segment1 Item,
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Value,
+sum(mmt.TRANSACTION_QUANTITY) as Qty,mtt.transaction_type_name
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst, 
+  apps.mtl_item_categories_v     cat
+where  
+mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    cat.organization_id=83 and cat.inventory_item_id = mmt.inventory_item_id --and cst.cost_type_id=1 
+and mmt.organization_id = 83 and msi.organization_id = 83 
+and    trunc(mmt.transaction_date) >= to_date('20050301','YYYYMMDD') 
+and    trunc(mmt.transaction_date) < to_date('20050401','YYYYMMDD') 
+and mtt.transaction_type_name not in ('Subinventory Transfer','Sales Order Pick','Standard cost update','Internal Order Pick','Cost Group Transfer') 
+and mtt.transaction_type_name not like '%Move Order Transfer%'
+and mtt.transaction_type_name not like '%Container%'
+and msi.PLANNING_MAKE_BUY_CODE=1
+and cat.category_set_id=1
+and cat.segment2 in ('DC','DM','KRC','KRH','ROA','ROAS')
+group by cat.segment1,mtt.transaction_type_name
+order by cat.segment1,mtt.transaction_type_name
+
+
+

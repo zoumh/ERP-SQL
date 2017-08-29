@@ -1,0 +1,35 @@
+
+
+
+-------Mover Order error, Cost Group_ID diff between Onhand & LPN
+
+----------Solve , update the CG on wms_license_plate_numbers
+----------Also check the lpn_context on wms_license_plate_numbers, update to 1 if it is not 1
+
+select  lpn_ID,lpn_context from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='M0030331'        
+
+update from 8 to 1
+
+select * from apps.wms_lpn_contents WHERE parent_lpn_ID=614134
+
+update COST_GROUP_ID to 1008
+
+select COST_GROUP_ID from apps.wms_lpn_contents WHERE parent_lpn_ID=578697
+
+update to 1009
+
+
+----------------Research to find the solution:
+
+1. Find out the move order number & Item number, to find out the LPN
+
+2. Check Onhand & LPN's CostGroup_ID
+
+3. Check LPN's lpn_context
+
+select lpn_ID,lpn_context from apps.wms_license_plate_numbers  WHERE  LICENSE_PLATE_NUMBER='S0020150'
+
+select COST_GROUP_ID from apps.wms_lpn_contents WHERE parent_lpn_ID=578697
+
+select COST_GROUP_ID from apps.mtl_onhand_quantities_detail where LPN_ID=578697
+

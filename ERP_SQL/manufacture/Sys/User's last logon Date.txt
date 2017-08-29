@@ -1,0 +1,75 @@
+
+-------a user's login history (Responsibility,Form)
+select 
+e.START_TIME,e.END_TIME,e.LOGIN_NAME,a.user_name User_ID,
+c.RESPONSIBILITY_NAME RESPONSIBILITY,
+b.START_TIME Res_Start_Time,b.END_TIME Res_End_Time,
+f.FORM_NAME,
+d.START_TIME Form_Start_Time,d.END_TIME Form_End_Time,
+e.TERMINAL_ID,e.LOGIN_TYPE,e.SUBMITTED_LOGIN_ID,
+a.description  User_Name,
+a.fax Department
+From apps.fnd_user a, apps.FND_LOGIN_RESPONSIBILITIES b,
+apps.FND_RESPONSIBILITY_TL c,
+apps.FND_LOGIN_RESP_FORMS d,
+apps.fnd_logins e,
+apps.FND_FORM f
+where a.user_id=e.user_id
+and e.LOGIN_ID =b.LOGIN_ID
+and b.RESP_APPL_ID=c.APPLICATION_ID
+and c.RESPONSIBILITY_ID=b.RESPONSIBILITY_ID
+and d.LOGIN_ID =b.LOGIN_ID
+and d.LOGIN_RESP_ID=b.LOGIN_RESP_ID
+and f.APPLICATION_ID=d.FORM_APPL_ID
+and f.FORM_ID=d.FORM_ID
+and c.LANGUAGE='US'
+and a.user_name='28952127'
+and e.START_TIME>=to_date('2009-10-12','yyyy-mm-dd')
+order by  e.START_TIME desc
+
+
+
+
+select a.last_logon_date,(case when round(sysdate-a.last_logon_date)>180 then '>6M' else case when round(sysdate-a.last_logon_date)>90 then '>3M' else case when round(sysdate-a.last_logon_date)>30 then '>1M' else '<1M' end end end ) Not_Use_Date_Fence,
+	   a.user_name Oracle_User_ID, 
+	   convert(a.description,'ZHS16GBK') Oracle_User_Name,
+	   a.fax Department,
+	   a.user_id Oracle_User_ID 
+From 	   apps.fnd_user a 
+where 	   a.end_date is null
+and a.last_logon_date is not null
+
+
+
+
+
+-----------User who never has been used ID
+
+select a.last_logon_date,(case when round(sysdate-a.creation_date)>180 then '>6M' else case when round(sysdate-a.creation_date)>90 then '>3M' else case when round(sysdate-a.creation_date)>30 then '>1M' else '<1M' end end end ) Not_Use_Date_Fence,
+	   a.creation_date,
+	   a.user_name Oracle_User_ID, 
+	   convert(a.description,'ZHS16GBK') Oracle_User_Name,
+	   a.fax Department,
+	   a.user_id User_ID 
+From 	   apps.fnd_user a 
+where 	   a.end_date is null
+and a.last_logon_date is null
+
+
+
+
+
+-----------each user login in times during a period
+select 	a.user_id Oracle_User_ID,
+a.user_name Oracle_User_ID, 
+convert(a.description,'ZHS16GBK') Oracle_User_Name, 
+a.fax Department, a.CREATION_DATE,count(*) login_times,a.LAST_LOGON_DATE 
+From 	   apps.fnd_user a, 
+apps.fnd_logins e
+where a.end_date is null
+and a.user_id=e.user_id
+and trunc(e.start_time)>=to_date('2005-1-1','yyyy-mm-dd')
+and (trunc(e.end_time)<=to_date('2005-12-10','yyyy-mm-dd') or e.end_time is null)
+group by a.user_id,a.user_name,a.description,a.fax,a.CREATION_DATE,a.LAST_LOGON_DATE 
+
+

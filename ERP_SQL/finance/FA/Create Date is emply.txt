@@ -1,0 +1,34 @@
+
+
+
+select * from apps.fa_additions_b where CREATION_DATE is null
+
+asset_number=
+12003908
+13001423
+
+
+Hi,
+
+Pls run the following updates.To implement the solution, please execute the following steps:
+
+i)Update fa_additions_b
+set created_by=1083
+where asset_id=100007781;
+
+ii)Update fa_additions_b
+set created_by=3008
+where asset_id=100008305;
+
+iii)Update fa_additions_b
+set creation_date=(select date_effective
+from fa_transaction_headers where asset_id=100007781 and transaction_header_id=30163)
+where asset_id=100007781;
+
+
+iv)Update fa_additions_b
+set creation_date=(select date_effective
+from fa_transaction_headers where asset_id=100008305 and transaction_header_id=32691)
+where asset_id=100008305;
+
+v)commit;

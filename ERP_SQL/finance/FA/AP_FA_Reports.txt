@@ -1,0 +1,78 @@
+
+
+
+Find out period AP Invoice information with account:
+
+
+----------ISIT's Asset purchasing (line Desc,line Amt, CC, ACC)
+select a.DESCRIPTION line_Desc,c.INVOICE_NUM,a.DISTRIBUTION_LINE_NUMBER as Line,a.AMOUNT as Line_Amount,
+b.segment3 as Account,b.segment2 as Cost_Center,c.INVOICE_CURRENCY_CODE as Inv_Curr,
+VDR.VENDOR_NAME,c.INVOICE_AMOUNT,c.INVOICE_DATE,c.DESCRIPTION Invoice_Desc,c.GL_DATE
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and b.segment2 like '15%'
+and c.GL_DATE>=to_date('2005-01-1','yyyy-mm-dd')
+and c.GL_DATE<=to_date('2005-12-31','yyyy-mm-dd')
+and c.INVOICE_TYPE_LOOKUP_CODE <>'EXPENSE REPORT'
+order by c.INVOICE_NUM
+
+
+
+
+--------------Per AP invoice distribution line  (with Expense Account)
+select c.INVOICE_NUM,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.VENDOR_ID,c.INVOICE_AMOUNT
+,c.INVOICE_DATE,c.DESCRIPTION,b.segment3 as Account,b.segment2 as Cost_Center,c.GL_DATE
+,c.ATTRIBUTE1 as Inv_Trans_Num,c.INVOICE_CURRENCY_CODE as Inv_Curr,a.DISTRIBUTION_LINE_NUMBER as Line,a.AMOUNT as Line_Amount
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and b.segment3='15010000'
+and c.GL_DATE>=to_date('2004-01-1','yyyy-mm-dd')
+and c.GL_DATE<=to_date('2004-05-31','yyyy-mm-dd')
+
+
+
+select c.INVOICE_NUM,a.distribution_line_number Dist_Line,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.segment1 VENDOR_num
+--,c.INVOICE_AMOUNT
+,nvl(a.base_amount,a.AMOUNT) CNY_Line_Amt,a.AMOUNT as Line_Amount,nvl(a.base_amount,a.AMOUNT)/a.AMOUNT Rate
+,c.INVOICE_CURRENCY_CODE as Inv_Curr,c.GL_DATE
+,c.INVOICE_DATE,c.DESCRIPTION
+,b.segment3 as Account,b.segment2 as Cost_Center
+from apps.AP_INVOICE_DISTRIBUTIONS_ALL a
+,apps.GL_CODE_combinations b
+,apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID
+and a.invoice_id=c.invoice_id
+and VDR.VENDOR_ID=c.VENDOR_ID
+and b.segment3='15010000'
+and c.GL_DATE>=to_date('2004-01-1','yyyy-mm-dd')
+and c.GL_DATE<=to_date('2004-12-31','yyyy-mm-dd')
+
+
+
+
+---------Per Invoice per line --- not correct - different account in one invoice
+select c.INVOICE_NUM,convert(VDR.VENDOR_NAME,'ZHS16GBK') as Supplier,vdr.VENDOR_ID,c.INVOICE_AMOUNT
+,c.INVOICE_DATE,c.DESCRIPTION,c.GL_DATE--,dd.Account,dd.Cost_Center 
+,c.ATTRIBUTE1 as Inv_Trans_Num,c.INVOICE_CURRENCY_CODE as Inv_Curr
+from apps.AP_INVOICES_ALL c
+,apps.PO_VENDORS VDR
+where --a.invoice_id=c.invoice_id
+VDR.VENDOR_ID=c.VENDOR_ID
+--and dd.Account='15010000'
+and c.GL_DATE>=to_date('2004-01-1','yyyy-mm-dd')
+and c.GL_DATE<=to_date('2004-05-31','yyyy-mm-dd')
+and c.invoice_id in (select a.invoice_id
+ from apps.AP_INVOICE_DISTRIBUTIONS_ALL a,apps.GL_CODE_combinations b
+ where a.DIST_CODE_COMBINATION_ID=b.CODE_COMBINATION_ID and b.segment3='15010000' group by a.invoice_id) 
+

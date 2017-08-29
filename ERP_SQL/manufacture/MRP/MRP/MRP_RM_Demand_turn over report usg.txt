@@ -1,0 +1,88 @@
+
+-----List RM MRP requirement , one Item, from both Tues. DPY MRP & Thur KRH MRP
+DPY MRP ----will run out both DPY & KRH
+
+
+ Values of apps.MRP_ORDERS_SC_V.order_type_text
+----------------------------------------------
+Discrete job
+Discrete job demand ----- Qty<0
+PO in receiving
+Planned order
+Planned order demand----- Qty<0
+Purchase order----------- Open Order Qty
+Purchase requisition
+
+
+
+--------DPY MRP source: 
+1. Forecast Demand for DPY
+2. J.O. demand from Last DPY MRP
+3. J.O. demand from Last KRH MRP (No need at movement report)
+
+--------DPY MRP source: 
+1. Forecast Demond for KRH
+2. J.O. demand from Last DPY MRP (No need at movement report)
+3. J.O. demand from Last KRH MRP
+
+
+select * from apps.MRP_ORDERS_SC_V where compile_designator='R50222DPY' and Item_segments = 'SXA 109 3392'
+and new_due_date=to_date('2005-1-6','yyyy-mm-dd')
+
+
+-----KRH Item
+select Item_segments,Quantity_rate,new_due_date,order_type_text,Order_number
+,schedule_compression_days,days_from_today,new_order_date,new_dock_date,old_due_date,new_start_date 
+from apps.MRP_ORDERS_SC_V 
+where compile_designator='R50222DPY'
+and Item_segments = 'SXA 109 4522/4'--SXA 109 3392'
+and new_due_date>=to_date('2005-2-1','yyyy-mm-dd')
+and new_due_date<=to_date('2005-4-16','yyyy-mm-dd')
+(
+ORDER_TYPE_TEXT ='Planned order demand' or (ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like 'DPY%')
+)
+order by new_due_date
+
+
+
+select sum(Quantity_rate)/21 average_demand
+from apps.MRP_ORDERS_SC_V 
+where compile_designator='R50224KRH'
+and Quantity_rate<0
+and Item_segments = 'RNH 942 64/2'--SXA 109 3392'
+and new_due_date>=to_date('2005-2-24','fmyyyy-mm-dd')
+and new_due_date<=to_date('2005-2-24','fmyyyy-mm-dd')+20
+and 
+(
+ORDER_TYPE_TEXT ='Planned order demand' or (ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like 'DPY%')
+)
+
+
+
+-----DPY Item
+select Item_segments,Quantity_rate,new_due_date,order_type_text,Order_number
+,schedule_compression_days,days_from_today,new_order_date,new_dock_date,old_due_date,new_start_date 
+from apps.MRP_ORDERS_SC_V 
+where compile_designator='R50222DPY'
+and Item_segments = 'SXA 109 4522/4'--SXA 109 3392'
+and new_due_date>=to_date('2005-2-1','yyyy-mm-dd')
+and new_due_date<=to_date('2005-4-16','yyyy-mm-dd')
+(
+ORDER_TYPE_TEXT ='Planned order demand' or (ORDER_TYPE_TEXT='Discrete job demand' and USING_ASSEMBLY_ITEM_NAME not like 'KRH%')
+)
+order by new_due_date
+
+
+
+-----from both DPY & KRH , wrong
+select sum(Quantity_rate)/20 --*8.48
+from apps.MRP_ORDERS_SC_V 
+where compile_designator='R50222DPY'
+and Item_segments='SXA 109 4522/4'--SXA 109 4522/1'
+and new_due_date>=to_date('2005-2-25','yyyy-mm-dd')
+and new_due_date<=to_date('2005-3-16','yyyy-mm-dd')
+
+
+
+
+

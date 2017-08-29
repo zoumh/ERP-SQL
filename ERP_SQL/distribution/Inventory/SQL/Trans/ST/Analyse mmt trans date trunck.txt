@@ -1,0 +1,40 @@
+
+------------------Delay of create in mmt vs transaction_Date truncked
+
+
+------------Find out for truncked transaction_date in mmt, create delay >4 hour
+select MTT.TRANSACTION_TYPE_NAME, count(*) count,mmt.CREATION_DATE,mmt.transaction_date,
+round((mmt.CREATION_DATE-mmt.transaction_date)/(0.0000116*60)) diff_minutes
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI 
+WHERE  MMT.organization_id=130 and
+MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.organization_id
+and mmt.transaction_date>=to_date('2007-11-12','yyyy-mm-dd')
+and to_char(mmt.transaction_date,'HH24:MI:SS')='00:00:00'
+and mmt.CREATION_DATE-mmt.transaction_date<300*60*0.0000116
+and MTT.TRANSACTION_TYPE_NAME not in ('PO Receipt','RMA Receipt','Return to Vendor')
+group by MTT.TRANSACTION_TYPE_NAME,mmt.transaction_date,mmt.CREATION_DATE
+
+
+--------Find out non truncked trans in mmt,how many delay > 4 hour (very few)
+select MTT.TRANSACTION_TYPE_NAME, count(*) count,mmt.CREATION_DATE,mmt.transaction_date,
+round((mmt.CREATION_DATE-mmt.transaction_date)/(0.0000116*60)) diff_minutes
+from 
+apps.MTL_MATERIAL_TRANSACTIONS MMT, 
+apps.MTL_TRANSACTION_TYPES MTT, 
+apps.MTL_SYSTEM_ITEMS MSI 
+WHERE  MMT.organization_id=130 and
+MMT.TRANSACTION_TYPE_ID=MTT.TRANSACTION_TYPE_ID 
+AND MSI.INVENTORY_ITEM_ID=MMT.INVENTORY_ITEM_ID 
+AND MSI.ORGANIZATION_ID=MMT.organization_id
+and mmt.transaction_date>=to_date('2007-11-12','yyyy-mm-dd')
+and mmt.transaction_date<to_date('2007-11-22','yyyy-mm-dd')
+and to_char(mmt.transaction_date,'HH24:MI:SS')<>'00:00:00'
+and mmt.CREATION_DATE-mmt.transaction_date>240*60*0.0000116
+and MTT.TRANSACTION_TYPE_NAME not in ('PO Receipt','RMA Receipt','Return to Vendor')
+group by MTT.TRANSACTION_TYPE_NAME,mmt.transaction_date,mmt.CREATION_DATE
+

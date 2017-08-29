@@ -1,0 +1,218 @@
+
+----2 part since PO receive
+	1. Received but never billed
+	2. Received, has part billing but not fully billed (this will use two sheet)
+		a. The Billing info, sum by Invoice_Date,CurrInvoice amount
+		b. The receive info, sum by Receive Date,Curr,Rec_Amt
+
+
+
+
+------1. Received, Never Bill
+
+---Sum by Rec_Date,Curr
+
+SELECT sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.QUANTITY*C.UNIT_PRICE,a.QUANTITY*C.UNIT_PRICE )) Receive_Amt,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.QUANTITY,a.QUANTITY )) Qty,trunc(TRANSACTION_DATE) Rec_Date,d.CURRENCY_CODE Curr
+FROM apps.rcv_transactions a,
+     apps.PO_LINES_ALL C,
+	 apps.PO_HEADERS_ALL D,
+	 apps.po_Line_locations_all e
+WHERE C.PO_LINE_ID=e.PO_lINE_ID
+AND  D.PO_HEADER_ID=c.PO_HEADER_ID
+AND  D.PO_HEADER_ID=e.PO_HEADER_ID
+and a.po_header_id=d.po_header_id
+and a.po_line_id=c.po_line_id
+and a.PO_LINE_LOCATION_ID =e.LINE_LOCATION_ID
+and c.org_id=d.org_id
+and c.org_id=e.org_id
+and e.SHIP_TO_ORGANIZATION_ID =a.ORGANIZATION_ID
+and (QUANTITY_RECEIVED-QUANTITY_CANCELLED-e.QUANTITY_BILLED)>0
+and e.QUANTITY_BILLED=0
+and a.SOURCE_DOCUMENT_CODE='PO'
+and a.destination_type_code='RECEIVING'
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id>=127
+and a.ORGANIZATION_ID>=127
+--and d.segment1='1018635'
+group by trunc(a.TRANSACTION_DATE),
+d.CURRENCY_CODE 
+
+
+
+-----Details by PO line,ship_line,Rec_Date
+SELECT d.segment1 PO_number,c.LINE_NUM,e.SHIPMENT_NUM,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.QUANTITY*C.UNIT_PRICE,a.QUANTITY*C.UNIT_PRICE )) Receive_Amt,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.QUANTITY,a.QUANTITY )) Qty,trunc(TRANSACTION_DATE) Rec_Date,d.CURRENCY_CODE Curr
+FROM apps.rcv_transactions a,
+     apps.PO_LINES_ALL C,
+	 apps.PO_HEADERS_ALL D,
+	 apps.po_Line_locations_all e
+WHERE C.PO_LINE_ID=e.PO_lINE_ID
+AND  D.PO_HEADER_ID=c.PO_HEADER_ID
+AND  D.PO_HEADER_ID=e.PO_HEADER_ID
+and a.po_header_id=d.po_header_id
+and a.po_line_id=c.po_line_id
+and a.PO_LINE_LOCATION_ID =e.LINE_LOCATION_ID
+and c.org_id=d.org_id
+and c.org_id=e.org_id
+and e.SHIP_TO_ORGANIZATION_ID =a.ORGANIZATION_ID
+and (QUANTITY_RECEIVED-QUANTITY_CANCELLED-e.QUANTITY_BILLED)>0
+and e.QUANTITY_BILLED=0
+and a.SOURCE_DOCUMENT_CODE='PO'
+and a.destination_type_code='RECEIVING'
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id>=127
+and a.ORGANIZATION_ID>=127
+--and d.segment1='1018635'
+group by d.segment1,c.LINE_NUM,e.SHIPMENT_NUM,trunc(a.TRANSACTION_DATE),
+c.org_id,d.CURRENCY_CODE 
+
+
+---more details
+SELECT d.segment1 PO_number,c.LINE_NUM,e.SHIPMENT_NUM,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.QUANTITY*C.UNIT_PRICE,a.QUANTITY*C.UNIT_PRICE )) Receive_Amt,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.QUANTITY,a.QUANTITY )) Qty,TRANSACTION_DATE,d.CURRENCY_CODE
+FROM apps.rcv_transactions a,
+     apps.PO_LINES_ALL C,
+	 apps.PO_HEADERS_ALL D,
+	 apps.po_Line_locations_all e
+WHERE C.PO_LINE_ID=e.PO_lINE_ID
+AND  D.PO_HEADER_ID=c.PO_HEADER_ID
+AND  D.PO_HEADER_ID=e.PO_HEADER_ID
+and a.po_header_id=d.po_header_id
+and a.po_line_id=c.po_line_id
+and a.PO_LINE_LOCATION_ID =e.LINE_LOCATION_ID
+and c.org_id=d.org_id
+and c.org_id=e.org_id
+and e.SHIP_TO_ORGANIZATION_ID =a.ORGANIZATION_ID
+and (QUANTITY_RECEIVED-QUANTITY_CANCELLED-e.QUANTITY_BILLED)>0
+and e.QUANTITY_BILLED=0
+and a.SOURCE_DOCUMENT_CODE='PO'
+and a.destination_type_code='RECEIVING'
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id>=127
+and a.ORGANIZATION_ID>=127
+--and d.segment1='1018635'
+group by a.po_header_id,a.po_line_id,a.PO_LINE_LOCATION_ID,d.segment1,c.LINE_NUM,e.SHIPMENT_NUM,a.TRANSACTION_DATE,
+c.org_id,d.CURRENCY_CODE 
+
+
+-------2 Has billed but not fully billed, Billed amount by Curr, inv Date
+
+---Sum
+
+select trunc(b.INVOICE_DATE ) Bill_Date,
+sum(a.QUANTITY_INVOICED) Qty_Billed,sum(a.amount) Inv_Amt,d.CURRENCY_CODE Curr
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and (f.QUANTITY_RECEIVED-f.QUANTITY_CANCELLED-f.QUANTITY_BILLED)>0
+and f.QUANTITY_BILLED>0
+and a.org_id=b.org_id
+and c.org_id=d.org_id
+and e.org_id=d.org_id
+and f.org_id=d.org_id
+and b.org_id=d.org_id
+and d.org_id>=127
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and d.segment1='1018817'
+group by trunc(b.INVOICE_DATE),d.CURRENCY_CODE
+
+
+---detail
+select trunc(b.INVOICE_DATE ) Bill_Date,
+b.INVOICE_NUM,to_char(a.DISTRIBUTION_LINE_NUMBER) Inv_Dist
+,d.segment1 as PO,to_char(e.LINE_NUM) PO_Line_Num,to_char(f.SHIPMENT_NUM) PO_Ship_Num
+,to_char(c.DISTRIBUTION_NUM) PO_Dist_Num,a.QUANTITY_INVOICED,a.UNIT_PRICE,
+(a.amount) Inv_Amt
+,a.DIST_MATCH_TYPE
+from apps.AP_INVOICE_DISTRIBUTIONS_all a
+,apps.ap_invoices_all b 
+,apps.PO_DISTRIBUTIONS_ALL c
+,apps.PO_HEADERS_ALL d
+,apps.PO_LINES_ALL e
+,apps.PO_LINE_LOCATIONS_ALL f
+where a.INVOICE_ID=b.INVOICE_ID
+and a.po_distribution_id=c.po_distribution_id
+and c.PO_HEADER_ID=d.PO_HEADER_ID
+and c.PO_LINE_ID=e.PO_LINE_ID
+and c.LINE_LOCATION_ID=f.LINE_LOCATION_ID
+and (f.QUANTITY_RECEIVED-f.QUANTITY_CANCELLED-f.QUANTITY_BILLED)>0
+and f.QUANTITY_BILLED>0
+and a.org_id=b.org_id
+and c.org_id=d.org_id
+and e.org_id=d.org_id
+and f.org_id=d.org_id
+and b.org_id=d.org_id
+and d.org_id>=127
+and a.LINE_TYPE_LOOKUP_CODE='ITEM'
+and d.segment1='1018817'
+
+
+
+---3 Received,Part Billed , received Amt by Rec_Date
+
+---Sum
+SELECT sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.QUANTITY*C.UNIT_PRICE,a.QUANTITY*C.UNIT_PRICE )) Receive_Amt,
+trunc(TRANSACTION_DATE) Rec_Date,d.CURRENCY_CODE Curr
+FROM apps.rcv_transactions a,
+     apps.PO_LINES_ALL C,
+	 apps.PO_HEADERS_ALL D,
+	 apps.po_Line_locations_all e
+WHERE C.PO_LINE_ID=e.PO_lINE_ID
+AND  D.PO_HEADER_ID=c.PO_HEADER_ID
+AND  D.PO_HEADER_ID=e.PO_HEADER_ID
+and a.po_header_id=d.po_header_id
+and a.po_line_id=c.po_line_id
+and a.PO_LINE_LOCATION_ID =e.LINE_LOCATION_ID
+and c.org_id=d.org_id
+and c.org_id=e.org_id
+and e.SHIP_TO_ORGANIZATION_ID =a.ORGANIZATION_ID
+and (QUANTITY_RECEIVED-QUANTITY_CANCELLED-e.QUANTITY_BILLED)>0
+and e.QUANTITY_BILLED>0
+and a.SOURCE_DOCUMENT_CODE='PO'
+and a.destination_type_code='RECEIVING'
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id>=127
+and a.ORGANIZATION_ID>=127
+--and d.segment1='1018817'
+group by trunc(a.TRANSACTION_DATE),d.CURRENCY_CODE 
+
+----Detail
+SELECT d.segment1 PO_number,c.LINE_NUM,e.SHIPMENT_NUM,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.QUANTITY*C.UNIT_PRICE,a.QUANTITY*C.UNIT_PRICE )) Receive_Amt,
+sum(decode(a.transaction_type,'RETURN TO VENDOR',-1*a.QUANTITY,a.QUANTITY )) Qty,trunc(TRANSACTION_DATE) Rec_Date,d.CURRENCY_CODE Curr
+FROM apps.rcv_transactions a,
+     apps.PO_LINES_ALL C,
+	 apps.PO_HEADERS_ALL D,
+	 apps.po_Line_locations_all e
+WHERE C.PO_LINE_ID=e.PO_lINE_ID
+AND  D.PO_HEADER_ID=c.PO_HEADER_ID
+AND  D.PO_HEADER_ID=e.PO_HEADER_ID
+and a.po_header_id=d.po_header_id
+and a.po_line_id=c.po_line_id
+and a.PO_LINE_LOCATION_ID =e.LINE_LOCATION_ID
+and c.org_id=d.org_id
+and c.org_id=e.org_id
+and e.SHIP_TO_ORGANIZATION_ID =a.ORGANIZATION_ID
+and (QUANTITY_RECEIVED-QUANTITY_CANCELLED-e.QUANTITY_BILLED)>0
+and e.QUANTITY_BILLED>0
+and a.SOURCE_DOCUMENT_CODE='PO'
+and a.destination_type_code='RECEIVING'
+and a.transaction_type in ('RETURN TO VENDOR','RECEIVE','CORRECT')
+and c.org_id>=127
+and a.ORGANIZATION_ID>=127
+--and d.segment1='1018817'
+group by d.segment1,c.LINE_NUM,e.SHIPMENT_NUM,trunc(a.TRANSACTION_DATE),
+c.org_id,d.CURRENCY_CODE 
+
+

@@ -1,0 +1,17 @@
+
+
+AR_RECEIVABLES_TRX_ALL
+
+This table links accounting information with your Receivables Activities. 
+Possible types of activities include Adjustment,Miscellaneous Cash, and Finance Charges.
+
+select a.last_update_date,a.name,a.status,a.creation_date,a.Type,b.segment3 Activity_Acc,a.end_date_active,a.INACTIVE_DATE, GL_ACCOUNT_SOURCE, TAX_CODE_SOURCE, 
+a.org_id 
+from apps.AR_RECEIVABLES_TRX_all a,apps.GL_CODE_COMBINATIONS b
+where b.CODE_COMBINATION_ID(+)=a.CODE_COMBINATION_ID
+and a.org_id<>-3113
+and a.status='A'
+and a.org_id=127
+order by a.org_id,a.creation_date desc
+
+

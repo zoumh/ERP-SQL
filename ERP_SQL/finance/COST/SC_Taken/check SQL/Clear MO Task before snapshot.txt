@@ -1,0 +1,119 @@
+
+---------Clear Move Order task before SC taken
+
+
+select d.REQUEST_NUMBER,c.ORGANIZATION_ID,c.segment1 Item,a.TRANSACTION_QUANTITY,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type,
+a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,a.INVENTORY_ITEM_ID,d.header_id
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where 
+--d.REQUEST_NUMBER='HZMV01' and 
+--c.segment1='KRH 101 316/3.R6A' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+a.TRX_SOURCE_LINE_ID=b.TXN_SOURCE_LINE_ID (+) and 
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+order by TRANSACTION_DATE desc
+
+
+
+
+Select *
+--Delete 
+From   Apps.Mtl_Material_Transactions_Temp t
+Where  Organization_Id = 130 and TRANSACTION_TYPE_ID=64 --(Move Order)
+And t.Transaction_Temp_Id In (Select Transaction_Temp_Id
+From   Apps.Mtl_Material_Transactions_Temp a
+Where  Exists (Select 1
+From   Apps.Mtl_Txn_Request_Lines_v b
+Where  a.Trx_Source_Line_Id = b.Line_Id And
+b.Request_Number In ('467772','468621','468625','469012','469507','470823','471048','471562','473071','474302','479670','486717')))
+order by CREATION_DATE  desc
+
+
+
+--------------apps.mtl_material_transactions_temp
+select d.REQUEST_NUMBER,b.line_id ,a.CREATION_DATE,a.TRANSACTION_DATE,  c.segment1 Item,a.TRANSACTION_QUANTITY,a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,
+a.ORGANIZATION_ID,a.INVENTORY_ITEM_ID,d.header_id,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where 
+d.REQUEST_NUMBER='291224' and 
+--c.segment1='SXA 109 4522/4' and 
+c.ORGANIZATION_ID=130 and 
+d.header_id=b.header_id and
+--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+a.TRX_SOURCE_LINE_ID=b.TXN_SOURCE_LINE_ID and 
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+and b.line_status in (5,6)
+order by a.TRANSACTION_DATE desc
+
+
+
+----To delete this record
+select * from apps.mtl_material_transactions_temp where TRX_SOURCE_LINE_ID=1669888
+
+delete from apps.mtl_material_transactions_temp where TRX_SOURCE_LINE_ID=1669888
+
+------------apps.wms_dispatched_tasks
+Select wdt.move_order_line_id, mtrl.inventory_item_id, mtrl.line_status,b.REQUEST_NUMBER,MTRL.LAST_UPDATE_DATE
+from apps.wms_dispatched_tasks wdt, apps.mtl_txn_request_lines mtrl, apps.MTL_TXN_REQUEST_HEADERS b
+where wdt.status in (1,2,3,4)
+and mtrl.line_status in (5,6)
+and wdt.move_order_line_id = mtrl.line_id 
+and b.HEADER_ID=mtrl.HEADER_ID
+--and b.REQUEST_NUMBER='291224'
+
+
+
+------
+----------Pending Trans, Type
+
+select d.REQUEST_NUMBER,c.ORGANIZATION_ID,c.segment1 Item,a.TRANSACTION_QUANTITY,
+decode(d.header_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') header_status,
+decode(b.line_status,1,'Incomplete',2,'Pending Approval',3,'Approved',4,'Not Approved',5,'Closed',6,'Canceled',
+7,'Pre Approved',8,'Partially Approved') line_status,e.transaction_type_name Trans_type,
+a.TRANSACTION_header_ID,a.TRANSACTION_TEMP_ID,a.TRX_SOURCE_LINE_ID,a.INVENTORY_ITEM_ID,d.header_id
+from apps.mtl_material_transactions_temp a,apps.MTL_TXN_REQUEST_lines b, apps.mtl_system_items c ,
+apps.MTL_TXN_REQUEST_headers d,apps.mtl_transaction_types e
+where 
+--d.REQUEST_NUMBER='HZMV01' and 
+--c.segment1='KRH 101 316/3.R6A' and 
+c.ORGANIZATION_ID=a.ORGANIZATION_ID and
+d.header_id=b.header_id and
+--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+a.TRX_SOURCE_LINE_ID=b.TXN_SOURCE_LINE_ID (+) and 
+b.INVENTORY_ITEM_ID=c.INVENTORY_ITEM_ID
+and a.transaction_type_id=e.transaction_type_id
+order by TRANSACTION_DATE desc
+
+
+
+------ 5,'Closed',6,'Canceled' Move Order still has Pending
+Select d.Request_Number, d.Header_Status, c.Segment1 Item, a.Transaction_Quantity, a.Transaction_Header_Id,
+			 a.Transaction_Temp_Id, a.Trx_Source_Line_Id, a.Organization_Id, a.Inventory_Item_Id, d.Header_Id, b.Line_Status,
+			 e.Transaction_Type_Name Trans_Type
+From   Apps.Mtl_Material_Transactions_Temp a, Apps.Mtl_Txn_Request_Lines b, Apps.Mtl_System_Items c,
+			 Apps.Mtl_Txn_Request_Headers d, Apps.Mtl_Transaction_Types e
+Where  d.Header_Status In (5, 6) And
+			--b.line_status In (5,6) And
+			 c.Organization_Id = 130 And
+			 d.Header_Id = b.Header_Id And
+			--a.TRX_SOURCE_LINE_ID=b.LINE_ID and 
+			 a.Trx_Source_Line_Id = b.Txn_Source_Line_Id And
+			 b.Inventory_Item_Id = c.Inventory_Item_Id And
+			 a.Transaction_Type_Id = e.Transaction_Type_Id And
+			 a.Organization_Id = c.Organization_Id
+

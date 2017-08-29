@@ -1,0 +1,116 @@
+
+1. IP Org (FIFO Cost), std report:Layer Inventory Value Report
+   std Inv Value report Logic:
+
+
+--SELECT *
+SELECT sum(CIL.layer_quantity) Qty1,
+sum(round(CIL.layer_cost*CIL.layer_quantity)) amt1,
+sum(nvl(CILCD.layer_cost,0)*CIL.layer_quantity) Amt2
+FROM
+apps.cst_inv_layers CIL,
+apps.cst_inv_layer_cost_details CILCD
+WHERE cil.ORGANIZATION_ID=132
+and CILCD.layer_id = CIL.layer_id 
+and CILCD.inv_layer_id = CIL.inv_layer_id
+--and  create_transaction_id=102567025
+--and CIL.LAYER_QUANTITY<>0
+--and CIL.LAYER_COST <>0
+--and  LAYER_QUANTITY<0 
+
+
+----Trans issue cause Qty Diff with onhand: 
+    DPY 101 2971/850.R3B/2 in IP WIP Comp mtl Transaction didn't create layer cost in table: 
+    cst_inv_layers,CST_QUANTITY_LAYERS,cst_inv_layer_cost_details ,
+    cause layer value report (=-20 pics) not same with SQL onhand(=0)! cause 20 pics diff 
+
+    Cost=0's cause diff result (parameter use cost<>0 will miss Qty on output)
+
+
+
+---------<Std Screen :SQL of the FIFO cost History Std Screen> layer cost has Transaction_Type
+select TRANSACTION_DATE,TRANSACTION_TYPE,NEW_QUANTITY NEW_Onhand_Qty,PRIMARY_QUANTITY PRIMARY_Trans_Qty,PRIOR_COSTED_QUANTITY,ACTUAL_COST,CHANGE,PRIOR_COST,NEW_COST
+from CST_CG_COST_HISTORY_V
+where INVENTORY_ITEM_ID=--113931--
+193588 
+and organization_id = 132
+order by TRANSACTION_DATE desc
+
+
+
+-------------IP Onhand (use FIFO cost type) total Qty  & Total Amount verified with Std Value report
+	(not same with layer report because DPY 101 2971/850.R3B/2 has a isssue on WIP_Comp trans cost booking,Qty=20 )
+select a.ORIG_DATE_RECEIVED,h.organization_code Org_Name, b.segment1 Item,b.DESCRIPTION DESCRIPTION, 
+a.REVISION, (a.transaction_quantity)  onhand , 
+d.item_cost, 
+((a.transaction_quantity)*decode(g.asset_inventory,1,d.item_cost,0))  Amt 
+, a.subinventory_code, c.cost_group,e.segment1 family_class, e.segment2 sub_class ,e.segment4 Comp_Type 
+from apps.mtl_onhand_quantities_detail a, apps.mtl_system_items b, apps.cst_cost_groups c, 
+apps.CST_ITEM_COST_TYPE_V d,apps.MTL_SECONDARY_INVENTORIES_FK_V g, 
+APPS.mtl_parameters h,apps.mtl_item_categories_v e 
+where a.organization_id=b.organization_id 
+and c.organization_id=d.organization_id 
+and a.organization_id=c.organization_id 
+and a.organization_id=g.organization_id 
+and a.organization_id=h.organization_id 
+and a.organization_id=e.organization_id 
+and e.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID 
+and g.SECONDARY_INVENTORY_NAME=a.subinventory_code 
+and a.organization_id=132 
+and category_set_id = 1 
+and structure_id=101 
+and a.inventory_item_id=b.inventory_item_id and a.inventory_item_id=d.inventory_item_id 
+and a.cost_group_id=c.cost_group_id 
+and d.COST_TYPE ='FIFO'
+order by a.organization_id,a.subinventory_code, b.segment1,a.REVISION
+
+
+
+------------------------IP Value SQL (FIFO) 
+	(from layer_Qty table,not from onhand info,Verified with std 'Layer Inventory Value Report')
+select a.ORGANIZATION_ID Org_ID,
+b.SEGMENT1 Item,b.DESCRIPTION,a.LAYER_QUANTITY,a.ITEM_COST Average_Cost,nvl(a.ITEM_COST,0) *nvl(a.LAYER_QUANTITY,0) Amount,
+b.ENABLED_FLAG Item_Enable,b.INVENTORY_ITEM_STATUS_CODE Item_Status,a.COST_GROUP_ID
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and LAYER_QUANTITY<>0
+and a.INVENTORY_ITEM_ID=132 ---IP
+
+
+----sum of IP FIFO value (no locator info,from layer_Qty table,not from onhand info)
+select a.ORGANIZATION_ID, 
+sum(a.ITEM_COST *a.LAYER_QUANTITY) Amount
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and LAYER_QUANTITY<>0
+and a.INVENTORY_ITEM_ID=132 ---IP
+group by a.ORGANIZATION_ID
+
+
+
+-----------BMC View for discover report (use layer_Qty table, not from onhand info)
+
+
+CREATE OR REPLACE View APPS.BMC_COST_Layer_Value
+AS
+select a.ORGANIZATION_ID Org_ID,
+b.SEGMENT1 Item,b.DESCRIPTION,a.LAYER_QUANTITY,a.ITEM_COST Average_Cost,nvl(a.ITEM_COST,0) *nvl(a.LAYER_QUANTITY,0) Amount,
+b.ENABLED_FLAG Item_Enable,b.INVENTORY_ITEM_STATUS_CODE Item_Status,a.COST_GROUP_ID
+from apps.CST_QUANTITY_LAYERS a,apps.mtl_system_items b
+where a.ORGANIZATION_ID=b.ORGANIZATION_ID
+and b.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and LAYER_QUANTITY<>0
+
+
+----Sum of IP
+select sum(LAYER_QUANTITY) Qty,sum(AMOUNT) Amt from APPS.BMC_COST_Layer_Value where org_id=132
+and LAYER_QUANTITY<>0
+
+
+
+
+
+
+

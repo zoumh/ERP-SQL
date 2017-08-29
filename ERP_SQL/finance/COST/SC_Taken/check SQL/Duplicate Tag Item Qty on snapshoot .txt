@@ -1,0 +1,42 @@
+
+--------Harris
+
+
+---------------To find out Duplicate Tags in snapshoot (LPN_Contxt=4,5,8 , <>1,11)
+
+select f.tag_number,b.segment1 item,LPN_CONTEXT,
+c.segment2||'.'||c.segment3||'.'||c.segment4||'.'||c.segment5 Locator,
+system_quantity,count_quantity,adjustment_quantity as Diff_Qty
+from apps.mtl_physical_adjustments a,apps.wms_license_plate_numbers d, apps.mtl_physical_inventory_tags f 
+, apps.mtl_system_items b, apps.mtl_item_locations c
+where d.lpn_id=a.parent_lpn_id and a.adjustment_id=f.adjustment_id
+and a.inventory_item_id=b.inventory_item_id
+and a.organization_id=b.organization_id
+and a.locator_id=c.inventory_location_id and c.organization_id=a.organization_id
+and a.physical_inventory_id =:d and LPN_CONTEXT not in (1,11)
+order by f.tag_number
+
+
+
+
+
+-----Fix
+
+
+select * from apps.wms_license_plate_numbers  WHERE  --lpn_id=1242483
+--LICENSE_PLATE_NUMBER ='DA00052015-B'
+LOCATOR_ID=32400
+
+
+select parent_lpn_id,COST_GROUP_ID,INVENTORY_ITEM_ID,QUANTITY,SOURCE_NAME    
+from apps.wms_lpn_contents WHERE parent_lpn_id in (1175665,1242483)
+
+select * from apps.MTL_ONHAND_QUANTITIES_DETAIl 
+where LOCATOR_ID=32400 and INVENTORY_ITEM_ID =76896
+
+
+delete from apps.wms_license_plate_numbers WHERE  lpn_id=1175665
+
+delete from apps.wms_lpn_contents WHERE parent_lpn_id in (1175665)
+
+

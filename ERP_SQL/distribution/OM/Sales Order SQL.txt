@@ -1,0 +1,203 @@
+
+
+
+---------SO deliver_Status,line Status
+select d.FLOW_STATUS_CODE,b.RELEASED_STATUS_NAME , 
+ c.ORDER_NUMBER SO_Num,d.LINE_NUMBER||'.'||d.SHIPMENT_NUMBER line_Num,b.source_header_type_name SO_Type,
+c.CUST_PO_NUMBER,
+b.delivery_ID Delivery_No,b.DELIVERY_DETAIL_ID Del_Detail,a.segment1 Item,b.revision,
+b.item_description,d.ORDERED_ITEM Cust_Item, c.FLOW_STATUS_CODE Head_Status,d.FLOW_STATUS_CODE Line_Status,b.released_Status_name Ship_Status, 
+b.shipped_quantity,b.Requested_quantity,b.cancelled_quantity,b.creation_date Ship_Date,b.last_update_date Ship_Date2,
+b.subinventory,b.released_Status_name,b.unit_price,b.currency_code Curr,b.Type,b.Source_Name,
+b.SOURCE_HEADER_ID  
+from apps.WSH_DELIVERABLES_V b,apps.OE_ORDER_HEADERS_all c,apps.OE_ORDER_lineS_all d,apps.mtl_system_items_b  a
+where c.header_id=d.header_id
+and b.SOURCE_HEADER_ID=c.header_id
+and b.source_line_id=d.LINE_ID
+and b.organization_id=a.organization_id
+and b.INVENTORY_ITEM_ID =a.INVENTORY_ITEM_ID 
+and c.ORDER_NUMBER='303278'
+and b.RELEASED_STATUS_NAME='Shipped'
+and d.FLOW_STATUS_CODE='AWAITING_SHIPPING'
+
+
+----Open SO with Sales_Person,Type
+
+SELECT 
+oh.ORDER_NUMBER,
+oh.ordered_date, 
+(CASE WHEN ROUND(SYSDATE-oh.ordered_date)>365 THEN '>1Y' ELSE CASE WHEN ROUND(SYSDATE-oh.ordered_date)>180 THEN '>6M' ELSE CASE WHEN ROUND(SYSDATE-oh.ordered_date)>90 THEN '>3M' ELSE CASE WHEN ROUND(SYSDATE-ordered_date)>30 THEN '>1M' ELSE '<1M' END END END END) Due_Date,
+oh.flow_status_code so_status,ol.flow_status_code line_status,
+--oh.ship_to_org_id 
+--(SELECT customer_name FROM ra_customers WHERE  oh.SOLD_TO_ORG_ID =CUSTOMER_ID) customer,
+--(SELECT name   FROM OE_TRANSACTION_TYPES_tl      WHERE LANGUAGE = 'US'    AND transaction_type_id = oh.order_type_id) order_type,
+( ol.ordered_quantity)  ordered_quantity,
+(ol.shipped_quantity)  shipped_quantity,ol.INVOICED_QUANTITY,c.segment1 Sys_Item,ol.ORDERED_ITEM,d.NAME Type_Name,
+ol.CUST_PO_NUMBER ,e.name Sales_Person
+FROM apps.oe_order_headers_all oh,
+ apps.oe_order_lines_all         ol,apps.mtl_system_items_b c,apps.oe_transaction_types_tl d,apps.RA_SALESREPS_ALL e
+WHERE oh.flow_status_code IN ('BOOKED','ENTERED')
+AND oh.header_id =   ol.header_id
+ AND ol.flow_status_code   IN ('AWAITING_SHIPPING','ENTERED')
+ and c.INVENTORY_ITEM_ID=ol.INVENTORY_ITEM_ID
+and ol.ship_from_org_id=c.organization_id
+and d.TRANSACTION_TYPE_ID=oh.ORDER_TYPE_ID
+and d.LANGUAGE='US'
+and e.SALESREP_ID=oh.SALESREP_ID
+order by oh.ORDER_NUMBER,
+oh.ordered_date,
+oh.flow_status_code 
+
+
+-----Sales Order with Type,Price_List
+select d.Name Price_List_Name,b.HEADER_ID,b.ORDER_NUMBER,c.NAME Type_Name,c.description Type_Desc,
+a.LINE_NUMBER||'.'||SHIPMENT_NUMBER Line,
+a.ACTUAL_SHIPMENT_DATE
+,a.FLOW_STATUS_CODE
+,ORDERED_ITEM
+,SHIPPED_QUANTITY
+,ORDERED_QUANTITY
+,SHIPPING_QUANTITY
+,a.CREATION_DATE
+,a.LAST_UPDATE_DATE,
+a.tax_code,a.tax_value
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c,
+apps.qp_list_headers d--,apps.qp_list_lines_v e
+where a.HEADER_ID=b.HEADER_ID
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+and a.price_list_id=d.list_header_id 
+and c.LANGUAGE='US'
+and b.ORDER_NUMBER='300284'
+
+
+
+select b.HEADER_ID,b.ORDER_NUMBER,c.NAME Type_Name,c.description Type_Desc,
+a.LINE_NUMBER||'.'||SHIPMENT_NUMBER Line,
+a.ACTUAL_SHIPMENT_DATE
+,a.FLOW_STATUS_CODE
+,ORDERED_ITEM
+,SHIPPED_QUANTITY
+,ORDERED_QUANTITY
+,SHIPPING_QUANTITY
+,a.CREATION_DATE
+,a.LAST_UPDATE_DATE
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c
+where a.HEADER_ID=b.HEADER_ID
+and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+and c.LANGUAGE='US'
+and b.ORDER_NUMBER='300284'
+
+
+-----------SO Customer_Item & System Item
+select a.ORG_ID,to_char(b.ORDER_NUMBER) OR_Num,
+to_Char(a.LINE_NUMBER) Line_Num
+,a.FLOW_STATUS_CODE
+,a.ORDERED_ITEM,c.segment1 Sys_Item
+,a.SHIPPED_QUANTITY
+,a.ORDERED_QUANTITY
+,a.SHIPPING_QUANTITY,a.UNIT_SELLING_PRICE,a.UNIT_SELLING_PRICE*a.SHIPPING_QUANTITY*8.28 Amount
+,a.CREATION_DATE
+,a.LAST_UPDATE_DATE,
+a.ACTUAL_SHIPMENT_DATE,a.FULFILLMENT_DATE,
+a.TAX_DATE,a.PRICING_DATE,a.SCHEDULE_SHIP_DATE,a.SCHEDULE_ARRIVAL_DATE,a.ACTUAL_ARRIVAL_DATE,a.SCHEDULE_STATUS_CODE
+from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.mtl_system_items_b c
+where a.HEADER_ID=b.HEADER_ID
+and c.INVENTORY_ITEM_ID=a.INVENTORY_ITEM_ID
+and a.ship_from_org_id=c.organization_id
+and a.ORG_ID=b.ORG_ID
+and a.ORG_ID<>81
+and b.ORDER_NUMBER='4003600'
+
+
+
+--------RMA SO line Reference SO/Invocie
+select * from apps.OE_ORDER_lineS_all where HEADER_ID=152518
+
+reference_customer_trx_line_id=195456
+
+reference_header_id
+
+credit_invoice_line_id
+
+
+
+--------Sales Order line Price / for some Items
+
+
+select ordered_item Item,schedule_ship_date,shipping_quantity,unit_selling_price,tax_value,actual_shipment_date 
+from apps.OE_ORDER_lineS_all 
+where schedule_ship_date >=to_date('2004-10-01','YYYY-MM-DD')
+and schedule_ship_date<=to_date('2005-03-31','YYYY-MM-DD')
+and ordered_item in ('RNH 942 27','SXK 109 5745','SXK 109 5787','SXK 109 5841','SXK 109 5745','RNH 942 27','SXK 109 5787','SXA 109 4637')
+order by ordered_item
+
+
+
+select ordered_item Item,b.segment1 Item2,schedule_ship_date,shipping_quantity,
+unit_selling_price,tax_value,actual_shipment_date ,line_number
+from apps.OE_ORDER_lineS_all a,apps.mtl_system_items_b b
+where schedule_ship_date >=to_date('2004-10-01','YYYY-MM-DD')
+and schedule_ship_date<=to_date('2005-03-31','YYYY-MM-DD')
+and ordered_item in ('RNH 942 27','SXK 109 5745','SXK 109 5787','SXK 109 5841','SXK 109 5745','RNH 942 27','SXK 109 5787','SXA 109 4637')
+and b.organization_id=83 
+and a.INVENTORY_ITEM_ID=b.INVENTORY_ITEM_ID
+order by ordered_item
+
+
+
+--------------List Orders which has two or more different Item price for same Item
+
+select distinct a.ordernum,a.item,b.price
+from 
+(
+  select ordernum,item 
+  from 
+  (
+ 	 select distinct b.ORDER_NUMBER ordernum, ordered_item Item, a.unit_selling_price price
+	 from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c
+	 where a.HEADER_ID=b.HEADER_ID
+	 and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+	 and c.LANGUAGE='US'
+	 and (a.CANCELLED_FLAG='N' or a.CANCELLED_FLAG is null )
+  )
+  group by ordernum,item 
+  having count(*)>1 
+) a,   
+(
+  select distinct b.ORDER_NUMBER ordernum, ordered_item Item, a.unit_selling_price price
+	 from apps.OE_ORDER_lineS_all a,apps.OE_ORDER_HEADERS_all b,apps.oe_transaction_types_tl c
+	 where a.HEADER_ID=b.HEADER_ID
+	 and c.TRANSACTION_TYPE_ID=b.ORDER_TYPE_ID
+	 and c.LANGUAGE='US'
+	 and (a.CANCELLED_FLAG='N' or a.CANCELLED_FLAG is null )
+) b
+where a.ordernum=b.ordernum and a.item=b.item 
+
+
+
+-----------RMA return with Item/Customer/Order type
+
+select a.transaction_type,a.source_document_code,--oe_order_header_id,a.ORGANIZATION_ID,
+b.segment1 Item,b.description,--UNIT_SELLING_PRICE ,UNIT_LIST_PRICE ,
+sum(a.PO_UNIT_PRICE*nvl(a.CURRENCY_CONVERSION_RATE,1)*decode(a.transaction_type,'RETURN TO CUSTOMER',-1*a.quantity,a.quantity)) CNY_Value 
+,sum(decode(a.transaction_type,'RETURN TO CUSTOMER',-1*a.quantity,a.quantity)) Qty,e.CUSTOMER_NAME ,ot.NAME Type_Name
+from apps.rcv_transactions a,apps.mtl_system_items b,
+apps.OE_ORDER_lineS_all c,apps.OE_ORDER_HEADERS_all oh,
+apps.AR_CUSTOMERS_V e,apps.oe_transaction_types_tl ot
+where a.source_document_code='RMA'
+and a.transaction_type in ('RETURN TO CUSTOMER','RECEIVE','CORRECT')
+and a.DESTINATION_TYPE_CODE='RECEIVING'
+and b.organization_id=a.organization_id
+and TRANSACTION_DATE >= to_date('20061001','YYYYMMDD') 
+and TRANSACTION_DATE <= to_date('20061231','YYYYMMDD') 
+and  b.organization_id=130
+and b.INVENTORY_ITEM_ID =c.INVENTORY_ITEM_ID
+and b.organization_id=a.organization_id
+and c.HEADER_ID=a.oe_order_header_id
+and c.LINE_ID =a.oe_order_line_id
+and oh.HEADER_ID=a.oe_order_header_id
+and a.customer_id=e.CUSTOMER_ID 
+and ot.TRANSACTION_TYPE_ID=oh.ORDER_TYPE_ID
+and ot.LANGUAGE='US'
+and ot.NAME not like 'Cancel%'
+group by a.ORGANIZATION_ID ,a.transaction_type,b.segment1,b.description,e.CUSTOMER_NAME,a.source_document_code,ot.NAME 

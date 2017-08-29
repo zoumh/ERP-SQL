@@ -1,0 +1,6 @@
+
+
+
+select * from apps.CST_COST_UPDATES where CREATION_DATE>to_date('2004-6-29','YYYY-MM-DD') order  by  CREATION_DATE
+
+

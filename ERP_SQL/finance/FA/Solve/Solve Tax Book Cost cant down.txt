@@ -1,0 +1,209 @@
+SR Number   6893354.994  (May-08)
+SR Number  7139119.992  (Aug-08)
+
+### Detailed Problem Statement ###
+FA 12021516 cost in FA_Book has been changed twice:
+1. from 5,290.30 to 12,021,517.00,
+2. change from 12,021,517.00 to 7,290.30
+
+But the 'Periodic Mass Copy' function only copy the first cost adjust transaction to TAX Book,now the cost in Tax book is 12,021,517.00 & 
+can't be manual change to 7,290.30 
+
+Error message:APP-OFA-47761 :The salvage value can't be greater then the net book value.
+
+1. Ensure that you have taken a backup of your system before applying the recommended solution.
+
+select * from apps.BMC_FA_TRANSACTION_HEAD_BAK where asset_id = 100029502   and book_type_code = 'BMC_TAX_BOOK' 
+--and transaction_header_id = 251233
+
+select * from apps.BMC_FA_ADJUSTMENTS_BAK where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK' 
+--and transaction_header_id = 251233
+
+select * from apps.BMC_FA_BOOKS_BAK where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'  
+--and transaction_header_id_in = 251233
+
+
+2. Run the following scripts in a TEST environment first while depreciation is rol
+led back:
+
+--asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+
+delete FA_TRANSACTION_HEADERS 
+where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id = 251233 ;
+
+-- should delete 1 row
+
+delete FA_ADJUSTMENTS
+where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id = 251233 ;
+
+-- should delete 3 rows
+
+delete FA_BOOKS 
+where asset_id = 100029502 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in = 251233 ;
+
+-- should delete 1 row
+
+update FA_BOOKS 
+set transaction_header_id_out = NULL,
+date_ineffective = NULL
+where asset_id = 100029502 
+and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in = 225774 
+
+-- should update 1 row
+
+3. If you are satisfied with the results, issue a commit.
+
+
+----------2008-08-29 
+FA 12021516 cost can't change down in TAX Book
+
+Log SR 7139119.992 but not get solution in time.
+So reference a prevous similar SR 6893354.994  ,make the solution:
+ 
+select * from apps.FA_ADDITIONS_B where ASSET_NUMBER='12021516'
+
+create table BMC_BKUP_FA_TRANSACTION_HEAD as 
+select * from apps.FA_TRANSACTION_HEADERS   
+where asset_id = 100035876 and book_type_code = 'BMC_TAX_BOOK'
+ 
+create table BMC_BKUP_FA_ADJUSTMENTS as select * from apps.FA_ADJUSTMENTS  
+where asset_id = 100035876 and book_type_code = 'BMC_TAX_BOOK'
+ 
+create table BMC_BKUP_FA_BOOKS as 
+select * from apps.FA_BOOKS   
+where asset_id = 100035876 and book_type_code = 'BMC_TAX_BOOK'
+ 
+delete FA_TRANSACTION_HEADERS 
+where asset_id = 100035876 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id = 271500;
+-- should delete 1 row
+
+delete FA_ADJUSTMENTS
+where asset_id =100035876 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id = 271500 ;
+-- should delete 3 rows
+ 
+delete FA_BOOKS 
+where asset_id = 100035876 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in = 271500 ;
+-- should delete 1 row
+ 
+update FA_BOOKS 
+set transaction_header_id_out = NULL,
+date_ineffective = NULL
+where asset_id = 100035876
+and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in =254754
+-- should update 1 row
+
+commit
+
+-------------2008-12-30
+FA 12009191 cost can't change down in TAX Book
+also reference SR 6893354.994 to solve.
+
+----Find out BMC Backup Tables :
+select * from all_objects where object_name like 'BMC%FA%' AND OBJECT_TYPE='TABLE'
+
+select * from apps.FA_ADDITIONS_B where ASSET_NUMBER='12009191'
+--asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK'
+
+insert into BMC_BKUP_FA_TRANSACTION_HEAD  select * from apps.BMC_FA_TRANSACTION_HEAD_BAK
+
+insert into BMC_BKUP_FA_TRANSACTION_HEAD
+select * from apps.FA_TRANSACTION_HEADERS
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK' --and transaction_header_id =295332
+
+insert into  BMC_BKUP_FA_ADJUSTMENTS select * from apps.BMC_FA_ADJUSTMENTS_BAK
+
+insert into  BMC_BKUP_FA_ADJUSTMENTS
+select * from apps.FA_ADJUSTMENTS
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK' --and transaction_header_id =295332
+
+insert into  BMC_BKUP_FA_BOOKS select * from apps.BMC_FA_BOOKS_BAK
+
+insert into  BMC_BKUP_FA_BOOKS
+
+select * from apps.FA_BOOKS
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK'  --and TRANSACTION_HEADER_ID_IN= 295332 
+ 
+ 
+delete FA_TRANSACTION_HEADERS 
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK' and transaction_header_id = 295332 ;
+-- should delete 1 row
+ 
+delete FA_ADJUSTMENTS
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id = 295332 ;
+-- should delete 3 rows
+ 
+delete FA_BOOKS 
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in = 295332 ;
+-- should delete 1 row
+ 
+update FA_BOOKS 
+set transaction_header_id_out = NULL,
+date_ineffective = NULL
+where asset_id = 100021937 
+and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in = 127413
+-- should update 1 row
+
+
+---------Final SQL
+This has happened in May-08 (SR 6893354.994)
+
+In Aug-08, SR 7139119.992 didn't give solution in time so we reference SR 6893354.994 to solve it.
+
+Now we also reference SR 6893354.994 to solve.
+
+1. Backup
+ 
+insert into 
+BMC_BKUP_FA_TRANSACTION_HEAD
+select * from apps.FA_TRANSACTION_HEADERS
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK'
+ 
+insert into  BMC_BKUP_FA_ADJUSTMENTS
+select * from apps.FA_ADJUSTMENTS
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK'
+ 
+insert into  BMC_BKUP_FA_BOOKS
+select * from apps.FA_BOOKS
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK'
+
+2. delete & Update 
+
+delete FA_TRANSACTION_HEADERS 
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK' and transaction_header_id = 295332 ;
+-- should delete 1 row
+
+delete FA_ADJUSTMENTS
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id = 295332 ;
+-- should delete 3 rows
+
+delete FA_BOOKS 
+where asset_id = 100021937 and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in = 295332 ;
+-- should delete 1 row
+
+update FA_BOOKS 
+set transaction_header_id_out = NULL,
+date_ineffective = NULL
+where asset_id = 100021937 
+and book_type_code = 'BMC_TAX_BOOK'
+and transaction_header_id_in = 127413
+-- should update 1 row
+
+commit
+
+
+
+
+

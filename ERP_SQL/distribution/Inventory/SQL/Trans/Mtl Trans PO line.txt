@@ -1,0 +1,61 @@
+
+----PO Mtl Transaction  link RCV_Transaction , PO, line
+select mtt.transaction_type_name,
+SHIPMENT_HEADER_ID Receipt,mmt.primary_quantity,
+pol.UNIT_PRICE PO_Price,
+mmt.ACTUAL_COST,mmt.CURRENCY_CONVERSION_RATE,
+mmt.TRANSACTION_COST,
+mmt.TRANSACTION_DATE,
+poh.SEGMENT1 PO,pol.LINE_NUM, 
+mmt.transaction_id
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt,
+  apps.PO_HEADERS_ALL            poh,
+   apps.rcv_transactions         rcv,
+   apps.PO_LINES_ALL             pol
+where  mtt.transaction_type_id = mmt.transaction_type_id   
+and    mmt.TRANSACTION_SOURCE_ID=poh.PO_HEADER_ID(+)
+and rcv.TRANSACTION_ID=mmt.RCV_TRANSACTION_ID
+and rcv.PO_HEADER_ID =poh.PO_HEADER_ID
+and poh.PO_HEADER_ID =pol.PO_HEADER_ID
+and rcv.PO_LINE_ID =pol.PO_LINE_ID
+and rcv.ORGANIZATION_ID>=127
+and poh.org_id=127
+and mmt.ORGANIZATION_ID=rcv.ORGANIZATION_ID
+--and mta.TRANSACTION_DATE>=to_date('20080901 00:00:00','YYYYMMDD HH24:MI:SS')
+and poh.SEGMENT1='1083196'
+and pol.LINE_NUM='6'
+order by SHIPMENT_HEADER_ID,mtt.transaction_type_name
+
+
+----PO Mtl Transaction/Accounts  link RCV_Transaction , PO, line
+select mta.TRANSACTION_VALUE,mta.base_transaction_value,mtt.transaction_type_name,
+gcc.segment3,mta.ACCOUNTING_LINE_TYPE Type,SHIPMENT_HEADER_ID Receipt,mta.primary_quantity,
+pol.UNIT_PRICE,mta.TRANSACTION_VALUE/mta.PRIMARY_QUANTITY Caculate_price,
+mta.RATE_OR_AMOUNT,mmt.ACTUAL_COST,mmt.CURRENCY_CONVERSION_RATE,
+mmt.TRANSACTION_COST,
+mta.TRANSACTION_DATE,poh.SEGMENT1 PO,pol.LINE_NUM, 
+mta.organization_id, 
+mmt.transaction_id,mta.gl_batch_id
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.gl_code_combinations      gcc, 
+  apps.mtl_transaction_accounts  mta,
+  apps.mtl_transaction_types     mtt,
+  apps.PO_HEADERS_ALL            poh,
+   apps.rcv_transactions         rcv,
+   apps.PO_LINES_ALL             pol
+where  mta.transaction_id = mmt.transaction_id 
+and    mta.reference_account = gcc.code_combination_id 
+and    mtt.transaction_type_id = mmt.transaction_type_id   
+and    mta.organization_id = mmt.organization_id  
+and    mmt.TRANSACTION_SOURCE_ID=poh.PO_HEADER_ID(+)
+and rcv.TRANSACTION_ID=mmt.RCV_TRANSACTION_ID
+and rcv.PO_HEADER_ID =poh.PO_HEADER_ID
+and poh.PO_HEADER_ID =pol.PO_HEADER_ID
+and rcv.PO_LINE_ID =pol.PO_LINE_ID
+--and mta.TRANSACTION_DATE>=to_date('20080901 00:00:00','YYYYMMDD HH24:MI:SS')
+and poh.SEGMENT1='1083196'
+and pol.LINE_NUM='6'
+order by SHIPMENT_HEADER_ID,mtt.transaction_type_name

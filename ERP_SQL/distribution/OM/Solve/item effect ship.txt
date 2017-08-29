@@ -1,0 +1,27 @@
+Symptoms
+The sales order line is in Fulfilled status.
+The delivery is in Interfaced status.
+But there are no material transactions to be found for this line item.
+
+
+Solution
+The above queries suggest that the item was defined as non-transactable when
+the delivery detail was created. Hence the pickable_flag is 'N' and inventory
+interfaced is marked 'Not Applicable'. Also move order lines(and reservations)
+are not created since the item was non-transactable.
+
+Most likely the item attribute was modified sometime after booking. No data
+fix is available for this situation (according to Development in Bug 3553185).
+Newly created orders should process fine.
+
+
+select pickable_flag 
+from apps.wsh_delivery_details 
+where delivery_detail_id = 1228425 
+--- returns 'N' ----- 
+
+select mtl_transactions_enabled_flag 
+from apps.mtl_system_items 
+where inventory_item_id = &Inventory_item_id
+and organization_id = &Org_id
+--- returns 'Y' ----- 

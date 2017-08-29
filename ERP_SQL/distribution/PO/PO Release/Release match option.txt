@@ -1,0 +1,41 @@
+
+
+--------------Blanket_PO Release's match option=Receipt
+select pll.CREATION_DATE,
+poh.TYPE_LOOKUP_CODE PO_Type,poh.SEGMENT1 PO,
+--poh.REVISION_NUM PO_Rev,por.REVISION_NUM Release_rev,
+por.RELEASE_NUM,pol.LINE_NUM,pll.SHIPMENT_NUM,pll.MATCH_OPTION,
+pll.QUANTITY,pll.QUANTITY_RECEIVED,pll.QUANTITY_BILLED,
+nvl(pll.QUANTITY_RECEIVED,0)*pol.UNIT_PRICE receive_amt,
+por.AUTHORIZATION_STATUS Release_approv,
+por.CANCEL_FLAG Release_cancel, pll.CANCEL_FLAG Ship_Cancel,
+poh.CURRENCY_CODE,
+pol.ITEM_DESCRIPTION,pol.UNIT_PRICE,
+pll.SHIP_TO_ORGANIZATION_ID Ship_to_Org
+from
+apps.PO_HEADERS_ALL POH, 
+apps.PO_RELEASES_all POR, 
+apps.PO_LINES_all POL, 
+apps.PO_LINE_LOCATIONS_all PLL
+where
+por.PO_HEADER_ID=poh.PO_HEADER_ID
+and pol.PO_HEADER_ID=poh.PO_HEADER_ID
+and pll.PO_HEADER_ID=poh.PO_HEADER_ID
+and por.PO_RELEASE_ID=pll.PO_RELEASE_ID
+and por.ORG_ID=poh.org_id
+and pol.ORG_ID=poh.org_id
+and pll.ORG_ID=poh.org_id
+and pol.PO_LINE_ID=pll.PO_LINE_ID
+and poh.ORG_ID=por.ORG_ID
+and poh.ORG_ID=pol.ORG_ID
+and poh.ORG_ID=pll.ORG_ID
+and pll.ORG_ID=127
+--and por.APPROVED_FLAG<>'Y'
+/*and poh.SEGMENT1='1086733'
+and por.RELEASE_NUM='119'
+and pol.LINE_NUM='261'*/
+and pll.MATCH_OPTION='R'
+--and por.CANCEL_FLAG is null
+--and pll.CANCEL_FLAG ='Y'--is not null
+--and nvl(pll.QUANTITY_RECEIVED,0)*pol.UNIT_PRICE <>0
+order by pll.CREATION_DATE,poh.SEGMENT1,por.RELEASE_NUM,pol.LINE_NUM,pll.SHIPMENT_NUM

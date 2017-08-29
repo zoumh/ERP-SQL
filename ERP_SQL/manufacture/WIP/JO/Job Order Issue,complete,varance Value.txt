@@ -1,0 +1,72 @@
+
+---------Job Order Value Sum (Issue,complete,varance), & Create/Close Date, Qty 
+
+select c.Job_Order,b.Issue_Value,a.Complete_Value,a.Complete_Qty,c.Variance_value,
+c.creation_date,c.transaction_date Close_Date
+from
+(
+select  wip_entity_name Job_Order ,
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Complete_Value,
+sum(mmt.TRANSACTION_QUANTITY) as Complete_Qty
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.wip_entities Wet  --apps.WIP_DISCRETE_JOBS_V
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = 83 and msi.organization_id = 83 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Assembly Return','WIP Assy Completion')--,'WIP Component Return','WIP component issue')
+and    trunc(mmt.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041231','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+group by wet.wip_entity_name
+) a,
+(
+select  wip_entity_name Job_Order, 
+sum(mmt.TRANSACTION_QUANTITY*mmt.ACTUAL_COST) Issue_Value
+from 
+  apps.mtl_material_transactions mmt, 
+  apps.mtl_transaction_types     mtt, 
+  apps.mtl_system_items_b        msi, 
+  apps.mtl_txn_source_types      mst,
+  apps.wip_entities Wet  --apps.WIP_DISCRETE_JOBS_V
+where  mtt.transaction_type_id = mmt.transaction_type_id 
+and    msi.inventory_item_id = mmt.inventory_item_id 
+and    mmt.transaction_source_type_id=mst.transaction_source_type_id 
+and    mmt.organization_id = 83 and msi.organization_id = 83 
+and	   wet.wip_entity_id=mmt.transaction_source_id
+and transaction_type_name in ('WIP Component Return','WIP component issue')
+and    trunc(mmt.transaction_date) >= to_date('20040901','YYYYMMDD') 
+and    trunc(mmt.transaction_date) <= to_date('20041231','YYYYMMDD')
+and mst.transaction_source_type_name='Job or Schedule'
+group by wip_entity_name
+) b,
+(
+select d.WIP_ENTITY_NAME Job_Order,sum(a.base_transaction_value) Variance_value,
+a.creation_date,a.transaction_date
+FROM apps.WIP_TRANSACTION_ACCOUNTS a,
+apps.GL_CODE_COMBINATIONS b,
+apps.WIP_TRANSACTIONs c,
+apps.WIP_ENTITIES d, --apps.WIP_DISCRETE_JOBS_V
+apps.MFG_LOOKUPS e
+where a.reference_account=b.CODE_COMBINATION_ID
+and c.Transaction_id=a.Transaction_id
+and c.organization_id=a.organization_id
+and d.wip_entity_id=a.wip_entity_id
+and e.LOOKUP_TYPE='WIP_TRANSACTION_TYPE'
+and e.LOOKUP_CODE(+) = c.TRANSACTION_TYPE
+and b.segment3='41010201'
+and a.ACCOUNTING_LINE_TYPE=8 --WIP variance
+and a.transaction_date>=to_date('2004-10-01','yyyy-mm-dd')
+and a.transaction_date<=to_date('2004-12-31','yyyy-mm-dd')
+group by d.WIP_ENTITY_NAME,a.transaction_date,a.creation_date
+order by d.WIP_ENTITY_NAME
+) c
+where c.Job_Order=b.Job_Order
+and c.Job_Order=a.Job_Order
+order by c.creation_date
+
